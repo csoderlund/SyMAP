@@ -8,7 +8,6 @@ import symap.manager.Mproject;
 /***************************************************************
  * Called in Data for each selected project
  * This uses the more global Mproject, but adds a little data and interface
- * CAS575 remove grpType = tProj.getdbGrpName; not used
  */
 public class Project {
 	private int id;

@@ -36,11 +36,6 @@ import util.Utilities;
 
 /**************************************************************
  * Draws the circle view for Selected-2-WG and 2D-N-chr
- * CAS521 cleanup and some rewrite
- * 		2-WG add reverse
- * CAS533 was accessing DotPlot just to get static background color.white
- * CAS552 add scroll bar and mess a little with constants
- * CAS553 made non-rotate project name easily clickable, allow changing colors, fiddle with name distance
  */
 public class CircPanel extends JPanel implements HelpListener, MouseListener,MouseMotionListener {
 	private static final long serialVersionUID = -1711255873365895293L;
@@ -52,8 +47,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private final String helpName = "Click a project name to use its colors for the blocks.";
 	private final String helpArc =  "Click an arc to bring its blocks to the top."
 									+ "\nDouble click an arc to only show its blocks.\n";
-	protected final double ZOOM_DEFAULT = 1.0; 			 // CAS552 was float
-	protected final int ARC_DEFAULT = 0, ARC_INC=5;	 // CAS553 add INC; was 10
+	protected final double ZOOM_DEFAULT = 1.0; 			
+	protected final int ARC_DEFAULT = 0, ARC_INC=5;	 
 	
 	 // set from ControlPanelCirc;  these defaults are also set in ControlPanelCirc
     protected int invChoice = 0;
@@ -79,7 +74,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     private int rOuter, rInner, rBlock; // rOuter based on rotateText,; rInner=rOuter*0.933; rBlock=rOuter*0.917;
     private int cX, cY;					// both are rOuter+marginX; set at beginning and do not change
     
-    private JScrollPane scroller;		// this scroll bar never did work; CAS552 does now
+    private JScrollPane scroller;		
     private HelpBar helpPanel = null;
     
     private void dprt(String msg) {symap.Globals.dprt("CP: " + msg);}
@@ -102,7 +97,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		addMouseMotionListener(this);
 		
 		try {
-			if (selGrpSet!=null && selGrpSet.size()>1) setLastParams(lastParams); // CAS553 use previous Home settings when same ref
+			if (selGrpSet!=null && selGrpSet.size()>1) setLastParams(lastParams); // use previous Home settings when same ref
 			if (!initDS(projIdxList, selGrpSet, refIdx)) return; // create allProjVec, idx2GrpMap, priortyVec
 		}
 		catch(Exception e) {ErrorReport.print(e, "Create CircPanel");}
@@ -127,17 +122,17 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				g.isSel = selGrpSet.contains(g.idx);
 			}
 		}
-		for (Project p : allProjVec) p.setTotalSize(); // CAS553 compute once here; used g.isSel
+		for (Project p : allProjVec) p.setTotalSize(); 
 		
 		priorityVec = new Vector<Integer>();
-		priorityVec.add(refIdx);	// CAS521 added so initial reference has priority colors
+		priorityVec.add(refIdx);	// initial reference has priority colors
 		for (Project p : allProjVec){
 			if (p.idx!=refIdx) priorityVec.add(p.idx);
 		}
 		
 		setChrColorIdx(); 							// does not need colorVec, only allProjVec
-		if (!initColorsFromProps()) return false; 	// CAS553 color params are saved in .symap_props
-		makeNewColorVec();			// create colorVec, use allGrpVec; CAS553 get instead of pass in from frame
+		if (!initColorsFromProps()) return false; 	// color params are saved in .symap_props
+		makeNewColorVec();			// create colorVec, use allGrpVec;
 		
 	// Blocks
 		loadBlocks();			
@@ -150,7 +145,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		try {
 			ResultSet rs;
 			rs = dbc2.executeQuery("select name from projects where idx=" + idx);
-			if (!rs.next()) { // CAS560 was .first() which is not allowed with new JDBC
+			if (!rs.next()) { 
 				System.out.println("Cannot find proj_idx=" + idx);
 				return;
 			}
@@ -162,7 +157,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		catch(Exception e) {ErrorReport.print(e, "Add project for Circle Panel");}	
 	}
-	// CAS521 try to make them always with same color regardless of comparison
+	// try to make them always with same color regardless of comparison
 	private void setChrColorIdx() {
 		try {
 			int maxGrps=0;
@@ -309,13 +304,12 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	 *****************************************************************/
 	protected void zoom (double f) { // -/= icons
 		zoom *= f;				
-		if (zoom<0.3) zoom=0.3; // CAS553 add check, even though why they would not this...
+		if (zoom<0.3) zoom=0.3; 
 		else if (zoom>2.5) zoom=2.5;
 	    makeRepaint();  
 	}
-	protected void rotate(int da) { // rotate(-10) CAS5552 add rotate(+10) icon
+	protected void rotate(int da) { 
 		arc0 += da;
-		//if (arc0 > 360) arc0 -= 360; CAS553 replace with below check
 		if (Math.abs(arc0)>=360) arc0=0; 
 		makeRepaint();
 	}
@@ -373,9 +367,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			if (priorityVec.get(i) == p.idx) break;
 		}
 		priorityVec.remove(i);
-		for (Project p1 : allProjVec) // CAS553 was setting  all clicked project true; now all false
+		for (Project p1 : allProjVec) 
 			for (Group g1 : p1.grps) g1.onTop=g1.onlyShow=false;
-		//for (Project p1 : allProjVec) { for (Group g1 : p1.grps) g1.onTop = (p1.idx==p.idx) ? true : false;}
 		
 		makeRepaint();						
 	}
@@ -392,14 +385,13 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 
 		if (grp != null) {
 			setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
-			//String dName = name2DisMap.containsKey(grp.projName) ? name2DisMap.get(grp.projName) : grp.projName; // CAS517
-			helpPanel.setHelp(helpArc,this); // CAS553 remove name
+			helpPanel.setHelp(helpArc,this); 
 		}
 		else {
 			Project p = overProjName(r,angle,(int)e.getX(), (int)e.getY());
 			if (p != null) {
 				setCursor( Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) );
-				helpPanel.setHelp(helpName, this);// CAS553 remove name
+				helpPanel.setHelp(helpName, this);
 			}
 			else{
 				setCursor( Cursor.getDefaultCursor() );
@@ -415,7 +407,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}	
 		return null;
 	}
-	private Project overProjName(int r, int angle, int x, int y){ // mouse over name; CAS553 diff query for non-rotate
+	private Project overProjName(int r, int angle, int x, int y){ 
 		int x1 = (bRotateText) ? r : x;
 		int x2 = (bRotateText) ? angle : y;
 		
@@ -450,23 +442,16 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		Dimension d = new Dimension( (int)(scroller.getWidth()*zoom), (int)(scroller.getHeight()*zoom) );
 		Dimension dimCircle = new Dimension(d.width-20, d.height-20);
 		
-		// CAS553: (1) make circle constant width (not based on longest name size) (2) add scroll bar based on name size
 	    int maxNameW = 0;
-	    //if (!bRotateText) { 
     	FontMetrics fm = g.getFontMetrics();
         for (Project p : allProjVec) {
             int nw = (int)(fm.getStringBounds(p.displayName,g).getWidth()) + 
-            		 (int)(fm.getStringBounds(p.maxGrpName,g).getWidth());	// CAS553 add maxGrpName	
+            		 (int)(fm.getStringBounds(p.maxGrpName,g).getWidth());		
             if (nw > maxNameW) maxNameW = nw;
         } 
-        /*int marginX = 50 + Math.max(60, maxNameW);  
-    	rOuter = Math.min(dim.width, dim.height)/2 - marginX;
-    	rInner = (int)(rOuter*0.933); rBlock = (int)(rOuter*0.917);	
-    	cX = rOuter + marginX; cY = rOuter + marginX;
-    	*/
 	    
-	    Dimension dd = new Dimension(d.width+maxNameW-20, d.height-20); // CAS553 add so scroll for large names
-	    setPreferredSize(dd); // CAS552 added these 3 lines to make scrollbar work
+	    Dimension dd = new Dimension(d.width+maxNameW-20, d.height-20); 
+	    setPreferredSize(dd); 
 		revalidate();
 		scroller.getViewport().revalidate();
         
@@ -474,12 +459,11 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	    rOuter = center - 100; 
 	    rInner = (int)(rOuter*0.933);
 	    rBlock = (int)(rOuter*0.917);
-	    int off = (allProjVec.size()%2==1) ? (maxNameW/2) : 15; // CAS553 1,3,5... will use name
+	    int off = (allProjVec.size()%2==1) ? (maxNameW/2) : 15; // 1,3,5... will use name
         cX = center + off;		
-        cY = center;
-        //dprt(String.format("2  rOuter %d  rInner %d cX %d  center %d  maxNameW %d", rOuter, rInner, cX, center, maxNameW));     
+        cY = center;    
         
-        int cXrOuter = cX-rOuter, cYrOuter = cY-rOuter; // CAS553 made variables
+        int cXrOuter = cX-rOuter, cYrOuter = cY-rOuter; 
         int cXrInner = cX-rInner, cYrInner = cY-rInner;
         int rOuter2  = rOuter*2,  rInner2  = rInner*2;
  
@@ -501,7 +485,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         for (Project prjObj : allProjVec) {
             int projArc = 360/allProjVec.size(); 
            
-            if (bToScale) { // CAS553 moved above the next if statement; only matters when empty project and scale
+            if (bToScale) { 
             	if (prjObj.projSizeShown == 0) {
             		projArc = PROJ_EMPTY_ARC;
             	}
@@ -511,22 +495,22 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
             	}
             }
    
-            if (prjObj.projSizeShown == 0) { // on 2D, no chr selected for this project; CAS553 does not work if arc0!=0
+            if (prjObj.projSizeShown == 0) { // on 2D, no chr selected for this project
             	g.drawArc(cXrOuter,   cYrOuter,   rOuter2,   rOuter2,   curArc, projArc-1);//x,y,w,h, rotate, extent
                 g.drawArc(cXrInner-1, cYrInner-1, rInner2+2, rInner2+2, curArc, projArc-1);
                 
                 g.drawLine((int) circX(cX, rInner, curArc), (int)circY(cY, rInner, curArc), 
                 		   (int) circX(cX, rOuter, curArc), (int)circY(cY, rOuter, curArc));
-                int endArc = curArc+projArc-1; // CAS553 compute once 
+                int endArc = curArc+projArc-1; 
                 g.drawLine((int) circX(cX, rInner+1, endArc), (int)circY(cY, rInner+1, endArc), 
                 		   (int) circX(cX, rOuter,   endArc), (int)circY(cY, rOuter,   endArc));
             }
      
             int nextArc = curArc + projArc;
-        	if (nextArc > 360) nextArc = 360;	// CAS553 was after midArc computed
+        	if (nextArc > 360) nextArc = 360;	
         	
         	// Project name
-        	int sp = (bRotateText) ? 40 : 20; // CAS552 was constant 40;
+        	int sp = (bRotateText) ? 40 : 20; 
         	int midArc = (curArc + nextArc)/2;
             paintProjName(g, prjObj, midArc, rOuter + sp); // Sets font for name and chromosome numbers
             
@@ -601,7 +585,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
       
       // NOTE: blocks are assigned to only one chromosome of the ribbon pair
       // Group Loop 1: paint the non-on-top groups.
-        if (!showOne) {										 // CAS553 avoid loop if no ontop
+        if (!showOne) {										 
 	        for (Group grp : idx2GrpMap.values()) {
 	        	if (!grp.isSel) continue;
 	        	
@@ -609,7 +593,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	        		if (invChoice == 1 && !b.inverted) continue;
 	        		if (invChoice == 2 &&  b.inverted) continue;
 	 
-	        		Group grp1 = idx2GrpMap.get(b.gidx1); // allGrpsMap.get(b.g1)
+	        		Group grp1 = idx2GrpMap.get(b.gidx1); 
 	        		Group grp2 = idx2GrpMap.get(b.gidx2);
 	        		
 	        		if (!bShowSelf && (grp1.proj_idx == grp2.proj_idx)) continue;
@@ -623,7 +607,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	        }
         }
      // Group Loop 2: paint the on-top group.
-        if (onTop) { 							// CAS553 avoid loop if no ontop
+        if (onTop) { 							
 	        for (Group grp : idx2GrpMap.values()) {
 	        	if (!grp.isSel) continue;
 	        	
@@ -648,13 +632,13 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		
 		int cidx = (colorFirstPriority(grp1.proj_idx, grp2.proj_idx) ? grp1.colorIdx : grp2.colorIdx);
 		if (invChoice != 3) g.setColor(new Color(colorVec.get(cidx)));
-		else                g.setColor(blk.inverted ? blockN : blockP); // CAS554 add
-	       		//g.setColor(blk.inverted ? Color.green.brighter() : Color.red.darker()); // CAS521 for 1st loop, was swapped
+		else                g.setColor(blk.inverted ? blockN : blockP);
+	       		
 		int s1 = grp1.arcLoc(blk.s1);
 		int e1 = grp1.arcLoc(blk.e1);
 		int s2 = grp2.arcLoc(blk.s2);
 		int e2 = grp2.arcLoc(blk.e2);
-		int cXrBlk = cX-rBlock, cYrBlk = cY-rBlock, rBlk2 = 2*rBlock; // CAS553 made variables
+		int cXrBlk = cX-rBlock, cYrBlk = cY-rBlock, rBlk2 = 2*rBlock; 
 		int s1arc0 = s1 + arc0, e1arc0 = e1 + arc0, s2arc0 = s2 + arc0, e2arc0 = e2 + arc0;
 	
 		GeneralPath gp = new GeneralPath();
@@ -675,17 +659,16 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		g2.fill(gp);
 	}
 	// Paint project name
-	private void paintProjName(Graphics g, Project prjObj, int midArc, int locLabel) {// locLabel= rOuter + 40);
+	private void paintProjName(Graphics g, Project prjObj, int midArc, int locLabel) {
 		g.setColor(Color.black);
        
-		// CAS521 add font to reference project/chromosomes; CAS553 set font before get w/h
 		Font f = g.getFont();
     	f = setProjFont(0, f, prjObj.idx);
     	g.setFont(f);
 		    	
 		FontMetrics fm = g.getFontMetrics();
 		int nameH =   (int) (fm.getStringBounds(prjObj.displayName,g).getHeight());
-		int nameW =   (int) (fm.getStringBounds(prjObj.displayName,g).getWidth());// CAS552 was prjObj.name; not much diff
+		int nameW =   (int) (fm.getStringBounds(prjObj.displayName,g).getWidth());
        
     	if (bRotateText) {
     		int unrotW =  (int) (nameW/2); 
@@ -712,8 +695,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     		// mouse over coords; finger occurs passed the name in all 4 directions, but also right on text.
     		prjObj.labelR1 = locLabel - nameH;
     		prjObj.labelR2 = locLabel + nameH;
-    		prjObj.labelA1 = midArc - nameArcW;// CAS553 rm - 5;
-    		prjObj.labelA2 = midArc + nameArcW;// CAS553 rm + 5;
+    		prjObj.labelA1 = midArc - nameArcW;
+    		prjObj.labelA2 = midArc + nameArcW;
     	}
     	else {
     		double correctedArc = midArc + arc0;
@@ -725,8 +708,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			while (vArc > 360) {vArc -= 360;}
 			while (vArc < 0)   {vArc += 360;}
 			
-        	int nameX = (int) circX(cX, rOuter + 40, correctedArc);  // CAS553 was +50, 40 puts it closer to arc																
-        	int nameY = (int) circY(cY, rOuter + 40, correctedArc);  // CAS553 was +50
+        	int nameX = (int) circX(cX, rOuter + 40, correctedArc); 															
+        	int nameY = (int) circY(cY, rOuter + 40, correctedArc);  
 
         	int xOff = (int)(nameW*(1.0-Math.abs(correctedArc-180.0)/180.0)); // 0 at the right, 1 at the left
         	nameX -=  xOff;
@@ -735,7 +718,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	
     		g.drawString(prjObj.displayName,nameX,nameY);
     		
-    		// mouse-over coords; CAS553 made specific to non-rotated
+    		// mouse-over coords;
     		prjObj.labelR1 = nameX - 1; 
     		prjObj.labelR2 = nameX + nameW;
     		prjObj.labelA1 = nameY - nameH; // x,y is lower left
@@ -771,13 +754,12 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	//////////////////////////////////////////////////////////////
 	protected void clear() {idx2GrpMap.clear();}
 	
-	protected void resetToHome() { // CAS552 for new Home button
+	protected void resetToHome() { 
 		zoom = ZOOM_DEFAULT;
 		arc0 = ARC_DEFAULT;
 		bToScale =  bRotateText = false;
-		//These are not included: bShowSelf =bRevRef = false; if (bRevRef) reverse(); invChoice = 0;
 	}
-	protected boolean isHome() { // these checks match above; CAS552 add for Control
+	protected boolean isHome() { 
 		return zoom==ZOOM_DEFAULT && arc0==ARC_DEFAULT && !bToScale && !bRotateText;
 	}
 	public String getHelpText(MouseEvent event) { return helpText;} // frame.HelpBar
@@ -789,8 +771,8 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		
 		private String displayName;							// load from db
 		private Vector<Group> grps = new Vector<Group>();	// load from db
-		private String maxGrpName="";						// CAS553 add
-		private double projSizeShown = 0;					// selected groups in 2D; CAS553 add so quite recomputing
+		private String maxGrpName="";						
+		private double projSizeShown = 0;					// selected groups in 2D
 		
 		private int labelR1,labelR2,labelA1,labelA2;		// mouse-over coords; set in paintProjText
 		
@@ -804,7 +786,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			while (rs.next()){
 				Group g = new Group(rs.getInt(3), rs.getInt(1), idx, rs.getString(2), name);
 				grps.add(g);
-				if (g.grpName.length()>maxGrpName.length()) maxGrpName=g.grpName; // CAS553 add
+				if (g.grpName.length()>maxGrpName.length()) maxGrpName=g.grpName; 
 			}
 			
 			Mproject tProj = new Mproject();
@@ -812,11 +794,11 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			
 			displayName = name;
 			rs = dbc2.executeQuery("select value from proj_props where name='"+display_name+"' and proj_idx=" + idx);
-			if (rs.next()) displayName = rs.getString(1); // CAS560 was .first()
+			if (rs.next()) displayName = rs.getString(1); 
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting project");}
 		}
-		// CAS552 remove totalSizeShown() as computed once
+		
 		private void setTotalSize() {
 			for (Group g : grps){
 				if (g.isSel) projSizeShown += ((double)g.size);
@@ -854,7 +836,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 	private class Group {
 		private double size;
 		private int idx, proj_idx;
-		private String grpName, projName;
+		private String grpName;
 		private int a1, a2;		 		// Assigned values in setGrpArc during paintComponent
 		private int colorIdx = -1; 		// index into color vector
 		private boolean isSel = true; 	// 2D is selected
@@ -866,7 +848,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 			this.idx = idx;
 			this.proj_idx = proj_idx;
 			this.grpName = name;		// chromosome number
-			this.projName = pname;		// for debugging
 		}
 		private void addBlock(Block b) {blocks.add(b);}
 		
@@ -889,7 +870,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 	}
 	/************************************************************
-	 * CAS554 add for Two-color all blocks
+	 * Two-color all blocks
 	 */
 	public static Color blockP; 		
 	public static Color blockN;

@@ -9,7 +9,7 @@ import java.util.HashSet;
 import backend.Constants;
 import backend.Utils;
 import util.ErrorReport;
-import util.Utilities;
+import util.FileDir;
 
 /*********************************************************
  * Splits converted files into chromosome files. Must be converted files.
@@ -55,8 +55,8 @@ public class Split {
 	private void splitFasta() {
 		try {
 			String seqDirName = projDir + seqDir;
-			if (!Utilities.pathExists(seqDirName)) {
-				Utilities.showWarningMessage("Directory does not exist: " + seqDirName);
+			if (!FileDir.pathExists(seqDirName)) {
+				util.Popup.showWarningMessage("Directory does not exist: " + seqDirName);
 				return;
 			}	
 			File sf = new File(seqDirName, inFaFile + ".fna");
@@ -139,7 +139,7 @@ public class Split {
 				return;
 			}
 			String annoDirName = projDir + annoDir;
-			if (!Utilities.pathExists(annoDirName)) {
+			if (!FileDir.pathExists(annoDirName)) {
 				prt("Directory does not exist: " + annoDirName);
 				return;
 			}		

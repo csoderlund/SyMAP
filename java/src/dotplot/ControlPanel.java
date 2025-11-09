@@ -20,18 +20,19 @@ import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
 import util.Utilities;
+import util.Popup;
 
 /**********************************************************
  * The Control Panel for the DotPlot (top row)
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener { 
-    private Data data; 		// changes to zoom, etc set in data
+	private static final long serialVersionUID = 1L;
+	private Data data; 		// changes to zoom, etc set in data
     private Plot plot; 		// for show image and repaint
     private Filter filter=null; 								
   
     private JButton homeButton, minusButton, plusButton;
-    private JTextField numField;	// CAS573 add
+    private JTextField numField;	
     private JButton filterButton, showImageButton, editColorsButton;
     private JButton helpButtonLg, helpButtonSm, statsButton;	
     private JButton scaleToggle; 							 
@@ -51,30 +52,30 @@ public class ControlPanel extends JPanel implements HelpListener {
 				"/images/plus.gif", "Increase the size of the dotplot");
 		numField = Jcomp.createTextField("1",  
 				"Amount to increase/decrease +/-; Min 1, Max 10", 2);
-		scaleToggle  =  Jcomp.createBorderIcon(this, hb, buttonListener,
+		scaleToggle  =  Jcomp.createBorderIconButton(this, hb, buttonListener,
 				"/images/scale.gif", "Draw to BP scale."); 
 		
 		referenceSelector = new JComboBox <Project> ();
 		referenceSelector.addActionListener(buttonListener);
-		referenceSelector.setToolTipText("Reference: Change reference (x-axis) project.");
-		referenceSelector.setName("Reference: Change reference (x-axis) project.");	
+		referenceSelector.setToolTipText("Change reference (x-axis) project");
+		referenceSelector.setName("Change reference (x-axis) project");	
 		hb.addHelpListener(referenceSelector, this);
 		
 		filter = new Filter(d, this);
-		filterButton     = Jcomp.createButtonNC(this,hb, buttonListener, 
-				"Filters", "Filters: Change filter settings.");
+		filterButton     = Jcomp.createButtonGray(this,hb, buttonListener, 
+				"Filters", "Filters and display options");
 	
 		showImageButton  =  Jcomp.createIconButton(this, hb, buttonListener,
-				"/images/print.gif", "Save: Save as image.");
+				"/images/print.gif", "Save as image");
 		editColorsButton = Jcomp.createIconButton(this, hb, buttonListener,
-				"/images/colorchooser.gif", "Colors: Edit the color settings");
+				"/images/colorchooser.gif", "Edit the color settings");
 		helpButtonLg     = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
 		helpButtonSm     = Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/info.png", "Quick Help Popup");
 		statsButton = (JButton) Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/s.png", "Stats Popup");
 		
-		JPanel row = Jcomp.createGrayRowPanel(); 
+		JPanel row = Jcomp.createRowPanelGray(); 
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);
@@ -108,9 +109,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		cp.add(comp);
 		if (blank.length()>0) addToGrid(cp, gbl,gbc,new JLabel(blank), "");
     }
-    protected void kill() {filter.setVisible(false);} // DotPlotFrame on shutdown; only needed if !modal
-    protected void update() {plot.repaint();} // Filter change
-    
+   
     private ActionListener buttonListener = new ActionListener() {
 	    public void actionPerformed(ActionEvent evt) {
 			Object src = evt.getSource();
@@ -121,12 +120,12 @@ public class ControlPanel extends JPanel implements HelpListener {
 				boolean rp = false;
 			    if (src == homeButton) 		{data.setHome(); rp=true;} 
 			    else if (src == minusButton)  {
-			    	data.factorZoom(getNumVal()); // was 0.95; CAS573
+			    	data.factorZoom(getNumVal()); 
 			    	plot.bPlusMinusScroll=true;
 			    	rp=true;
 			    }
 			    else if (src == plusButton)      {
-			    	data.factorZoom(1/getNumVal()); // was 1/0.95; CAS573
+			    	data.factorZoom(1/getNumVal()); 
 			    	plot.bPlusMinusScroll=true;
 			    	rp=true;
 			    }
@@ -147,12 +146,12 @@ public class ControlPanel extends JPanel implements HelpListener {
 			    else if (src == helpButtonSm) 	  popupHelp();
 			    else if (src == statsButton)  	  popupStats();
 			    
-			    if (rp==true) plot.repaint();	// CAS573 they do not all require repaint
+			    if (rp==true) plot.repaint();	
 			}
 			setEnable();
 	    }
 	};
-	private double getNumVal() {// CAS573 add
+	private double getNumVal() {
 		int n = Utilities.getInt(numField.getText());
     	if (n<1) {
     		n = 1;
@@ -164,14 +163,31 @@ public class ControlPanel extends JPanel implements HelpListener {
     	}
     	return 1.0 - ((double) n * 0.05);
 	}
-	protected void setEnable() {
-		homeButton.setEnabled(!data.isHome());
+	private void popupHelp() {
+		String msg = 
+				"If multiple chr-by-chr cells are shown, click on a cell to view the cell only.";
+		msg +=  "\n\nFor the chr-by-chr cell view only:"
+				+ "\n   Select a block by double-clicking on it (boundary must be showing), "
+				+ "\n      or select a region by dragging the mouse and double-click on it."
+				+ "\n\n   The first click will turn the block/region beige, the second click will bring up"
+				+ "\n      the 2D display of the block/region." 
+				+ "\n\n   A selected beige block/region will stay in view "
+				+ "\n      while changing the DotPlot size using the +/- buttons.";
+		msg += "\n\nFor the genome display: change the reference by selecting it via the dropdown.";
+		msg += "\n\nSee ? for details.\n";
+		
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
+	private void popupStats() {
+		String msg = plot.prtCntsS(); 
+		Popup.displayInfoMonoSpace(this, "Dot plot stats", msg, false);
+	}
+	 
+    protected void kill() {filter.setVisible(false);} // DotPlotFrame on shutdown; only needed if !modal
     
-	public String getHelpText(MouseEvent event) {  // symap.frame.Helpbar
-		Component comp = (Component)event.getSource();
-		return comp.getName();
-	}
+    protected void update() {plot.repaint();} // Filter change
+    
+	protected void setEnable() {homeButton.setEnabled(!data.isHome());}
 	
 	protected void setProjects(Project[] projects) { // DotPlotFrame
 		if (projects == null) {
@@ -186,23 +202,9 @@ public class ControlPanel extends JPanel implements HelpListener {
 		if (projects.length == 2 && projects[0].getID() == projects[1].getID())
 			referenceSelector.setEnabled(false);
 	}
-	private void popupHelp() {
-		String msg = 
-				"If multiple chr-by-chr cells are shown, click on a cell to view the cell only.";
-		msg +=  "\n\nFor the chr-by-chr cell view only:"
-				+ "\n   Double-click on a synteny block (boundary must be showing), "
-				+ "\n      or create a region by dragging the mouse and double-click on it."
-				+ "\n   The first click will turn the region beige, the second click will bring up"
-				+ "\n      the 2D display of the region." 
-				+ "\n   To keep a region in view while using the +/- buttons to change the dotplot size, "
-				+ "\n      click on a block or select a region; the resulting beige region will stay in view.";
-		msg += "\n\nFor the genome display: change the reference by selecting it via the dropdown.";
-		msg += "\n\nSee ? for details.\n";
-		
-		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
-	}
-	private void popupStats() {
-		String msg = plot.prtCntsS(); // CAS571 renamed
-		util.Utilities.displayInfoMonoSpace(this, "Dot plot stats", msg, false);
+	
+	public String getHelpText(MouseEvent event) {  // symap.frame.Helpbar
+		Component comp = (Component)event.getSource();
+		return comp.getName();
 	}
 }

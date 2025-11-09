@@ -18,6 +18,7 @@ import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
+import util.Popup;
 
 /**********************************************************
  * DoAlignSynPair; Calls AlignMain, AnchorMain and SyntenyMain; Called from ManagerFrame
@@ -50,7 +51,7 @@ public class DoAlignSynPair extends JFrame {
 		Mproject mProj2 = mp.mProj2;
 		String dbName1 = mProj1.getDBName();
 		String dbName2 = mProj2.getDBName();
-		String toName =  (mProj1 == mProj2) ? dbName1 : dbName1 + " to " + dbName2; // CAS572 make naming consistent
+		String toName =  (mProj1 == mProj2) ? dbName1 + " to self (includes mirrored hits)": dbName1 + " to " + dbName2; 
 		
 		FileWriter syFW =   symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
@@ -62,12 +63,12 @@ public class DoAlignSynPair extends JFrame {
 		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
 		diaLog.msgToFileOnly(">>> " + toName + v);
 		
-		if (mp.bPseudo) {// CAS565 add, CAS571 set in params
+		if (mp.bPseudo) {
 			pseudoOnly(diaLog, mProj1, mProj2);
 			return;
 		}
 		
-		if (mp.bSynOnly) mp.removeSyntenyFromDB(); // CAS571 add
+		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
 		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
 		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  // Saved to DB in SumFrame
@@ -84,7 +85,7 @@ public class DoAlignSynPair extends JFrame {
 		final Thread statusThread = new Thread() {
 			public void run() {
 				
-				while (aligner.notStarted() && !Cancelled.isCancelled()) Utilities.sleep(1000);
+				while (aligner.notStarted() && !Cancelled.isCancelled()) Utils.sleep(1000);
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
 				if (Cancelled.isCancelled()) return;
 				
@@ -97,7 +98,7 @@ public class DoAlignSynPair extends JFrame {
 
 				while (aligner.getNumRunning()>0 || aligner.getNumRemaining()>0) {
 					if (Cancelled.isCancelled()) return;
-					Utilities.sleep(10000);
+					Utils.sleep(10000);
 					if (Cancelled.isCancelled()) return;
 					
 					// same as before loop
@@ -137,7 +138,7 @@ public class DoAlignSynPair extends JFrame {
 					
 					/** Anchors **/
 					long synStart = Utils.getTime(); // need time for symap part only
-					success = (mp.bSynOnly) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; CAS571 bSynOnly
+					success = (mp.bSynOnly) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
 					
 					if (Cancelled.isCancelled()) return;
 					if (!success) {
@@ -170,7 +171,7 @@ public class DoAlignSynPair extends JFrame {
 					success = false;
 					statusThread.interrupt();
 					diaLog.msg( "Not enough memory - increase 'mem' in symap script");
-					Utilities.showOutOfMemoryMessage(diaLog);
+					Popup.showOutOfMemoryMessage(diaLog);
 				}
 				catch (Exception e) {
 					success = false;
@@ -216,7 +217,7 @@ public class DoAlignSynPair extends JFrame {
 				String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
 						     "\nCancel:  The user removes the database and starts over";
 				
-				if (Utilities.showConfirm2("Remove pair", msgx)) { 
+				if (Popup.showConfirm2("Remove pair", msgx)) { 
 					System.out.println("Cancel alignment (removing alignment from DB)");
 						mp.removePairFromDB(true); 					// redo numHits;
 					System.out.println("Removal complete");
@@ -291,8 +292,8 @@ public class DoAlignSynPair extends JFrame {
 	private String buildLogAlignDir(Mproject p1, Mproject p2) {
 		try {
 			String logName = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName();
-			if (Utilities.dirExists(logName)) System.out.println("Log alignments in directory: " + logName);
-			else Utilities.checkCreateDir(logName, true /* bPrt */);
+			if (util.FileDir.dirExists(logName)) System.out.println("Log alignments in directory: " + logName);
+			else util.FileDir.checkCreateDir(logName, true /* bPrt */);
 			return logName + "/";
 		}
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}

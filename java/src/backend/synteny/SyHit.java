@@ -15,6 +15,7 @@ public class SyHit implements Comparable <SyHit> {
 	protected int mPctID;   // MUMmer %id; create average of chain to save in DB; never used
 	protected int coset;	// collinear set; 				 for bStrict to include cosets
 	protected int hitNum;   // hitnum computed down G1 side after clustering
+	protected int nGenes;	// gene_overlap for isSelf
 	
 	protected int midG1;	// (h.start1+h.end1)/2	used for synteny computations
 	protected int midG2;	// (h.start2+h.end2)/2
@@ -33,7 +34,7 @@ public class SyHit implements Comparable <SyHit> {
 	protected boolean mDPUsedFinal = false;
 	protected int nBlk = 0;		// Used in SyntenyMain.cosetBlock
 	
-	protected SyHit(int s1, int e1, int s2, int e2, int idx, int pctid, int coset, int hitnum){
+	protected SyHit(int s1, int e1, int s2, int e2, int idx, int pctid, int coset, int hitnum, int gene_overlap){
 		this.s1 = s1;
 		this.e1 = e1;
 		this.s2 = s2;
@@ -42,6 +43,7 @@ public class SyHit implements Comparable <SyHit> {
 		this.mPctID = pctid;
 		this.coset = coset;
 		this.hitNum = hitnum;
+		this.nGenes = gene_overlap; // for isSelf 
 		
 		midG1 = (s1+e1)/2;
 		midG2 = (s2+e2)/2;	
@@ -51,7 +53,8 @@ public class SyHit implements Comparable <SyHit> {
 				msg, hitNum, s1, e1, s2, e2, coset));
 	}
 	public String toString() {
-		return String.format(" Idx %,6d Hit# %,6d  S/E: %,10d %,10d %,10d %,10d ", mIdx, hitNum, s1, e1, s2, e2);
+		return String.format(" Hit# %,6d  Sort %,5d Prev %,5d  NDots %5d   S-E: %,10d %,10d %,10d %,10d  ", 
+				hitNum, mI2, mPrevI,  mNDots, s1, e1, s2, e2);
 	}
 	/////////////////////////////////////////////////////////////////////
 	public int compareTo(SyHit h2) { // For binarySearch

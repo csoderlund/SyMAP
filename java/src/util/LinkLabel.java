@@ -11,28 +11,20 @@ import java.awt.event.MouseListener;
 import javax.swing.JLabel;
 
 /**
- * Class <code>LinkLabel</code> is a JLabel with its text underlined and a 
- * transparent background that changes foreground color when the mouse 
- * enters and exits.
- * @see JLabel
- * @see MouseListener
+ * LinkLabel creates a JLabel with its text underlined and a 
+ * transparent background that changes foreground color when the mouse  enters and exits.
+ * Only used by ManagerFrame, ChrExpFrame, sequence.TextBox
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
+
 public class LinkLabel extends JLabel implements MouseListener {
+	private static final long serialVersionUID = 1L;
+
 	private static final Cursor HAND_CURSOR = new Cursor(Cursor.HAND_CURSOR);
 	
 	private Color defaultColor;
     private Color hoverColor;
     private String url; 
 
-    /**
-     * Creates a new <code>LinkLabel</code> instance with the given text and colors.
-     *
-     * @param text a <code>String</code> value of label's text
-     * @param color a <code>Color</code> value of default color for label's text
-     * @param hoverColor a <code>Color</code> value of the text's color when 
-     * the mouse is hovering over the label
-     */
     public LinkLabel(String text, Color color, Color hoverColor) {
 		super(text);
 		this.defaultColor = color;
@@ -58,32 +50,13 @@ public class LinkLabel extends JLabel implements MouseListener {
     	this(text, Color.blue.darker().darker(), Color.blue, url);
     }
 
-    /**
-     * Method <code>setColor</code> sets the color to be used when the mouse 
-     * is not over the label.
-     *
-     * @param color a <code>Color</code> value
-     */
     public void setColor(Color color) {
     	defaultColor = color;
     }
-
-    /**
-     * Method <code>setHoverColor</code> sets the color to be used when the 
-     * mouse is over the label.
-     *
-     * @param color a <code>Color</code> value
-     */
     public void setHoverColor(Color color) {
     	hoverColor = color;
     }
 
-    /**
-     * Method <code>paint</code> paints the component, painting the text and 
-     * the line underneath it.
-     *
-     * @param g a <code>Graphics</code> value
-     */
     public void paint(Graphics g) {
 		super.paint(g);
 		Rectangle r = getBounds();
@@ -91,42 +64,21 @@ public class LinkLabel extends JLabel implements MouseListener {
 			   this.getFontMetrics(this.getFont()).stringWidth(this.getText()),  
 			   r.height - this.getFontMetrics(this.getFont()).getDescent() + 1);
     }
-
-    /**
-     * Method <code>setupLink</code> should be used to set the size of the 
-     * component if it doesn't appear to be sizing itself.
-     */
     public void setupLink() {
 		FontMetrics fm = this.getFontMetrics(this.getFont());
 		setSize(fm.stringWidth(this.getText()),fm.getMaxAscent()+fm.getMaxDescent());
     }
-
-    /**
-     * Method <code>mouseEntered</code> handles when the mouse enters the 
-     * block link changing its color to the hover color.
-     *
-     * @param e a <code>MouseEvent</code> value
-     */
     public void mouseEntered(MouseEvent e) {
 		setTheColor(hoverColor);
 		setCursor(HAND_CURSOR);
     }
-
-    /**
-     * Method <code>mouseExited</code> handles when the mouse exits the link, 
-     * change its color back to the default.
-     *
-     * @param e a <code>MouseEvent</code> value
-     */
     public void mouseExited(MouseEvent e) {
 		setTheColor(defaultColor);
 		setCursor(null);
     }
-
-    public void mouseClicked(MouseEvent e) { // CAS507 remove check for Applet
+    public void mouseClicked(MouseEvent e) { 
     	if (url != null) util.Jhtml.tryOpenURL(url);
     }
-    
     public void mouseReleased(MouseEvent e) { }
     public void mousePressed(MouseEvent e) { }
 

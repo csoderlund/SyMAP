@@ -2,7 +2,6 @@ package backend;
 
 /********************************************
  * see ProgressDialog for writing to LOAD.log and symap.log
- * CAS535 removed Logger interface
  */
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,7 +11,7 @@ import util.ErrorReport;
 public class Log  {
 	public FileWriter logFile = null;
 	
-	public Log(FileWriter fw) { // backend.ProgSpec.doAlignment
+	public Log(FileWriter fw) { // backend.AlignRun, backend.Log
 		logFile = fw;
 	}
 	

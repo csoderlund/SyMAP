@@ -9,13 +9,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 
-import symap.Ext;		// all external programs stuff in Ext; CAS566
+import symap.Ext;		
 import util.ErrorReport;
 import util.Utilities;
+import util.FileDir;
 
 /************************************* 
  * Executes the alignment program for one query_to_target where either may have >1 chromosomes/scaffold
- * v560 renamed from ProgSpec
  */
 public class AlignRun implements Comparable<AlignRun> 
 {
@@ -96,7 +96,7 @@ public class AlignRun implements Comparable<AlignRun>
 			setStatus(STATUS_RUNNING);
 	
 			String doneFile = outFile + Constants.doneSuffix;
-			Utilities.deleteFile(doneFile);
+			FileDir.deleteFile(doneFile);
 			
 			String query = f1.getPath(); 
 			String targ  = f2.getPath();
@@ -134,7 +134,7 @@ public class AlignRun implements Comparable<AlignRun>
 		
 			if (rc == 0) {
 				cleanup(); // Cleanup intermediate files. 
-				Utilities.checkCreateFile(doneFile, "PS done");
+				FileDir.checkCreateFile(doneFile, "PS done");
 				setStatus(STATUS_DONE);
 			}
 			else {
@@ -156,12 +156,12 @@ public class AlignRun implements Comparable<AlignRun>
 			System.out.println("For mummer files, see " + resDir);
 			return; 
 		}
-		Utilities.deleteFile(intFilePath + ".delta"); // appears to be the only one MUMmer keeps if successfully completes
-		Utilities.deleteFile(intFilePath + ".cluster");
-		Utilities.deleteFile(intFilePath + ".mgaps");
-		Utilities.deleteFile(intFilePath + ".aaqry"); // promer only
-		Utilities.deleteFile(intFilePath + ".aaref"); // promer only
-		Utilities.deleteFile(intFilePath + ".ntref"); // nucmer only
+		FileDir.deleteFile(intFilePath + ".delta"); // appears to be the only one MUMmer keeps if successfully completes
+		FileDir.deleteFile(intFilePath + ".cluster");
+		FileDir.deleteFile(intFilePath + ".mgaps");
+		FileDir.deleteFile(intFilePath + ".aaqry"); // promer only
+		FileDir.deleteFile(intFilePath + ".aaref"); // promer only
+		FileDir.deleteFile(intFilePath + ".ntref"); // nucmer only
 	}
 	
 	protected void interrupt() {
@@ -184,7 +184,7 @@ public class AlignRun implements Comparable<AlignRun>
 	        
 	        // Execute command
 	        String [] x = strCommand.split("\\s+");
-	        process = Runtime.getRuntime().exec(x); // CAS547 single string depreciated
+	        process = Runtime.getRuntime().exec(x); 
 	        
 	        // Capture stdout and stderr
 	        InputStream    stdout = process.getInputStream();       

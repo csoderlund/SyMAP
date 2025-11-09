@@ -1,8 +1,5 @@
 package symapQuery;
 
-/**********************************************
- * The left side of the SyMAP Query panel, which shows the 3 sections and result tabs
- */
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -19,6 +16,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+/**********************************************
+ * The left side of the SyMAP Query panel, which shows the 3 sections and result tabs
+ */
 public class MenuPanel extends JPanel {
 	private static final long serialVersionUID = 7029184547060500871L;
 	
@@ -88,7 +88,7 @@ public class MenuPanel extends JPanel {
 		Iterator<JButton> iter = theResults.iterator();
 		while(iter.hasNext()) {
 			JButton temp = iter.next();
-			if (temp.getText().equals(oldLabel)) {// CAS564 was startsWith
+			if (temp.getText().equals(oldLabel)) {
 				temp.setText(newLabel);
 				buildPanel();
 				return true;

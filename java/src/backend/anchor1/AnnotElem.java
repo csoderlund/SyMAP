@@ -5,10 +5,9 @@ import java.util.Comparator;
 import java.util.Vector;
 
 /*****************************************
- * This is part of finding Cluster Hits (not part of loading annotation from AnnotLoadMain)
- * Created in Group, accessed in AnchorMain as bestOlapAnno
+ * Created in Group, accessed in AnchorMain1 as bestOlapAnno
  */
-public class AnnotElem implements Comparable <AnnotElem> {// CAS500 added <type>; comparable so can be used in TreeMap
+public class AnnotElem implements Comparable <AnnotElem> {
 	protected int start, end, len, idx, genenum;
 	protected boolean isRev;
 	protected GeneType mGT = GeneType.NA; // {Gene, NonGene, NA}

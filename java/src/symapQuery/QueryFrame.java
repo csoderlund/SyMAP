@@ -19,6 +19,7 @@ import javax.swing.JSplitPane;
 import database.DBconn2;
 import database.Version;
 import props.PersistentProps;
+import util.Popup;
 import util.Utilities;
 import util.ErrorReport;
 import symap.closeup.MsaMainPanel;
@@ -49,17 +50,17 @@ public class QueryFrame extends JFrame {
 			boolean useAlgo2, int cntUsePseudo, int cntSynteny, boolean isSelf) {
 		setTitle("Query " + title); // title has: SyMAP vN.N.N - dbName
 		
-		this.mFrame = mFrame;  //  for getMpair; CAS575 add
+		this.mFrame = mFrame;  //  for getMpair
 		this.title = title;
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
 		
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
 		String [] ab = getAbbrevNames();
-		for (int i=0; i<ab.length-1; i++) {// Dup abbrev are not checked in ProjParams; CAS575 
+		for (int i=0; i<ab.length-1; i++) {// Dup abbrev are not checked in ProjParams
 			for (int j=i+1; j<ab.length; j++) {
 				if (ab[i].equals(ab[j])) {
-					Utilities.showErrorMessage("Duplicate abbreviations of " + ab[i] + "\nPlease fix with symap and try again.");
+					Popup.showErrorMessage("Duplicate abbreviations of " + ab[i] + "\nPlease fix with symap and try again.");
 					return;
 				}
 			}
@@ -67,13 +68,13 @@ public class QueryFrame extends JFrame {
 		if (mProjs.size()==2 && mProjs.get(0).getIdx()==mProjs.get(1).getIdx()) {
 			int pairIdx = mFrame.getMpair(mProjs.get(0).getIdx(), mProjs.get(1).getIdx()).getPairIdx();
 			if (new Version(tdbc2).isVerLt(pairIdx, 575)) 
-				Utilities.showWarning("Self-synteny must be updated with A&S v5.7.5 or later to work in Queries");
+				Popup.showWarning("Self-synteny must be updated with A&S v5.7.5 or later to work in Queries");
 		}
 		
 		this.bUseAlgo2 = useAlgo2; 		
 		this.cntUsePseudo = cntUsePseudo;
 		this.cntSynteny = cntSynteny;
-		this.isSelf = isSelf; // abbrev are diff, all else the same; CAS575 add
+		this.isSelf = isSelf; // abbrev are diff, all else the same
 		
 		// for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -85,7 +86,7 @@ public class QueryFrame extends JFrame {
 		    }
 		});
 		
-		Rectangle screenRect = Utilities.getScreenBounds(this);
+		Rectangle screenRect = util.Jcomp.getScreenBounds(this);
 		screenWidth  = Math.min( MIN_WIDTH, screenRect.width);
 		screenHeight = Math.min(MIN_HEIGHT, screenRect.height); 	
 		setSize(screenWidth, screenHeight);	
@@ -123,12 +124,12 @@ public class QueryFrame extends JFrame {
 
 		allPanelVec = new Vector<JPanel> ();
 		
-		overviewPanel = new OverviewPanel(this);
-		queryPanel = 	new QueryPanel(this);
-		resultsPanel = 	new ResultsPanel(this);
+		qPanel 			= new QueryPanel(this);
+		overviewPanel 	= new OverviewPanel(this);
+		resultsPanel 	= new ResultsPanel(this);
 		
 		mainPanel.add(overviewPanel);
-		localQueryPane = new JScrollPane(queryPanel);
+		localQueryPane = new JScrollPane(qPanel);
 		mainPanel.add(localQueryPane);
 		mainPanel.add(resultsPanel);
 		
@@ -349,7 +350,7 @@ public class QueryFrame extends JFrame {
 	}
 	/**********************************************************/
 	protected DBconn2 getDBC() {return tdbc2;}
-	protected QueryPanel getQueryPanel() {return queryPanel;}
+	protected QueryPanel getQueryPanel() {return qPanel;}
 	protected Vector<Mproject> getProjects() {return mProjs;}
 	protected boolean isAlgo2() {return bUseAlgo2;};
 	protected boolean isSelf() {return isSelf;}
@@ -366,6 +367,8 @@ public class QueryFrame extends JFrame {
 	/**********************************************************/
 	private DBconn2 tdbc2 = null;
 	private ManagerFrame mFrame;
+	private QueryPanel qPanel = null;
+	
 	private Vector<Mproject> mProjs = null;
 	protected boolean bUseAlgo2=false;
 	protected boolean isSelf=false;			
@@ -382,8 +385,6 @@ public class QueryFrame extends JFrame {
 	
 	private Vector<JPanel> allPanelVec = null;
 
-	private QueryPanel queryPanel = null;
-	
 	private int resultCounter = 0; 	
 	private int msaCounter = 0; 	
 	private static final long serialVersionUID = 9349836385271744L;

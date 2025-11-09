@@ -3,10 +3,6 @@ package database;
 /*****************************************************
  * Schema update: select value from props where name='DBVER'
  * Pair update:   select idx, syVer from pairs
- * 
- * CAS506 created to provide an organized why for database updates.
- * MySQL v8 'groups' is a new special keywords, so the ` is necessary for that particular rename.
- * CAS546 removed table methods and use DBconn2
  */
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -15,6 +11,7 @@ import java.util.HashSet;
 import backend.Utils;
 import symap.Globals;
 import util.ErrorReport;
+import util.Popup;
 import util.Utilities;
 
 public class Version {
@@ -43,7 +40,7 @@ public class Version {
     		vx = vx.substring(0, v.length()-1);
     		n = util.Utilities.getInt(v);
     	}
-    	if (n<vnum) Globals.prt("PairIdx=" + pairIdx + " was built with " + v + " (" + n + "<" + vnum + ") ");
+    	if (n<vnum) Globals.tprt("PairIdx=" + pairIdx + " was built with " + v + " (" + n + "<" + vnum + ") ");
     	return n<vnum;
     }
     catch (Exception e) {ErrorReport.print(e, "Getting version"); return false;}
@@ -66,12 +63,12 @@ public class Version {
 			if (idb==dbVer) return; 
 			
 			if (idb>dbVer) { 
-				Utilities.showWarningMessage("This database schema is " + strDBver + "; this SyMAP version uses " + strVer +
+				Popup.showWarningMessage("This database schema is " + strDBver + "; this SyMAP version uses " + strVer +
 						"\nThis may not be a problem.....");
 				return;
 			}
 			
-			if (!Utilities.showYesNo("DB update", 					
+			if (!Popup.showYesNo("DB update", 					
 					"Database schema needs updating from " + strDBver + " to " + strVer +"\nProceed with update?")) return;
 			
 			System.out.println("Updating schema from " + strDBver + " to " + strVer);
@@ -272,7 +269,7 @@ public class Version {
 			System.out.println("Update blocks.grps");
 		}
 		
-	// CAS540x -dbd add pseudo_annot_hit.pair_idx	THIS IS SLOW
+	// -dbd add pseudo_annot_hit.pair_idx	THIS IS SLOW
 		HashSet <Integer> annotSet = new HashSet <Integer> ();
 		HashSet <Integer> hitSet = new HashSet <Integer> ();
 		rs = dbc2.executeQuery("select hit_idx, annot_idx from pseudo_hits_annot");
@@ -301,7 +298,7 @@ public class Version {
 		hitPairMap.clear(); hitSet.clear();
 		Globals.rprt("Update pseudo_hits_annot.pair_idx");
 		
-	// CAS540x -dbd add pseudo_annot_hit.grp_idx and proj_idx
+	// -dbd add pseudo_annot_hit.grp_idx and proj_idx
 	
 		HashMap <Integer, Integer> annotGrpMap = new HashMap <Integer, Integer> (); // annot_idx, grp_idx
 		
@@ -318,7 +315,7 @@ public class Version {
 		cnt=0;
 		for (int aidx : annotGrpMap.keySet()) {
 			cnt++;
-			if (cnt%5000==0) Globals.rprt("added " + cnt); // CAS561 use rprt
+			if (cnt%5000==0) Globals.rprt("added " + cnt); 
 			int gidx = annotGrpMap.get(aidx);
 			dbc2.executeUpdate("update pseudo_hits_annot set xgrp_idx=" + gidx + " where annot_idx=" +aidx);
 		}
@@ -346,7 +343,7 @@ public class Version {
 	}
 	
 	/************************************************************************
-	 * CAS548 if only DB content needs updating per project, do it here
+	 * if only DB content needs updating per project, do it here
 	 */
 	private void checkForContentUpdate() {
 	try {
@@ -357,7 +354,7 @@ public class Version {
 			int idx = rs.getInt(1);
 			String ver = rs.getString(2);
 			if (ver!=null) { // v5.5.2c
-				String x= ver.replaceAll("([a-z])", ""); // CAS552c remove any chars 
+				String x= ver.replaceAll("([a-z])", ""); 
 				x = x.replaceAll("\\.", ""); 
 				int y = Utilities.getInt(x);
 				pairVer.put(idx, y);
@@ -367,7 +364,7 @@ public class Version {
 		int chg=0;
 		for (int idx : pairVer.keySet()) {
 			int ver = pairVer.get(idx);
-			if (ver<548) { 			// Update for v548
+			if (ver<548) { 			
 				int algo1 = dbc2.executeCount("select value from pair_props where name='algo1' and pair_idx=" + idx);
 				
 				if (algo1==1) {
@@ -379,7 +376,7 @@ public class Version {
 					System.err.println(getProjNames(idx) + ": Synteny for needs to be rerun for v548 Algo2 new features");
 				}
 			}
-			else if (ver<556) {	// Update for v556 (added in v557)
+			else if (ver<556) {	
 				chg++;
 				System.err.println(getProjNames(idx) + ": Collinear sets for  needs to be rerun for v556 improvements");
 			}
@@ -422,7 +419,7 @@ public class Version {
 	/*************************************************************
 	 * Any update from ManagerFrame calls this
 	 */
-	public void updateReplaceProp() { // CAS543 new Version(DBconn2 dbc).updateReplaceProp
+	public void updateReplaceProp() { 
 		try {
 			replaceProps("UPDATE", Utilities.getDateOnly());
 			

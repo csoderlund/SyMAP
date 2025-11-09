@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 
 import util.ErrorReport;
 import util.Utilities;
+import util.FileDir;
 import database.DBconn2;
 import props.PropertiesReader;
 import symap.Globals;
@@ -40,11 +41,11 @@ public class Mproject implements Comparable <Mproject> {
 	private String strDate="";
 	private DBconn2 dbc2;
 	
-	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0; 
+	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0, numDraft=0; // numDraft to see !strict by default
 	private long length=0; 		// genome length - must be long
 	
-	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01; was idx2Name; CAS575
-	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01; CAS575
+	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
+	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01
 	private TreeMap<String,Integer>   grpName2Idx = new TreeMap <String, Integer> ();     // full name and name
 	private Pattern namePat;
 	private boolean bHasSelf=false; 
@@ -85,7 +86,7 @@ public class Mproject implements Comparable <Mproject> {
 	public Mproject() { // for display packages querying proj_props 
 		makeParams();
 	}
-	public Mproject copyForQuery() { // for isSelf; CAS575
+	public Mproject copyForQuery() { // for isSelf
 	try {
 		Mproject p = new Mproject(dbc2, projIdx, strDBName, "");
 		p.loadDataFromDB();
@@ -134,6 +135,7 @@ public class Mproject implements Comparable <Mproject> {
 	public int getGeneCnt()		{ return numGene;} // for Query Instructions
 	public String getLoadDate() {return strDate;}
 	public int getNumGroups() 	{ return numGroups; }
+	public int getNumDraft() 	{ return numDraft; } // # <1000000
 	
 	public short getStatus() 	{return nStatus; }
 	public boolean isLoaded() 	{return (nStatus==STATUS_IN_DB);}
@@ -143,7 +145,7 @@ public class Mproject implements Comparable <Mproject> {
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
 	
-	public void setIsSelf(String display, String abbrev) { // CAS575 add for isSelf
+	public void setIsSelf(String display, String abbrev) { // for isSelf
 		setProjVal(sDisplay, display); strDisplayName = display;
 		setProjVal(sAbbrev, abbrev); 
 	} 
@@ -278,21 +280,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		catch (Exception e){ErrorReport.print(e, "Failed to update parameters");}
 	}
-	/*******************************************************
-	 * For Summary and AlignProg
-	 */
-	/* moved to Pairs
-	public String getOrderParam() { 
-		if (hasOrderAgainst()) return " " + strDisplayName + ": Order against " + getOrderAgainst() ;
-		return "";
-	}
 	
-	public boolean isMasked()  		{ return getProjVal(aMaskNonGenes).contentEquals("1");} 
-	public String getMaskedParam() {
-		if (isMasked()) return " " + strDisplayName + ": Masked genes  ";
-		return "";
-	}
-	*/
 	/*************************************************************************
 	 * The View button on MF
 	 */
@@ -400,8 +388,7 @@ public class Mproject implements Comparable <Mproject> {
 		rs = dbc2.executeQuery(sql + "' AND name='proj_anno_date'");
 		fdate = (rs.next()) ? rs.getString(1) : "";
 		if (!file.trim().contentEquals("")) info += "\nAnno: " + file + "\nDate: " + fdate + "\n";
-		rs.close();
-				
+		rs.close();		
 		
 		Params paramObj = getParams(lMinLen);
 		if (!paramObj.isDBvalDef() && !paramObj.dbVal.contentEquals("")) {
@@ -557,7 +544,7 @@ public class Mproject implements Comparable <Mproject> {
 		catch (Exception e) {ErrorReport.print(e,"Load projects properties"); }
 	}
 	protected void loadParamsFromDisk() {
-		if (!Utilities.dirExists(Constants.dataDir)) {
+		if (!FileDir.dirExists(Constants.dataDir)) {
 			finishParams(); 
 			return;
 		}
@@ -658,13 +645,17 @@ public class Mproject implements Comparable <Mproject> {
 				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
 				"where xgroups.proj_idx=" + projIdx);	
 		
+        numDraft = dbc2.executeCount("select count(length<1000000) from pseudos " +
+				"join xgroups on xgroups.idx=pseudos.grp_idx  " +
+				"where xgroups.proj_idx=" + projIdx);	
+        
 		numSynteny = dbc2.executeCount("select count(*) from pairs where proj1_idx=" + projIdx +
 				" or proj2_idx=" + projIdx); 
 	}
 	private void writeNewParamsFile() { 
 		if (Utilities.isEmpty(strDBName)) return; // OrderAgainst writes the file, but not with Mproject
 		String dir = Constants.seqDataDir + strDBName;
-		Utilities.checkCreateDir(dir, true);
+		FileDir.checkCreateDir(dir, true);
 		
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists())
@@ -684,7 +675,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public String toString() { return strDBName + ":" + projIdx; }
 	
-	public void prtInfo() {// CAS575 made public for testing query
+	public void prtInfo() {// public for testing query
 		Globals.prt(String.format("   %-20s %s index %d", "DBname", strDBName, projIdx));
 		String key = paramLabel[sCategory];
 		Globals.prt(String.format("   %-20s %s", key, pLabelMap.get(key).projVal));
@@ -723,7 +714,7 @@ public class Mproject implements Comparable <Mproject> {
 	private void setProjVal(int idx, String value) {
 		String key = paramKey[idx];
 		pKeysMap.get(key).projVal = value;
-		pKeysMap.get(key).dbVal = value; // CAS575 add for Query self-synteny
+		pKeysMap.get(key).dbVal = value; // for Query self-synteny
 	}
 	
 	private String  getDBVal(int idx) {

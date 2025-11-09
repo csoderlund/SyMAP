@@ -12,21 +12,17 @@ import javax.swing.event.*;
 import javax.swing.*;
 
 import database.DBconn2;
-import symap.Globals;
 import symap.manager.Mproject;
 import util.ImageViewer;
 import util.ErrorReport;
-
+import util.Jcomp;
 /************************************************
  * Draws the blocks for a synteny pair
  */
-// CAS42 12/27/17 Seq-FPC has crashes from multiple problem. 
-// They are fixed, but Seq-FPC reverse leaves a blank page of blocks
-// CAS515 rearranged, made a little smaller
-// CAS516 add refType, fonts for upper text, scroll works for many scaffolds, skip when no blocks
+
 public class BlockViewFrame extends JFrame{
 	private static final long serialVersionUID = 1L;
-	public static final int MAX_GRPS =  150; // CAS42 12/6/17 - if #seqs>MAX_GRPS, blocks does not work right
+	public static final int MAX_GRPS =  150; 
 	public static final int maxColors = 100;
 	private final int fChromWidth = 8;
 	private final int fLayerWidth = 8;
@@ -83,8 +79,7 @@ public class BlockViewFrame extends JFrame{
 			this.getContentPane().removeAll();
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			
-			mainPane = new JPanel();
-			mainPane.setBackground(Color.white);
+			mainPane = Jcomp.createPagePanel();
 			mainPane.setLayout(new GridBagLayout()); 
 			scroller = new JScrollPane(mainPane);
 						
@@ -92,26 +87,25 @@ public class BlockViewFrame extends JFrame{
 			cPane.gridx = cPane.gridy = 0;	cPane.fill = GridBagConstraints.CENTER;
 			
 		// Top row
-			JPanel topRow = new JPanel();
-			topRow.setBackground(Color.white);
+			JPanel topRow = Jcomp.createRowPanel();
 			topRow.setLayout(new GridBagLayout());	
 			
 			GridBagConstraints cRow = new GridBagConstraints();
 			cRow.gridx = cRow.gridy = 0; cRow.fill = GridBagConstraints.SOUTHEAST;
 			
-			JLabel title = new JLabel(name2 + " synteny to " + refName); 
-			title.setFont(new Font("Verdana",Font.BOLD,18));
+			JLabel title = Jcomp.createBoldLabel(name2 + " to " + refName + " synteny", 18); 
+			
 			topRow.add(title,cRow);
 			cRow.gridx++; 	
 			topRow.add(new JLabel("          "),cRow);
 			
 			if (!bGtMaxGrps2 ) {
 				cRow.gridx++;	cRow.fill = GridBagConstraints.SOUTHEAST;
-				JLabel revLabel = new JLabel("<html><u>reverse</u>");
+				JLabel revLabel = Jcomp.createHtmlLabel("Reverse", "Reverse reference"); // ul
 				revLabel.addMouseListener(reverseClick);
 				topRow.add(revLabel,cRow);
 			}
-			else { // CAS42 12/6/17 - there was NO message if this happened
+			else { 
 				System.out.println("Warning: one of the genomes has >" + MAX_GRPS + " sequences");
 				System.out.println("   this causes the 'reverse' option to not work on the block view");
 				System.out.println("   use scripts/lenFasta.pl to find cutoff length for Minimum Length.");
@@ -120,11 +114,7 @@ public class BlockViewFrame extends JFrame{
 			cRow.gridx++;
 			topRow.add(new JLabel("      "),cRow);
 			
-			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); 
-			saveBtn =  new JButton(icon);
-			saveBtn.setBackground(Color.white);
-			saveBtn.setBorder(null);
-			saveBtn.setToolTipText("Save Image");
+			saveBtn = Jcomp.createIconButton("/images/print.gif", "Save Image");
 			saveBtn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					ImageViewer.showImage("Blocks", mainPane);
@@ -137,36 +127,30 @@ public class BlockViewFrame extends JFrame{
 			mainPane.add(topRow,cPane);
 			
 		// Legend
-		    JPanel keyRow = new JPanel();
-			keyRow.setBackground(Color.white);
-			JLabel key = new JLabel(name2 + " " + type2 + " color key"); 
-			key.setFont(new Font("Verdana",0,12));
+		    JPanel keyRow = Jcomp.createPlainPanel(); 
+			JLabel key = Jcomp.createVentanaLabel(name2 + " " + type2 + " color key", 12); 
 			keyRow.add(key);
 			cPane.gridy++; 
 			mainPane.add(keyRow,cPane);
 			
-			JPanel legendPane = new JPanel();
-			legendPane.setBackground(Color.white);
+			JPanel legendPane = Jcomp.createRowPanel();
 			drawLegend(legendPane);
 			cPane.gridy++; 
 			mainPane.add(legendPane,cPane);
 			
 		// Click for detail
-			JPanel selectRow = new JPanel();
-			selectRow.setBackground(Color.white);
-			JLabel select = new JLabel(refName + " " + refType + " - click for detail view"); 
-			select.setFont(new Font("Verdana",0,12));
+			JPanel selectRow = Jcomp.createPlainPanel();
+			JLabel select = Jcomp.createVentanaLabel(refName + " " + refType + " - click for detail view", 12); 
 			selectRow.add(select);
 			cPane.gridy++; 
 			mainPane.add(selectRow,cPane);
 		
-		// blocks
+		// Blocks panel
 			BlockPanel blockPanel = new BlockPanel(this);
 			blockPanel.setVisible(true);
 			cPane.gridy++;
 			mainPane.add(blockPanel,cPane);
 			
-			// CAS515 Dimension d = new Dimension(blockWindowWidth + 100, blockMaxHeight + chromLabelOffset + 250)
 			int nLevels = 0;
 			for (int grp : mLayout.keySet()) nLevels += mLayout.get(grp).size();			
 			int totalWinWidth = (mLayout.size()*(fChromWidth + fChromSpace)) + (nLevels*fLayerWidth); // used by legend
@@ -189,8 +173,8 @@ public class BlockViewFrame extends JFrame{
 		}
 		catch(Exception e){ErrorReport.print(e, "Initializing panel for blocks");}
 	}
-	public void dispose() { // override; CAS541 add
-		setVisible(false); // necessary?
+	public void dispose() { // override
+		setVisible(false); 
 		tdbc2.close();
 		super.dispose();
 	}
@@ -232,7 +216,7 @@ public class BlockViewFrame extends JFrame{
 			
 			refName = tdbc2.executeString("select value from proj_props where name='"+display_name+"' and proj_idx=" + mRefIdx);
 			refType = tdbc2.executeString("select value from proj_props where name='"+ grp_type +"' and proj_idx=" + mRefIdx);
-			if (refType == null) refType = "Chromosomes"; // CAS534 should be loaded, but if not...
+			if (refType == null) refType = "Chromosomes"; // should be loaded, but if not...
 			
 			name2 = tdbc2.executeString("select value from proj_props where name='"+ display_name+"' and proj_idx=" + mIdx2);
 			type2 = tdbc2.executeString("select value from proj_props where name='"+grp_type+"' and proj_idx=" + mIdx2);
@@ -260,14 +244,14 @@ public class BlockViewFrame extends JFrame{
 		int tmp = mIdx2;
 		mIdx2 = mRefIdx;
 		mRefIdx = tmp;
-		chromLabelOffset = 0; // CAS516
+		chromLabelOffset = 0; 
 		init();
 	}
 	private boolean layoutBlocks() {
 	try {
 		ResultSet rs;
 		
-		HashSet <Integer> chrBlocks = new HashSet <Integer> (); // CAS516 add 
+		HashSet <Integer> chrBlocks = new HashSet <Integer> (); 
 		String sql1="";
 		if (!reversed) sql1 = "select grp2_idx from blocks where pair_idx=" + mPairIdx;
 		else 		   sql1 = "select grp1_idx from blocks where pair_idx=" + mPairIdx;
@@ -306,7 +290,7 @@ public class BlockViewFrame extends JFrame{
 		rs.close();
 		
 		bpPerPx = maxChrLen/fBlockMaxHeight;
-		if (bpPerPx<=0) bpPerPx=1; // CAS42 12/27/17 - crashing on divide by 0 below 
+		if (bpPerPx<=0) bpPerPx=1; 
 		
 		// get the blocks in decreasing order of size.
 		// as we add each one to the list we assign it an index which is just its order in the list. 
@@ -339,7 +323,7 @@ public class BlockViewFrame extends JFrame{
 		for(int i = 0; i < mBlocks.size(); i++){
 			Block b = mBlocks.get(i);
 			TreeMap<Integer,Vector<Block>> chrLayout = mLayout.get(b.mGrpRef);
-			if (chrLayout==null) continue; // CAS42 12.27.17
+			if (chrLayout==null) continue; 
 			
 			// find the first level where this block can fit
 			int L;
@@ -382,7 +366,6 @@ public class BlockViewFrame extends JFrame{
 			}
 			chrLayout.get(L).add(b);
 		}
-		// CAS516 - removed code to add mirrored level on opposite where they do not exist
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Block layout");; return false;}
@@ -400,7 +383,7 @@ public class BlockViewFrame extends JFrame{
 		}
 	}
 	private void blockMouseMoved(MouseEvent m) {
-		if (mBlockRects.size()==0) return; // CAS42 12/27/17
+		if (mBlockRects.size()==0) return; 
 		for (int i = 0; i < mRefOrder.size(); i++) {
 			Rectangle blockRect = mBlockRects.get(i);
 			if (blockRect.contains(m.getPoint())) {				
@@ -452,8 +435,7 @@ public class BlockViewFrame extends JFrame{
 			g.setFont(chromeFont);
 			g.drawString(mRefNames.get(refIdx),x + chromXOffset, chromLabelOffset - 10 + y0);
 			
-			// g.setColor(new Color(0xE0,0xE0,0xE0)); // CAS505 was showing white on linux
-			g.setColor(Color.lightGray); // CAS505
+			g.setColor(Color.lightGray); 
 			g.fillRect(x,chromLabelOffset + y0, fChromWidth,chromHeight);
 			int yB = yA + chromHeight;
 			x += fChromWidth;
@@ -496,7 +478,7 @@ public class BlockViewFrame extends JFrame{
 		// unanchored blocks have grp_idx=0 (unGrp2=0)
 		rs = tdbc2.executeQuery("select count(*) as count from blocks where pair_idx=" + mPairIdx + 
 				" and (grp1_idx=" + unGrp2 +  " or grp2_idx=" + unGrp2 + ")");
-		rs.next(); // CAS560 was first()
+		rs.next(); 
 		if (rs.getInt("count") > 0) {
 			grpColorOrder.put(unGrp2, 0);
 			mGrps2.add(unGrp2);
@@ -508,8 +490,8 @@ public class BlockViewFrame extends JFrame{
 				" order by sort_order asc"); // sort_order is by name unless 'ordered_against'
 		int i = mGrps2.size();
 		while (rs.next() ) {
-			String name = rs.getString("name");
-			int idx = rs.getInt("idx");
+			String name = rs.getString(1);
+			int idx = rs.getInt(2);
 			mGrps2.add(idx);
 			mGrp2Names.put(idx, name);
 			grpColorOrder.put(idx,i);
@@ -525,10 +507,10 @@ public class BlockViewFrame extends JFrame{
 			f.setPreferredSize(d); f.setMinimumSize(d);
 			f.setVisible(true);
 			f.setBackground(new Color(mColors.get(j))); 
-			j++;  // CAS42 12/6/17 - let it cycle through colors, will have dups, but better than black
+			j++;  //  let it cycle through colors, will have dups, but better than black
 			if (j>=mColors.size()) j=0;
 			pane.add(f);
-			JLabel l = new JLabel(mGrp2Names.get(idx) + " ");
+			JLabel l = new JLabel(" " + mGrp2Names.get(idx) + " ");
 			l.setFont(legendFont);
 			pane.add(l);
 		}

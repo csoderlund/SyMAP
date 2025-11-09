@@ -5,7 +5,6 @@ package symap.sequence;
  * It is used for History, i.e back and forth
  */
 public  class TrackData {
-	private Class <?> trackClass;
 	private int project, otherProject;
 	private int orient;
 	
@@ -28,7 +27,6 @@ public  class TrackData {
 	
 	// This is called every time there is a change to the Display; save current state for back button
 	protected TrackData(Sequence seq) { 
-		trackClass        = seq.getClass();
 		project           = seq.projIdx;
 		start             = seq.chrDisplayStart;
 		end               = seq.chrDisplayEnd;
@@ -59,13 +57,13 @@ public  class TrackData {
 		bHighPopupGene  = sf.bHighGenePopup;
 		
 		bShowNoText  	= sf.bShowNoText;	
-		bShowBlock1stText = sf.bShowBlock1stText; // CAS572
+		bShowBlock1stText = sf.bShowBlock1stText; 
 		bShowBlockText  = sf.bShowBlockText;	
 		bShowCsetText 	= sf.bShowCsetText;	
 		bShowScoreText  = sf.bShowScoreText;	
 		bShowHitNumText = sf.bShowHitNumText;	
 		
-		bGeneNCheck 	= sf.bGeneNCheck;		 // CAS573
+		bGeneNCheck 	= sf.bGeneNCheck;		 
 		selectGeneObj   = sf.selectGeneObj;
 		
 		bHighHit2g2  	= sf.bHighG2x2;
@@ -121,12 +119,4 @@ public  class TrackData {
 		sf.bHighG2x1  	= bHighHit2g1;
 		sf.bHighG2x0  	= bHighHit2g0;
 	}
-
-	public Class <?> getTrackClass() {return trackClass;}
-	
-	public int getProject() {return project;}
-
-	public int getOtherProject() {return otherProject;}
-
-	protected int getGroup() {return grpIdx;}
 }

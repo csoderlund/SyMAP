@@ -15,15 +15,14 @@ import util.Jcomp;
 public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
 	
-	public OverviewPanel(QueryFrame parentFrame) {
+	protected OverviewPanel(QueryFrame parentFrame) {
 		theQueryFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
 		buildOverview();
 		add(mainPanel);
 	}
-	// CAS561 change Category to #Genes. Add note if no genes. 
-	// CAS563 Java20 was not formatting html right; this still uses a little html, but should be less resistant to change
+	
 	private void buildOverview() {
 		mainPanel = Jcomp.createPagePanel();
 		mainPanel.add(Box.createVerticalStrut(30));
@@ -68,10 +67,10 @@ public class OverviewPanel extends JPanel {
 			
 			// Pseudo
 			msg += "<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Pseudo</i>: "; 
-			int cntPseudo = theQueryFrame.cntUsePseudo; // CAS565 add
+			int cntPseudo = theQueryFrame.cntUsePseudo; 
 			int cntSynteny = theQueryFrame.cntSynteny;
 			
-			String pg = "Un-annotated Pseudo Gene# assigned";// CAS570 reworded
+			String pg = "Un-annotated Pseudo Gene# assigned";
 			if (projVec.size()==2)  msg += (cntPseudo==1) ? pg : "No " + pg;	
 			else {
 				if (cntPseudo>0 && cntPseudo!=cntSynteny)  

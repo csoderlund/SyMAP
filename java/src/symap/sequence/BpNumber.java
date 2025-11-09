@@ -4,11 +4,7 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 
 /**
- * CAS550 This was in a separate class called number, along with 2 other files.
- * It was moved to Sequence and all references to getBpPerCb() removed since it was always 1.
- * Then removed all BpNumber objects from Sequence, and this is what is left.
  * This originally was written for FPC CB units and Seq BP units.
- * CAS551 changed longs to ints
  */
 public class BpNumber {
 	public static final int DEFAULT_FRACTION_DIGITS = 2;
@@ -24,7 +20,7 @@ public class BpNumber {
 
 	protected static final HashMap<String,Integer> unitConversion = new HashMap<String,Integer>();
 	static {
-		unitConversion.put(BP, 1); // CAS512 new Long(1); CAS551 changed to int
+		unitConversion.put(BP, 1); 
 		unitConversion.put(KB, 1000);
 		unitConversion.put(MB, 1000000);
 		unitConversion.put(GB, 1000000000);
@@ -70,7 +66,6 @@ public class BpNumber {
 		return getFormatted(unit, bp0,bpPerPixel,numFormat);
 	}
 
-	
 	protected static String getFormatted(double bpSep, double cb, double bpPerPixel) {
 		return getFormatted(bpSep, cb,bpPerPixel,nf);
 	}

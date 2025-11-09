@@ -11,6 +11,7 @@ import java.util.Vector;
 
 import database.DBconn2;
 import props.PropsDB;
+import symap.Globals;
 import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import util.ErrorReport;
@@ -18,6 +19,7 @@ import util.Utilities;
 
 /**
  * This contains the arrays of data (Project and Tile (chr-chr)) and interface code with Filter
+ * And the interface into calling 2D
  */
 public class Data  {
 	protected static final double DIAG_HIT = 200;
@@ -46,7 +48,7 @@ public class Data  {
 	
 	private DBconn2 tdbc2;
 	private DBload dbLoad;
-	protected boolean isSelf=false; // CAS575 add
+	protected boolean isSelf=false; 
 	
 	// Called from DotPlotFrame; for ChrExp, called on first time its used
 	protected Data(DBconn2 dbc2, String type, boolean is2d) {
@@ -83,7 +85,6 @@ public class Data  {
 	/* init projects*/
 		Vector<Project> newProjects = new Vector<Project>(projIDs.length);
 		for (int i = 0;  i < projIDs.length;  i++) {// 1 -> 0
-			// Project p = Project.getProject(projects, 1, projIDs[i]); CAS575 projects were just cleared
 			Project p = new Project(projIDs[i], tdbc2);
 			newProjects.add( p );
 		}
@@ -142,15 +143,22 @@ public class Data  {
 			Project pY = getCurrentProj();
 			Group gX = ib.getGroup(X);
 			Group gY = ib.getGroup(Y);
-
+			
 			HfilterData hd = new HfilterData (); 
-			hd.setForDP(ib.getNumber()); // CAS573 only show block
+			hd.setForDP(ib.getNumber());
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),gY.getID(),Color.CYAN);	
 			symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),gX.getID(),Color.GREEN);
-			symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
-			symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
+			
+			if (pY.getID()==pX.getID() && gX.getID()==gY.getID() && ib.getStart(X)>ib.getStart(Y)) {// shows the full chr; CAS576
+				symap.getDrawingPanel().setTrackEnds(1,0,gY.getGrpLenBP());
+				symap.getDrawingPanel().setTrackEnds(2,0,gX.getGrpLenBP());
+			}
+			else {
+				symap.getDrawingPanel().setTrackEnds(1,ib.getStart(Y),ib.getEnd(Y));
+				symap.getDrawingPanel().setTrackEnds(2,ib.getStart(X),ib.getEnd(X));
+			}
 			symap.getFrame().showX();
 		}
 		else {
@@ -159,10 +167,10 @@ public class Data  {
 		}
 	}
 	
-	private void show2dArea(double x1, double y1, double x2, double y2) {
+	private void show2dArea(double x1, double y1, double x2, double y2) { 
 		Project pX = projects[X];
 		Project pY = getCurrentProj();
-		String track[] = {"",""};
+		String track[] = {"",""};		// group
 		for (int n = 0;  n < 2;  n++) {
 			track[n] = currentGrp[n].toString();
 		}
@@ -170,7 +178,6 @@ public class Data  {
 			System.out.println("No Sequences found to display! x=" + track[X] + " y=" + track[Y]);
 			return;
 		}
-		
 		try { 
 			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
@@ -183,9 +190,15 @@ public class Data  {
 		
 		symap.getDrawingPanel().setSequenceTrack(1,pY.getID(),Integer.parseInt(track[Y]),Color.CYAN);
 		symap.getDrawingPanel().setSequenceTrack(2,pX.getID(),Integer.parseInt(track[X]),Color.GREEN);
-		symap.getDrawingPanel().setTrackEnds(1,y1,y2);
-		symap.getDrawingPanel().setTrackEnds(2,x1,x2);
 		
+		if (pY.getID()==pX.getID() && currentGrp[X].getID()==currentGrp[Y].getID() && x1>y1) {
+			util.Popup.showInfoMsg("Self-synteny", "You must select below the diagonal for self-chromosomes");
+			return;
+		}
+		else {
+			symap.getDrawingPanel().setTrackEnds(1,y1,y2);
+			symap.getDrawingPanel().setTrackEnds(2,x1,x2);
+		}
 		symap.getFrame().showX();
 	}
 	
@@ -352,7 +365,7 @@ public class Data  {
 	protected long getVisibleGroupsSizeY(Group[] xGroups) { // plot.setDims
 		long size = 0;
 		for (Group g : getVisibleGroupsY(xGroups))
-			size += g.getGrpLenBP();		// CAS573 changed from getEffectiveSize
+			size += g.getGrpLenBP();		
 		return size;
 	}
 	protected long getVisibleGroupsSize(int axis) { // plot.setDims
@@ -448,7 +461,7 @@ public class Data  {
 				}
 				String inGrp =  (groupList == null) ? "" : " AND g.idx IN " + groupList;
 				
-				qry = "SELECT g.idx, g.sort_order, g.name, g.fullname, p.length " + // CAS571 add fullname
+				qry = "SELECT g.idx, g.sort_order, g.name, g.fullname, p.length " + 
 					  " FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
 					  " WHERE g.proj_idx=" + prj.getID() +  inGrp + 
 					  " AND g.sort_order > 0 ORDER BY g.sort_order";
@@ -563,7 +576,7 @@ public class Data  {
 			}
 			rs.close();	
 			
-			if (isSelf && gY.getID()==gX.getID()) {// create diagonal hit; CAS575 this replaces computing diagonal in AnchorMain1
+			if (isSelf && gY.getID()==gX.getID()) {// create diagonal hit
 				int len = tdbc2.executeInteger("select length from pseudos where grp_idx=" + gY.getID());
 				DPHit hit = new DPHit(len/2, len/2,  DIAG_HIT, 0, false, len);
 				hits.add(hit);

@@ -35,14 +35,15 @@ import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
+import util.Popup;
 import util.Utilities;
 
 /*******************************************************************
- * Control Panel for Circle View; CAS552 made more consistent with other interface
+ * Control Panel for Circle View
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanelCirc extends JPanel implements HelpListener  {
-    private CircPanel circPanel;
+	private static final long serialVersionUID = 1L;
+	private CircPanel circPanel;
     private HelpBar helpPanel;
   
     private JButton homeButton, plusButton, minusButton, rotateLButton, rotateRButton; 
@@ -65,7 +66,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
     		boolean isSelf, boolean hasSelf) { // isSelf - only self align; hasSelf - at least one project has self align
     	helpPanel = hb;
     	circPanel = cp;
-    	circPanel.bShowSelf = isSelf; // turn on by default since only self align
+    	circPanel.bShowSelf = isSelf; // turn on showing self since isSelf
     	
     	persistentProps = new PersistentProps(); // does not work unless this is global
 		cdh = new ColorDialogHandler(persistentProps); // needs to be called on creation to init non-default colors
@@ -78,15 +79,16 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 							"Decrease the circle size.");
 		plusButton    =  Jcomp.createIconButton(null, helpPanel, buttonListener, "/images/plus.gif",
 							"Increase the circle size.");
-		scaleToggle =  Jcomp.createBorderIcon(null, helpPanel, buttonListener, "/images/scale.gif",
-							"Toggle: Scale to genome and chromosome sizes in bp."); 
+		String msg = (bIsWG) ? "genome size." : "chromosome size.";
+		scaleToggle =  Jcomp.createBorderIconButton(null, helpPanel, buttonListener, "/images/scale.gif",
+							"Toggle: Scale to the " + msg); 
 		
 		rotateRButton  =  Jcomp.createIconButton(null, helpPanel, buttonListener,"/images/rotate-right.png",
 							"Rotate the image clock-wise.");
 		rotateLButton  =  Jcomp.createIconButton(null, helpPanel, buttonListener,"/images/rotate-left.png",
 							"Rotate the image counter-clock-wise.");
 		
-		rotateToggle =    Jcomp.createBorderText(null, helpPanel, buttonListener,"Rotate", 
+		rotateToggle =    Jcomp.createBorderButton(null, helpPanel, buttonListener,"Rotate", 
 							"Toggle: Rotate the text."); 
 		
 		colorButton  =  Jcomp.createIconButton(null, helpPanel, buttonListener,"/images/colorPalette.png",
@@ -97,17 +99,17 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
             }
         });
 		
-		viewPopupButton = Jcomp.createButtonNC(this,helpPanel, null /*has own listener*/,"View",
+		viewPopupButton = Jcomp.createButtonGray(this,helpPanel, null /*has own listener*/,"View",
 				"Click button for menu of options");
 		createViewPopup();
 		
-		selfToggle = Jcomp.createBorderText(null, helpPanel, buttonListener, "Self-align",
+		selfToggle = Jcomp.createBorderButton(null, helpPanel, buttonListener, "Self-align",
 							"Toggle: Show self-alignment synteny blocks"); 
 		if (isSelf) {
 			circPanel.bShowSelf = isSelf;
 			selfToggle.setBackground(Jcomp.getBorderColor(isSelf));
 		}
-		revToggle =  Jcomp.createBorderText(null,helpPanel,buttonListener,"Reverse",
+		revToggle =  Jcomp.createBorderButton(null,helpPanel,buttonListener,"Reverse",
 							"Toggle: Reverse reference, which re-assigns reference colors"); 
 		
 		saveButton = Jcomp.createIconButton(this,helpPanel,buttonListener,"/images/print.gif",
@@ -117,7 +119,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.circle);
 		
 		//// build row ///////////
-		JPanel row = Jcomp.createGrayRowPanel(); 
+		JPanel row = Jcomp.createRowPanelGray(); 
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
 		setLayout(gbl);							// If row.setLayout(gbl), cannot add Separators, but ipadx, etc work
@@ -133,11 +135,11 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		addToGrid(row, gbl,gbc,rotateRButton,sp1);
 		addToGrid(row, gbl,gbc,rotateLButton,sp1);
 		addToGrid(row, gbl,gbc,rotateToggle, sp2);
-		addToGrid(row, gbl,gbc,scaleToggle,  sp2); // needs extra space between image and spe
+		addToGrid(row, gbl,gbc,scaleToggle,  sp2); // needs extra space between image
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
 		
 		addToGrid(row, gbl,gbc,viewPopupButton, sp1); 		
-		if (hasSelf)          addToGrid(row, gbl,gbc,selfToggle,sp1); 		// only if there is self; CAS552 add check
+		if (hasSelf)          addToGrid(row, gbl,gbc,selfToggle,sp1); 		// only if there is self
 		if (bIsWG && !isSelf) addToGrid(row, gbl,gbc,revToggle, sp2);     	// only for whole genome 
 		addToGrid(row, gbl,gbc,colorButton,  sp2); 
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // end alter display
@@ -219,9 +221,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 				circPanel.makeRepaint();
 			}
 			else if (src == minusButton)   circPanel.zoom(0.95); 
-			else if (src == plusButton)    circPanel.zoom(1.05);  // CAS553 (1/0.95)
-			else if (src == rotateRButton) circPanel.rotate(-circPanel.ARC_INC); // CAS553 was -10
-			else if (src == rotateLButton) circPanel.rotate(circPanel.ARC_INC);  // CAS553 was 10
+			else if (src == plusButton)    circPanel.zoom(1.05);  
+			else if (src == rotateRButton) circPanel.rotate(-circPanel.ARC_INC); 
+			else if (src == rotateLButton) circPanel.rotate(circPanel.ARC_INC);  
 			else if (src == scaleToggle)	{	
 				circPanel.bToScale = !circPanel.bToScale;
 				scaleToggle.setBackground(Jcomp.getBorderColor(circPanel.bToScale));
@@ -267,7 +269,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 	}
     
     /////////////////////////////////////////////////////////////////
-	protected void setLastParams(int inv, boolean self, boolean rotate, boolean scale) { // CAS553 add
+	protected void setLastParams(int inv, boolean self, boolean rotate, boolean scale) { 
 		viewPopupButton.setText(actOptions[inv]);
 		selfToggle.setSelected(self); selfToggle.setBackground(Jcomp.getBorderColor(self));
 		scaleToggle.setSelected(scale); scaleToggle.setBackground(Jcomp.getBorderColor(scale));
@@ -287,9 +289,10 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			     + "\n   click an arc or a project name."
 				 + "\n\nSee ? for details.\n";
 				
-		util.Utilities.displayInfoMonoSpace(this, "Quick Circle Help", msg, false);
+		Popup.displayInfoMonoSpace(this, "Quick Circle Help", msg, false);
 	}
 	private class ChgColor extends JDialog implements ActionListener {
+		private static final long serialVersionUID = 1L;
 		private JButton okButton, defButton, cancelButton, info2Button;
 		private JRadioButton set1Radio, set2Radio;
 		private JRadioButton orderRadio, reverseRadio, shuffleRadio, noneRadio;
@@ -311,7 +314,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			
 			JPanel row0 = Jcomp.createRowPanel();
 			cdh.setCircle();
-			editColorButton = Jcomp.createIconButton("/images/colorchooser.gif", "Colors: Edit the color settings");
+			editColorButton = Jcomp.createBorderIconButton("/images/colorchooser.gif", "Edit the color settings");
 			editColorButton.addActionListener(this);
 			row0.add(new JLabel("Two-color all blocks: "));
 			row0.add(editColorButton);
@@ -320,7 +323,8 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			
 			int h=5;
 			JPanel row1 = Jcomp.createRowPanel();
-			set1Radio = Jcomp.createRadio("Color Set 1"); set2Radio = Jcomp.createRadio("Color Set 2");
+			set1Radio = Jcomp.createRadio("Color Set 1", "Lighter colors"); 
+			set2Radio = Jcomp.createRadio("Color Set 2", "Darker colors");
 			ButtonGroup grp = new ButtonGroup ();
 			grp.add(set1Radio); grp.add(set2Radio); 
 			set1Radio.setSelected(circPanel.colorSet==1);
@@ -329,18 +333,18 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			optionPanel.add(row1); optionPanel.add(Box.createVerticalStrut(3));
 			
 			JPanel row2 = Jcomp.createRowPanel();
-			scaleBox = Jcomp.createCheckBox("Scale", circPanel.bScaleColors);
+			scaleBox = Jcomp.createCheckBox("Scale", "< 1 darker, >1 lighter", circPanel.bScaleColors);
 			txtScale = Jcomp.createTextField(circPanel.scaleColors+"", 3);
 			row2.add(scaleBox); row2.add(txtScale);
 			optionPanel.add(row2); optionPanel.add(Box.createVerticalStrut(3));
 			
 			JPanel row3 = Jcomp.createRowPanel();
-			orderRadio = Jcomp.createRadio("Order");
-			reverseRadio = Jcomp.createRadio("Reverse");
+			orderRadio = Jcomp.createRadio("Order", "Sorts the colors so the blue-green colors are shown first");
+			reverseRadio = Jcomp.createRadio("Reverse", "Sorts the colors so the yellow-red colors are shown first");
 			
 			txtShuffle = Jcomp.createTextField(circPanel.seed+"", 2);
-			shuffleRadio = Jcomp.createRadio("Shuffle");
-			noneRadio = Jcomp.createRadio("None");
+			shuffleRadio = Jcomp.createRadio("Shuffle", "Randomize the colors");
+			noneRadio = Jcomp.createRadio("None", "No action");
 			
 			row3.add(orderRadio);    row3.add(Box.createHorizontalStrut(h));
 			row3.add(reverseRadio);  row3.add(Box.createHorizontalStrut(h));
@@ -399,7 +403,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 			setModal(true);
 			setBackground(Color.white);
 			setResizable(false);
-			setAlwaysOnTop(true); // CAS543; doesn't work on Ubuntu
+			setAlwaysOnTop(true); // doesn't work on Ubuntu
 			setLocationRelativeTo(null);	
 			setVisible(true);
 		}
@@ -425,7 +429,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 						d = Double.parseDouble(txtScale.getText());
 					} catch (Exception ex) {d= -1;}
 					if (d<0) {
-						Utilities.showErrorMessage("Invalid 'Scale' value; must be a real positive number.");
+						Popup.showErrorMessage("Invalid 'Scale' value; must be a real positive number.");
 						return;
 					}
 					circPanel.scaleColors = d;
@@ -437,7 +441,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 						s = Integer.parseInt(txtShuffle.getText());
 					} catch (Exception ex) {s = 0;}
 					if (s<=0) {
-						Utilities.showErrorMessage("Invalid 'Shuffle' value; must be positive integer.");
+						Popup.showErrorMessage("Invalid 'Shuffle' value; must be positive integer.");
 						return;
 					}
 					circPanel.seed = s;
@@ -489,7 +493,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 					+ "The color settings are saved between sessions.\n"
 					;
 					
-			util.Utilities.displayInfoMonoSpace(this, "Quick Circle Help", msg, false);
+			Popup.displayInfoMonoSpace(this, "Quick Circle Help", msg, false);
 		}
 	}
 }

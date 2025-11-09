@@ -14,6 +14,7 @@ import props.PropertiesReader;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
+import util.FileDir;
 
 /*********************************************************
  * this is mainly used in backend
@@ -24,8 +25,6 @@ import util.Utilities;
  * 5. AlignProj  save - save all to db
  * 6. Show file params on PairParams
  * 7. Show db params on Summary
- * CAS546 Algo2; CAS565 #Pseudo; CAS567 Concat, Orient, Order, CAS568 Mask, Order, CAS571 bPseudo,bSynteny, 
- * CAS572 strict
  */
 public class Mpair {
 	public  static final int FILE = 0;
@@ -36,7 +35,7 @@ public class Mpair {
 	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
 	private static final String SYNORIG = "  Synteny Original";
 	private static final String SYNSTRI = "  Synteny Strict";		
-	private static final String spp     = "       ";	// space to go before parameters; CAS575 add 2 more spaces
+	private static final String spp     = "       ";	// space to go before parameters;
 	
 	public Mproject mProj1, mProj2;
 	protected int pairIdx=-1; 		// accessed in ManagerFrame; 
@@ -62,8 +61,10 @@ public class Mpair {
 			"gene_scale", "exon_scale","len_scale","g0_scale", 
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
 	};
-	private static final String [] paramDef = {  // defMap value
-			"7", "0", "0",	"0",        // synteny:  hits, strict, orient, merge, 
+	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular; CAS576
+	private final int defStrict = 1, defAlgo = 16; // if annotated, [16]=0, [17]=1  
+	private String [] paramDef = {  
+			"7", "1", "0",	"0",        // synteny:  hits, strict, orient, merge; strict is default except for when there are many contigs
 			"1", "0", "0", 				// 	 order against: none, proj1->proj2, proj2->proj1
 			"1", "0", "0", 				// align: concat, mask1, mask2
 			"", "", "", "0", "0",		//        nucmer, promer, self, only, only
@@ -78,11 +79,26 @@ public class Mpair {
 		this.mProj1 = p1;		// order is based on pairs table, or either can come first
 		this.mProj2 = p2;
 		this.pairIdx = pairIdx;
-	
-		proj1Idx=mProj1.getIdx();
-		proj2Idx=mProj2.getIdx();
-		resultDir = "./" + Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
+		
+		proj1Idx = mProj1.getIdx();
+		proj2Idx = mProj2.getIdx();
 		isSelf = proj1Idx==proj2Idx;
+		
+		if (!isSelf && p1.hasGenes() && p2.hasGenes()) { 		// if annotated, algo2 is default
+			paramDef[defAlgo]="0"; paramDef[defAlgo+1]="1";
+		}
+		else {
+			paramDef[defAlgo]="1"; paramDef[defAlgo+1]="0";
+		}
+		if (p1.getNumDraft()>25 || p2.getNumDraft()>25) {		// strict is not good with many small contigs, i.e. ordering
+			paramDef[defStrict] = "0"; 
+		}
+		String x = Constants.orderDelim; 						// ..	also does not work welll with ordered contigs		
+		if ((mProj1.getDBName().contains(x) || mProj2.getDBName().contains(x))) {
+			paramDef[defStrict] = "0"; 
+		}
+		
+		resultDir = "./" + Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
 		
 		makeParams();
 		if (!isReadOnly)  loadFromFile(); // loads into FileMap
@@ -92,17 +108,15 @@ public class Mpair {
 	}
 	
 	/************************************************************************************/
-	// ManagerFrame.alignSelectPair popop when need align; 
-	// DoAlignSynPair terminal, dialog, symap.log
+	// ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgAllParams(int type) {
 		String amsg = getChgAlign(type, false);   
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
 		
-		return amsg + "\n" + cmsg + "\n" + smsg; // none are empty; CAS575 anymore
+		return amsg + "\n" + cmsg + "\n" + smsg; // none are empty
 	}
-	// ManagerFrame.alignSelectedPair popup when no align;  
-	// DoAlignSynPair terminal, dialog, symap.log
+	// ManagerFrame.alignSelectedPair popup when no align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgClustSyn(int type) { 
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
@@ -130,7 +144,7 @@ public class Mpair {
 			else if (isSelf)                                      return ALIGN + " NUCmer" + "\n" + msg;
 			else                                                  return ALIGN + " PROmer" + "\n" + msg;
 		}
-		if (isSelf) return ALIGN + " NUCmer" ; // always remind what is being used; CAS575 add
+		if (isSelf) return ALIGN + " NUCmer" ; // always remind what is being used
 		return ALIGN + " PROmer";
 	}
 	
@@ -147,7 +161,7 @@ public class Mpair {
 			if (isChg(type,"En_pile"))		msg = pjoin(msg, "Limit Exon-intergenic piles");
 			if (isChg(type,"II_pile"))		msg = pjoin(msg, "Allow Intron-Intron piles");
 			if (isChg(type,"In_pile"))		msg = pjoin(msg, "Allow Intron-intergenic piles");
-			if (isChg(type,"topn")) 		msg = pjoin(msg, "Top N piles =" + getTopN(type));
+			if (isChg(type,"topn")) 		msg = pjoin(msg, "Top N piles = " + getTopN(type));
 			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
 			
 			if (msg.equals("")) msg = ALGO2;
@@ -211,7 +225,7 @@ public class Mpair {
 	public Mproject getProj2() {return mProj2;}
 	
 	protected boolean isPairInDB() {return pairIdx>0;}
-	public boolean hasSynteny()    {return pairIdx>0;} // if A&S fails, it will not be in database; CAS571
+	public boolean hasSynteny()    {return pairIdx>0;} // if A&S fails, it will not be in database
 	
 	public boolean isNumPseudo(int type) {
 		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
@@ -363,7 +377,7 @@ public class Mpair {
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
 			 dbc2.resetAllIdx(); 				// check all, even though some are not relevant
 			 
-		     if (bHitCnt) ancObj.saveAnnoHitCnt(false); // Redo numhits for this pair; false is to not print CAS575
+		     if (bHitCnt) ancObj.saveAnnoHitCnt(false); // Redo numhits for this pair; false is to not print
 		}
 	    pairIdx = -1;
 	}
@@ -382,9 +396,9 @@ public class Mpair {
 	}
 	/********** called by PairParams on save; write all ***********/
 	public void saveParamsToFile(HashMap <String, String> valMap) { 
-		Utilities.checkCreateDir(Constants.dataDir, true); 
-		Utilities.checkCreateDir(Constants.seqRunDir, true); 
-		Utilities.checkCreateDir(resultDir, true); 
+		FileDir.checkCreateDir(Constants.dataDir, true); 
+		FileDir.checkCreateDir(Constants.seqRunDir, true); 
+		FileDir.checkCreateDir(resultDir, true); 
 		
 		File pfile = new File(resultDir,Constants.paramsFile);
 		try {

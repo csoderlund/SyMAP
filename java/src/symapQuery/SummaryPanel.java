@@ -25,10 +25,10 @@ public class SummaryPanel  extends JPanel {
 	private Vector <DBdata> rowsFromDB;
 	private  QueryPanel qPanel;
 	private SpeciesPanel spPanel;
-	private HashMap <String, String> projMap; // CAS575 quit passing these as args
+	private HashMap <String, String> projMap; 
 	private HashMap <Integer, Integer> geneCntMap; // computed in DBdata.makeGeneCounts
 	
-	private boolean isSelf=false; 			  // CAS575 add
+	private boolean isSelf=false; 			  
 	
 	public SummaryPanel(Vector <DBdata> rowsFromDB, QueryPanel qPanel,  // rows have been merged
 			HashMap <String, String> projMap, 			// Clust and Multi summary 
@@ -46,7 +46,7 @@ public class SummaryPanel  extends JPanel {
 		
 		computeStats(); 
 	}
-	public JPanel getPanel() {return statsPanel;}
+	protected JPanel getPanel() {return statsPanel;}
 	
 	/****************************************************
 	 * Compute Stats - fills in the rest of panel
@@ -106,7 +106,7 @@ public class SummaryPanel  extends JPanel {
 			
 			for (DBdata dd : rowsFromDB) {
 				int spIdx1 = dd.getSpIdx(0);
-				int spIdx2 = (isSelf) ? spIdx1+1 : dd.getSpIdx(1); // CAS575 add isSelf
+				int spIdx2 = (isSelf) ? spIdx1+1 : dd.getSpIdx(1); 
 				
 				counterInc(proj2hits, spIdx1, 1);
 				counterInc(proj2hits, spIdx2, 1);
@@ -139,7 +139,7 @@ public class SummaryPanel  extends JPanel {
 			}
 			// Add 1st line of summary
 			String label = String.format("Block (Hits): %,d (%,d)   Annotated: Both %,d  One %,d  None %,d", 
-					 blockCnt.size(), block, both, either, none); 				// CAS575 switched size and hits to be clearer
+					 blockCnt.size(), block, both, either, none); 				
 			if (minor>0)	 label += String.format("  Minor %,d", minor); 		// only >0 if Every+
 			if (collinear>0) label += String.format("   Collinear (Hits): %,d (%,d)", collinearCnt.size(), collinear);
 			if (maxGrp>0)    label += String.format("  Groups: #%,d", maxGrp);

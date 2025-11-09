@@ -31,11 +31,14 @@ public class SyBlock  implements Comparable <SyBlock>{
 	private TreeSet<Integer> mHitIdxSet; // quick search for hitVec in Merge
 	protected boolean hasChg=false;	     // MergeWith or Strict
 
-	protected SyBlock(String orient) { 
+	protected SyBlock(String orient, int grpIdx1, int grpIdx2) { 
 		hitVec = new Vector<SyHit>();
 		mHitIdxSet = new TreeSet<Integer>();
 		this.orient = orient;
 		tBlk = cntBlk++;
+		
+		mGrpIdx1 = grpIdx1;
+		mGrpIdx2 = grpIdx2;
 		
 		mS1 = mS2 = Integer.MAX_VALUE; mE1 = mE2 = 0;
 	}
@@ -85,7 +88,7 @@ public class SyBlock  implements Comparable <SyBlock>{
 	}
 	
 	/*******************************************
-	 * Checks to see whether the collinear block fit well in this block; called from Merge; CAS574 add
+	 * Checks to see whether the collinear block fit well in this block; called from Merge
 	 */
 	protected boolean fitStrict(SyBlock coblk, int fullGap2, boolean bPrt) {// hits sorted on side1; 
 		try {
@@ -104,9 +107,6 @@ public class SyBlock  implements Comparable <SyBlock>{
 				if (htA.hitNum > cHtBot.hitNum) htBot = htA;
 				
 				if (htTop!=null && htBot!=null) break;
-			}
-			if (SyntenyMain.bTraceBlks) {
-				
 			}
 			boolean isGood1 = true, isGood2 = true;
 			int diff1 = 0, diff2 = 0;
@@ -131,7 +131,7 @@ public class SyBlock  implements Comparable <SyBlock>{
 		catch (Exception e) {ErrorReport.print(e,"strictTrim"); return false;}
 	}
 	/******************************************************************/
-	// Block finalize: Compute avgGap, stdDev; CAS572 add; CAS574 do both averages in one call; CAS575 remove stddev
+	// Block finalize: Compute avgGap
 	// 
 	protected void avgGap() { 
 		int nGap = nHits-1; 
@@ -148,7 +148,7 @@ public class SyBlock  implements Comparable <SyBlock>{
 			SyHit htA = hitVec.get(i);
 			SyHit htB = hitVec.get(i+1);
 		
-			avgGap2 += Math.abs(htB.s2 - htA.e2); //if (!isOlap(htA.s2, htA.e2, htB.s2, htB.e2)) { CAS574 remove
+			avgGap2 += Math.abs(htB.s2 - htA.e2); 
 		}
 		avgGap2 /= nGap;
 		
@@ -194,7 +194,8 @@ public class SyBlock  implements Comparable <SyBlock>{
 		Globals.prt(x + y + z);
 	}
 	public String toString() {
-		return "Block#" + mBlkNum + " Grps " + mGrpIdx1 + " " + mGrpIdx2;
+		return String.format("Block# %3d Grps %3d,%3d  Hits %4d  S-E %,10d %,10d %,10d %,10d ", 
+				mBlkNum, mGrpIdx1, mGrpIdx2, hitVec.size(), mS1, mE1, mS2, mE2);
 	}
 	public int compareTo (SyBlock b2) {
 		if (mS1 != b2.mS1) 	return mS1 - b2.mS1;

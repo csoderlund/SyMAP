@@ -25,7 +25,6 @@ public class PropsDB {
 		dbProjProp =   new DatabaseProperties();
 		load();
 	}
-	
 	private void load()  {
 		try {
 			pairs.clear();
@@ -68,7 +67,7 @@ public class PropsDB {
 		catch (Exception e) {ErrorReport.print(e, "Project pool reset");}
 	}
 	
-	public int getPairIdx(int pp1, int pp2) { // MapperPool to check version; CAS575
+	public int getPairIdx(int pp1, int pp2) { // MapperPool to check version
 		if (hasPair(pp1, pp2)) return getPair(pp1, pp2).pid;
 		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).pid;
 		return -1;
@@ -78,22 +77,18 @@ public class PropsDB {
 		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).isAlgo1;
 		return false;
 	}
-	
 	public String getProperty(int projectID, String property) { // Sequence
 		return dbProjProp.getProperty((Object) projectID,property);
 	}
-
 	public String getName(int projectID) { // Sequence
 		for (int i = 0; i < projects.length; i++) {
 			if (projects[i].id == projectID) return projects[i].name;
 		}
 		return null;	
 	}
-
 	public String getDisplayName(int projectID) { // Sequence
 		return getProperty(projectID,"display_name");
 	}
-
 	public boolean hasPair(int p1, int p2) { // MapperPool
 		for (Pair pp : pairs) {
 			if (pp.p1 == p1 && pp.p2 == p2)
@@ -106,7 +101,6 @@ public class PropsDB {
 		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).hasPseudo;
 		return false;
 	}
-	
 	public boolean isSwapped(int pX, int pY) { // Data
 		Pair pair = getPair(pX, pY);
 		return (pair == null || pX == pair.getP1());
@@ -156,8 +150,8 @@ public class PropsDB {
 	/**
 	 * Class DatabaseProperties can load properties from a database for quick access.
 	 */
-	@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 	private class DatabaseProperties extends Properties {
+		private static final long serialVersionUID = 1L;
 		public static final String SEPARATOR = ":##:";
 
 		private DatabaseProperties() {super();}

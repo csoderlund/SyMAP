@@ -12,25 +12,23 @@ import javax.swing.JLabel;
 import util.LinkLabel;
 
 /******************************************************
- * Draws the yellow annotation description box
+ * Draws the gray annotation description box
  * They stay the same width regular of expand/shrink, instead turns on scroll bar
- * CAS544 moved from util to sequence - only used for yellow text box; removed rect because not using popup from here
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TextBox extends JComponent  {
-	private Color borderColor = Color.black;				// CAS554 added border color
-	private final Color bgColor = new Color(240,240,240);   // CAS503, CAS554 was yellow, now light gray
-	private float stroke = 3f;								// CAS554 added strong
+	private static final long serialVersionUID = 1L;
+	private Color borderColor = Color.black;				
+	private final Color bgColor = new Color(240,240,240);   
+	private float stroke = 3f;								
 	private final int INSET = 5;
 	private final int startWidth = 600;
-	private final int wrapLen=40, wrapMaxLen=50, wrapShortLen=10, maxLines=3; // CAS554 made final
+	private final int wrapLen=40, wrapMaxLen=50, wrapShortLen=10, maxLines=3; 
 	
 	private int width=0, tx = INSET, ty = INSET;
 	private Font theFont;
 	
-	// CAS548 Specific for yellow box called from Sequence; two lines input
-	// greedy algorithm 
-	public TextBox(Vector<String> lines, Font font, int x, int y, Color bgColor) {
+	// Specific for gray box called from Sequence; greedy placement algorithm 
+	protected TextBox(Vector<String> lines, Font font, int x, int y, Color bgColor) {
 		if (lines.size()!=3) return;
 		
 		theFont=font;
@@ -75,7 +73,7 @@ public class TextBox extends JComponent  {
 		setLocation(x, y);
 	}
 	private void setLabel(String line) {
-		if (line.length()>wrapLen) line = line.substring(0,wrapLen)+"..."; // CAS554 line with no break
+		if (line.length()>wrapLen) line = line.substring(0,wrapLen)+"..."; 
 		JLabel label = new JLabel(line);
 		
 		label.setLocation(tx, ty);

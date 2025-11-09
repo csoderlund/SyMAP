@@ -19,7 +19,6 @@ import util.Utilities;
 
 /**************************************************
  * Computes synteny
- * CAS572 new Strict; CAS574 put synteny finder and finish in their own classes 
  * Strict: uses original algorithm but:
  * 		uses stricter gaps and larger PCC (see setCutoffs)
  * 		creates blocks with bOrient first, then remove hit-wires that cross may others
@@ -31,7 +30,7 @@ public class SyntenyMain {
 	public  static boolean bTrace = false; 		  // -bt trace; set at command line 
 	protected static boolean bTraceBlks = bTrace; // local set
 	
-	private boolean bVerbose = Constants.VERBOSE; // CAS575 remove static
+	private boolean bVerbose = Constants.VERBOSE; 
 	
 	protected static final String orientSame = "==";	// must be ++ or --;  
 	protected static final String orientDiff = "!=";	// must be +- or -+
@@ -71,14 +70,15 @@ public class SyntenyMain {
 	private int ngaps;										  // Depends on genome length && number hits
 	private Vector<Integer> gap1list = new Vector<Integer>(); // Set the decreasing gap search points 
 	private Vector<Integer> gap2list = new Vector<Integer>(); 
+	
+	private final double fDiag = 0.4, fGeneDiag=0.8;					  // isSelf, aligns to close to diagonal; CAS576
 
 	// final stats
 	private boolean bSuccess = true;
 	private long startTime;
 	private int totalBlocks=0, cntMerge=0, cntSame=0, cntDiff=0;
-	private int cntGrpMerge=0, cntGrpSame=0, cntGrpDiff=0; 
-	private int cntSetNB=0, cntSetNBhits=0;
-	private int cntTrIn=0, cntTrOlap=0,  cntMgCoset=0, cntMgSkip=0, cntTrCsChg=0; 
+	private int cntGrpMerge=0, cntGrpSame=0, cntGrpDiff=0, cntSetNB=0, cntSetNBhits=0; 			// Verbose
+	private int cntTrIn=0, cntTrOlap=0, cntTrCoset=0, cntTrSkip=0, cntTrCsChg=0, cntTrRmDiag=0; // bTrace
 	
 	public SyntenyMain(DBconn2 dbc2, ProgressDialog log, Mpair mp) {
 		this.dbc2 = dbc2;
@@ -130,6 +130,7 @@ public class SyntenyMain {
 		
 		if (bVerbose) 	Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		else 			Globals.rprt("group-x-group pairs to analyze");
+		String grpMsg = nGrpGrp + " of " + maxGrp;
 		
 		for (int grpIdx1 : mProj1.getGrpIdxMap().keySet()) {
 			for (int grpIdx2 : mProj2.getGrpIdxMap().keySet()) {
@@ -137,35 +138,36 @@ public class SyntenyMain {
 				if (isSelf && grpIdx1<grpIdx2) continue; // DIR_SELF (old >) must match direction of loadHitsForGrpPair; mirror later
 				
 				SyBlock.cntBlk = 1;
-				cntGrpMerge=cntGrpSame=cntGrpDiff=0;
+				cntGrpMerge=cntGrpSame=cntGrpDiff=cntTrRmDiag=0;
 				blockVec = new Vector<SyBlock>(); // create for both orients so can be number sequentially
 				
-				if (!bOrSt) buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientMix); 
+				if (!bOrSt) buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientMix, grpMsg); 
 				else { 									// restrict to same orientation; 
-					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientSame); 
-					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientDiff);
+					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientSame, grpMsg); 
+					buildObj.doChrChrSynteny(grpIdx1,grpIdx2, orientDiff, grpMsg);
 				}
 				if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close();return false;}
 				
 				finishObj.doChrChrBlkFinish(grpIdx1,grpIdx2); 			// save to DB; need to be combined bOrient; 
 				
 				cntSame += cntGrpSame; cntDiff += cntGrpDiff; cntMerge += cntGrpMerge;
-				if (bVerbose && blockVec.size()>0) { 		
+				if ((bTrace || bVerbose) && blockVec.size()>0) { 	
+					Globals.rclear();
 					String msg = String.format("Blocks %-12s", mProj1.getGrpFullNameFromIdx(grpIdx1) + "-" + mProj2.getGrpFullNameFromIdx(grpIdx2));
 					if (bOrSt)                         msg += String.format("  Orient:  Same %3d   Diff %3d ",cntGrpSame, cntGrpDiff);
 					if (!pMerge.equals("0") || bTrace) msg += String.format("  Merged %3d ", cntGrpMerge);
+					if (isSelf && cntTrRmDiag>0 && bTrace) msg += String.format("  Remove close to diagonal %3d ", cntTrRmDiag);
 					Utils.prtIndentNumMsgFile(mLog, 1, blockVec.size(), msg);	
 				}
-				else {
-					String t = Utilities.getDurationString(Utils.getTime()-startTime);
-					Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); 
-				}
+				String t = Utilities.getDurationString(Utils.getTime()-startTime);
+				
+				grpMsg = " (" + nGrpGrp + " of " + maxGrp + " pairs (" + t + "))  ";
+				Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); 
 				blockVec.clear();
 			}
 		}	
 		Globals.rclear();
 		
-		// CAS575 already saved by ChrChr; if (bIsSelf) rwObj.symmetrizeBlocks();	
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close();return false;}
 		
 		// Final number for output to terminal and log
@@ -178,10 +180,9 @@ public class SyntenyMain {
 			msg = String.format("Collinear Sets not in blocks (%,d total hits)", cntSetNBhits);	
 			Utils.prtIndentNumMsgFile(mLog, 1, cntSetNB, msg);
 		}
-		
 		if (bTrace) {
 			Utils.prtIndentMsgFile(mLog, 3, String.format("Merge: In %,d    Olap %,d", cntTrIn, cntTrOlap));
-			Utils.prtIndentMsgFile(mLog, 3, String.format("Coset Blk %,d    Skip %,d    Add hits to existing blk %,d", cntMgCoset, cntMgSkip, cntTrCsChg));
+			Utils.prtIndentMsgFile(mLog, 3, String.format("Coset Blk %,d    Skip %,d    Add hits to existing blk %,d", cntTrCoset, cntTrSkip, cntTrCsChg));
 		}
 		Utils.prtMsgTimeDone(mLog, "Finish Synteny", startTime);
 
@@ -197,7 +198,6 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;}
 		
 	/** Finish **********************************************************/
-		// CAS575 query works for self now; if (bIsSelf) rwObj.writeResultsToFile(mLog, resultDir); 
 		tdbc2.close();
 		return bSuccess; 								// Full time printed in calling routine
 	}
@@ -296,6 +296,8 @@ public class SyntenyMain {
 		private String orient;
 		private RWdb rwObj;					// all read/write db methods
 		private Vector <SyHit>   hitVec;    // chr-chr hits; populated in RWdb for each new chr-chr; 
+		private int grpIdx1, grpIdx2;
+		private String title, grpMsg;
 		
 		private BuildBlock(RWdb rwObj) {
 			this.rwObj = rwObj;
@@ -303,18 +305,19 @@ public class SyntenyMain {
 		/************************************************************************
 		 * Main synteny method; orient may be "==", "!=" or ""
 		 *******************************************************************/
-		private void doChrChrSynteny(int grpIdx1, int grpIdx2, String o)  {
+		private void doChrChrSynteny(int grpIdx1, int grpIdx2, String o, String grpMsg)  {
 		try {
+			this.grpIdx1 = grpIdx1;
+			this.grpIdx2 = grpIdx2;
 			orient = o;	// "", ==, !=
-			boolean isGrpSelf = (grpIdx1 == grpIdx2);
+			this.grpMsg = grpMsg;
+			title = mProj1.getGrpFullNameFromIdx(grpIdx1)+ "-" + mProj2.getGrpFullNameFromIdx(grpIdx2);
 			
 		/* Read hits */
-			hitVec = rwObj.loadHitsForGrpPair(grpIdx1, grpIdx2, isGrpSelf, orient);
+			hitVec = rwObj.loadHitsForGrpPair(grpIdx1, grpIdx2, orient);
 			if (hitVec==null) {bSuccess=false; return;}
 			
 			if (hitVec.size() < pMindots) return; // not error
-			
-			if (bTrace) Globals.prt(String.format(">> %s %s  %s  Hits %,d                   ",  mProj1.getGrpFullNameFromIdx(grpIdx1), mProj2.getGrpFullNameFromIdx(grpIdx2), o, hitVec.size()));
 			
 			Collections.sort(hitVec); 									   // Sort by G2 hit midpoints
 			for (int i = 0; i < hitVec.size(); i++) hitVec.get(i).mI2 = i; // index of the hit in the sorted list
@@ -361,13 +364,15 @@ public class SyntenyMain {
 				}
 			}
 			// Final blocks
-			SyBlock blk = new SyBlock(orient);
+			SyBlock blk = new SyBlock(orient, grpIdx1, grpIdx2);
 			while (longestChain(2, low1, low2, blk)){  
 				if (isGoodCorr(blk)){
 					blockVec.add(blk);				   // final: add new block to blockVec
 					finalBlock1(blk);
 					
-					blk = new SyBlock(orient); 
+					blk = new SyBlock(orient, grpIdx1, grpIdx2); 
+					Globals.rclear();
+					Globals.rprt(blockVec.size() + " blocks for " + title + grpMsg); 
 				}
 				else blk.clear();
 			}
@@ -375,7 +380,7 @@ public class SyntenyMain {
 		}
 		/************************************************************/
 		private boolean hasGoodChain(int gap1, int gap2){ // createBlockVec, binarySearch
-			SyBlock blk = new SyBlock(orient); 
+			SyBlock blk = new SyBlock(orient, grpIdx1, grpIdx2); 
 			while (longestChain(1, gap1, gap2, blk)){ 
 				if (isGoodCorr(blk)) {
 					resetDPUsed();
@@ -443,15 +448,15 @@ public class SyntenyMain {
 					
 					if (savHt1 == null) 					savHt1 = ht1;
 					else if (ht1.mScore > savHt1.mScore) 	savHt1 = ht1;
-					else if (ht1.mScore >= savHt1.mScore && ht1.mNDots > savHt1.mNDots) savHt1 = ht1;	
+					else if (ht1.mScore >= savHt1.mScore && ht1.mNDots > savHt1.mNDots) savHt1 = ht1;
 				}
 				else {
-					ht1.mNDots 	= 1;
+					ht1.mNDots = 1;
 					ht1.mScore = 1;
-					ht1.mPrevI 	= -1;
+					ht1.mPrevI = -1;
 				}
 			} // end hit loop
-			
+
 			if (savHt1==null || savHt1.mNDots < fMindots_keepbest) return false; // fMindots_keepBest=3
 			
 		/* Need to build block for isGoodBlock even if it is then discarded */
@@ -552,15 +557,15 @@ public class SyntenyMain {
 					else cntNoBlk++;
 				} // end hit loop
 				
-				if (!bStrict) {							    // CAS574 was part of cntNoBlk 
+				if (!bStrict) {							    
 					if (nBlk==0) {cntSetNB++; cntSetNBhits += cset.setVec.size(); }
 					continue;
 				}
 				
 				if (nBlk==0) { 			 	 		// new block            		
-					SyBlock cblk = new SyBlock(orient);		// assigned nBlk on creation
+					SyBlock cblk = new SyBlock(orient, grpIdx1, grpIdx2);		// assigned nBlk on creation
 					for (SyHit ht : cset.setVec)  
-						if (ht.nBlk==0) cblk.addHit(ht);	// CAS574 wasn't checking this
+						if (ht.nBlk==0) cblk.addHit(ht);	
 			
 					cblk.mCase = "N"; 
 					cblk.setActualCoords();					// better for possible merge
@@ -584,7 +589,7 @@ public class SyntenyMain {
 				// else nBlk>0 and all are in a block
 			} // end coset loop
 			
-			// If Cosets merge, they have a better change of merging into a bigger block; CAS574 add this
+			// If Cosets merge, they have a better change of merging into a bigger block
 			if (cblkVec.size()>0) {
 				Merge mergeObj = new Merge(Merge.COSET, cblkVec,  bOrient, pMindots, gap2list.get(0)); 
 				cblkVec = mergeObj.mergeBlocks(gap1list.get(0), gap2list.get(0)); 
@@ -616,9 +621,9 @@ public class SyntenyMain {
 		try {
 			for (SyBlock blk : blockVec) finalBlock2(blk);
 				
-			if (grpIdx1 == grpIdx2) rmDiagBlocks(); // remove lower diagonal for self-chr only!
+			if (grpIdx1 == grpIdx2) rmDiagBlocks();
 			
-			mergeBlocks(); 						// always merge contained; conditionally merge olap/close
+			mergeBlocks(); 					// always merge contained; conditionally merge olap/close
 			
 			if (bStrict) strictRemoveBlocks();
 			
@@ -652,7 +657,7 @@ public class SyntenyMain {
 			for (SyHit h : blk.hitVec) h.mDPUsedFinal = h.mDPUsed = false;	
 				
 			blk.setActualCoords();				// Change from midpoint to actual coords
-			blk.avgGap();						// saved to DB; sorted by hitVec; CAS574 moved sorts
+			blk.avgGap();						// saved to DB; sorted by hitVec
 			
 			blk.mCorr1 = hitCorrelation(blk.hitVec); 
 			blk.hasChg = false;
@@ -676,7 +681,7 @@ public class SyntenyMain {
 					cntTrIn++;
 				}
 			}
-			cntMgCoset += mergeObj.cntCoset; cntMgSkip += mergeObj.cntSkip;
+			cntTrCoset += mergeObj.cntCoset; cntTrSkip += mergeObj.cntSkip;
 			if (pMerge.equals("0")) return;		// Contain only
 			
 			// 0 Contain, 1 Overlap
@@ -726,15 +731,40 @@ public class SyntenyMain {
 		}
 		
 		/**************************************************
-		 * Remove blocks from chr-chr diagonal; run on final chr-chr before merge or strict
-		 * These are built because they were reflected in AnchorMain; but the blocks will not be the same,
-		 * hence, removed here and reflected in RWdb.save
-		 */
+		* Remove blocks that run along the diagonal with few genes; Hsa has many, Arab none
+		* Note: even if a block is retained, it may be removed in strictRemove
+		*/
 		private void rmDiagBlocks(){ 
 			Vector<SyBlock> out = new Vector<SyBlock>();
 			for (SyBlock b : blockVec){
 				int gap = Math.max(b.mS1,b.mS2) - Math.min(b.mE1,b.mE2); 
-				if (gap > 0) out.add(b);
+				if (gap>0) {
+					out.add(b);
+					continue;
+				}
+				gap = -gap;
+				int len = b.mE2-b.mS2+1;
+				double ratio = (double)gap/(double)len;
+				if (bTrace) Globals.prt(String.format("Rm %s %,10d %,10d %.6f  ", Globals.toTF(ratio>=fDiag), gap, len, ratio) + b.toString());
+				
+				if (ratio<fDiag) { 			// 0.4
+					out.add(b);
+					continue;
+				}
+				if (ratio<fGeneDiag) { 		// 0.8
+					int cntG=0, cntNG=0;
+					for (SyHit ht : b.hitVec) {
+						if (ht.nGenes==2) cntG++; 
+						else 		      cntNG++; // g1 is not counted
+					}
+					if (bTrace) Globals.prt(String.format("Rm %s %d %d", Globals.toTF(cntG<=cntNG*2), cntG, cntNG));
+					
+					if (cntG > cntNG*2) {	// 2x genes vs non-gene
+						out.add(b);
+						continue;
+					}
+				}
+				cntTrRmDiag++;
 			}
 			blockVec = out;
 		}

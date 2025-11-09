@@ -1,9 +1,3 @@
-/*
- * This code was developed based of the DefaultRGBChooserPanel developed by Sun Microsystems.
- *
- * An alpha slider and spinner have been added.
- */
-
 package colordialog;
 
 import java.awt.BorderLayout;
@@ -26,13 +20,10 @@ import javax.swing.event.ChangeListener;
 /**
  * Class RGBAChooserPanel is based of of the DefaultRGBChooserPanel with
  * an added slider and spinner for the alpha value (optional).
- *
- * @see AbstractColorChooserPanel
- * @see ChangeListener
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class RGBAChooserPanel extends AbstractColorChooserPanel implements ChangeListener {
-    private static final int MIN_VALUE = 0;
+    private static final long serialVersionUID = 1L;
+	private static final int MIN_VALUE = 0;
     private static final int MAX_VALUE = 255;
 
     private JSlider redSlider, greenSlider, blueSlider, alphaSlider;
@@ -41,17 +32,9 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
     private boolean isLocked;
     private boolean doAlpha;
 
-    /**
-     * Creates a new RGBAChooserPanel instance in which alpha is enabled.
-     */
     public RGBAChooserPanel() { 
-    	this(true);
+    	this(true); 
     }
-
-    /**
-     * Creates a new RGBAChooserPanel instance.
-     * @param alphaEnabled a boolean value of true to allow for changing the alpha value
-     */
     public RGBAChooserPanel(boolean alphaEnabled) {
 		super();
 		doAlpha = alphaEnabled;
@@ -67,10 +50,6 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
         return null;
     }
 
-    /**
-     * Method buildChooser sets up the view
-     *
-     */
     protected void buildChooser() {
         setLayout(new BorderLayout());
         Color color = getColorFromModel();
@@ -103,9 +82,7 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
 		if (doAlpha) setRow(new JLabel("Alpha"),alphaSlider,alphaSpinner,panel,gridbag,constraints);
     }
 
-    /**
-     * Method updateChooser updates the sliders and spinners based on the current color.
-     */
+    /* updates the sliders and spinners based on the current color.*/
     public void updateChooser() {
         if (!isLocked) {
             isLocked = true;
@@ -122,22 +99,19 @@ public class RGBAChooserPanel extends AbstractColorChooserPanel implements Chang
 		    if (alphaSlider.getValue() != alpha)alphaSlider.setValue(alpha);
 		    
 		    if (((Integer)redSpinner.getValue()).intValue() != red)
-		    	redSpinner.setValue(red); 		// CAS redSpinner.setValue(new Integer(red));
+		    	redSpinner.setValue(red); 		
 		    if (((Integer)greenSpinner.getValue()).intValue() != green)
-		    	greenSpinner.setValue(green); 	// greenSpinner.setValue(new Integer(green));
+		    	greenSpinner.setValue(green); 	
 		    if (((Integer)blueSpinner.getValue()).intValue() != blue)
-		    	blueSpinner.setValue(blue);		// blueSpinner.setValue(new Integer(blue));
+		    	blueSpinner.setValue(blue);		
 		    if (((Integer)alphaSpinner.getValue()).intValue() != alpha)
-		    	alphaSpinner.setValue(alpha); 	// alphaSpinner.setValue(new Integer(alpha));
+		    	alphaSpinner.setValue(alpha); 	
 	    
             isLocked = false;
         }
     }
 
-    /**
-     * Method stateChanged handles the changing of sliders and spinner
-     * @param e a ChangeEvent value
-     */
+    /* handles the changing of sliders and spinner */
     public void stateChanged(ChangeEvent e) {
 		if (!isLocked) {
 		    if (e.getSource() instanceof JSlider) {

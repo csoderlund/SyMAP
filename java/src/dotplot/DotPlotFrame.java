@@ -15,11 +15,9 @@ import symap.frame.HelpBar;
 
 /*****************************************************************
  * Called from the SyMAP manager and Explorer
- * CAS573 removed old CAS comments and changed public to protected for all dotplot files
  */
-
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DotPlotFrame extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private Data data;
 	private PersistentProps    persistentProps;
 	
@@ -48,7 +46,7 @@ public class DotPlotFrame extends JFrame {
 		
 		persistentProps = new PersistentProps(); // does not work unless this is global
 		ColorDialogHandler colorDialogHandler = new ColorDialogHandler(persistentProps); 
-		colorDialogHandler.setDotPlot();
+		colorDialogHandler.setDotPlot(); // Set in FilterData
 		
 		ControlPanel controls = new ControlPanel(data, plot, hb, colorDialogHandler);
 		data.setCntl(controls);

@@ -18,6 +18,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Vector;
@@ -36,6 +37,7 @@ import symap.frame.HelpListener;
 import symap.mapper.HitData;
 import symap.mapper.SeqHits;
 import util.Utilities;
+import util.Popup;
 import util.ErrorReport;
 
 /**
@@ -44,7 +46,6 @@ import util.ErrorReport;
  * Sequence & TrackHolder are 1-1; get replaced with different sequence unless a current sequence uses. 
  */
 public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMotionListener,MouseWheelListener {
-	
 	protected int grpIdx=Globals.NO_VALUE;
 	protected String chrName;					// e.g. Chr01
 	protected int projIdx=Globals.NO_VALUE, otherProjIdx=Globals.NO_VALUE;
@@ -202,7 +203,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean buildGraphics() { // DrawingPanel.buildAll & firstViewBuild; Sequence.mouseDragged
 		if (hasBuild) return true;
 		if (!hasLoad) return false;
-		if (chrDisplayEnd==0 || chrDisplayEnd==chrDisplayStart) return false; // Timing issue from dotplot; CAS571
+		if (chrDisplayEnd==0 || chrDisplayEnd==chrDisplayStart) return false; // Timing issue from dotplot
 		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = false;
 			
 		if (firstBuild) {
@@ -227,7 +228,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		// this started happening with later Java versions if they click too fast
 		double dif = getPixelValue(chrDisplayEnd) - getPixelValue(chrDisplayStart);
 		if (!(dif > 0 && dif <= MAX_PIXEL_HEIGHT)) { // make popup
-			Utilities.showWarningMessage("Unable to size sequence view. Try again. (" + chrDisplayStart + "," + chrDisplayEnd + ")"); 				
+			Popup.showWarningMessage("Unable to size sequence view. Try again. (" + chrDisplayStart + "," + chrDisplayEnd + ")"); 				
 			if (height == Globals.NO_VALUE) height = getAvailPixels();
 			bpPerPixel = (chrDisplayEnd-chrDisplayStart)/height; 
 		}
@@ -319,7 +320,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (offset>0 && isRight) offset = -offset;
 			
 			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bShowGeneNumHit, nG2xN); // CAS570 add nG2xN
+				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bShowGeneNumHit, nG2xN); 
 			
 			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint;  
 			last=annot;
@@ -341,7 +342,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    		double lastBP=rect.y + rect.height; 
 		    	for (Annotation annot : allAnnoVec) {
 		    		if (!(annot.isGene() && annot.hasDesc() && annot.isVisible())) continue;
-		    		if (sfilObj.bShowAnnotHit && !annot.showGeneHasHit()) continue; // CAS571
+		    		if (sfilObj.bShowAnnotHit && !annot.showGeneHasHit()) continue; 
 		    		
 					x1 = isRight ? (rect.x + rect.width + RULER_LINE_LENGTH + 2) : rect.x; 
 					x2 = isRight ? x1 + RULER_LINE_LENGTH  						 : x1 - RULER_LINE_LENGTH;
@@ -422,7 +423,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		return true;
 	}
-	protected void setTitle() {// Sequence.build
+	private void setTitle() {// Sequence.build
 		String title = getTitle(); 
 		if (title==null) {
 			title="bug";
@@ -516,7 +517,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 
 		try {// The CloseUp panel created at startup and reused.
 			if (end-start>Globals.MAX_CLOSEUP_BP) {
-				Utilities.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_K + ". Cannot align.");
+				Popup.showWarningMessage("Region greater than " + Globals.MAX_CLOSEUP_K + ". Cannot align.");
 				return;
 			}
 			Vector <HitData> hitList1 = new Vector <HitData> ();
@@ -528,7 +529,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			if (hitList1.size()>0) {
 				int rc = drawingPanel.getCloseUp().showCloseUp(hitList1, this, start, end, 
 						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
-				if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
+				if (rc < 0) Popup.showWarningMessage("Error showing close up view."); 
 			}
 			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside 
 			if (hitsObj2!=null) { 
@@ -536,17 +537,17 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				if (hitList2.size()>0) {
 					int rc = drawingPanel.getCloseUp().showCloseUp(hitList2, this, start, end, 
 						isQuery2, hitsObj2.getOtherChrName(this), numShow);
-					if (rc < 0) Utilities.showWarningMessage("Error showing close up view."); 
+					if (rc < 0) Popup.showWarningMessage("Error showing close up view."); 
 				}
 			}
 			
 			if (hitList1.size()==0 && hitList2.size()==0) {
-				 Utilities.showWarningMessage("No hits found in region. Cannot align without hits."); 
+				 Popup.showWarningMessage("No hits found in region. Cannot align without hits."); 
 				 return;
 			}	
 		}
 		catch (OutOfMemoryError e) { 
-			Utilities.showOutOfMemoryMessage();
+			Popup.showOutOfMemoryMessage();
 			drawingPanel.smake("seq out of mem"); // redraw after user clicks "ok"
 		}
 	}
@@ -555,7 +556,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		try {
 			if (end-start > 1000000) {
 				String x = "Regions is greater than 1Mbp (" + (end-start+1) + ")";
-				if (!Utilities.showContinue("Show Sequence", x)) return;
+				if (!Popup.showContinue("Show Sequence", x)) return;
 			}
 			new TextShowSeq(drawingPanel, this, getProjectDisplayName(), getGroup(), start, end, isQuery1);
 		}
@@ -647,7 +648,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}	
 
 	public void setAnnotation() {sfilObj.bShowAnnot=true;}
-	public void setGeneNum()    {sfilObj.bShowGeneNumHit=true;}  // for 2D-3track query; CAS571 use hit only for 2d
+	public void setGeneNum()    {sfilObj.bShowGeneNumHit=true;}  // for 2D-3track query
 	
 	protected TrackData getData() {return new TrackData(this);} // TrackHolder.getTrackData
 	
@@ -667,7 +668,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	/************************************************
 	 *  XXX Interface between Sfilter and DrawingPanel, etc
 	 */
-	public boolean getShowAnnot() 		{ return sfilObj.bShowAnnot || sfilObj.bShowAnnotHit;} 		// drawingpanel; CAS571 add hit
+	public boolean getShowAnnot() 		{ return sfilObj.bShowAnnot || sfilObj.bShowAnnotHit;} 	// drawingpanel
 	
 	//SeqHits.DrawHits
 	public boolean getShowHitLen()		{ return sfilObj.bShowHitLen; }
@@ -675,9 +676,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	public boolean getShowScoreText() 	{ return sfilObj.bShowScoreText; }	 
 	public boolean getShowHitNumText() 	{ return sfilObj.bShowHitNumText; }
 	public boolean getShowBlockText()  	{ return sfilObj.bShowBlockText; }
-	public boolean getShowBlock1stText(){ return sfilObj.bShowBlock1stText; } // CAS572
+	public boolean getShowBlock1stText(){ return sfilObj.bShowBlock1stText; } 
 	public boolean getShowCsetText()   	{ return sfilObj.bShowCsetText; }
-	public boolean getHasText()    { 									// for drawing text on top; CAS573
+	public boolean getHasText()    { 									// for drawing text on top
 		return sfilObj.bShowScoreText || sfilObj.bShowHitNumText
 			|| sfilObj.bShowBlockText || sfilObj.bShowBlock1stText || sfilObj.bShowCsetText;
 	}
@@ -718,7 +719,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	/******************************************************************
 	 * Hit interface
 	 ****************************************************************/
-	/* g2xN methods  CAS570 */
+	/* g2xN methods  */
 	
 	// Sfilter.FilterListener.xHighG2xN called for reference track
 	protected void refSetG2xN(int which, boolean high) {// 2=g2x2, 1=g2x1, 0=none
@@ -903,11 +904,11 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	public void setStart(int startValue)  { // DrawingPanel, Sfilter; 
 		if (startValue > chrSize) {
-			Utilities.showWarningMessage("Start value "+startValue+" is greater than size "+chrSize+".");
+			Popup.showWarningMessage("Start value "+startValue+" is greater than size "+chrSize+".");
 			return;
 		}
 		if (startValue < 0) {
-			Utilities.showWarningMessage("Start value is less than zero.");
+			Popup.showWarningMessage("Start value is less than zero.");
 			return;
 		}
 		if (chrDisplayStart != startValue) {
@@ -919,7 +920,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	public int setEnd(int endValue) { // DrawingPanel, Sfilter; 
 		if (endValue < 0) {
-			Utilities.showWarningMessage("End value is less than zero.");
+			Popup.showWarningMessage("End value is less than zero.");
 			return chrSize;
 		}
 		if (endValue > chrSize) endValue = chrSize;
@@ -934,11 +935,11 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	}
 	public void setStartBP(int startBP, boolean resetPlusMinus)  { // Track, DrawingPanel, Sequence
 		if (startBP > chrSize) {
-			Utilities.showWarningMessage("Start value "+startBP+" is greater than size "+chrSize+".");
+			Popup.showWarningMessage("Start value "+startBP+" is greater than size "+chrSize+".");
 			return;
 		}
 		if (startBP < 0) {
-			Utilities.showWarningMessage("Start value "+startBP+" is less than zero.");
+			Popup.showWarningMessage("Start value "+startBP+" is less than zero.");
 			return;
 		}
 		if (resetPlusMinus) curCenter = 0;
@@ -949,7 +950,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	public int setEndBP(int endBP, boolean resetPlusMinus)  {// Track, DrawingPanel, Sequence
-		if (endBP < 0) Utilities.showWarningMessage("End value is less than zero.");
+		if (endBP < 0) Popup.showWarningMessage("End value is less than zero.");
 
 		if (endBP > chrSize || endBP<0) endBP = chrSize;
 
@@ -1397,7 +1398,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 	}
 	// The following allow the GeneNum or Annot box to only be shown if a gene has a hit that is visible
-	protected boolean hasAnnoHit(int x, Annotation annot) { // Called from Annot to display GeneNum if has hit; CAS571
+	protected boolean hasAnnoHit(int x, Annotation annot) { // Called from Annot to display GeneNum if has hit
 		if (x==2 && hitsObj2==null) return false;
 		
 		boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
@@ -1411,11 +1412,45 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		else  annot.setHitList2(hits, scoreMap);
 		return true;
 	}
-	protected boolean hasVisHit(int x, int [] hitIdxList) { // goes with hasHit for Annot; CAS571
+	protected boolean hasVisHit(int x, int [] hitIdxList) { // goes with hasHit for Annot
 		if (x==1) return hitsObj1.hasVisHit(hitIdxList);
 		else return (hitsObj2==null ||  hitsObj2.hasVisHit(hitIdxList));
 	}
-	
+	/************************************************************************/
+	private class Rule { // was separate file; CAS575 cleanup
+		private Color unitColor;
+		private Font unitFont;
+		private Line2D.Double line;
+		private Point2D.Float point;
+		private TextLayout layout;
+
+		private Rule(Color unitColor, Font unitFont) {
+			this.unitColor = unitColor;
+			this.unitFont = unitFont;
+			line = new Line2D.Double();
+			point = new Point2D.Float();
+		}
+		private void setLine(double x1, double y1, double x2, double y2) {
+			line.setLine(x1, y1, x2, y2);
+		}
+		private void setText(TextLayout textLayout, double x, double y) {
+			layout = textLayout;
+			point.setLocation((float) x, (float) y);
+		}
+		private void setOffset(double x, double y) {
+			line.setLine(line.x1 - x, line.y1 - y, line.x2 - x, line.y2 - y);
+			point.setLocation(point.x - x, point.y - y);
+		}
+		public void paintComponent(Graphics2D g2) {
+			if (layout != null) {
+				g2.setPaint(unitColor);
+				g2.draw(line);
+				g2.setFont(unitFont);
+				layout.draw(g2, point.x, point.y);
+			}
+		}
+	}
+
 	/*************************************************************************/
     // Track
 	private static final int REFPOS=2;

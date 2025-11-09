@@ -195,12 +195,12 @@ public class TableData implements Serializable {
     	this.tblId = tblID;
     	vData = 	new Vector<Vector<Object>>();
     	vHeaders = 	new Vector<TableDataHeader>();
-    	theParent = parent;
+    	tPanel = parent;
     }
    
     /********************************************************/
     protected void sortMasterList(String columnName) {
-    	theParent.sortMasterColumn(columnName);
+    	tPanel.sortMasterColumn(columnName);
     }
 
     protected void setColumnHeaders( String [] species, String [] annoKeys, boolean isSingle) {
@@ -288,7 +288,7 @@ public class TableData implements Serializable {
     		Vector <Object> row = vData.get(i);
     		
     		for (int j=0; j< arrHeaders.length; j++) {
-    			if (j>=row.size()) break;				// for isSelf; CAS575
+    			if (j>=row.size()) break;				// for isSelf
     			arrData[i][j] = row.get(j);
     		}
     	}
@@ -352,7 +352,7 @@ public class TableData implements Serializable {
     protected void sortByColumn(final int column) {
 		if (column == -1) return; 
 		try {
-        	theParent.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+        	tPanel.setCursor(new Cursor(Cursor.WAIT_CURSOR));
         	Arrays.sort(arrData, new ColumnComparator(column)); // error on sort if change tabs; Comparison method violates its general contract!
         	
         	//Always keep rows in same order
@@ -360,7 +360,7 @@ public class TableData implements Serializable {
         		arrData[x][0] = x+1;
         	}
         	arrHeaders[column].flipAscending();
-        	theParent.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        	tPanel.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
 		catch (Exception e) {} // With sort error, seems to work okay anyway {ErrorReport.print(e, "Sort by column");}
     }
@@ -624,5 +624,5 @@ public class TableData implements Serializable {
     //Dynamic data structures
     private Vector<TableDataHeader> vHeaders = null;
     private Vector<Vector<Object>> vData = null; 
-    private TableMainPanel theParent = null;
+    private TableMainPanel tPanel = null;
 }

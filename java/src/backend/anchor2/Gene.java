@@ -25,7 +25,7 @@ public class Gene implements Comparable <Gene> {
 	
 	// read mummer finds overlaps and assign to gene for chr-chr; Pair-specific - clone only
 	protected ArrayList <Hit> gHitList = new ArrayList <Hit> ();          // some will be filtered, or used in two diff clHits
-	protected ArrayList <HitPair> gHprList = new ArrayList <HitPair> ();  // CAS560 add 
+	protected ArrayList <HitPair> gHprList = new ArrayList <HitPair> ();  
 	
 	private int hitsStart=Integer.MAX_VALUE, hitsEnd=0; // trace
 	
@@ -154,21 +154,21 @@ public class Gene implements Comparable <Gene> {
 		else if (this.gEnd<gn.gEnd) return -1;
 		else return 0;
 	}
-	protected void sortExons() { // AnchorMain.loadAnno; assign Hits to Exon in Read Mummer
+	protected void sortExons() { // AnchorMain2.loadAnno; assign Hits to Exon in Read Mummer
 		Collections.sort(exonList, 
 			new Comparator<Exon>() {
 				public int compare(Exon g1, Exon g2) {
 					if      (g1.estart < g2.estart) return -1;
 					else if (g1.estart > g2.estart) return 1;
 					else if (g1.eend > g2.eend) return -1;
-					else if (g1.eend < g2.eend) return 1;  // CAS557 added for violates its general contract!
+					else if (g1.eend < g2.eend) return 1;  // for violates its general contract!
 					else return 0;
 				}
 			}
 		);
 	}
 	
-	/////////////////////////////////////////////////////////////////
+	/*******  prtToFile on -tt ***************/
 	protected String toResults() {	
 		if (gHitList.size()==0) return "";  
 		
@@ -197,9 +197,7 @@ public class Gene implements Comparable <Gene> {
 				: " No hits ";
 		return toName() + gCoords + hCoords;
 	}
-	
 	protected String toName() {return  Arg.side[ix]+ "#" + geneTag + " ("  + geneIdx + ") " + chr + " ";}
-	
 	public String toString() {return toResults();}
 
 	public void clear() {

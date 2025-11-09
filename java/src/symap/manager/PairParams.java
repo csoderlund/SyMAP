@@ -29,11 +29,10 @@ import backend.Constants;
 import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
+import util.Popup;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
- * CAS565 Pseudo, CAS567 Orient, Concat (from Main); CAS568 Order, Mask(from ProjParam); 
- * CAS571 Clust&Syn, CAS572 strict, extended merge
  */
 
 public class PairParams extends JDialog {
@@ -76,6 +75,7 @@ public class PairParams extends JDialog {
 	private Mproject mProj1 = null, mProj2 = null;
 	private ManagerFrame manFrame=null;
 	private boolean isAlignDone;	// Could be A or check; mp.hasSynteny() determines which
+	private boolean isSelf=false;
 	
 	protected PairParams(Mpair mp, ManagerFrame manFrame, boolean alignDone) {
 		this.mp = mp;
@@ -83,6 +83,7 @@ public class PairParams extends JDialog {
 		this.mProj2 = mp.mProj2;
 		this.manFrame = manFrame;
 		this.isAlignDone = alignDone;
+		isSelf = mProj1.getIdx()==mProj2.getIdx();
 		
 		createMainPanel();
 		setInit();
@@ -110,7 +111,6 @@ public class PairParams extends JDialog {
 		chkStrictBlocks = Jcomp.createCheckBox(LABELS[x++], "Smaller gaps allowed and stricter mixed blocks", true); 
 		chkSameOrient  = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
 		
-	
 		lblMerge = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
 		cmbMergeBlocks = Jcomp.createComboBox(mergeOpts, "Each option includes the previous", 0); 
 		
@@ -135,12 +135,12 @@ public class PairParams extends JDialog {
 		if (!mProj2.hasGenes()) chkMask2.setEnabled(false); 
 		
 		// mummer
-		lblNucMerArgs = Jcomp.createLabel(LABELS[x++]); txtNucMerArgs = Jcomp.createTextField("",textWidth);
-		lblProMerArgs = Jcomp.createLabel(LABELS[x++]); txtProMerArgs = Jcomp.createTextField("",textWidth);
-		lblSelfArgs   = Jcomp.createLabel(LABELS[x++]); txtSelfArgs = Jcomp.createTextField("",textWidth);
-		chkNucOnly    = Jcomp.createRadio(LABELS[x++]);
-		chkProOnly    = Jcomp.createRadio(LABELS[x++]);
-		chkDef        = Jcomp.createRadio("Defaults");		// not saved
+		lblNucMerArgs = Jcomp.createLabel(LABELS[x++], "NUCmer parameters"); txtNucMerArgs = Jcomp.createTextField("",textWidth);
+		lblProMerArgs = Jcomp.createLabel(LABELS[x++], "PROmer parameters"); txtProMerArgs = Jcomp.createTextField("",textWidth);
+		lblSelfArgs   = Jcomp.createLabel(LABELS[x++], "NUCmer parameters for self-chromosome"); txtSelfArgs = Jcomp.createTextField("",textWidth);
+		chkNucOnly    = Jcomp.createRadio(LABELS[x++], "Use NUCmer for this alignment");
+		chkProOnly    = Jcomp.createRadio(LABELS[x++], "Use PROmer for this alignment");
+		chkDef        = Jcomp.createRadio("Defaults", "Use NUCmer for self-synteny, otherwise use PROmer");		// not saved
 		ButtonGroup sgroup = new ButtonGroup();
 		sgroup.add(chkNucOnly); sgroup.add(chkProOnly); sgroup.add(chkDef);
 		chkDef.setSelected(true);
@@ -148,11 +148,12 @@ public class PairParams extends JDialog {
 		// Cluster
 		chkPseudo = Jcomp.createCheckBox(LABELS[x++], "Number pseudo genes (un-annotated hit)", false);
 		
-		chkAlgo1 = Jcomp.createRadio(LABELS[x++]);
-		chkAlgo2 = Jcomp.createRadio(LABELS[x++]);
+		chkAlgo1 = Jcomp.createRadio(LABELS[x++], "Use Algo1");
+		chkAlgo2 = Jcomp.createRadio(LABELS[x++], "Use Algo2");
 		ButtonGroup agroup = new ButtonGroup();
 		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
-		chkAlgo2.setSelected(true);
+		chkAlgo2.setSelected(!isSelf);
+		chkAlgo2.setEnabled(!isSelf);
 		
 		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
 		
@@ -294,7 +295,7 @@ public class PairParams extends JDialog {
 		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); 
 		row.add(lblLen);     row.add(txtLen);    row.add(Box.createHorizontalStrut(5));
 		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
 		
 		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		row.add(new JLabel("Keep piles:")); 
@@ -303,7 +304,7 @@ public class PairParams extends JDialog {
 		row.add(chkEnpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkIIpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkInpile);   row.add(Box.createHorizontalStrut(5));
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
 		
 	// Synteny
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
@@ -329,7 +330,7 @@ public class PairParams extends JDialog {
 		row.add(radOrdNone);  row.add(Box.createHorizontalStrut(3));
 		row.add(radOrdProj1); row.add(Box.createHorizontalStrut(2));
 		row.add(radOrdProj2);
-		if (mProj1!=mProj2) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}// CAS572
+		if (mProj1!=mProj2) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
 		
 		// Buttons
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
@@ -451,7 +452,7 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	{
 			int idx = Utilities.getInt(value);
 			if (idx==-1) idx = 0;
-			cmbMergeBlocks.setSelectedIndex(idx); // number 0,1,2; Merge CAS572
+			cmbMergeBlocks.setSelectedIndex(idx); // number 0,1,2
 		}
 		else if (symbol.equals(SYMBOLS[x++]))	radOrdNone.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj1.setSelected(value.equals("1"));
@@ -572,7 +573,7 @@ public class PairParams extends JDialog {
 		mp.saveParamsToFile(fileMap); // saves to DB when run
 		
 		bSavPseudo = mp.bPseudo; bSavSynOnly = mp.bSynOnly;
-		manFrame.updateEnableButtons(); // update Selected pair label; CAS571
+		manFrame.updateEnableButtons(); // update Selected pair label
 		
 		if (mp.bSynOnly) setSaveSynOnly();	
 		else if (mp.bPseudo) setSavePseudo();
@@ -588,11 +589,11 @@ public class PairParams extends JDialog {
 		int isMerge = cmbMergeBlocks.getSelectedIndex(); 
 		boolean isPrune = chkStrictBlocks.isSelected(); 
 		String dot = txtMinDots.getText();
-		int order=0;								// CAS572 add
+		int order=0;								
 		if (radOrdProj1.isSelected()) order=1;
 		else if (radOrdProj2.isSelected()) order=2;
 		
-		setParams(mp.getDbParams()); // The wrong values will be in Summary if this is not done; CAS571
+		setParams(mp.getDbParams()); // The wrong values will be in Summary if this is not done
 		
 		chkSameOrient.setSelected(isOrient);
 		cmbMergeBlocks.setSelectedIndex(isMerge);
@@ -608,18 +609,18 @@ public class PairParams extends JDialog {
 		int i = Utilities.getInt(x.trim());
 		if (min==0) {
 			if (i<0) {
-				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer (" + x + "). Must be >=0.");
+				Popup.showErrorMessage(label + "=" + x + "\nIs an incorrect integer (" + x + "). Must be >=0.");
 				return false;
 			}
 			return true;
 		}
 		if (i==-1 || i==0) {
-			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
+			Popup.showErrorMessage(label + "=" + x + "\nIs an incorrect integer. Must be >0.");
 			return false;
 		}
 		// warnings
 		if (label.startsWith("Top") && i>4) {
-			Utilities.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
+			Popup.showContinue("Top N piles", "Top N > 4 may produce worse results and take significantly longer.");
 		}
 	
 		return true;
@@ -629,13 +630,13 @@ public class PairParams extends JDialog {
 		double d = Utilities.getDouble(x.trim());
 		if (min==0) {
 			if (d<0) {
-				Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal (" + x + "). Must be >=0.");
+				Popup.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal (" + x + "). Must be >=0.");
 				return false;
 			}
 			return true;
 		}
 		if (d==-1 || d==0) {
-			Utilities.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal. Must be >0.");
+			Popup.showErrorMessage(label + "=" + x + "\nIs an incorrect decimal. Must be >0.");
 			return false;
 		}
 		return true;

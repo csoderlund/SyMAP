@@ -9,7 +9,8 @@ import java.util.Vector;
 
 import backend.Utils;
 import util.ErrorReport;
-import util.Utilities;
+import util.Popup;
+import util.FileDir;
 
 /************************************************
  * Print lengths of sequences from converted files
@@ -31,14 +32,14 @@ public class Lengths {
 	protected Lengths(String projDir) {
 		this.projDir = projDir;
 		
-		seqDirName = Utilities.fileNormalizePath(projDir, seqSubDir);
-		if (!Utilities.pathExists(seqDirName)) {
-			Utilities.showWarningMessage("Path for sequence files does not exist: " + seqDirName);
+		seqDirName = FileDir.fileNormalizePath(projDir, seqSubDir);
+		if (!FileDir.pathExists(seqDirName)) {
+			Popup.showWarningMessage("Path for sequence files does not exist: " + seqDirName);
 			return;
 		}	
 		getSeqFiles();
 		if (seqFiles.size()==0) {
-			Utilities.showWarningMessage("No .fa or .fna files in: " + seqDirName);
+			Popup.showWarningMessage("No .fa or .fna files in: " + seqDirName);
 			return;
 		}
 		prt("");
@@ -88,13 +89,13 @@ public class Lengths {
 					grpFullName = Utils.parseGrpFullName(line);
 					
 					if (grpFullName==null || grpFullName.equals("")){	
-						Utilities.showWarningMessage("Unable to parse group name from:" + line);
+						Popup.showWarningMessage("Unable to parse group name from:" + line);
 						return;
 					}
     			}
     			else len += line.length();
 			}
-			if (len>0) {// CAS558 was missing last case
+			if (len>0) {
 				cntSeq++;
 				if (len>maxLenForPrt) prt(String.format("%5d  %,10d  %s", cntSeq, len,  saveLine));
 				else {

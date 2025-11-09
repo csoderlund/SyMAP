@@ -11,11 +11,10 @@ import javax.swing.JTextField;
 import util.ErrorReport;
 
 /************************************
- * Return multi-hits >=n; added CAS548. If *Minor was checked, they are already included
+ * Multi filter; Return multi-hits >=n;  If *Minor was checked, they are already included
  * Filtering on location has already been done, but need to again here because the multi>N must be on a selected
  * chromosome (if there is one).
  * Input is a vector DBdata objects of two species, each will represent a row when created later.
- * CAS555 add pile and same chr options, number groups, print clashes, and move code from DBdata; 
  */
 
 public class ComputeMulti {
@@ -56,7 +55,7 @@ public class ComputeMulti {
 		return false;
 	}
 	////////////////////////////////////////////////////////////////////
-	public ComputeMulti(Vector <DBdata> dataFromDB, // input data
+	protected ComputeMulti(Vector <DBdata> dataFromDB, // input data
 			QueryPanel qPanel,						// get parameters
 			JTextField loadStatus,					// write to TableMainPanel in loadStatus bar
 			HashSet<Integer> grpIdxOnly,			// groups to process
@@ -101,10 +100,8 @@ public class ComputeMulti {
 						break;
 					}
 				}
-				if (ii== -1) { // CAS556 this happened when no data for on pair
-					continue;  // CAS563 was 'return finalRows' resulting in no projMap statistics; also printed estoric message to terminal
-				}
-				
+				if (ii== -1) continue; // no data for on pair
+					  
 				filterNhits(); 		if (!bSuccess) return finalRows;   			// In: inData  Out: spData; all rows for sp1&sp2
 				
 				if (isTandem) filterTandem(); if (!bSuccess) return finalRows;  // In: spData  Out: spData; remove non-tandem
@@ -113,7 +110,7 @@ public class ComputeMulti {
 				
 				spSummaryCnts[sp1][sp2] = numFam-1;	
 				
-				if (rowNum++ % Q.INC ==0) {// CAS564 checked stopped
+				if (rowNum++ % Q.INC ==0) {
 					if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return null;}
 					loadStatus.setText("Cluster " + rowNum + " rows...");
 				}

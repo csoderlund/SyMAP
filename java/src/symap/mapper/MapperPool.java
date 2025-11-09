@@ -10,7 +10,6 @@ import props.PropsDB;
 import symap.Globals;
 import symap.sequence.Sequence;
 import util.ErrorReport;
-import util.Utilities;
 
 /**
  * Create an array of Hits from the DB and passes them to a SeqHit object
@@ -56,7 +55,7 @@ public class MapperPool {
 				+ "LEFT JOIN blocks as b on (b.idx=bh.block_idx) "  
 				+ "WHERE h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx="+ grpIdx2; 
 			
-			if (isSelf) { // DIR_SELF; same as in QueryPanel; CAS575
+			if (isSelf) { // DIR_SELF; same as in QueryPanel
 				if (grpIdx1>grpIdx2) sql += " and h.refidx=0 "; 		// grp1>grp2 lower tile
 				else  if (grpIdx1<grpIdx2)  sql += " and h.refidx>0 "; 	// grp1<grp2 upper tile
 				else sql += " and h.start1>h.start2 ";	  				// lower part of self-chr diagonal for given grp only
@@ -100,11 +99,11 @@ public class MapperPool {
 			rs.close();
 			if (hitList.size()==0) {
 				Globals.prt("No hits for " + st1.getTitle() + " to " + st2.getTitle());
-				if (st1.getProjIdx() == st2.getProjIdx()) { // CAS575 VER_CHG
+				if (st1.getProjIdx() == st2.getProjIdx()) { // VER_CHG
 					int pairIdx = projPairs.getPairIdx(st1.getProjIdx(), st2.getProjIdx());
 					if (pairIdx==-1) Globals.eprt("Cannot get pairIdx");
 					else if (new Version(dbc2).isVerLt(pairIdx, 575)) 
-						Utilities.showWarning("Self-synteny must be updated with A&S v5.7.5 or later to fully work");
+						util.Popup.showWarning("Self-synteny must be updated with A&S v5.7.5 or later to fully work");
 				}
 			}
 			
@@ -112,7 +111,7 @@ public class MapperPool {
 				zeroPseudo(1, grpIdx1, hitList);
 				zeroPseudo(2, grpIdx2, hitList);
 			}
-			if (Globals.TRACE) {// CAS575 move a few things for debugging
+			if (Globals.TRACE) {
 				String x = String.format("MP: Total hits %,d: %d (%d)  Merged: %d (%d)", 
 						hitList.size(), HitData.cntTotal, HitData.cntTotalSH, HitData.cntMerge, HitData.cntMergeSH);
 				Globals.dprt(x);

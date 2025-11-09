@@ -13,10 +13,6 @@ import symapQuery.TableMainPanel;
  * 	dotplot.Data
  * 	blockview.Block2Frame
  * 	symapQuery.tableDataPanel.showSynteny
- * 
- *  CAS521 remove FPC; CAS532 moved HTML links to Jhtml
- *  CAS534 renamed from SyMAP=> SyMAP2d; moved all globals to symap.Globals
- *  CAS544 moved to drawingpanel for 2d stuff; CAS570 removed CAS comments
  */
 public class SyMAP2d {
 	private Frame2d            frame;
@@ -78,6 +74,4 @@ public class SyMAP2d {
 	public Frame2d getFrame() {return frame;}
 
 	public DrawingPanel getDrawingPanel() {return drawingPanel;}
-	
-	public ControlPanel getControlPanel() {return controlPanel;} 
 }

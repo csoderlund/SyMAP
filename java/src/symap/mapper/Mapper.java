@@ -29,10 +29,8 @@ import util.ErrorReport;
  * The Mapper that holds two tracks (overlaying them when drawn) and all of the hits.
  * Called from DrawingPanel
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Mapper extends JComponent 
-	implements  MouseMotionListener, MouseListener, MouseWheelListener, HelpListener 		
-{
+public class Mapper extends JComponent implements  MouseMotionListener, MouseListener, MouseWheelListener, HelpListener {
+	private static final long serialVersionUID = 1L;
 	// ColorDialog colors at bottom
 	private DrawingPanel drawingPanel; 
 	private TrackHolder trackHolders[];
@@ -105,7 +103,7 @@ public class Mapper extends JComponent
 	public DrawingPanel getDrawingPanel() { return drawingPanel;}
 	public HfilterData getHitFilter() {return hitFilData;}
 	
-	// For HitData.getCoordsForGenePopup
+	// For HitData.getCoordsForGenePopup and createHover
 	public String getGeneNum1(int annoIdx) { return seqHitObj.getSeqObj1().getGeneNumFromIdx(annoIdx);}
 	public String getGeneNum2(int annoIdx) { return seqHitObj.getSeqObj2().getGeneNumFromIdx(annoIdx);}
 	
@@ -139,7 +137,7 @@ public class Mapper extends JComponent
 	/**********************************************
 	 * hasPair is (query,target); query<target alphanumeric; 
 	 */
-	public boolean isQueryTrack(Sequence src) {
+	protected boolean isQueryTrack(Sequence src) {
 		Sequence t1 = trackHolders[0].getTrack(); 
 		Sequence t2 = trackHolders[1].getTrack();
 		
@@ -155,9 +153,13 @@ public class Mapper extends JComponent
 		return false; // target
 	}
 	
-	public boolean isQuerySelHit(int idx, boolean bHit1) {
+	protected boolean isQuerySelHit(int idx, boolean bHit1) {
 		if(theTablePanel != null) return theTablePanel.isHitSelected(idx, bHit1);
 		return false;
+	}
+	protected void setTrackBuild() {
+		if (trackHolders[0].getTrack() != null) trackHolders[0].getTrack().setTrackBuild();
+		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().setTrackBuild();
 	}
 	/********************************************************************/
 	public void paintComponent(Graphics g) {
@@ -219,10 +221,6 @@ public class Mapper extends JComponent
 	}
 	public void closeFilter() {fh.hide();} // closes this mappers filter window @see FilterHandler#hide() 
 	
-	public void setTrackBuild() {
-		if (trackHolders[0].getTrack() != null) trackHolders[0].getTrack().setTrackBuild();
-		if (trackHolders[1].getTrack() != null) trackHolders[1].getTrack().setTrackBuild();
-	}
 	/******************************************************************/
 	// drawing methods directly access these, and ColorDialog can change them
 	public static Color negOrientLineColor;
@@ -253,7 +251,7 @@ public class Mapper extends JComponent
 		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); 
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 
 		
-		props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));// CAS571 added for 2 extra colors
+		props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));// for 2 extra block colors
 		pseudoLineHighlightColor3 = props.getColor("exonColorP"); 
 		pseudoLineHighlightColor4 = props.getColor("exonColorN"); 
 	}

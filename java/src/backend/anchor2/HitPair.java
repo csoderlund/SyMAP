@@ -4,34 +4,31 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import symap.Globals;
 import util.ErrorReport;
 
 /*************************************************************
- * Set of joined hits representing g2, g1, or g0
- * CAS560 moved coverage filters to Arg
+ * Cluster hit; Set of joined hits for g2, g1, or g0
  */
 public class HitPair {
 	private static final int T=Arg.T, Q=Arg.Q, TQ=Arg.TQ;
 	private static int CNT_HPR=1;
 	
-	protected int  nHpr = 1; 			 // CAS560 for sorting identical hitpairs of overlapping genes
+	protected int  nHpr = 1; 			 // for sorting identical hitpairs of overlapping genes
 	protected int  gtype = Arg.typeUnk;  // "Unk","G0", "G1t", "G1q", "G2"
 	protected char flag = Arg.UNK;	     // Major, Minor, Filter, Dup, Ign, Pile
 	protected int  bin = 0;			     // GrpPairGx set for hpr, then reset in GrpPair
 	
-	///////
 	protected int [] hpStart = {Integer.MAX_VALUE, Integer.MAX_VALUE};
 	protected int [] hpEnd   = {0,0};
 	
-	protected ArrayList <Hit> hitList = new ArrayList <Hit> (); 
+	protected ArrayList <Hit> hitList = new ArrayList <Hit> (); // subhits
 	protected int nHits = 0;
 	protected boolean isStEQ = true; 	// same strand (T) diff strand (F)
 	protected boolean isRst =  true;	// g2 genes correspond to hit strand, g2 are on +/- but hit is +/+
 	protected boolean isOrder = true;
 	
 	protected Gene tGene=null, qGene=null;
-	protected double [] pExonHitFrac  = {0.0, 0.0, 0.0};  // % fraction of each exon hit; CAS560 add
+	protected double [] pExonHitFrac  = {0.0, 0.0, 0.0};  // % fraction of each exon hit
 	protected double [] pExonHitCov   = {0.0, 0.0, 0.0};  // % exons covered by hits; T,Q,TQ
 	protected double [] pGeneHitCov   = {0.0, 0.0, 0.0};  // % gene  covered by hits; T,Q,TQ
 	protected double [] pGeneHitOlap  = {0.0, 0.0, 0.0};  // % hitLen/gLen; T,Q,TQ -- G0 for non-gene, sum of hits
@@ -44,7 +41,7 @@ public class HitPair {
 	// Cluster
 	protected int cHitNum=0; 	    // after all processing including pile; assigned in GrpPair.createCluster
 	protected boolean bEE=false, bEI=false, bII=false, bEn=false, bIn=false, bnI=false, bnn=false; // for GrpPairPile filter on piles
-	protected boolean bBothGene=false, bOneGene=false, bNoGene=false; // CAS560 changed bEitherGene to bOneGene, add bNoGene
+	protected boolean bBothGene=false, bOneGene=false, bNoGene=false; 
 	protected String sign="";							// */-, etc set in setScores
 	protected String targetSubHits="", querySubHits=""; // concatenated hits for DB
 	protected String htype=Arg.snn;							// EE, EI, etc
@@ -116,7 +113,6 @@ public class HitPair {
 	}
 	
 	protected void crossRef() {
-		//for (Hit ht : hitList) ht.hHprList.add(this);
 		if (tGene!=null) tGene.gHprList.add(this);
 		if (qGene!=null) qGene.gHprList.add(this);
 	}
@@ -164,7 +160,7 @@ public class HitPair {
 				pGeneHitOlap[X] = ((double) Arg.pOlapOnly(hs, he, xGene.gStart, xGene.gEnd)/ (double)xGene.gLen)*100.0;
 				
 				double [] scores = xGene.scoreExonsGene(mergedHits); 
-				pExonHitFrac[X]	 = scores[0]; // % fraction cover of each exon; CAS560 add
+				pExonHitFrac[X]	 = scores[0]; // % fraction cover of each exon
 				pExonHitCov[X]   = scores[1]; // % total summed exons covered in hits - no regard for individual exons
 				pGeneHitCov[X]   = scores[2]; // % hit/gene; was percent hit coverage of genes, but bad for long introns
 			} 
@@ -348,7 +344,7 @@ public class HitPair {
 		hitList.clear();
 	}
 	// symap -wsp outputs this; documented in SystemHelp under Clusters; see GrpPairGx.runG2.processWS
-	protected String toWSResults() { // CAS565 modified output a little
+	protected String toWSResults() { 
 		String eq = isStEQ ? " =" : "!=";
 		eq = qGene.strand + "/" + tGene.strand + "  " + eq;
 	
@@ -357,8 +353,8 @@ public class HitPair {
 		
 		return String.format("%-5d  %-8s  %-10s %-10s   %s   %s  ", nHits, eq, qGene.geneTag, tGene.geneTag, locq, loct);
 	}
-	/********* Trace output; CAS565 put Q before T *************************************************/
-	protected String toResultsGene() {
+	/********* prtToFile *************************************************/
+	protected String toResultsGene() { 
 		String n1 = (qGene!=null) ? qGene.geneTag : "None"; n1 = String.format("Q#%-6s", n1);
 		String n2 = (tGene!=null) ? tGene.geneTag : "None"; n2 = String.format("T#%-6s", n2);
 		
@@ -396,7 +392,6 @@ public class HitPair {
 			String m3 = String.format("%s %s %-12s %s %s", pil, o, note, id, chrs);
 			msg = String.format("%s%s %s", m1, toResultsGene(),  m3);
 		}
-		
 		if (bHits) {
 			Hit last=null;
 			for (Hit ht: hitList) {

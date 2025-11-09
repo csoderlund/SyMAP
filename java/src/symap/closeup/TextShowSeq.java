@@ -72,10 +72,11 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		this.grpID = grpID;
 		this.isQuery = isQuery;
 		
-		hitButton = 	new JRadioButton("Hit"); 				hitButton.setBackground(Color.white);
-		revHitButton = 	new JRadioButton("Reverse Hit"); 		revHitButton.setBackground(Color.white);
-		fullHitButton = new JRadioButton("Full Hit"); 			fullHitButton.setBackground(Color.white);
-		regionButton = 	new JRadioButton("Region"); 			regionButton.setBackground(Color.white);
+		hitButton = 	Jcomp.createRadio("Subhits", "Show separate subhits"); 		// CAS576 add tip; change label
+		revHitButton = 	Jcomp.createRadio("Reverse", "Show reversed subhits"); 		
+		fullHitButton = Jcomp.createRadio("Full Hit", "Show from start to end of the clustered hit"); 			
+		regionButton = 	Jcomp.createRadio("Region", "Show the selected sequence"); 			
+		// these are not working...
 		transHitButton = new JRadioButton("Translated Hit");	transHitButton.setBackground(Color.white);
 		geneButton = 	new JRadioButton("Gene"); 				geneButton.setBackground(Color.white);
 		exonButton = 	new JRadioButton("Exon"); 				exonButton.setBackground(Color.white);

@@ -54,7 +54,7 @@ public class AnchorMain1 {
 	private String proj1Name, proj2Name;
 	private Proj syProj1, syProj2; 
 	
-	private int mTotalHits=0, mTotalLargeHits=0, mTotalBrokenHits=0;
+	private int mTotalHits=0, mTotalLargeHits=0, mTotalBrokenHits=0, mTotalWS=0;
 	private boolean isSelf = false, isNucmer=false;
 	
 	private HashSet<Hit> filtHitSet = new HashSet <Hit> ();
@@ -117,7 +117,7 @@ public class AnchorMain1 {
 			return;
 		}
 		
-		if (VB) plog.msg("   Loading annotations"); else Globals.rprt("   Loading annotation"); // CAS575 indent
+		if (VB) plog.msg("   Loading annotations"); else Globals.rprt("   Loading annotation"); 
 		Vector <Group> group1Vec = syProj1.getGroups();
 		Vector <Group> group2Vec = syProj2.getGroups();
 		
@@ -157,8 +157,8 @@ public class AnchorMain1 {
 		int nLoop = (isSelf) ? 2 : 1; // process grp1!=grp2 first to get similar results as v4.2
 	
 		for (int i=0; i<nLoop; i++) {
-			for (File f : fs) {
-				if (!f.isFile()) continue;
+			for (File f : fs) { 
+				if (!f.isFile() || f.isHidden()) continue; // CAS576 add isHidden
 				
 				String fName = f.getName();
 				if (!fName.endsWith(Constants.mumSuffix))continue;
@@ -181,6 +181,7 @@ public class AnchorMain1 {
 			return rtError(" Or missing loaded sequences (try Algo2, which allows missing sequences).");
 		}
 		if (mTotalHits == 0)   return rtError("No good anchors were found");
+		
 		Globals.rclear();
 		if (nFile>1 || !VB) 			Utils.prtNumMsgFile(plog, nHitsScanned, "Total scanned hits from " + nFile + " files"); 
 		if (nHitsScanned!=mTotalHits) 	Utils.prtNumMsgFile(plog, mTotalHits, "Total accepted hits");
@@ -214,11 +215,13 @@ public class AnchorMain1 {
 			}
 		}
 		Globals.rclear();
-		if (nFile>1 || !VB) 
-			Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits  ");
+		
+		if (nFile>1 || !VB) Utils.prtNumMsg(plog, nHitsScanned, "Total cluster hits  ");
 
-		if (Globals.TRACE) Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
-			
+		if (Globals.TRACE) {
+			Utils.prtNumMsgFile(plog, mTotalWS, "Cluster hits with >3 subhits have wrong strand compared to hit genes");
+			Utils.prtTimeMemUsage(plog, "Complete scan cluster", memTime);
+		}	
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reading seq anchors"); bSuccess=false; return false;}
@@ -227,7 +230,7 @@ public class AnchorMain1 {
 	/*************************************************************
 	 * first time through, create the predicted genes from non-gene hits
 	 */
-	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2) throws Exception { // remove selfSkip param, does not do anything; CAS575
+	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2) throws Exception { 
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {	
 		if (!VB) Globals.rprt(String.format("Scan %s",  Utils.fileFromPath(mFile.toString())));
@@ -275,7 +278,7 @@ public class AnchorMain1 {
 				return 0;
 			}
 			if (isSelf) {// DIR_SELF
-				if (hit.queryHits.grpIdx <  hit.targetHits.grpIdx) {hit.swapCoords(); cntSwap++;} // lower diagonal; CAS575 add
+				if (hit.queryHits.grpIdx <  hit.targetHits.grpIdx) {hit.swapCoords(); cntSwap++;} // lower diagonal
 				
 				if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) { 
 					cntSkip++; continue; // mirror later; self hits are in file twice, once with start1<start2 and vice versa
@@ -358,9 +361,8 @@ public class AnchorMain1 {
 			hit.targetHits.grpIdx = p2.grpIdxFromQuery(hit.targetHits.name);
 			
 			if (isSelf) {// DIR_SELF
-				if (hit.queryHits.grpIdx < hit.targetHits.grpIdx) hit.swapCoords();   // CAS575 add
+				if (hit.queryHits.grpIdx < hit.targetHits.grpIdx) hit.swapCoords();   
 				
-				//CAS575 shouldn't happen; if (i==0 && hit.queryHits.grpIdx==hit.targetHits.grpIdx) continue; 
 				if (hit.queryHits.grpIdx == hit.targetHits.grpIdx && hit.queryHits.start < hit.targetHits.start) continue; 
 			}
 			
@@ -425,7 +427,7 @@ public class AnchorMain1 {
 			AnnotElem qAnno = grp1.getBestOlapAnno(hit.queryHits.start, hit.queryHits.end);   // priority to gene annotElem
 			AnnotElem tAnno = grp2.getBestOlapAnno(hit.targetHits.start, hit.targetHits.end); 
 
-			// Self-synteny humans failed on this...
+			// Self-synteny humans failed on this, especially Y chr
 			if (qAnno == null) {Globals.tprt("missing query annot!  grp:" + grp1.idStr() + " start:" + hit.queryHits.start + " end:" + hit.queryHits.end); continue;}	
 			if (tAnno == null) {Globals.tprt("missing target annot! grp:" + grp2.idStr() + " start:" + hit.targetHits.start + " end:" + hit.targetHits.end); continue;}	
 			
@@ -450,6 +452,7 @@ public class AnchorMain1 {
 		}
 		
 		// Merge the pair hits into a clustered hit
+		Hit.totalWS=0;
 		for (String key : pairMap.keySet()) {			
 			Vector<Hit> pairHits = pairMap.get(key);
 			AnnotElem qAnno = key2qAnno.get(key);
@@ -457,6 +460,7 @@ public class AnchorMain1 {
 			
 			outHits.addAll(Hit.clusterHits2( pairHits, pairTypes.get(key), qAnno, tAnno));		
 		}
+		mTotalWS += Hit.totalWS;
 		return outHits;
 	}
 	catch (Exception e) {
@@ -587,7 +591,7 @@ public class AnchorMain1 {
 		
 		saveFilterHits(onlyFiltHits, false); 			if (!bSuccess) return;
 		
-		if (isSelf) saveFilterHits(onlyFiltHits, true);	if (!bSuccess) return; // CAS575 add
+		if (isSelf) saveFilterHits(onlyFiltHits, true);	if (!bSuccess) return; 
 		
 		saveAnnoHits();			 						if (!bSuccess) return;
 		
@@ -606,7 +610,7 @@ public class AnchorMain1 {
 			if (VB) plog.msg(msg); else Globals.rprt(msg);
 			int numLoaded=0, countBatch=0;
 			
-			if (isSelf) addIsSelfRefIdx(filtHits, bMirror);
+			addIsSelfRefIdx(filtHits, bMirror);
 			
 			String sql = "insert into pseudo_hits (pair_idx,";
 			
@@ -622,7 +626,7 @@ public class AnchorMain1 {
 					+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
 			
 			for (Hit hit : filtHits) {
-				if (hit.htype==-1) continue;				// isSelf self-chr diagonal; CAS575 self no longer entered; dotplot creates the diagonal
+				if (hit.htype==-1) continue;				// isSelf self-chr diagonal; dotplot creates the diagonal
 				
 				String htype = "g0"; // show on Query
 				int geneOlap = 0;
@@ -722,10 +726,10 @@ public class AnchorMain1 {
 	private void saveAnnoHits()  { 
 	String key="";
 	try {
-		if (VB) plog.msg("   Save hit to gene "); else Globals.rprt("   Save hit to gene ");
+		if (VB) plog.msg("   Save hit to gene             "); else Globals.rprt("   Save hit to gene        ");
 		
 		/* Load hits from database, getting their new idx;  */
-		Vector <Hit> vecHits = loadHitsFromDB(true);  // CAS575 move to separate method
+		Vector <Hit> vecHits = loadHitsFromDB(true);  
 		if (failCheck()) return;
 		
 	/* save the query annotation hits, which correspond to syProj1 */ /* on self-synteny, get dups;  */
@@ -804,7 +808,7 @@ public class AnchorMain1 {
 	}
 	
 	// Used by saveAnnoHits (gene only) and self-synteny addRefIdx (all) 
-	private Vector <Hit> loadHitsFromDB(boolean bGene) { // was in saveAnnoHits, but now shared with addRefIdx CAS575
+	private Vector <Hit> loadHitsFromDB(boolean bGene) { 
 	try {
 		Vector <Hit> vecHits = new Vector <Hit> (filtHitSet.size()); 
 		String st = "SELECT idx, start1, end1, start2, end2, strand, grp1_idx, grp2_idx, annot1_idx, annot2_idx" +

@@ -20,12 +20,9 @@ import symap.manager.Mproject;
 
 /*************************************************
  * Called by ChrExpFrame. Draw Chromosome Icons to for a project
- * CAS534 renamed manager.ProjectPanelCommon=> frame.ProjIcons
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class ProjIcons extends JComponent 
-	implements MouseListener, MouseMotionListener
-{
+public class ProjIcons extends JComponent implements MouseListener, MouseMotionListener {
+	private static final long serialVersionUID = 1L;
 	private final static double MAX_CHR_HEIGHT = 80;
 	private final static int MIN_CHR_HEIGHT = 15;
 	private final static int WIDTH = 12;
@@ -121,7 +118,7 @@ public class ProjIcons extends JComponent
 				if ((b.getGroup2Idx() == mapper.getRefChr().getGroupIdx() || mapper.isRefChr(t))
 						&& b.getGroup1Idx() == t.getGroupIdx())
 				{
-					long startBP = (long) b.getStart1(); // CAS551 this does not work right unless long
+					long startBP = (long) b.getStart1(); // this does not work right unless long
 					long endBP = (long) b.getEnd1();
 				
 					int startY = (int)(height * startBP / t.getSizeBP());
@@ -184,8 +181,7 @@ public class ProjIcons extends JComponent
 			}
 		}
 		
-		if (bChanged) {
-			// Call parent handler to redraw all displays of this type
+		if (bChanged) { // Call parent handler to redraw all displays of this type
 			if (listener != null)
 				listener.actionPerformed( new ActionEvent(this, -1, "Redraw") );
 		}

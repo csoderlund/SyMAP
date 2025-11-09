@@ -40,13 +40,11 @@ import javax.swing.table.TableColumn;
 import backend.Constants;
 import util.ErrorReport;
 import util.Jcomp;
-import util.Utilities;
 import util.Jhtml;
+import util.FileDir;
 
 /*******************************************
  * Displays the project parameter window and saves them to file
- * CAS567 add a drop-down of existing categories; shorten text fields
- * CAS568 move mask and order-against to pairs; add directory name
  */
 public class ProjParams extends JDialog {
 	private static final long serialVersionUID = -8007681805846455592L;
@@ -84,9 +82,7 @@ public class ProjParams extends JDialog {
 		getContentPane().setBackground(Color.WHITE);
 		
 		theListener = new CaretListener() {
-			public void caretUpdate(CaretEvent arg0) {
-				// nothing right now
-			}
+			public void caretUpdate(CaretEvent arg0) {}
 		};
 		createMainPanel();
 		setFieldsFromProj();
@@ -100,7 +96,7 @@ public class ProjParams extends JDialog {
 		
 		setLocationRelativeTo(parentFrame); 
 	}
-	public boolean wasSave() {return bWasSave;}
+	public boolean wasSave() {return bWasSave;} // ManagerFrame.doReloadParams, doSetParamsNotLoaded
 	
 	private ProjParams getInstance() { return this; }
 	
@@ -111,7 +107,7 @@ public class ProjParams extends JDialog {
 		int startAnno=0, startLoad=0, i=0;
 		boolean bReload=true, bReAlign=true;
 		
-		theFields = new Field[11]; // If change #fields, change!; CAS568 removed 2 fields
+		theFields = new Field[11]; // If change #fields, change!
 		theFields[i++] = new Field(mProj.sCategory, catArr, 1, 	!bReload, !bReAlign, true);// true -> add text field
 		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
@@ -129,8 +125,6 @@ public class ProjParams extends JDialog {
 		startAnno=i-1; 
 		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  	
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
-		
-		// CAS568 remove adding synteny mask and order here
 		
 		JPanel fieldPanel = Jcomp.createPagePanel();
 		fieldPanel.add(Jcomp.createHtmlLabel(displayHead)); 
@@ -218,7 +212,7 @@ public class ProjParams extends JDialog {
 	}
 	private boolean setField(String fieldName, String fieldValue) {
 		for (int x=0; x<theFields.length; x++) {
-			if (fieldName.equals(theFields[x].getLabel())) { // CAS568 remove mask replace yes/no
+			if (fieldName.equals(theFields[x].getLabel())) { 
 				theFields[x].setValue(fieldValue);
 				return true;
 			}
@@ -237,8 +231,8 @@ public class ProjParams extends JDialog {
 	 * XXX Save
 	 */
 	private void save() {
-		if (!Utilities.dirExists(Constants.dataDir)) {
-			Utilities.showWarningMessage("The /data directory does not exist, cannot save parameters.");
+		if (!FileDir.dirExists(Constants.dataDir)) {
+			util.Popup.showWarningMessage("The /data directory does not exist, cannot save parameters.");
 			return;
 		}
 		if (!saveCheckFields()) return;
@@ -257,7 +251,7 @@ public class ProjParams extends JDialog {
 		closeDialog();
 	}
 	/********************************************************************/
-	private boolean saveCheckFields() {// CAS567 expand checks
+	private boolean saveCheckFields() {
 	try {
 		String msg=null;
 		
@@ -292,7 +286,7 @@ public class ProjParams extends JDialog {
 				if (!val.isEmpty() && val.contains("/") || val.contains("#") || val.contains("\"")) 
 					msg = "Description cannot contains backslash, quotes or #";
 			}
-			else if (index == mProj.sAbbrev) {/* Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj */
+			else if (index == mProj.sAbbrev) {/* Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj'; checked in QueryFrame */
 				if (val.length()!=4) {
 					msg = lab + " must be exactly 4 characters. Value '" + val + "' is " + val.length() + ".";
 				}
@@ -312,7 +306,7 @@ public class ProjParams extends JDialog {
 			}
 			// only shows the first warning - returns for user to fix, then test again
 			if (msg!=null) { 
-				Utilities.showWarning(msg);
+				util.Popup.showWarning(msg);
 				return false;
 			}
 		}
@@ -409,7 +403,7 @@ public class ProjParams extends JDialog {
 	 */
 	private void writeParamsFile() {	
 		String dir = Constants.seqDataDir + theDBName;
-		Utilities.checkCreateDir(dir, true); 
+		FileDir.checkCreateDir(dir, true); 
 		
 		File pfile = new File(dir,Constants.paramsFile);
 		if (!pfile.exists()) // should not happen here because written on startup in Mproject
@@ -430,7 +424,7 @@ public class ProjParams extends JDialog {
 					System.out.println("SyMAP error on label: " + label);
 					continue;
 				}
-				if(val.length() > 0) { // CAS568 remove Mask and Order checks
+				if(val.length() > 0) { 
 					String v = val.replace('\n', ' ');
 					v = v.replace("\"", " ");
 					v = v.replace("\'", " ");
@@ -481,7 +475,7 @@ public class ProjParams extends JDialog {
 			this.index = index;
 			String label = mProj.getLab(index);
 			String initValue = mProj.getDef(index);
-			String desc = mProj.getDesc(index);	// CAS567 add
+			String desc = mProj.getDesc(index);	
 			
 			bdoReload = needsReload;
 			bdoRealign = needsRealign;
@@ -504,7 +498,7 @@ public class ProjParams extends JDialog {
 			setLayout();
 		} 
 		
-		//Used for properties that require a combo box; CAS567 add optional text field and label descriptions
+		// Used for properties that require a combo box
 		private Field(int index, String [] options, int selection, 
 				boolean needsReload, boolean needsRealign, boolean bHasText) {
 			this.index = index;
@@ -601,7 +595,7 @@ public class ProjParams extends JDialog {
 		}
 		
 		protected int index=0;
-		private JComponent theComp = null, theComboText = null; // CAS567 all refs to theComboText are new
+		private JComponent theComp = null, theComboText = null; 
 		private JComboBox <String> comboBox = null; 
 		private JLabel theLabel = null;
 		private boolean bdoReload = false, bdoRealign = false;
@@ -715,7 +709,7 @@ public class ProjParams extends JDialog {
 			
 			if (lastSeqDir==null) {
 				defDir = Constants.seqDataDir;
-				if (Utilities.pathExists(defDir+theDBName)) defDir += theDBName;
+				if (FileDir.pathExists(defDir+theDBName)) defDir += theDBName;
 			}
 			else defDir=lastSeqDir;
 			return defDir;

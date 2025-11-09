@@ -31,16 +31,17 @@ import java.util.HashMap;
 
 import util.ErrorReport;
 import util.Jcomp;
+import util.Popup;
 import util.Utilities;
 
 /**********************************************************
  * Selected row(s): Contains the MSA align and 2D display
  */
 public class UtilSelect {
-	private TableMainPanel tablePanel;
+	private TableMainPanel tPanel;
 	
 	protected UtilSelect(TableMainPanel tdp) {
-		this.tablePanel = tdp;
+		this.tPanel = tdp;
 	}
 	protected void msaAlign() {
 		new MsaAlign();
@@ -54,7 +55,7 @@ public class UtilSelect {
 		private int pad;					// how much to pad from the selected hit
 		private boolean isChkGene;			// display geneNum, else annotation
 		private Vector <Integer> grpIdxVec; // the group hits to highlight; returns the values
-		private boolean isSelf=false;		// CAS575 add along with all self logic
+		private boolean isSelf=false;		
 		
 		protected int [] hitNums = {-1, -1};
 		
@@ -73,8 +74,8 @@ public class UtilSelect {
 		/***************************************/
 		private void showSynteny() {
 		try{
-			TmpRowData rd = new TmpRowData(tablePanel);
-			if (!rd.loadRow(tablePanel.theTable.getSelectedRows()[0])) return;
+			TmpRowData rd = new TmpRowData(tPanel);
+			if (!rd.loadRow(tPanel.theTable.getSelectedRows()[0])) return;
 						
 			int track1Start=0, track2Start=0, track2End=0, track1End=0;
 			int [] coords;
@@ -82,7 +83,7 @@ public class UtilSelect {
 					
 			if (selIndex==TableMainPanel.showSET) {
 				if (rd.collinearN==0) {
-					Utilities.showWarning("The selected row does not belong to a collinear set.");
+					Popup.showWarning("The selected row does not belong to a collinear set.");
 					return;
 				}
 				coords = loadCollinearCoords(rd.collinearN, rd.chrIdx[0], rd.chrIdx[1]);
@@ -92,7 +93,7 @@ public class UtilSelect {
 			}
 			else if (selIndex==TableMainPanel.showBLOCK) {
 				if (rd.blockN==0) {
-					Utilities.showWarning("The selected row does not belong to a synteny block.");
+					Popup.showWarning("The selected row does not belong to a synteny block.");
 					return;
 				}
 				coords = loadBlockCoords(rd.blockN, rd.chrIdx[0], rd.chrIdx[1]);
@@ -100,7 +101,7 @@ public class UtilSelect {
 			}
 			else if (selIndex==TableMainPanel.showGRP) { 
 				if (rd.groupN==0) {
-					Utilities.showWarning("The selected row does not belong to a group.");
+					Popup.showWarning("The selected row does not belong to a group.");
 					return;
 				}
 				coords = rd.loadGroup(grpIdxVec); // assigns hits to grpIdxVec
@@ -112,7 +113,7 @@ public class UtilSelect {
 				coords[2] = rd.start[1]; coords[3] = rd.end[1];
 				hd.setForQuery(0, false, true);  // block, set, region
 				
-				if (isSelf && rd.chrIdx[0]==rd.chrIdx[1]) { // hit-wires do not show if this is not done; CAS575 
+				if (isSelf && rd.chrIdx[0]==rd.chrIdx[1]) { // hit-wires do not show if this is not done
 					coords[0] = rd.start[1]; coords[1] = rd.end[1];
 					coords[2] = rd.start[0]; coords[3] = rd.end[0];
 				}
@@ -122,7 +123,7 @@ public class UtilSelect {
 			track2Start = coords[2] - pad; if (track2Start<0) track2Start=0;
 			track2End   = coords[3] + pad;
 			
-			tablePanel.hitNum1 = rd.hitnum; 			
+			tPanel.hitNum1 = rd.hitnum; 			
 			
 			int p1Idx = rd.spIdx[0];
 			int p2Idx = rd.spIdx[1];
@@ -131,7 +132,7 @@ public class UtilSelect {
 			int grp2Idx = rd.chrIdx[1];
 			
 			// create new drawing panel; 				
-			SyMAP2d symap = new SyMAP2d(tablePanel.queryFrame.getDBC(), tablePanel);
+			SyMAP2d symap = new SyMAP2d(tPanel.queryFrame.getDBC(), tPanel);
 			symap.getDrawingPanel().setTracks(2); 		
 			symap.getDrawingPanel().setHitFilter(1,hd); 
 			
@@ -149,15 +150,15 @@ public class UtilSelect {
 		/***********************************************************/
 	    private void showSyntenyfor3() {// this is partially redundant with above, but easier...
 	 		try{
-	 			int [] col = tablePanel.getSharedRef(false); 
+	 			int [] col = tPanel.getSharedRef(false); 
 	 			if (col == null) return;
 	 			
 	 			TmpRowData [] rd = new TmpRowData [2];
 	 			
-	 			rd[0] = new TmpRowData(tablePanel);
-	 			if (!rd[0].loadRow(tablePanel.theTable.getSelectedRows()[0])) {Globals.tprt("No load 0");return;}
-	 			rd[1] = new TmpRowData(tablePanel);
-	 			if (!rd[1].loadRow(tablePanel.theTable.getSelectedRows()[1])) {Globals.tprt("No load 1");return;}
+	 			rd[0] = new TmpRowData(tPanel);
+	 			if (!rd[0].loadRow(tPanel.theTable.getSelectedRows()[0])) {Globals.tprt("No load 0");return;}
+	 			rd[1] = new TmpRowData(tPanel);
+	 			if (!rd[1].loadRow(tPanel.theTable.getSelectedRows()[1])) {Globals.tprt("No load 1");return;}
 	 				
 	 			int r0t1 = col[0], r0t2 = col[1],  
 	 				               r1t2 = col[2], r1t3 = col[3];
@@ -170,7 +171,7 @@ public class UtilSelect {
 	 			
 	 			if (selIndex==TableMainPanel.showSET) {
 	 				if (rd[0].collinearN==0 || rd[1].collinearN==0) {
-	 					Utilities.showWarning("The selected rows do not belong to a collinear set.");
+	 					Popup.showWarning("The selected rows do not belong to a collinear set.");
 	 					return;
 	 				}
 	 				int [] coords0 = loadCollinearCoords(rd[0].collinearN, rd[0].chrIdx[0], rd[0].chrIdx[1]);// ret sL,eL,sR,eR
@@ -227,10 +228,10 @@ public class UtilSelect {
 				tStart[2] = coordsRow1[sR] - pad; if (tStart[2]<0) tStart[2]=0;
 	 			tEnd[2]   = coordsRow1[eR] + pad; 
 	 			
-	 			tablePanel.hitNum1 = rd[0].hitnum; tablePanel.hitNum2 = rd[1].hitnum;
+	 			tPanel.hitNum1 = rd[0].hitnum; tPanel.hitNum2 = rd[1].hitnum;
 				
 	 			// create new drawing panel; 
-	 			SyMAP2d symap = new SyMAP2d(tablePanel.queryFrame.getDBC(), tablePanel);
+	 			SyMAP2d symap = new SyMAP2d(tPanel.queryFrame.getDBC(), tPanel);
 	 			symap.getDrawingPanel().setTracks(3); 
 	 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
 	 			symap.getDrawingPanel().setHitFilter(2,hd1);
@@ -254,7 +255,7 @@ public class UtilSelect {
 			try {
 				int start1=Integer.MAX_VALUE, end1=-1, start2=Integer.MAX_VALUE, end2=-1, d;
 				
-				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
+				DBconn2 dbc2 = tPanel.queryFrame.getDBC();
 			    String sql = "select start1, end1, start2, end2 from pseudo_hits where runnum=" + set;
 			    if (isSelf && grpIdx1==grpIdx2) sql += " and start1<start2 "; // usually this is start1>start2; but not here...
 				
@@ -282,7 +283,7 @@ public class UtilSelect {
 					return null;
 				}
 							
-				coords = new int [4]; // removed padding of 8 since more pad is added in calling routine; CAS575
+				coords = new int [4];
 				coords[0]=start1; 
 				coords[1]=end1; 
 				coords[2]=start2; 
@@ -296,7 +297,7 @@ public class UtilSelect {
 	    private int [] loadBlockCoords(int block, int idx1, int idx2) {
 			int [] coords = null;
 			try {
-				DBconn2 dbc2 = tablePanel.queryFrame.getDBC();
+				DBconn2 dbc2 = tPanel.queryFrame.getDBC();
 				
 				String sql = "select start1, end1, start2, end2 from blocks  where blocknum="+block;
 				if (isSelf && idx1==idx2) sql += " and start1<start2 ";
@@ -342,19 +343,19 @@ public class UtilSelect {
 		
 		private MsaAlign() {
 		try {						
-			DBconn2 dbc = tablePanel.queryPanel.getDBC();
+			DBconn2 dbc = tPanel.queryPanel.getDBC();
 			aPool = new AlignPool(dbc);
 			
-			tablePanel.setPanelEnabled(false);
+			tPanel.setPanelEnabled(false);
 			createMenu();
 			if (bOkay) {
-				tablePanel.setMsaButton(false);
+				tPanel.setMsaButton(false);
 				
 				buildHitVec();	if (!bSuccess) return;
 				loadSeq();		if (!bSuccess) return;
 				buildTableAndAlign();
 			}
-			tablePanel.setPanelEnabled(true);
+			tPanel.setPanelEnabled(true);
 		}
 		catch(Exception e) {ErrorReport.print(e, "Show alignment");}			
 		}
@@ -364,7 +365,7 @@ public class UtilSelect {
 			msg += "\nUse gapless hits: this is good for genes with long introns (e.g. homo sapiens), "
 				+  "\n                  where the subhits are separatedly by long intronic regions. ";
 			msg += "\n\nSee ? for details.\n";
-			util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+			Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 		}
 		
 		/********************************************************/
@@ -477,7 +478,7 @@ public class UtilSelect {
 			});
 	    	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(5));
 	    	
-	    	JButton btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
+	    	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 			btnInfo.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					popupHelp();
@@ -508,11 +509,11 @@ public class UtilSelect {
 				if (Ext.getMafftCmd()==null) {bSuccess=false; return;}
 			}
 			alignBase=0;
-			int [] selRows = tablePanel.theTable.getSelectedRows();
+			int [] selRows = tPanel.theTable.getSelectedRows();
 			numRows = selRows.length;
 			HashMap<String, HitEnd> tagMap = new HashMap<String, HitEnd> (); 
 			
-			TmpRowData rd = new TmpRowData(tablePanel);
+			TmpRowData rd = new TmpRowData(tPanel);
 			if (!bMerge) {
 				for(int x=0; x<numRows; x++) {
 					if (!rd.loadRow(selRows[x])) {bSuccess=false; return;} // Load row data
@@ -646,7 +647,7 @@ public class UtilSelect {
 			String [] tabLines = theTable.toArray(new String[0]);
 			
 			// Add tab and align - QueryFrame calls MsaMainPanel, which is treaded
-			tablePanel.queryFrame.makeTabMSA(tablePanel, names, seqs, tabLines, 
+			tPanel.queryFrame.makeTabMSA(tPanel, names, seqs, tabLines, 
 					progress, tabAdd, resultSum, msaSum, bTrim, bAuto, nCPU);
 			
 			theNames.clear(); theTable.clear(); theSeqs.clear();

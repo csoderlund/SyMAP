@@ -31,7 +31,6 @@ public class Group implements Comparable<Group> {
 	protected String getName() { return name; }
 	protected String getFullName() { return fullname; }
 	protected int getGrpLenBP() { return cLenBP; }
-	// CAS573 no longer have scaleFactor; protected int getEffectiveSize() { return cLenBP; }
 	
 	protected void setHasBlocks(Group g) { 
 		if (!hasBlocks.containsKey(g)) hasBlocks.put(g,true); 
@@ -55,12 +54,11 @@ public class Group implements Comparable<Group> {
 	public int compareTo(Group g) {
 		return sortOrder - g.sortOrder;
 	}
-	// CAS573 remove setScaleFactor which used an obsolete user-defined value
 	protected static void setOffsets(Group[] groups) {
 		if (groups != null && groups.length > 0) {
 			groups[0].offset = 0;
 			for (int i = 1; i < groups.length; i++) {
-				groups[i].offset = groups[i-1].offset + groups[i-1].cLenBP; // CAS573 removed * scaleFactor
+				groups[i].offset = groups[i-1].offset + groups[i-1].cLenBP; 
 			}
 		}
 	}

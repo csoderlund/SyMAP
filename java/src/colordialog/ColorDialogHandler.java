@@ -7,10 +7,7 @@ import java.lang.ref.WeakReference;
 import props.PersistentProps;
 
 /**
- * Class ColorDialogHandler handles the showing and setting of colors of a color dialog box.  
- * @see ColorDialog and SyMAP.java (caller)
- * 
- * CAS532 moved properties stuff to ColorDialog and removed some dead code
+ * The shows and setting of colors of a color dialog box.  
  */
 public class ColorDialogHandler {
 
@@ -20,18 +17,18 @@ public class ColorDialogHandler {
 	private ColorDialog dialog = null;
 	
 	/**
-	 * Created in SyMAP.java at startup
+	 * Created in circview.ControlPanelCirc, dotplot.DotPlotFrame, drawingPanel.SyMAP2d
 	 * cookie - in user's directory file .symap_saved_props
 	 */
-	public ColorDialogHandler(PersistentProps cookie)  { //CAS521 remove hasFPC
+	public ColorDialogHandler(PersistentProps cookie)  { 
 		listeners = 	new Vector<WeakReference<ColorListener>>();
 		this.cookie  =  cookie;
-		setColors(); 									// CAS521 moved from SyMAP.java to here
+		setColors(); 									
 	}
 	// frame.ControlPanel calls when color icon clicked
 	public void showX() {
 		if (dialog == null) dialog = new ColorDialog(cookie); 					
-		dialog.setVisible(true); 						// CAS512 dialog.show();
+		dialog.setVisible(true); 						
 		notifyListeners();
 	}
 	
@@ -51,8 +48,7 @@ public class ColorDialogHandler {
 		notifyListeners();
 	}
 
-	/**
-	 * Method addListener adds listener to the list of objects listening to this dialog.  The
+	/* adds listener to the list of objects listening to this dialog.  The
 	 * listener's resetColors() method is called when the colors change.
 	 */
 	public void addListener(ColorListener listener) {

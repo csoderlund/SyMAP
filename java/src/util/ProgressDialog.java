@@ -30,10 +30,10 @@ import java.io.FileWriter;
 
 /***************************************************************
  * Used by ManagerFrame for popup dialog tracking progress
- * CAS535 removed Logger interface
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ProgressDialog extends JDialog  {
+	private static final long serialVersionUID = 1L;
+
 	private static final int MIN_DISPLAY_TIME = 1500; // milliseconds
 	
 	private JProgressBar progressBar;
@@ -46,16 +46,16 @@ public class ProgressDialog extends JDialog  {
 	private FileWriter logFileW = null;
 	
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
-			boolean hasCancel, // CAS511 Removes has this as false, cause Hangs if Cancel
+			boolean hasCancel, 
 			FileWriter logW)   // LOAD.log or symap.log (2nd also written to by backend.Log)
 	{
 		super(owner, strTitle, true);
 		Cancelled.init();
 		logFileW = logW;
-		boolean isDeterminate=false; // CAS535 was parameter, but always false
+		boolean isDeterminate=false; 
 	
 		msgToFileOnly("-----------------------------------------------------------------");
-		String x = "    Running Java v" + System.getProperty("java.version") + " on " + ErrorReport.getDate(); // CAS559 add java v to log
+		String x = "    Running Java v" + System.getProperty("java.version") + " on " + ErrorReport.getDate(); 
 		msgToFileOnly(">>> SyMAP " + Globals.VERDATE + x + " <<<");
 		
 		// Label
@@ -162,7 +162,7 @@ public class ProgressDialog extends JDialog  {
 			progressBar.setIndeterminate(false);
 			
 			if (ErrorCount.getCount() > 0) {
-				progressBar.setString("Completed, click 'Done' to continue ..."); // CAS511 move after if
+				progressBar.setString("Completed, click 'Done' to continue ..."); 
 				msg("Some errors occurred, check text in this window, terminal or view logs/[dbName]_load.log.");
 				button.setText("Done (Error Occurred)"); 
 			}
@@ -185,7 +185,6 @@ public class ProgressDialog extends JDialog  {
 					button.setText("Done"); // Wait for user to close
 				}
 				else {
-					//cancel();//bCancelled = true;
 					progressBar.setString("Error occurred, click 'Cancel' to abort ...");
 				}
 			}
@@ -204,17 +203,17 @@ public class ProgressDialog extends JDialog  {
 			setCursor( Cursor.getDefaultCursor() );
 			dispose(); // Close this dialog
 		}
-		catch (Exception e) {} // CAS508 Cancel causes stacktrace on dispose; crashes anyway on dispose
+		catch (Exception e) {} 
 		
-		if (logFileW != null) // CAS500
+		if (logFileW != null) 
 			try {
 				logFileW.close(); 
 				logFileW=null;}
-			catch (Exception e) {} // CAS500
+			catch (Exception e) {} 
 	}	
 	public void setCancelled() {
 		try {
-			if (logFileW!=null) logFileW.append("Cancel"); // CAS535
+			if (logFileW!=null) logFileW.append("Cancel"); 
 			bCancelled = true;	
 		}
 		catch (Exception e) {}

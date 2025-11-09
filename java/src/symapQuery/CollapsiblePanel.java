@@ -14,12 +14,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 
+/********************************************************
+ * Called in QueryPanel to create the filter panels
+ */
 public class CollapsiblePanel extends JPanel {
 	private static final long serialVersionUID = 7114124162647988756L;
 
-	public CollapsiblePanel(String title, String description) {
+	protected CollapsiblePanel(String title, String description) {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBackground(Color.WHITE);
 		showIcon = createImageIcon("/images/plus.gif");
@@ -50,7 +52,7 @@ public class CollapsiblePanel extends JPanel {
 		thePanel.setBorder ( BorderFactory.createEmptyBorder(5, 20, 10, 20) );
 		thePanel.setAlignmentX(LEFT_ALIGNMENT);
 		thePanel.setBackground(Color.WHITE);
-		//thePanel.add(new JSeparator()); CAS504
+		
 		super.add( showHideButton );
 		if (labelDescription != null) super.add( labelDescription );
 		super.add( thePanel );
@@ -62,7 +64,7 @@ public class CollapsiblePanel extends JPanel {
 		setAlignmentX(LEFT_ALIGNMENT);
 	}
 		
-	public void collapse() {
+	protected void collapse() {
 		visible = false;
 		showHideButton.setIcon(showIcon);
 		showHideButton.setToolTipText("Expand");
@@ -71,7 +73,7 @@ public class CollapsiblePanel extends JPanel {
 		thePanel.setVisible(false);
 	}
 	
-	public void expand() {
+	protected void expand() {
 		visible = true;
 		showHideButton.setIcon(hideIcon);
 		showHideButton.setToolTipText("Collapse");
@@ -79,7 +81,7 @@ public class CollapsiblePanel extends JPanel {
 		setMaximumSize(theSizeExpanded);
 		thePanel.setVisible(true);
 	}
-	
+	/* over-ride */
 	public Component add(Component comp) {
 		thePanel.add(comp);
 		if(!visible) {

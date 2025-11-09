@@ -1,8 +1,7 @@
 package database;
 
 /***********************************************************
- * CAS541 All database operations are performed via this method for SyMAP (copied from TCW)
- * Its called DBconn2 since it replaces DBconn plus a bunch of other files (e.g. Abstract User)
+ * Used by all for database connections
  */
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -13,7 +12,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 
-import symap.Ext;		// CAS566 moved checkExt from backend.Constants
+import symap.Ext;		
 import util.ErrorReport;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
@@ -21,12 +20,11 @@ import util.ErrorReport;
 
 public class DBconn2 {
 	private final int maxTries = 10;
-	private final boolean TRACE = symap.Globals.DEBUG && symap.Globals.TRACE; // CAS560 add trace
+	private final boolean TRACE = symap.Globals.DEBUG && symap.Globals.TRACE; 
 	
 	static private String chrSQL = "characterEncoding=utf8"; // utf8mb4
-    static private String driver = "com.mysql.cj.jdbc.Driver"; // CAS560 add .cj for new driver
+    static private String driver = "com.mysql.cj.jdbc.Driver"; // add .cj for new driver
     
-    // CAS541 
     // 1. Connections are associated with unique panels or view from CE (where dp, circle, 2d are reused). 
     // 2. Manager is the only one that stays open. The rest close when the window closes.
     // 3. Multiple circles, etc can be opened; they each have there own connection, 
@@ -155,8 +153,7 @@ public class DBconn2 {
 	public boolean renew() {
 	try {
 		Class.forName(driver);
-		// mStmt = null;
-		//if (mConn != null && !mConn.isClosed()) mConn.close(); CAS541 why closing?
+		
 		if (mConn != null && !mConn.isClosed())  return true;
 		
 		if (mStmt!=null && !mStmt.isClosed()) mStmt.close();
@@ -247,7 +244,7 @@ public class DBconn2 {
 	
 	public boolean executeBoolean(String sql) throws Exception {
         try {
-           int cnt = executeCount(sql); // CAS310 was (sql + "limit 1")
+           int cnt = executeCount(sql); 
            if (cnt==0) return false;
            else return true;
         }
@@ -291,7 +288,7 @@ public class DBconn2 {
 	public boolean tablesExist() throws Exception {
 		boolean ret = false;
 		ResultSet rs = executeQuery("show tables");
-		if (rs!=null && rs.next()) ret = true; // CAS560 was first()
+		if (rs!=null && rs.next()) ret = true; 
 		if (rs!=null) rs.close();
 		return ret;
 	}
@@ -435,7 +432,7 @@ public class DBconn2 {
 	}	
 	
     /***************************************************************************/
-    public void resetAllIdx() { // CAS535 add, this is easier
+    public void resetAllIdx() { 
 		try {
 			resetIdx("idx", "annot_key");
 			resetIdx("idx", "blocks");
@@ -447,7 +444,7 @@ public class DBconn2 {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Reset auto-crement for all tables");}
 	}
-	public void resetIdx(String idx, String table) { // CAS511 add, CAS512 add max
+	public void resetIdx(String idx, String table) { 
 		try {
 			int cnt = getIdx("select count(*) from " + table);
 			if (cnt==0) {
@@ -463,7 +460,7 @@ public class DBconn2 {
     /****************************************************************************
    	 * Check database settings when mysql database is created
    	 */
-   	public void checkVariables(boolean prt) { // CAS501, update CAS505; CAS560 GLOBAL->global uc does not work on mac
+   	public void checkVariables(boolean prt) { 
    		try{	
    			System.err.println("\nCheck MySQL variables");
    			int cntFlag=0;
@@ -475,7 +472,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   max_allowed_packet=" + packet);
    				if (packet<4194304) {
    					cntFlag++;
-   					System.err.println("   Suggest: set global max_allowed_packet=4194304;  # or greater"); // CAS559 chg msg
+   					System.err.println("   Suggest: set global max_allowed_packet=4194304;  # or greater"); 
    				}
    			}
    			
@@ -486,7 +483,7 @@ public class DBconn2 {
    				if (prt) System.err.println("   innodb_buffer_pool_size=" + packet);
    				if (packet< 134217728) {
    					cntFlag++;
-   					System.err.println("   Suggest: set global innodb_buffer_pool_size=134217728; # or greater");// CAS559 chg msg
+   					System.err.println("   Suggest: set global innodb_buffer_pool_size=134217728; # or greater");
    				}
    			}
    			
@@ -505,7 +502,7 @@ public class DBconn2 {
    			}
    			else System.err.println("  MySQL variables are okay ");
    			
-   			Ext.checkExt(); // CAS508 moved checkExt from this file to Constants
+   			Ext.checkExt(); 
    		}
         catch (Exception e) {ErrorReport.print(e, "Getting system variables");	}
    	}
@@ -514,12 +511,12 @@ public class DBconn2 {
      * ******************************************/
   
    	/*************************************************************
-	 * Create database; CAS504 stopped using scripts/symap.sql and added Schema.java
+	 * Create database; 
 	 */
 	public static int createDatabase(String hostname, String dbname, String username, String password) {
 		checkHost(hostname,username,password);
 		
-		int rc=0; // 0 create, -1 fail, 1 exist CAS559 calling routine needs these 3 states
+		int rc=0; // 0 create, -1 fail, 1 exist
 		Connection conn;
 		String dburl =   createDBstr(hostname, dbname);
 		String hosturl = createDBstr(hostname, "");
@@ -558,7 +555,7 @@ public class DBconn2 {
 		return rc;
 	}
 	/***********************************************************
-	 * Database exists for the read only viewSymap CAS511 add
+	 * Database exists for the read only viewSymap 
 	 */
 	public static boolean existDatabase(String hostname, String dbname, String username, String password) {
 		checkHost(hostname,username,password);
@@ -572,13 +569,6 @@ public class DBconn2 {
 	    	boolean b = (rs.next()) ? true : false;
 	    	stmt.close(); conn.close();
 	    	return b;
-	    	
-	    	/** alternative way - but creates exception
-			String dbstr = createDBstr(hostname, dbname);
-			Connection con = DriverManager.getConnection(dbstr, username, password);
-			con.close();
-			return true;
-			**/
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking for database " + dbname); return false;}
 		

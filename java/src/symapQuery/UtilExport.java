@@ -25,6 +25,7 @@ import symap.closeup.AlignPool;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Jcomp;
+import util.Popup;
 import util.Utilities;
 
 /***************************************************
@@ -35,13 +36,13 @@ public class UtilExport extends JDialog {
 	private static String filePrefix = "tableExport";
 	protected final int ex_csv = 0, ex_html = 1, ex_fasta= 2, ex_cancel= 3; // Referenced in TableDataPanel
    
-	private TableMainPanel tdp;
-	private String title, projs=""; 	 // CAS571 add projs
+	private TableMainPanel tPanel;
+	private String title, projs=""; 	
 	private JRadioButton btnYes;
 	private int nMode = -1;    
 	    
-	public UtilExport(TableMainPanel tdp, String title) {
-		this.tdp = tdp;
+	protected UtilExport(TableMainPanel tdp, String title) {
+		this.tPanel = tdp;
 		this.title = title;
 		
 		Vector<Mproject> projVec = tdp.queryFrame.getProjects();
@@ -92,7 +93,7 @@ public class UtilExport extends JDialog {
 				nMode = ex_fasta;
 			}
 		});
-		if (tdp.isSingle) btnFASTA.setEnabled(false);
+		if (tPanel.isSingle) btnFASTA.setEnabled(false);
    	  
 		ButtonGroup grp = new ButtonGroup();
 		grp.add(btnCSV);
@@ -148,57 +149,57 @@ public class UtilExport extends JDialog {
     protected void writeCSV() {
     try {
     	boolean reset = false;
-    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	int nSelRows = tPanel.theTable.getSelectedRowCount();
     	if (nSelRows>0) {
-    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
 		PrintWriter outFH = getFileHandle(ex_csv, filePrefix + ".csv", true);
 		if (outFH==null) return;
 		
 		if(nSelRows == 0) {
-			tdp.theTable.selectAll();
+			tPanel.theTable.selectAll();
 			reset = true;
 		}
-		int [] selRows = tdp.theTable.getSelectedRows();
+		int [] selRows = tPanel.theTable.getSelectedRows();
 		
 		outFH.println("### " + title);
 		outFH.println("### " + projs);
-		outFH.println("### Filter: " + tdp.theSummary); // CAS571 add
+		outFH.println("### Filter: " + tPanel.theSummary); 
 		boolean incRow = btnYes.isSelected();
-		tdp.setPanelEnabled(false);
+		tPanel.setPanelEnabled(false);
 		
 		// Columns names
-		for(int x=0; x<tdp.theTable.getColumnCount()-1; x++) {
+		for(int x=0; x<tPanel.theTable.getColumnCount()-1; x++) {
 			if (!incRow && x==0) continue; // for row check
 			
-			outFH.print(reloadCleanString(tdp.theTable.getColumnName(x)) + ",");
+			outFH.print(reloadCleanString(tPanel.theTable.getColumnName(x)) + ",");
 		}
-		outFH.println(reloadCleanString(tdp.theTable.getColumnName(tdp.theTable.getColumnCount()-1)));
+		outFH.println(reloadCleanString(tPanel.theTable.getColumnName(tPanel.theTable.getColumnCount()-1)));
 		
 		// rows
 		for(int x=0; x<selRows.length; x++) {
-			for(int y=0; y<tdp.theTable.getColumnCount()-1; y++) {
+			for(int y=0; y<tPanel.theTable.getColumnCount()-1; y++) {
 				if (!incRow && y==0) continue; 
 				
-				outFH.print(reloadCleanString(tdp.theTable.getValueAt(selRows[x], y)) + ",");
+				outFH.print(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)) + ",");
 			}
-			outFH.println(reloadCleanString(tdp.theTable.getValueAt(selRows[x], tdp.theTable.getColumnCount()-1)));
+			outFH.println(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], tPanel.theTable.getColumnCount()-1)));
 			outFH.flush();
 		}
 		System.out.println("Wrote " + selRows.length + " rows                  ");
 		outFH.close();
 		
 		if(reset)
-			tdp.theTable.getSelectionModel().clearSelection();
-		tdp.setPanelEnabled(true);
+			tPanel.theTable.getSelectionModel().clearSelection();
+		tPanel.setPanelEnabled(true);
 	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
     }
    
     protected void writeHTML() { 
     try {
-    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	int nSelRows = tPanel.theTable.getSelectedRowCount();
     	if (nSelRows>0) { 
-    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
     	
     	PrintWriter outFH = getFileHandle(ex_html, filePrefix + ".html", false);
@@ -206,13 +207,13 @@ public class UtilExport extends JDialog {
 	
 		boolean incRow = btnYes.isSelected();
 		
-		tdp.setPanelEnabled(false);
+		tPanel.setPanelEnabled(false);
 		boolean reset = false;
 		if(nSelRows == 0) {
-			tdp.theTable.selectAll();
+			tPanel.theTable.selectAll();
 			reset = true;
 		}
-		int [] selRows = tdp.theTable.getSelectedRows();
+		int [] selRows = tPanel.theTable.getSelectedRows();
 		
 		// html header
 		outFH.print("<!DOCTYPE html><html>\n<head>\n"
@@ -226,13 +227,13 @@ public class UtilExport extends JDialog {
 	 
 		outFH.println("<p><center><b><big>" + title + "</big></b></center>\n"); 
 		outFH.println("<br><center>" + projs + "</center>\n"); 
-		outFH.println("<br><center>Filter: " + tdp.theSummary + "</center>\n");
+		outFH.println("<br><center>Filter: " + tPanel.theSummary + "</center>\n");
 		outFH.print("<p><table class='ty'>\n<tr>");
 		
 		// Columns names
-		for(int x=0; x<tdp.theTable.getColumnCount(); x++) {
+		for(int x=0; x<tPanel.theTable.getColumnCount(); x++) {
 			if (!incRow && x==0) continue; 
-			String col = reloadCleanString(tdp.theTable.getColumnName(x));
+			String col = reloadCleanString(tPanel.theTable.getColumnName(x));
 			col = col.replace(" ","<br>");
 			outFH.print("<td><b><center>" + col + "</center></b></th>");
 		}
@@ -240,10 +241,10 @@ public class UtilExport extends JDialog {
 		// rows
 		for(int x=0; x<selRows.length; x++) {
 			outFH.print("\n<tr>");
-			for(int y=0; y<tdp.theTable.getColumnCount(); y++) {
+			for(int y=0; y<tPanel.theTable.getColumnCount(); y++) {
 				if (!incRow && y==0) continue; 
 				
-				outFH.print("<td>" + reloadCleanString(tdp.theTable.getValueAt(selRows[x], y)));
+				outFH.print("<td>" + reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)));
 			}
 			outFH.flush();
 		}
@@ -254,8 +255,8 @@ public class UtilExport extends JDialog {
 		outFH.close();
 		
 		if(reset)
-			tdp.theTable.getSelectionModel().clearSelection();
-		tdp.setPanelEnabled(true);
+			tPanel.theTable.getSelectionModel().clearSelection();
+		tPanel.setPanelEnabled(true);
 	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
     }
     
@@ -264,9 +265,9 @@ public class UtilExport extends JDialog {
      */
     protected void writeFASTA() {
     try {
-    	int nSelRows = tdp.theTable.getSelectedRowCount();
+    	int nSelRows = tPanel.theTable.getSelectedRowCount();
     	if (nSelRows>0) {
-    		if (!Utilities.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
+    		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
     	PrintWriter outFH = getFileHandle(ex_fasta, filePrefix + ".fa", true);
 		if (outFH==null) return;
@@ -274,27 +275,27 @@ public class UtilExport extends JDialog {
     	Thread inThread = new Thread(new Runnable() {
     	public void run() {
 			try {
-				TmpRowData rd = new TmpRowData(tdp);
-				tdp.setPanelEnabled(false);
+				TmpRowData rd = new TmpRowData(tPanel);
+				tPanel.setPanelEnabled(false);
 				
-				DBconn2 dbc = tdp.queryPanel.getDBC(); // CAS563 moved from QueryFrame; call here
+				DBconn2 dbc = tPanel.queryPanel.getDBC(); 
 				AlignPool aPool = new AlignPool(dbc);
 				
 				boolean reset = false;
-				if(tdp.theTable.getSelectedRowCount() == 0) {
-					tdp.theTable.selectAll();
+				if(tPanel.theTable.getSelectedRowCount() == 0) {
+					tPanel.theTable.selectAll();
 					reset = true;
 				}
 				long startTime = Utilities.getNanoTime();
-				int [] selRows = tdp.theTable.getSelectedRows();
+				int [] selRows = tPanel.theTable.getSelectedRows();
 				int selNum = selRows.length;
 				if (selNum>500) {
-					if (!Utilities.showContinue("Export FASTA", 
+					if (!Popup.showContinue("Export FASTA", 
 						"Selected " + selNum + " row to export. This is a slow function. \n" +
 						"It may take over a minute to export each 500 rows of sequences.")) 
 					{
-						if (reset)tdp.theTable.getSelectionModel().clearSelection();
-						tdp.setPanelEnabled(true);
+						if (reset)tPanel.theTable.getSelectionModel().clearSelection();
+						tPanel.setPanelEnabled(true);
 						return;
 					}
 				}
@@ -304,8 +305,8 @@ public class UtilExport extends JDialog {
 				for(int x=0; x<selNum; x++) {
 					if (!rd.loadRow(x)) {
 						outFH.close();
-						if(reset) tdp.theTable.getSelectionModel().clearSelection();
-						tdp.setPanelEnabled(true);
+						if(reset) tPanel.theTable.getSelectionModel().clearSelection();
+						tPanel.setPanelEnabled(true);
 						return;
 					}	
 					for (int i=0; i<2; i++) {
@@ -320,15 +321,15 @@ public class UtilExport extends JDialog {
 						seqNum++;
 					}
 					pairNum++;						
-					Globals.rprt("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%");// CAS561 use rprt
+					Globals.rprt("Wrote: " + ((int)((((float)x)/selRows.length) * 100)) + "%");
 				}
 				outFH.close();
 				
 				Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
 				
 				if(reset)
-					tdp.theTable.getSelectionModel().clearSelection();
-				tdp.setPanelEnabled(true);
+					tPanel.theTable.getSelectionModel().clearSelection();
+				tPanel.setPanelEnabled(true);
 		} catch(Exception e) {ErrorReport.print(e, "Write fasta");}
 		}});
 		inThread.start();
@@ -342,7 +343,7 @@ public class UtilExport extends JDialog {
 		
 		JFileChooser chooser = new JFileChooser(saveDir);
 		chooser.setSelectedFile(new File(fname));
-		if(chooser.showSaveDialog(tdp.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+		if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
 		if(chooser.getSelectedFile() == null) return null;
 		
 		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
@@ -361,12 +362,12 @@ public class UtilExport extends JDialog {
 		boolean append=true;
 		if (new File(saveFileName).exists()) {
 			if (bAppend) {
-				int rc = Utilities.showConfirmFile(saveFileName);
+				int rc = Popup.showConfirmFile(saveFileName);
 				if (rc==0) return null;
 				if (rc==1) append=false;
 			}
 			else {
-				if (!Utilities.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
+				if (!Popup.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
 				append=false;
 			}
 		}

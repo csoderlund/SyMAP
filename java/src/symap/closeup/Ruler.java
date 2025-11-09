@@ -30,12 +30,12 @@ public class Ruler {
 	private Rectangle2D.Double bounds = new Rectangle2D.Double();
 	private double[] points = new double[0];
 
-	public Ruler(Dimension2D lArrowDim, Dimension2D rArrowDim, Dimension2D tickDim,
+	protected Ruler(Dimension2D lArrowDim, Dimension2D rArrowDim, Dimension2D tickDim,
 			boolean showTickText, double tickSpace, double lineThickness) { //, int orientation) {
 		setRuler(0,0,lArrowDim,rArrowDim,tickDim,showTickText,tickSpace,lineThickness);//,orientation);
 	}
 
-	public void paint(Graphics2D g2, Color rulerColor, Color fontColor, Font font) {
+	protected void paint(Graphics2D g2, Color rulerColor, Color fontColor, Font font) {
 		if (rulerColor != null) g2.setPaint(rulerColor);
 		g2.draw(arrowLine);
 		g2.fill(arrowLine);
@@ -64,7 +64,7 @@ public class Ruler {
 						(tDim == null ? 0 : tDim.getHeight()/2.0) - TICK_TEXT_OFFSET);
 				for (int i = 0; i < points.length; ++i) {
 					g2.rotate(-Math.PI/4.0,(float)points[i],y);
-					String x = String.format("%,d", getUnit(points[i],unitPerPixel)); // CAS535 add comma
+					String x = String.format("%,d", getUnit(points[i],unitPerPixel)); 
 					g2.drawString(x.toString(),(float)points[i]-fontOffset,y);
 					g2.setTransform(saveAt);
 				}
@@ -85,7 +85,7 @@ public class Ruler {
 			double x = bounds.x + bounds.getWidth()/2.0;
 			double m = bounds.x + fm.getAscent() + fm.getDescent();
 			while (x >= m) {
-				points.add(x); // CAS520 double
+				points.add(x); 
 				x -= tickSpace;
 			}
 			m = bounds.x + bounds.getWidth() - fm.getAscent() - fm.getDescent();
@@ -102,7 +102,7 @@ public class Ruler {
 		return ret;
 	}
 
-	public void setBounds(int start, int end, double x, double y, 
+	protected void setBounds(int start, int end, double x, double y, 
 			double unitsPerPixel, FontMetrics tickFontMetrics) 
 	{
 		if (tickText && tickFontMetrics == null)
@@ -133,7 +133,7 @@ public class Ruler {
 		points = getPoints(tickFontMetrics);
 	}
 
-	public Rectangle2D getBounds() {
+	protected Rectangle2D getBounds() {
 		return bounds;
 	}
 
@@ -162,7 +162,7 @@ public class Ruler {
 		int max = 0;
 		int stop = Math.max(0,maxNumber - 100);
 		for (; maxNumber >= stop; --maxNumber) {
-			String x = String.format("%d", maxNumber); // CAS520 Integer.toString
+			String x = String.format("%d", maxNumber); 
 			max = Math.max(SwingUtilities.computeStringWidth(fm,x),max);
 		}
 		return max;

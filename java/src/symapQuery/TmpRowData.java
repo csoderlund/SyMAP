@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import symap.Globals;
 import util.ErrorReport;
-import util.Utilities;
 
 /***************************************************
  * Translates a row from a vector of objects to the correct data types for easy access,
@@ -13,15 +12,15 @@ import util.Utilities;
  * used in UtilReport, UtilExport writeFasta, and TableMainPanel.showAlignment, showRow, showSynteny
  */
 public class TmpRowData {
-	private TableMainPanel tdp;
+	private TableMainPanel tPanel;
 	
 	protected TmpRowData (TableMainPanel tdp) {
-		this.tdp = tdp;
+		this.tPanel = tdp;
 	}
 	
 	protected String loadRowAsString(int row) {// show row
 		try {
-			String outLine = tdp.theTableData.getRowData(row); // colName, value
+			String outLine = tPanel.theTableData.getRowData(row); // colName, value
 			return outLine;
 		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return "error";}
 	}
@@ -34,7 +33,7 @@ public class TmpRowData {
 			Vector <String> colNames = new Vector <String> (); // for new 2D-3track
 			Vector <Object> colVals = new Vector <Object> ();
 			
-			tdp.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
+			tPanel.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
 			
 			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
 			int isp=0;
@@ -120,13 +119,13 @@ public class TmpRowData {
 			
 			// get supporting values
 			if (spAbbr[1]==null || spAbbr[1]=="") {
-				Utilities.showWarningMessage("The abbrev_names are the same, cannot continue...");
+				util.Popup.showWarningMessage("The abbrev_names are the same, cannot continue...");
 				return false;
 			}
-			spName[0] = tdp.queryFrame.getDisplayFromAbbrev(spAbbr[0]);
-			spName[1] = tdp.queryFrame.getDisplayFromAbbrev(spAbbr[1]);
+			spName[0] = tPanel.queryFrame.getDisplayFromAbbrev(spAbbr[0]);
+			spName[1] = tPanel.queryFrame.getDisplayFromAbbrev(spAbbr[1]);
 			
-			SpeciesPanel spPanel = tdp.queryPanel.getSpeciesPanel();
+			SpeciesPanel spPanel = tPanel.queryPanel.getSpeciesPanel();
 			for (isp=0; isp<2; isp++) {
 				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
 				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
@@ -143,12 +142,12 @@ public class TmpRowData {
 		int [] coords = {0,0,0,0}; 
 		coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
 		
-		for (int r=0; r<tdp.theTableData.getNumRows(); r++) {
-			HashMap <String, Object> colHeadVal = tdp.theTableData.getRowLocData(r); 
+		for (int r=0; r<tPanel.theTableData.getNumRows(); r++) {
+			HashMap <String, Object> colHeadVal = tPanel.theTableData.getRowLocData(r); 
 			
 			String val = (String) colHeadVal.get(Q.grpCol);
 			String [] tok = val.split(Q.GROUP);				
-			int grp  = Utilities.getInt(tok[tok.length-1]);
+			int grp  = util.Utilities.getInt(tok[tok.length-1]);
 			if (grp!=groupN) continue;     // only rows with this groupN (selected row)
 			
 			int hitNum=0;
@@ -203,7 +202,7 @@ public class TmpRowData {
 	/* UtilReport **/
 	protected String getAnnoFromKey(String spAbbr, int row) {
 	try {
-		HashMap <String, String> annoMap = tdp.theTableData.getAllAnno(row);
+		HashMap <String, String> annoMap = tPanel.theTableData.getAllAnno(row);
 		
 		for (String colHead : annoMap.keySet()) { // All_Anno for all species in query
 			if (colHead.startsWith(spAbbr) && colHead.endsWith(Q.All_Anno)) 
@@ -215,7 +214,7 @@ public class TmpRowData {
 	
 	// get gene coordinates;  not used
 	protected Object [] getGeneCoords(String spAbbr, int row) {
-		return tdp.theTableData.getGeneCoords(spAbbr, row);
+		return tPanel.theTableData.getGeneCoords(spAbbr, row);
 	}
 	public String toString() {
 		return String.format("%4s %4s  %10s %10s  %5s %5s ", spAbbr[0], spAbbr[1], geneTag[0], geneTag[1], chrNum[0], chrNum[1]);

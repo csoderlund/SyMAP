@@ -72,8 +72,8 @@ public class SeqPool {
 			
 			for (int i=0; i<2; i++) {
 				String sql = (i==0) ? " type='" + Globals.geneType + "'" 
-				: " (type!='" + Globals.geneType + "' && type!='" + Globals.pseudoType + "')"; // CAS565 add pseudo
-				rs = dbc2.executeQuery(annot_query + sql + " order by start ASC"); // CAS560 add order to be sure
+				: " (type!='" + Globals.geneType + "' && type!='" + Globals.pseudoType + "')"; 
+				rs = dbc2.executeQuery(annot_query + sql + " order by start ASC"); 
 				while (rs.next()) {
 					annot_idx = rs.getInt(1);		
 					type = rs.getString(2);	
@@ -174,7 +174,7 @@ public class SeqPool {
 			lastGeneNum = annot.getGeneNum();
 			numList.add(annot);
 		 }
-		 buildPlace(olapMap, numList, lastGeneNum); // CAS519 missing last one
+		 buildPlace(olapMap, numList, lastGeneNum); 
 		 
 		 if (olapMap.size()==0) olapMap.put(-1,-1); // need at least one value so will not compute again
 	}
@@ -247,7 +247,6 @@ public class SeqPool {
 	 * XXX SeqFilter Conserved Genes; These methods are called from the reference track from Sequence
 	 ****************************************************************************/
 	/**
-	 *  CAS570 stop using intermediate class, better naming of variables, fix problem of filtered G2 showing one side only
 	 *  Confusing: Left/right tracks; Hits have left/right possible genes.
 	 *  Green: high&anno, visible g2/g1
 	 *  Pink:  high&force, non-visible but completes g2: green/pink, g1: brown/pink

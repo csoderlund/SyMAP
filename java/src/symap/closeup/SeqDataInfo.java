@@ -13,11 +13,10 @@ import util.ErrorReport;
 
 /*******************************************************
  * Create sequence information associated with TextShowInfo
- * CAS560 was part of SeqData; split off into new file
  */
 public class SeqDataInfo {
 	
-	  // CAS517 - format exon list (e.g. Exon #1:20:50,Exon #1:20:50); CAS531 moved from Utilities
+	  // format exon list (e.g. Exon #1:20:50,Exon #1:20:50)
     static public String formatExon(String exonList) {	
     	String exonTag = Globals.exonTag;
     	int rm = exonTag.length();
@@ -68,9 +67,6 @@ public class SeqDataInfo {
      * Methods for TextShowInfo for hits
      */
     /* Format a clustered hit (e.g. 100:200,300:400); hitListStr is order stored in DB, which is by Q
-     * CAS531 sorted by start so easier to read and determine overlap or gap
-     * CAS548 only called by TextShowInfo for SeqHits.popupDesc to draw hit popup
-     * CAS560 add args:
      * 	 aObj   - for ExonVec && if -ii gStart and gEnd 
      *   title  - merge, order, remove
      * 	 bSort  - default&Merge yes, target only, sort by start; so # may be out-of-order 
@@ -137,7 +133,7 @@ public class SeqDataInfo {
 			rows[r][c++] =  String.format("%,d", len); 
 			
 			if (lastE>0) { 					// gap column
-				gapCol = Globals.pGap_nOlap(s,e,lastS,lastE); // CAS560 was off by one with s-lastE; change to olapOrGap
+				gapCol = Globals.pGap_nOlap(s,e,lastS,lastE); 
 				
 				rows[r][c++] = String.format("%,d",gapCol);
 				if (gapCol<=0) cntMergeNeg++;
@@ -145,8 +141,7 @@ public class SeqDataInfo {
 			else rows[r][c++] = "-";
 			
 			/* last column */
-			// disorder sign
-			String star = " ";
+			String star = " ";// disorder sign
 			if (bOrder) {
 				  if (lastS > s) { 
 					  star = TextShowInfo.disOrder+TextShowInfo.disOrder;
@@ -202,7 +197,7 @@ public class SeqDataInfo {
     }
     
     /*************************************************************
-     * Merge overlapping hits: CAS560 add
+     * Merge overlapping hits
      * This method is in:
      * 	  mapper.HitData:  for 2D display where it is not sorted first, which can leave gaps but does not hurt for display
      *    anchor2.HitPair: where the input is a vector of hits and the output is a merged vector
@@ -282,7 +277,7 @@ public class SeqDataInfo {
 	}
 	catch (Exception e) {e.printStackTrace(); return null;}	
 	}
-    /* CAS560 remove disordered hits */
+  
     static protected String [] calcRemoveDisorder(String queryHits, String targetHits, boolean isInv) {
      	try {
      		String [] retHits = new String [2];
@@ -387,7 +382,7 @@ public class SeqDataInfo {
   				}
   		});
     }
-    /* CAS560 added but not used; Only called if target is disordered; not used, switched to not-sort; 
+    /* Not used; Only called if target is disordered; not used, switched to not-sort; 
      * return new queryHits and targetHits ordered by target start; 
      */
     static protected String [] calcOrderTarget_NotUsed(String queryHits, String targetHits, boolean isInv) {

@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.Vector;
 
 import database.DBconn2;
-import props.PropsDB;
 import symap.Globals;
 import symap.mapper.HitData;
 import util.ErrorReport;
@@ -26,8 +25,6 @@ import util.Utilities;
  * 1. Query and target are used in the pseudo_hits table
  * 2. Select and Other are from the user selected sequence
  * 3. isQuery determines whether the Select=Query or Select=Target
- * 
- * CAS531 restructured/renamed for clarity; CAS541 was DBAbsUser; CAS563 changes for MSA query and add isTrim arg for hitInfo
  */
 public class AlignPool  {
 	private static final boolean TRACE = false; 
@@ -93,28 +90,25 @@ public class AlignPool  {
 	/*****************************************************************
 	 * 2D Text popup and closeup
 	 ***********************************************************/
-	public AlignPool(DBconn2 dbc2, PropsDB pp){
-		this.dbc2 = dbc2;
-	}
 	
-	// Called from CloseUpDialog.setview 
-	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, 
+	// Called from AlignPool, HitAlignment
+	protected synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, 
 			boolean isQuery, String projS, String projO, int selStart, int selEnd) 
 	{	
 		return computeHitAlign(hitList, isQuery, projS, projO, true, selStart, selEnd, bTrim); // use -a trim
 	}
 	// Called from TextPopup
-	public synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery, boolean isTrim) 
+	protected synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery, boolean isTrim) 
 	{
-		return computeHitAlign(hitList, isQuery, "", "", isNT, -1, -1, isTrim); // CAS563 pass in trim
+		return computeHitAlign(hitList, isQuery, "", "", isNT, -1, -1, isTrim); 
 	}
 	// Called from TextPopup 
-	public synchronized HitAlignment[] getHitReverse(HitAlignment [] halign) 
+	protected synchronized HitAlignment[] getHitReverse(HitAlignment [] halign) 
 	{
 		return computeHitReverse(halign);
 	}
 	// Called from TextShowSeq 
-	public Vector <SeqData> getHitSequence (Vector <HitData> hitList, int grpID, boolean isQuery, boolean bRev) 
+	protected Vector <SeqData> getHitSequence (Vector <HitData> hitList, int grpID, boolean isQuery, boolean bRev) 
 	{
 		return createHitSequence(hitList, grpID, isQuery, bRev);
 	}
@@ -144,7 +138,7 @@ public class AlignPool  {
 			for (int i = 0;  i < num;  i++) {
 				int subStart = extractStart(curHit.selectIndices[i]);
 				int subEnd = extractEnd(curHit.selectIndices[i]);
-				if (sStart!=-1 && sEnd != -1) { //CAS535 only subhits that overlap the selected coords
+				if (sStart!=-1 && sEnd != -1) { 
 					if (!Utilities.isOverlap(sStart, sEnd, subStart, subEnd)) continue;	
 				}
 				// Do Alignment
@@ -198,7 +192,7 @@ public class AlignPool  {
 		int startOfs = subHit.selectStart - curHit.selectStart; // relative to beginning
 		int endOfs   = subHit.selectEnd   - curHit.selectStart;
 		subHit.selectSeq =   curHit.selectSeq.substring(startOfs, endOfs+1); 
-		if (toUpper)         subHit.selectSeq = subHit.selectSeq.toUpperCase();// CAS531 stop toUpperCase
+		if (toUpper)         subHit.selectSeq = subHit.selectSeq.toUpperCase();
 		if (curHit.isSelNeg) subHit.selectSeq = SeqData.revComplement(subHit.selectSeq);
 		
 		// make other sub-sequence
@@ -208,7 +202,7 @@ public class AlignPool  {
 		startOfs = subHit.otherStart - curHit.otherStart;
 		endOfs =   subHit.otherEnd   - curHit.otherStart;
 		subHit.otherSeq =    curHit.otherSeq.substring(startOfs, endOfs+1);
-		if (toUpper)         subHit.otherSeq = subHit.otherSeq.toUpperCase();// CAS531 stop toUpperCase
+		if (toUpper)         subHit.otherSeq = subHit.otherSeq.toUpperCase();
 		if (curHit.isOthNeg) subHit.otherSeq = SeqData.revComplement(subHit.otherSeq);
 		
 	    /** Align **/
@@ -218,7 +212,7 @@ public class AlignPool  {
 					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
 					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
 		
-		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, isTrim, tmsg)) return null; // CAS563 changed from -a flag to Trim button
+		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, isTrim, tmsg)) return null; 
 		
 		// Get results
 		subHit.selectAlign = ad.getAlignSeq1();
@@ -419,7 +413,7 @@ public class AlignPool  {
 			long chunk = start / CHUNK_SZ;
 			String seq;
 			start = start % CHUNK_SZ;
-			if (start>0) start--;  // CAS531 -1 =translate like MUMmer show_align AA output (it seems to do 6-frame and pick best)
+			if (start>0) start--;  // -1 =translate like MUMmer show_align AA output (it seems to do 6-frame and pick best)
 			end = end % CHUNK_SZ;
 			
 			while (count > 0) {
@@ -494,7 +488,7 @@ public class AlignPool  {
 		
 		return curHit;
 	}
-	// Query MSA - CAS563 add -hitIdx is not available, but these 5 numbers are unique; need all!
+	// Query MSA 
 	private String loadSubHitStr(int pos, String gapLess) {
 	try {
 		String [] tok = gapLess.split(";");		// pseudo_hits needs all of these to be unique since no hitIdx

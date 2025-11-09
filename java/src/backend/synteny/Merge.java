@@ -61,14 +61,14 @@ public class Merge {
 		
 				if (bOrient && !bA.orient.equals(bZ.orient)) continue;
 				
-				if (action!=COSET && (bA.nHits < mindots && bZ.nHits < mindots)) continue; // Strict merges cosets; CAS574 add
+				if (action!=COSET && (bA.nHits < mindots && bZ.nHits < mindots)) continue; // Strict merges cosets
 				
 				if (action==CONTAINED) { // only merge if contained on both sides
 					if (isContained(bA.mS1,bA.mE1,bZ.mS1,bZ.mE1) && 
 						isContained(bA.mS2,bA.mE2,bZ.mS2,bZ.mE2))
 					{
 						boolean isGood = true;
-						if (bA.nHits<mindots || bZ.nHits<mindots) { // Strict cosets has <mindots; merged cosets can be >mindots; CAS574 add
+						if (bA.nHits<mindots || bZ.nHits<mindots) { // Strict cosets has <mindots; merged cosets can be >mindots
 							isGood = (bA.nHits<bZ.nHits) ? bZ.fitStrict(bA, fullGap2, loop==0) : bA.fitStrict(bZ, fullGap2, loop==0);
 							if (!isGood) cntSkip++; else cntCoset++;
 						}		

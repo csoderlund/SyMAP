@@ -16,7 +16,7 @@ import symap.Globals;
 
 /*************************************************
  * Write image - used from the Printer Icon
- * CAS533 it was using org.freehep for images, which did not work past Java v8.
+ * it was using org.freehep for images, which did not work past Java v8.
  * Even though it does not use org.freehep explicitly, it still needs 
  * 		org.freehep.graphicsio.raw.RawImageWriterSpi 
  */
@@ -38,7 +38,7 @@ public class ImageViewer extends JDialog {
 			}
 		}
 		if (type==null) {
-			Utilities.showWarningMessage("Illegal File: " + f + "\nMust end in: " + typeStr);
+			util.Popup.showWarningMessage("Illegal File: " + f + "\nMust end in: " + typeStr);
 			return;
 		}
 		saveImage(comp, type, f);
@@ -46,7 +46,7 @@ public class ImageViewer extends JDialog {
 	
     private static String getFile(String fname) {
 		try {	
-			String saveDir = Globals.getExport(); // CAS547 change to call globals
+			String saveDir = Globals.getExport(); 
 			
 			JFileChooser fc = new JFileChooser(saveDir);
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(typeStr, typeExt);

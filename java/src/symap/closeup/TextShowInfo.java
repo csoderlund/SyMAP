@@ -60,8 +60,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private JButton closeButton;
 	
 	/***************************************************
-	 * 2D Gene info; CAS560 make separate from hit
-	 * Called by Annotation.java
+	 * 2D Gene info. Called by Annotation.java
 	 */
 	public TextShowInfo (Component parentFrame, String title, String theInfo, Annotation annoDataObj) {
 		super();
@@ -129,7 +128,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		boolean bOrder = title.startsWith(titleOrder);
 		boolean bRemove = title.startsWith(titleRemove);
 		
-		String name1 = String.format("%-16s %s", proj1, gene1);// CAS570 removed () and line up gene#
+		String name1 = String.format("%-16s %s", proj1, gene1);
 		String name2 = String.format("%-16s %s", proj2, gene2);
 		
 		/** Text - the tables and info **/
@@ -392,7 +391,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 				queryHits, targetHits, isQuery, isInvHit, false /* keep order */); 
 	}
 	/*************************************************************
-	 * run after runOrder to remove disordered hits; CAS560 add
+	 * run after runOrder to remove disordered hits
 	 */
 	private void runRemove() {
 		String [] sort = SeqDataInfo.calcRemoveDisorder(queryHits, targetHits, isInvHit);

@@ -5,46 +5,43 @@ import symap.Globals;
 /**
  * Constants for Query and display
  */
-
 public class Q {
 	static final int INC=5000;
-	static final String GROUP = "-", COSET = "."; // CAS563 can't change COSET easily
+	static final String GROUP = "-", COSET = "."; 
 	static final String DOT = Globals.DOT,    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
 			            SDOT = Globals.SDOT; // this is for split
 	
-	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand; CAS563
-	static final String dash	 =  "-"; 		// pre-v5.6.5 this used for geneTag if empty
-	static final String pseudo 	= Globals.pseudoChar; // v5.6.5 no annot
+	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand
+	static final String dash	 =  "-"; 		// empty
+	static final String pseudo 	= Globals.pseudoChar; // no annot
 	static final String minor 	= Globals.minorAnno;
 	static final int    iNoVal   = -1;          // gene coord defaults
 	
 	static final String delim = "\n";	// uses as delimiter between Species::annoKey, and put annoKey on 2nd column line
 	static final String delim2 = ":";	// used for other keys
-	static final String stop = "Stopped"; // CAS564 set in TableMainPanel, checked in other files
+	static final String stop = "Stopped"; // set in TableMainPanel, checked in other files
 	
 	static final String rowCol   = "Row";
 	static final String blockCol = "Block"; 	// loadRow; equals TableData.ColumnComparator (for sorting)
-	static final String cosetCol = "Collinear"; // loadRow; CAS517 equals TableData.ColumnComparator
-	static final String hitCol =   "Hit#";		// loadRow; CAS521 used for Align text
-	static final String grpCol =   "Group";		// loadRow; CAS555 show synteny; CAS563 now GrpSize.Grp#.
+	static final String cosetCol = "Collinear"; // loadRow; equals TableData.ColumnComparator
+	static final String hitCol =   "Hit#";		// loadRow; used for Align text
+	static final String grpCol =   "Group";		// loadRow; show synteny; GrpSize.Grp#.
 	static final String hitPrefix = "Hit";		// Required prefix; Searches MUST BE for equal, or SpAbbr of "Hitx" would mess up
-	static final String hitSt	  = "Hit\nSt";  // Leave \n so can search on full column in TableData; CAS563 add for Align
+	static final String hitSt	  = "Hit\nSt";  // Leave \n so can search on full column in TableData
 	
-	// CAS519 was Gene for Orphan and Hit for Pairs; now it always shows the genes; Chr is always same for hit/gene
 	static final String chrCol =	 "Chr";
 	static final String gStartCol =	 "Gstart";
 	static final String gEndCol =	 "Gend";
 	static final String gLenCol = 	 "Glen";
-	static final String gStrandCol = "Gst";		// endsWith TableData.ColumnComparator; CAS518
+	static final String gStrandCol = "Gst";		// endsWith TableData.ColumnComparator
 	static final String gNCol =  	 "Gene#";	// endsWith TableData.ColumnComparator; expects chr#.genenum.[suffix]
 	static final String hStartCol =	 "Hstart";
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";
-	static final String gHitNumCol = "NumHits"; // CAS541 
-	static final String gOlap = 	 "%Olap";   // CAS548
+	static final String gHitNumCol = "NumHits"; 
+	static final String gOlap = 	 "%Olap";   
 	
 	static final String All_Anno =  "All_Anno";
-	
 	
 	// for SQL tables - see below for tables and fields used
 	static final String PA = 	"PA"; 	// pseudo_annot
@@ -84,13 +81,10 @@ public class Q {
 	static final int BNUM = 27;			// B.blocknum
 	static final int BSCORE = 28;		// B.blockscore
 	
-	static final int AOLAP = 29;		// PHA.olap or exlap CAS548 add
+	static final int AOLAP = 29;		// PHA.olap or exlap 
 	
 	static final int ANNOT1IDX = 30;	// PH.annot1_idx
 	static final int ANNOT2IDX = 31;	// PH.annot2_idx
-	
-	static final int PHAANNOT1IDX = 32;	// PHA.annot_idx	CAS565 not used anymore; CAS547 for AllGenes
-	static final int PHAANNOT2IDX = 33;	// PHA.annot2_idx
 	
 	/**************************************************************
 	 * Relations:
@@ -116,9 +110,9 @@ public class Q {
 			"start2              INTEGER NOT NULL," +
 			"end2                INTEGER NOT NULL, " +  
 			"runsize			 INTEGER default 0," +
-			"pctid               TINYINT UNSIGNED NOT NULL," +    // Col6, Avg %ID CAS515 
-			"countpct			INTEGER UNSIGNED default 0," +  // unused 0; CAS515 number of merged, tinyint->integer
-		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  //was unused 0 -> CAS515 Col7 %sim
+			"pctid               TINYINT UNSIGNED NOT NULL," +    // Col6, Avg %ID  
+			"countpct			INTEGER UNSIGNED default 0," +  // unused 0
+		    "cvgpct				TINYINT UNSIGNED NOT NULL," +  //was unused 0 -> 
 		    "score				 INTEGER default 0,"
 			
 			

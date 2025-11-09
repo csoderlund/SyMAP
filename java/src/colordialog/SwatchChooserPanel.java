@@ -1,9 +1,3 @@
-/*
- * This is based off of DefaultSwatchChooserPanel.java by Sun Microsystems.
- *
- * An alpha slider and spinner have been added.
- */
-
 package colordialog;
 
 import java.awt.BorderLayout;
@@ -31,13 +25,9 @@ import javax.swing.event.ChangeListener;
 /**
  * Class SwatchChooserPanel is based off of the DefaultSwatchChooserPanel with
  * an added slider and spinner for Alpha values (optional).
- *
- * @see AbstractColorChooserPanel
- * @see ChangeListener
- * @see MouseListener
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class SwatchChooserPanel extends AbstractColorChooserPanel implements ChangeListener, MouseListener {
+	private static final long serialVersionUID = 1L;
 	private MainSwatchPanel swatchPanel;
 	private RecentSwatchPanel recentSwatchPanel;
 	private JSlider alphaSlider;
@@ -45,17 +35,9 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	private boolean isLocked; // for stopping an endless loop of changing the slider and updating the colors
 	private boolean doAlpha;  // not allowing alpha changes
 
-	/**
-	 * Creates a new SwatchChooserPanel instance in which alpha is enabled.
-	 */
 	public SwatchChooserPanel() { 
 		this(true);
 	}
-
-	/**
-	 * Creates a new SwatchChooserPanel instance.
-	 * @param alphaEnabled a boolean value of true to allow for changing the alpha value
-	 */
 	public SwatchChooserPanel(boolean alphaEnabled) {
 		super();
 		doAlpha = alphaEnabled;
@@ -71,10 +53,6 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	public Icon getLargeDisplayIcon() {
 		return null;
 	}
-
-	/**
-	 * Method buildChooser sets up the view and the listeners
-	 */
 	protected void buildChooser() {
 		int alpha = getColorFromModel().getAlpha();
 
@@ -128,10 +106,7 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 		add(superHolder);
 	}
 
-	/**
-	 * Method stateChanged handles the changing of the alpha slider and alpha spinner.
-	 * @param e a ChangeEvent value
-	 */
+	/* handles the changing of the alpha slider and alpha spinner. */
 	public void stateChanged(ChangeEvent e) {
 		if (!isLocked && e.getSource() == alphaSlider || e.getSource() == alphaSpinner) {
 			Color c = getColorFromModel();
@@ -147,27 +122,19 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 			getColorSelectionModel().setSelectedColor(new Color(c.getRed(),c.getGreen(),c.getBlue(),alpha));
 		}
 	}
-
-	/**
-	 * Method updateChooser updates the alpha slider and alpha spinner to the current color from the color model.
-	 */
 	public void updateChooser() { 
 		if (!isLocked) {
 			isLocked = true;
 
 			int alpha = getColorFromModel().getAlpha();
 			alphaSlider.setValue(alpha);
-			alphaSpinner.setValue(alpha); // CAS512 alphaSpinner.setValue(new Integer(alpha));
+			alphaSpinner.setValue(alpha); 
 
 			isLocked = false;
 		}
 	}
 
-	/**
-	 * Method mousePressed handles the mouse clicking on
-	 * spots in the main color grid and the recent color grid.
-	 * @param e a MouseEvent value
-	 */
+	/* handles the mouse clicking on spots in the main color grid and the recent color grid. */
 	public void mousePressed(MouseEvent e) {
 		if (e.getSource() == recentSwatchPanel) {
 			Color color = recentSwatchPanel.getColorForLocation(e.getX(), e.getY());
@@ -186,8 +153,9 @@ public class SwatchChooserPanel extends AbstractColorChooserPanel implements Cha
 	public void mouseReleased(MouseEvent e) { }
 }
 
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
+
 abstract class SwatchPanel extends JPanel {
+	private static final long serialVersionUID = 1L;
 	protected Color[] colors;
 	protected Dimension swatchSize, numSwatches, gap;
 
@@ -203,11 +171,6 @@ abstract class SwatchPanel extends JPanel {
 	protected abstract void initValues();
 	protected abstract void initColors();
 
-	/* 
-	public boolean isFocusTraversable() { // CAS512 depreciated
-		return false;
-	}
-	*/
 	public void paintComponent(Graphics g) {
 		g.setColor(getBackground());
 		g.fillRect(0,0,getWidth(), getHeight());

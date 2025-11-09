@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
  * 
  * Called from xToSymap, but can be used stand-alone.
  * 
- * Written by CAS 16/Jan/18; made part of toSymap and other changes for CAS557; CAS558 rewrote and simplified
  * This assumes input of the project directory, which has either
  * 1. The ncbi_dataset.zip unzipped, .e.g 
  *    /data/seq/Arab/ncbi_dataset/data/GCF_000001735.4
@@ -104,7 +103,7 @@ public class ConvertNCBI {
 	private final String exonGeneAttrKey = "gene";
 	private final String cdsProteinAttrKey = "protein_id";
 
-	private final String PROTEINID = "proteinID="; // CAS558 new keywords for gene attributes
+	private final String PROTEINID = "proteinID="; // keywords for gene attributes
 	private final String MRNAID    = "rnaID="; 	   // ditto
 	private final String DESC	   = "desc=";	   // ditto
 	private final String RMGENE	   = "gene-";
@@ -153,7 +152,7 @@ public class ConvertNCBI {
 		isToSymap=false;
 		new ConvertNCBI(args, defGapLen, null);
 	}
-	protected ConvertNCBI(String [] args, int gapLen, String prefix) { // CAS557 make accessible from ConvertFrame
+	protected ConvertNCBI(String [] args, int gapLen, String prefix) {
 		if (args.length==0) { // command line
 			checkArgs(args);
 			return;
@@ -238,7 +237,7 @@ public class ConvertNCBI {
 			prt( String.format("C %,11d  c %,11d", cntBase.get('C'), cntBase.get('c')) );
 			prt( String.format("G %,11d  g %,11d", cntBase.get('G'), cntBase.get('g')) );
 			prt( String.format("N %,11d  n %,11d", cntBase.get('N'), cntBase.get('n') ));
-			String other=""; // CAS513
+			String other=""; 
 			for (char b : cntBase.keySet()) {
 				boolean found = false;
 				for (char x : base) if (x==b) {found=true; break;}
@@ -292,7 +291,7 @@ public class ConvertNCBI {
     				}
     				idcol1 = tok[0];
     				
-    				isChr=isScaf=isMT=false; // CAS557 start check prefix (was only checking for contains)
+    				isChr=isScaf=isMT=false; 
     				
     				if (idcol1.startsWith("NC_")) isChr=true; 
     				else if (idcol1.startsWith("NW_") || idcol1.startsWith("NT_") ) isScaf=true;
@@ -306,7 +305,7 @@ public class ConvertNCBI {
     				else if (isMT) cntMtPt++;
     				else cntUnk++;
     				
-    				if (prefixOnly!=null) { // CAS557 new parameter
+    				if (prefixOnly!=null) { 
     					if (!idcol1.startsWith(prefixOnly)) {
     						cntNoOutSeq++;
     						continue;
@@ -440,7 +439,7 @@ public class ConvertNCBI {
 	private String createChrPrtName(String line) {
 		try {
 			String name=null;
-			String [] words = line.split("\\s+"); // CAS557 this gets them all I think...
+			String [] words = line.split("\\s+"); 
 			for (int i=0; i<words.length; i++) {
 				if (words[i].equals("chromosome")) {
 					if (i+1 < words.length) name = words[i+1];
@@ -716,7 +715,7 @@ public class ConvertNCBI {
 		String [] tok = geneLine.split("\\t");
 		if (tok.length!=9) die("Gene: " + tok.length + " " + geneLine);
 		
-		if (geneID.startsWith(RMGENE)) geneID = geneID.replace(RMGENE,""); // CAS558 remove gene-
+		if (geneID.startsWith(RMGENE)) geneID = geneID.replace(RMGENE,""); 
 		String idAt = idAttrKey + "=" + geneID + ";";
 		
 		String [] attrs = tok[8].split(";");
@@ -725,7 +724,6 @@ public class ConvertNCBI {
 		
 		String desc = getVal(descAttrKey, attrs).trim();
 		if (!desc.equals("")) gproductAt = DESC + desc;
-		// else gproductAt=""; CAS561 use mRNA product 
 		
 		gmrnaAt += " (" + cntThisGeneMRNA + ");";
 		

@@ -19,14 +19,14 @@ public class ABlock implements Shape, Comparable<ABlock> {
 	private int number;
 	private Rectangle rect;
 	
-	private Tile parent;
+	private Tile tileObj;
 	int sX, eX, sY, eY; // for swap reference
 
 	protected ABlock(Tile parent, int blockNum, int sX, int eX, int sY, int eY) {    
 		this.sX=sX; this.eX=eX; this.sY=sY; this.eY=eY;
 		rect = new Rectangle();
 		
-		this.parent = parent;
+		this.tileObj = parent;
 		this.number = blockNum;
 		rect.setFrameFromDiagonal(sX,sY,eX,eY);
 	}
@@ -48,14 +48,14 @@ public class ABlock implements Shape, Comparable<ABlock> {
 	}
 	
 	protected String getName() {
-		return parent.getGroup(Y).getName()+"."+parent.getGroup(X).getName()+"."+getNumber();
+		return tileObj.getGroup(Y).getName()+"."+tileObj.getGroup(X).getName()+"."+getNumber();
 	}
 	// Called by Plot and Data
 	protected int getStart(int axis) {return (axis == X ? rect.x : rect.y);}
 	protected int getEnd(int axis)   {return (axis == X ? rect.x+rect.width : rect.y+rect.height);}
 	protected int getNumber()        {return number;}
 	protected String getNumberStr()  {return number+"";}
-	protected Group getGroup(int axis) {return parent.getGroup(axis);}
+	protected Group getGroup(int axis) {return tileObj.getGroup(axis);}
 
 	////// Shape
 	public boolean contains(double x, double y) {

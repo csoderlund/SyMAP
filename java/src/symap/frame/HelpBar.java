@@ -25,11 +25,9 @@ import colordialog.ColorListener;
 /******************************************************************
  * Help Box on left side of Chromosome explorer and bottom of other displays
  */
-
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class HelpBar extends JPanel 
-					 implements MouseListener, MouseMotionListener, ActionListener, ColorListener 
-{
+					 implements MouseListener, MouseMotionListener, ActionListener, ColorListener {
+	private static final long serialVersionUID = 1L;
 	private static final Font helpFont = new Font("Courier", 0, 12); 
 	private static final Color helpColor = Color.black;
 	private static final Color helpBackgroundColor = Color.white;
@@ -75,7 +73,7 @@ public class HelpBar extends JPanel
 				help = help.replaceAll("\n", "   ");
 				help = help.replaceAll(":    ", ": ");
 				help = help.replaceAll(":   ", ": ");
-				help = help.replaceAll(":  ", ": "); // CAS571 formated for Information box; don't need extra space on bottom
+				help = help.replaceAll(":  ", ": "); 
 			}
 		}
 		helpLabel.setText(help);

@@ -8,7 +8,7 @@ import java.util.Vector;
 
 import symap.manager.Mproject;
 
-public class MapLeft  { // CAS521 removed 'extend Observer' - wasn't even used
+public class MapLeft  { 
 	private Mproject[] projects;	
 	private ChrInfo[] allChrs;
 	private Block[] blocks;

@@ -28,7 +28,7 @@ public class ResultsPanel extends JPanel {
 	private static final long serialVersionUID = -4532933089334778200L;
 
 	protected ResultsPanel(QueryFrame parentFrame) {
-		theQueryFrame = parentFrame;
+		qFrame = parentFrame;
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBackground(Color.WHITE);
@@ -39,7 +39,7 @@ public class ResultsPanel extends JPanel {
 		theTable.getTableHeader().setBackground(Color.WHITE);
 		theTable.setColumnSelectionAllowed( false );
 		theTable.setCellSelectionEnabled( false );
-		theTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);// CAS562
+		theTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		theTable.setRowSelectionAllowed( true );
 		theTable.setShowHorizontalLines( false );
 		theTable.setShowVerticalLines( true );	
@@ -52,7 +52,7 @@ public class ResultsPanel extends JPanel {
 				updateButtons();
 				if (e.getClickCount() == 2) {
 					int row = theTable.getSelectedRow();
-					theQueryFrame.selectResult(row);		// 
+					qFrame.selectResult(row);		// 
 				}
 			}
 		});
@@ -77,28 +77,28 @@ public class ResultsPanel extends JPanel {
 	
 	private void removeSelectedSummaries(int [] selections) {
 		for(int x=selections.length-1; x>=0; x--) {
-			theQueryFrame.removeResult(selections[x]);
+			qFrame.removeResult(selections[x]);
 			rows.remove(selections[x]);
 		}
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
 		
-		if (rows.size()==0) theQueryFrame.resetCounter(); 
+		if (rows.size()==0) qFrame.resetCounter(); 
 	}
 	
 	private void removeAllSummaries() {
 		int numResults = rows.size();
 		
 		for(int x=0; x < numResults; x++) 
-			theQueryFrame.removeResult(0);
+			qFrame.removeResult(0);
 		rows.clear();
 		
 		theTable.clearSelection();
 		theTable.revalidate();
 		updateButtons();
 		
-		theQueryFrame.resetCounter(); 
+		qFrame.resetCounter(); 
 	}
 	
 	private void updateButtons() {
@@ -177,6 +177,6 @@ public class ResultsPanel extends JPanel {
 	private Vector<String []> rows = null;
 	private String [] colNames = { "Result", "Filters" };
 	
-	private QueryFrame theQueryFrame = null;
+	private QueryFrame qFrame = null;
 }
 

@@ -22,10 +22,9 @@ import java.util.TreeMap;
 /***************************************************************
  * Displays the graphical portion of the Closeup Align
  */
-
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class CloseUpComponent extends JComponent {
-	// colors and finals are at the bottom
+	private static final long serialVersionUID = 1L;
+	
 	private HitAlignment[] hitAlign;
 	private GeneAlignment[] geneAlign;
 	private int startGr, endGr;			// start and end of graphics
@@ -35,7 +34,7 @@ public class CloseUpComponent extends JComponent {
 	/******************************************************
 	 * XXX 
 	 */
-	public CloseUpComponent() {
+	protected CloseUpComponent() {
 		super();
 		setBackground(backgroundColor);
 		listeners = new Vector<CloseUpDialog>();
@@ -47,26 +46,6 @@ public class CloseUpComponent extends JComponent {
 		ruler = new Ruler(RULER_ARROW_DIM, RULER_ARROW_DIM, RULER_TICK_DIM,
 				true, RULER_TICK_SPACE, RULER_LINE_THICKNESS);
 	}
-
-	public void addCloseUpListener(CloseUpDialog cl) {if (!listeners.contains(cl))listeners.add(cl);}
-	public void removeCloseUpListener(CloseUpDialog cl) {listeners.remove(cl);}
-
-	// start = min(start_exon, start_subhit), end=max(end_exon, end_subhit)
-	public void setData(int startG, int endG, GeneAlignment[] ga, HitAlignment[] ha) {
-		this.startGr = startG;
-		this.endGr = endG;
-		this.geneAlign = ga;
-		this.hitAlign = ha;
-		
-		if (this.geneAlign != null) Arrays.sort(this.geneAlign);
-		if (this.hitAlign  != null) Arrays.sort(this.hitAlign);
-		
-		setPreferredSize(getWidth());
-	}
-
-	public int getNumberOfHits() { return (hitAlign == null ? 0 : hitAlign.length); }
-	
-	private int getLengthG() { return Math.abs(endGr - startGr) + 1; }
 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -90,15 +69,13 @@ public class CloseUpComponent extends JComponent {
 		for (int i = 0; i < geneAlign.length; ++i) 
 			geneAlign[i].paint(g2, fm, geneFontColor, FONT_SPACE);
 	}
-	/****************************************************************************/
 	public void setPreferredSize(Dimension d) {
 		setPreferredSize(d.width);
 	}
-
+	/****************************************************************************/
+	
 	private void setPreferredSize(double width) {
-		// CAS534 would not have done hit overlaps if no genes; if (hitAlign != null && geneAlign != null) {
-		
-		double grLen = getLengthG();
+		double grLen = Math.abs(endGr - startGr) + 1;
 		
 		double lenBP = grLen/(width-2 * HORZ_BORDER);
 		
@@ -164,7 +141,7 @@ public class CloseUpComponent extends JComponent {
 
 		return ((numLayers + 1) * layerHeight) + y;
 	}
-	// CAS531 previous, a different hit was on a different layer; now, overlapping hits go on top layer of 2
+
 	// layer 1 is the lower layer, and layer 0 is upper; has to have 2 layers
 	private int assignHitLayers() {
 		if (hitAlign == null || hitAlign.length == 0) return 0;
@@ -193,7 +170,7 @@ public class CloseUpComponent extends JComponent {
 		}
 		return maxLayer;
 	}
-	/*******************************************************************/
+	
 	private HitAlignment getHitAlignment(Point p) {
 		if (hitAlign != null) {
 			for (HitAlignment h : hitAlign)
@@ -202,28 +179,45 @@ public class CloseUpComponent extends JComponent {
 		}
 		return null;
 	}
-
 	private void notifyListenersOfClick(HitAlignment h) {
 		if (h != null)
 			for (int i = 0; i < listeners.size(); ++i)
 				((CloseUpDialog) listeners.get(i)).hitClicked(h);
 	}
-
 	private double getFontHeight(Font font) {
 		return (double) getFontMetrics(font).getHeight() + FONT_SPACE;
 	}
+	
+
+	protected void addCloseUpListener(CloseUpDialog cl) {if (!listeners.contains(cl))listeners.add(cl);}
+	
+	// start = min(start_exon, start_subhit), end=max(end_exon, end_subhit)
+	protected void setData(int startG, int endG, GeneAlignment[] ga, HitAlignment[] ha) {
+		this.startGr = startG;
+		this.endGr = endG;
+		this.geneAlign = ga;
+		this.hitAlign = ha;
+		
+		if (this.geneAlign != null) Arrays.sort(this.geneAlign);
+		if (this.hitAlign  != null) Arrays.sort(this.hitAlign);
+		
+		setPreferredSize(getWidth());
+	}
+
+	protected int getNumberOfHits() { return (hitAlign == null ? 0 : hitAlign.length); }
+
 
 	/********************************************************************************/
 	private static Color rulerFontColor= new Color(0,0,0);
 	private static Color hitFontColor = Color.black, geneFontColor=Color.black;
 	
 	private static Font rulerFont =  new Font("Courier",0,14);
-	private static Font hitFont =    new Font("Arial",0,12); // CAS541 Ariel->Arial
+	private static Font hitFont =    new Font("Arial",0,12); 
 	private static Font geneFont =   new Font("Arial",0,12);
-	private static final double VERT_HIT_SPACE=2; // CAS531 3->2, no diff
+	private static final double VERT_HIT_SPACE=2; 
 	private static final double VERT_GENE_SPACE=5, HORZ_GENE_SPACE=8;
-	private static final int 	VERT_BORDER=12, HORZ_BORDER=15; // CAS531 VERT 15->12
-	private static final double RULER_TICK_SPACE=60, RULER_LINE_THICKNESS=3, RULER_OFFSET=12; // CAS531 30->12 - no diff
+	private static final int 	VERT_BORDER=12, HORZ_BORDER=15; 
+	private static final double RULER_TICK_SPACE=60, RULER_LINE_THICKNESS=3, RULER_OFFSET=12; 
 	private static final double FONT_SPACE = 3;
 	
 	// HitAlignment
@@ -232,7 +226,7 @@ public class CloseUpComponent extends JComponent {
 	public static final DoubleDimension INSERT_DIM = new DoubleDimension(6,6);
 	public static final double INSERT_OFFSET=5;
 	public static final DoubleDimension ARROW_DIM = new DoubleDimension(9,15);
-	public static final double HIT_HEIGHT = 15; // CAS531 was a complicated equation that always gave 18
+	public static final double HIT_HEIGHT = 15; 
 	
 	// Gene Alignment
 	public static final DoubleDimension GARROW_DIM = new DoubleDimension(10,15); //w,h
@@ -245,7 +239,7 @@ public class CloseUpComponent extends JComponent {
 	// Set by user in color wheel; defaults in closeup.properties
 	public static Color backgroundColor, rulerColor, hitColor;
 	public static Color missColor, deleteColor, insertColor;
-	public static Color intronColor, exonColorP, exonColorN; // CAS535 split exon into p/n
+	public static Color intronColor, exonColorP, exonColorN; 
 	
 	static {
 		PropertiesReader props = new PropertiesReader(SyMAP2d.class.getResource("/properties/closeup.properties"));
@@ -258,10 +252,5 @@ public class CloseUpComponent extends JComponent {
 		exonColorP = props.getColor("exonColorP");
 		exonColorN = props.getColor("exonColorN");
 		intronColor = props.getColor("intronColor");
-		
-		// CAS531 removed all the constants from closeup.properties, e.g. below, except those that user can change
-		//ARROW_DIM = props.getDoubleDimension("arrowDimension");
-		//DELETE_HEIGHT = props.getDouble("deleteHeight");
-		//geneFont = props.getFont("geneFont");
 	}
 }

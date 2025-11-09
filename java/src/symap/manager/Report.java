@@ -403,7 +403,7 @@ public class Report extends JDialog  {
     		    " join xgroups as g2 on g2.idx=b.grp2_idx " +
     		    " where b.pair_idx=" + mp.getPairIdx();
     	
-    	if (isSelf) sql+= " and (b.avgGap1>0 or b.avgGap2>0)"; // mirrored are zero for these values in CAS575; see SyntenyMain.RWdb
+    	if (isSelf) sql+= " and (b.avgGap1>0 or b.avgGap2>0)"; // mirrored are zero for these values; see SyntenyMain.RWdb
     	
     	if (isSp1) sql += " order by g1.name asc, g2.name asc, b.blocknum asc"; // name is chrName
     	else       sql += " order by g2.name asc, g1.name asc, b.start2 asc";   // blocks will be out of order; CAS575
@@ -418,7 +418,7 @@ public class Report extends JDialog  {
     
     	if (which==ONLY) {
     		if (hasGap) {
-    			typeArr.add(NUM); typeArr.add(NUM);  // avgGap, remove stddev CAS574
+    			typeArr.add(NUM); typeArr.add(NUM);  // avgGap
     		}
     		else {
     			typeArr.add(LFLOAT); typeArr.add(LFLOAT); // AvgGap computed
@@ -452,7 +452,7 @@ public class Report extends JDialog  {
 		}
 		File f = new File(exFileName);
 		if (f.exists()) {
-			if (!Utilities.showConfirm2("File exists","File '" + exFileName + "' exists.\nOverwrite?")) return null;
+			if (!util.Popup.showConfirm2("File exists","File '" + exFileName + "' exists.\nOverwrite?")) return null;
 			f.delete();
 		}
 		
@@ -511,7 +511,7 @@ public class Report extends JDialog  {
     }
     private String htmlTail(int totBlks) {
     	String tail="</table>";
-    	if (isSelf) tail += String.format("<p>%,d Total Blocks below diagonal", totBlks); // CAS575 add
+    	if (isSelf) tail += String.format("<p>%,d Total Blocks below diagonal", totBlks); 
     	else tail += String.format("<p>%,d Total Blocks", totBlks); 
     	if (cntHtmlRow>100 && !isPop) tail += "<p><a href='#top'>Go to top</a>\n";
     	tail += "</center></body></html>\n";

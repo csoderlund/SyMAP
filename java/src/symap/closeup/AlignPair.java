@@ -1,7 +1,7 @@
 package symap.closeup;
 
 /**
- * The DPalign method perform dynamic programming
+ * The DPalign method perform dynamic programming; called by AlignPair
  * The methods getHorzResult and getVertResult build and scored the aligned sequences
  */
 public class AlignPair 
@@ -15,25 +15,18 @@ public class AlignPair
 	private boolean bFreeEndGaps = true;  // semi-global; don't penalize gaps at ends
 	private boolean bUseAffineGap = true; 
 	  
-	public void setMatchScore (float f) 	{matchScore=f;}
-	public void setMismatchScore (float f) 	{mismatchScore=f;}
-	public void setGapOpen (float f) 		{gapOpen=f;}
-	public void setGapExtend (float f) 		{gapExtend=f;}
-	public void setDPaffine (boolean b) 	{bUseAffineGap = b;}
-	public void setDPfreeEnds (boolean b) 	{bFreeEndGaps = b;}
-	
-    public boolean DPalign ( String strHorz, String strVert, boolean dna ) {
+    protected boolean DPalign ( String strHorz, String strVert, boolean dna ) {
 		strGapHorz=strGapVert=null;
     	isDNA = dna;
     	
     	if (bUseAffineGap) 	return matchAffine( strHorz, strVert );
     	else 				return matchNonAffine( strHorz, strVert );
     }
-    public String getAlignResult1 ( ) {
+    protected String getAlignResult1 ( ) {
 		if (strGapHorz==null) buildOutput ( gapCh ); 
 		return strGapHorz; 
     }
-    public String getAlignResult2 () {
+    protected String getAlignResult2 () {
 		if (strGapVert==null) buildOutput ( gapCh ); 
 		return strGapVert; 
     }
@@ -49,7 +42,7 @@ public class AlignPair
      * Shared Routines for affine and non-affine dynamic programming
      */
     private float cmp(char x, char y) {
-		if (isDNA) { // CAS531 add lowerCase
+		if (isDNA) { 
 			if (Character.toUpperCase(x)==Character.toUpperCase(y)) return matchScore;
 			else return mismatchScore;
 		}
@@ -70,24 +63,21 @@ public class AlignPair
         if (!checkAllocation ( )) return false;
 
         // Initialize top row
-        for ( int i = 1; i < nCols; ++i )
-        {
+        for ( int i = 1; i < nCols; ++i ){
             if ( bFreeEndGaps ) matchRow[i] = 0;
             else matchRow[i] = - ( gapOpen * i );                    
             matchDir[i] = DIRECTION_LEFT;
         }
         
         // Initalize left column for direction arrays
-        for ( int k = 1, i = nCols; k < nRows; ++k, i += nCols )
-        {
+        for ( int k = 1, i = nCols; k < nRows; ++k, i += nCols ){
             matchDir[i] = DIRECTION_UP;
         }
         matchRow[0] = 0;
         
         // Fill in all matricies simultaneously, row-by-row
-        for ( int v = 1; v < nRows; ++v )
-        {
-        		float fMatch, fUp, fDiag, fLeft;
+        for ( int v = 1; v < nRows; ++v ){
+        	float fMatch, fUp, fDiag, fLeft;
             int i = ( v * nCols ) + 1;
             
             // Only saves two rows, the last one and current one.
@@ -105,8 +95,7 @@ public class AlignPair
             if ( bFreeEndGaps ) matchRow[0] = 0;
             else matchRow[0] = - ( gapOpen * v );    
             
-            for ( int h = 1; h < nCols; ++h, ++i )
-            {
+            for ( int h = 1; h < nCols; ++h, ++i ){
                 fMatch = cmp(strVert.charAt(v-1), strHorz.charAt(h-1));
 
                 fUp = matchLastRow[h];
@@ -120,13 +109,11 @@ public class AlignPair
                 matchRow[h] = fUp;
                 matchDir[i] = DIRECTION_UP;
                 
-                if ( fDiag > matchRow[h] )
-                {
+                if ( fDiag > matchRow[h] ){
                     matchRow[h] = fDiag;
                     matchDir[i] = DIRECTION_DIAGONAL; 
                 }
-                if ( fLeft > matchRow[h] )
-                {
+                if ( fLeft > matchRow[h] ){
                     matchRow[h] = fLeft;
                     matchDir[i] = DIRECTION_LEFT; 
 	            } 
@@ -134,8 +121,7 @@ public class AlignPair
 	    }  
         return true;
     }
-    private void buildNonAffineOutput ( char chGap )
-    {
+    private void buildNonAffineOutput ( char chGap ){
         strGapHorz = "";
         strGapVert = "";
         
@@ -143,10 +129,8 @@ public class AlignPair
         int v = strInVert.length() - 1;
         int h = strInHorz.length() - 1;
       
-        while ( i > 0 )
-        {
-            switch ( matchDir[i] )
-            {
+        while ( i > 0 ){
+            switch ( matchDir[i] ){
             case DIRECTION_UP:
                 strGapHorz = chGap  + strGapHorz;
                 strGapVert = strInVert.charAt(v) + strGapVert;
@@ -174,8 +158,7 @@ public class AlignPair
     /********************************************************
      * XXX Affine
      */
-    private boolean matchAffine (String strHorz, String strVert )
-    {
+    private boolean matchAffine (String strHorz, String strVert ){
         nRows = strVert.length() + 1;
         nCols = strHorz.length() + 1;
         nCells = nCols * nRows;
@@ -187,8 +170,7 @@ public class AlignPair
         if (!checkAllocation ( )) return false;
         
         // Initialize top row
-        for ( int i = 1; i < nCols; ++i )
-        {
+        for ( int i = 1; i < nCols; ++i ){
             matchRow[i] = -Float.MAX_VALUE;
             matchDir[i] = DIRECTION_DIAGONAL;
             gapHorzRow[i] = -Float.MAX_VALUE;
@@ -199,8 +181,7 @@ public class AlignPair
        }
         
         // Initalize left column for direction arrays
-        for ( int k = 1, i = nCols; k < nRows; ++k, i += nCols )
-        {
+        for ( int k = 1, i = nCols; k < nRows; ++k, i += nCols ){
             matchDir[i] = DIRECTION_DIAGONAL;
             gapHorzDir[i] = DIRECTION_UP;
             gapVertDir[i] = DIRECTION_LEFT;
@@ -208,8 +189,7 @@ public class AlignPair
         matchRow[0] = 0;
  
         // Fill in all matricies simultaneously, row-by-row
-        for ( int v = 1; v < nRows; ++v )
-        {
+        for ( int v = 1; v < nRows; ++v ){
             int i = ( v * nCols ) + 1;
             
             // "Rotate" the score arrays.  The current row is now uninitialized,
@@ -230,8 +210,7 @@ public class AlignPair
             else   gapHorzRow[0] = - ( gapOpen + (v - 1) * gapExtend );     
             gapVertRow[0] = -Float.MAX_VALUE;
             
-            for ( int h = 1; h < nCols; ++h, ++i)
-            {
+            for ( int h = 1; h < nCols; ++h, ++i){
                 float fMatch = cmp(strVert.charAt(v-1), strHorz.charAt(h-1));
                 
                 // Match matrix. Compare with the value one cell up and one to the left.
@@ -261,8 +240,7 @@ public class AlignPair
         startDir = chLastBest;
         return true;
     }
-    private void buildAffineOutput ( char chGap )
-    {      
+    private void buildAffineOutput ( char chGap ){      
         strGapHorz = "";
         strGapVert = "";
         
@@ -272,10 +250,8 @@ public class AlignPair
         
         char chNextHop = startDir;       
         
-        while ( i > 0 )
-        {
-            switch ( chNextHop )
-            {
+        while ( i > 0 ){
+            switch ( chNextHop ){
             case DIRECTION_UP:
                 chNextHop = gapHorzDir [i];
                 strGapHorz = chGap  + strGapHorz;
@@ -307,20 +283,17 @@ public class AlignPair
     /*****************************************************
      * Used by affine method
      */
-    private void testBest ( int i, boolean bCurRow, float fDUp, float fDDiag, float fDLeft )
-    {
+    private void testBest ( int i, boolean bCurRow, float fDUp, float fDDiag, float fDLeft ){
         // Choose the best choice with the arbitrary tie break of up, diagonal, left       
         // Note: the inversion between the direction in the matrix and the gap is correct
         float fUp, fDiag, fLeft;
      
-        if ( bCurRow )
-        {
+        if ( bCurRow ){
             fUp = fDUp + gapHorzRow [i];
             fDiag = fDDiag + matchRow [i];
             fLeft = fDLeft + gapVertRow [i];
         }
-        else
-        {
+        else{
             fUp = fDUp + gapHorzLastRow [i];
             fDiag = fDDiag + matchLastRow [i];
             fLeft = fDLeft + gapVertLastRow [i];
@@ -328,21 +301,18 @@ public class AlignPair
         
         fLastBest = fUp;
         chLastBest = DIRECTION_UP;
-        if ( fDiag > fLastBest )
-        {
+        if ( fDiag > fLastBest ){
             fLastBest = fDiag;
             chLastBest = DIRECTION_DIAGONAL;
         }
-        if ( fLeft > fLastBest )
-        {
+        if ( fLeft > fLastBest ){
             fLastBest = fLeft;
             chLastBest = DIRECTION_LEFT;
         }
     }
    /***********************************************************/
     // For doHomology, the arrays get reused.
-    private boolean checkAllocation ( )
-    {
+    private boolean checkAllocation ( ){
 		if (nCells > maxCells) {
 	   		System.err.println("Not enough memory to align sequences - need " + nCells + "kb");
 	   		isGood=false;
@@ -352,11 +322,9 @@ public class AlignPair
 	    chLastBest = DIRECTION_DIAGONAL;
 	    
 		try {
-	        if ( matchDir == null || matchDir.length < nCells )
-	        {
+	        if ( matchDir == null || matchDir.length < nCells ){
 	            matchDir = new char [nCells];
-	            if ( bUseAffineGap )
-	            {
+	            if ( bUseAffineGap ){
 	                gapHorzDir = new char [nCells];
 	                gapVertDir = new char [nCells];        
 	            }
@@ -369,12 +337,10 @@ public class AlignPair
 	        }
 	        int max = (nRows > nCols ) ? nRows : nCols;
 	        
-	        if ( matchRow == null || matchRow.length < max )
-	        {
+	        if ( matchRow == null || matchRow.length < max ){
 	            matchRow = new float [max];
 	            matchLastRow = new float [max];  
-	            if ( bUseAffineGap )
-	            {
+	            if ( bUseAffineGap ){
 	                gapHorzRow = new float [max];
 	                gapHorzLastRow = new float [max];
 	                gapVertRow = new float [max];
@@ -400,7 +366,7 @@ public class AlignPair
         return true;
     }
     
-    public void clear() {
+    protected void clear() {
     	matchLastRow = null;
     	matchRow = null;
     	matchDir = null;
@@ -411,7 +377,7 @@ public class AlignPair
     	gapVertLastRow = null;
     	gapVertDir = null;
     	
-    	strInHorz = null; // CAS301 add these 4
+    	strInHorz = null; 
         strInVert = null;
         strGapHorz = null; 
         strGapVert = null; 
@@ -443,8 +409,7 @@ public class AlignPair
         OLPlen = allE - allS + 1; 
         if (allE>=strGapHorz.length() || allE>=strGapVert.length()) return;
         
-        for (i = allS; i <= allE; i++) 
-        {	    		
+        for (i = allS; i <= allE; i++) {	    		
     		if (strGapHorz.charAt(i) == chGap || strGapVert.charAt(i) == chGap) {	 
     			OLPgap++;
         		if (isOpen && bUseAffineGap) OLPscore -= gapExtend;
@@ -467,15 +432,8 @@ public class AlignPair
         } 
         if (OLPmatch>OLPlen) OLPmatch=OLPlen; // just to make sure
     }
-    
-    public int getOLPmatch() 	{ return OLPmatch;}
-    public int getOLPlen() 		{ return OLPlen;}
-    public int getOLPscore() 	{ return OLPscore;}
-    public int getOLPstops() 	{ return OLPstops;}
-    public int getOLPgap() 	    { return OLPgap;}
-    public boolean isGood() { return isGood;}
-    /*******************************************************/
-   
+  
+    /*******************************************************/ 
     private String strInHorz = null;
     private String strInVert = null;
     private String strGapHorz = null, strGapVert = null; // final results
@@ -506,17 +464,17 @@ public class AlignPair
     // maybe should have just gotten a dp score.
     private int OLPmatch = 0;
     private int OLPlen = 0;
-    private int OLPstops = 0;
-    private int OLPscore = 0;
-    private int OLPgap = 0;
+    private int OLPstops = 0, OLPscore = 0, OLPgap = 0;
     private boolean isDNA = true;
     private boolean isGood=true;
+    
+    protected void prtInfo() {System.out.format("Stops %d Score %d Gap %d Good %b", OLPstops, OLPscore, OLPgap, isGood);}
     
     // BLOSUM62 7/17/19 from ftp://ftp.ncbi.nlm.nih.gov/blast/matrices/BLOSUM62
     // Called in cmp above. 
     // Also called by util.align.AlignData
     // by moving the array to this file sped it up about 10-fold!!
-    static public int getBlosum(char a1, char a2) {
+    static protected int getBlosum(char a1, char a2) {
      	String residues = "ARNDCQEGHILKMFPSTWYVBZX*";
 		int idx1 = residues.indexOf(a1);
 		int idx2 = residues.indexOf(a2);
@@ -527,7 +485,7 @@ public class AlignPair
 		}
 		return (blosum[idx1][idx2]); 
 	}
-    public static final int blosum[][] = new int [][] {
+    private static final int blosum[][] = new int [][] {
     	{ 4, -1, -2, -2,  0, -1, -1,  0, -2, -1, -1, -1, -1, -2, -1,  1,  0, -3, -2,  0, -2, -1,  0, -4},
     	{-1,  5,  0, -2, -3,  1,  0, -2,  0, -3, -2,  2, -1, -3, -2, -1, -1, -3, -2, -3, -1,  0, -1, -4},
     	{-2,  0,  6,  1, -3,  0,  0,  0,  1, -3, -3,  0, -2, -3, -2,  1,  0, -4, -2, -3,  3,  0, -1, -4},

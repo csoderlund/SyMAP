@@ -22,15 +22,13 @@ import props.PersistentProps;
 import symap.Globals;
 import symap.frame.HelpBar;
 import util.ErrorReport;
-import util.Utilities;
 
 /***********************************************************
  * The 2D frame containing the drawingpanel, controlpanel and optional helpbar if on the bottom
  * SyMAP2d creates the components of 2D display, and this puts them together
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
-public class Frame2d extends JFrame implements KeyListener, ContainerListener
-{	
+public class Frame2d extends JFrame implements KeyListener, ContainerListener{	
+	private static final long serialVersionUID = 1L;
 	private static final String DISPLAY_SIZE_COOKIE = "SyMAPDisplaySize";
 	private static final String DISPLAY_POSITION_COOKIE = "SyMAPDispayPosition";
 
@@ -68,7 +66,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 		if (hb != null && showHelpBar) 		// Otherwise, put in Explorer on left
 			container.add(hb, BorderLayout.SOUTH);
 
-		setSizeAndLocationByProp(Utilities.getScreenBounds(this));
+		setSizeAndLocationByProp(util.Jcomp.getScreenBounds(this));
 
 		addKeyAndContainerListenerRecursively(this);
 	}
@@ -89,7 +87,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 			setSize(d);
 			super.setVisible(true); // Has to be displayed first, or the build will not happen
 			
-			// CAS572 trying to fix DotPlot Sequence.buildGraphics timing problem; it displays a flash of window
+			// sort of fixes DotPlot Sequence.buildGraphics timing problem; it displays a flash of window
 			if (!dp.amake()) super.setVisible(false); 
 		}
 		catch (Exception e) {ErrorReport.print(e, "Show non-explorer 2d");}
@@ -157,9 +155,7 @@ public class Frame2d extends JFrame implements KeyListener, ContainerListener
 	}
 	public void keyReleased(KeyEvent e) { }
 	public void keyTyped(KeyEvent e) { }
-	public void keyPressed(KeyEvent e) { // this seems to never happen
-		//if (e.isAltDown() && e.isControlDown() && e.getKeyCode() == KeyEvent.VK_C && dp != null) dp.resetData();
-	}
+	public void keyPressed(KeyEvent e) { }
 
 	private class CompListener implements ComponentListener {
 		public void componentMoved(ComponentEvent e) { 

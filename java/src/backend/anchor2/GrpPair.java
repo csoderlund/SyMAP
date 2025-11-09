@@ -16,7 +16,7 @@ import util.ProgressDialog;
  * Performs all processing for a chrT-chrQ; save results to DB; frees memory
  * The genes and hits are specific to the pair; 
  * 		the genes are copies since each gene can align to more than one chr
- * 		the hits are unique to the pair
+ * 		the hits are unique to the GrpPair
  */
 public class GrpPair {
 	static public final int T=Arg.T, Q=Arg.Q;
@@ -38,7 +38,7 @@ public class GrpPair {
 	// GrpPairGx creates gxPairList, turned into clusters, used for saveAnnoHits for Major and Minor
 	private GrpPairGx gpGxObj;			
 	protected ArrayList <HitPair> gxPairList;	
-		
+	
 	// GrpPairPile removes piles
 	private GrpPairPile gpPileObj;
 		
@@ -98,7 +98,9 @@ public class GrpPair {
 	
 		HitPair.sortByXstart(Q, gxPairList);	// SORT
 		createClustersFromHPR();  				if (fChk()) return  false; 
-		saveClusterHits(); 						if (fChk()) return  false;  
+		
+		saveClusterHits();		 				if (fChk()) return  false;  
+		
 		saveAnnoHits();							if (fChk()) return  false;  
 		
 		prtTrace();
@@ -146,21 +148,21 @@ public class GrpPair {
 		int proj1Idx = mainObj.mProj1.getIdx();
 		int proj2Idx = mainObj.mProj2.getIdx();
 		
-		int cntG2=0, cntG1=0, cntG0=0, countBatch=0, cntSave=0;
+		int cntG2=0, cntG1=0, cntG0=0, countBatch=0, cntSave=0, cntFil=0;
 		int cntDOeq=0, cntDOne=0;
 		
 		tdbc2.executeUpdate("alter table pseudo_hits modify countpct integer");
-					
-		PreparedStatement ps = tdbc2.prepareStatement("insert into pseudo_hits "	
-				+ "(hitnum, pair_idx, proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
-				+ "pctid, cvgpct, countpct, score, htype, gene_overlap,"
-				+ "annot1_idx, annot2_idx, strand, start1, end1, start2, end2,"
-				+ "query_seq, target_seq) "
+		
+		String sql = "insert into pseudo_hits (hitnum, pair_idx,"
+					+ "proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
+					+ "pctid, cvgpct, countpct, score, htype, gene_overlap, strand,"
+					+ "annot1_idx, annot2_idx, start1, end1, start2, end2, query_seq, target_seq)";
+	
+		PreparedStatement ps = tdbc2.prepareStatement(sql 
 				+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
-		
-		
+
 		for (HitPair hpr : gxPairList) {
-			if (hpr.flag!=Arg.MAJOR) continue;
+			if (hpr.flag!=Arg.MAJOR) {cntFil++; continue;}
 			
 			if (!hpr.isOrder) {
 				if (hpr.isStEQ) cntDOeq++; else cntDOne++;
@@ -181,11 +183,10 @@ public class GrpPair {
 			ps.setInt(i++, hpr.xMaxCov); 				// score; max coverage 
 			ps.setString(i++, hpr.htype) ;				// htype EE, EI, etc
 			ps.setInt(i++, hpr.getGeneOverlap());		// geneOlap 0,1,2
+			ps.setString(i++, hpr.sign); 				// Strand
 			
 			ps.setInt(i++, hpr.geneIdx[Q]);
-			ps.setInt(i++,  hpr.geneIdx[T]); 
-			
-			ps.setString(i++, hpr.sign); 				// Strand
+			ps.setInt(i++, hpr.geneIdx[T]); 
 			ps.setInt(i++, hpr.hpStart[Q]);
 			ps.setInt(i++, hpr.hpEnd[Q]);
 			ps.setInt(i++, hpr.hpStart[T]);
@@ -200,7 +201,7 @@ public class GrpPair {
 				countBatch=0;
 				ps.executeBatch();
 			}
-			if (cntSave%10000==0) Globals.rprt(cntSave + " loaded"); // CAS566 add %10000
+			if (cntSave%10000==0) Globals.rprt(cntSave + " loaded"); 
 			
 			if (hpr.geneIdx[Q]>0 && hpr.geneIdx[T]>0) cntG2++;
 			else if (hpr.geneIdx[Q]>0 || hpr.geneIdx[T]>0) cntG1++;
@@ -216,9 +217,10 @@ public class GrpPair {
 			
 		String msg1 = String.format("Clusters %s-%s",  qChr, tChr); 
 		if (Arg.VB) { 
-			String msg2 = (Globals.INFO || Globals.TRACE) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
+			String msg2 = (AnchorMain2.bTrace) ? String.format("Disorder (EQ,NE) %,4d %,4d ", cntDOeq, cntDOne) : "";
 			String msg = String.format("%-20s   Both genes %,6d   One gene %,6d   No gene %,6d    %s", msg1, cntG2, cntG1, cntG0, msg2);
-			Utils.prtIndentNumMsgFile(plog, 1, cntSave, msg); // format same as Blocks and Pseudos; CAS568
+			Utils.prtIndentNumMsgFile(plog, 1, cntSave, msg); // format same as Blocks and Pseudos
+			if (AnchorMain2.bTrace) Utils.prtIndentNumMsgFile(plog, 1, cntFil, "Filtered or minor");
 		}
 		else Globals.rprt(String.format("%,5d %s", cntSave, msg1));
 	}
@@ -237,8 +239,9 @@ public class GrpPair {
 		
 	// Load hits from database; the clNum was set as the unique hitNum (which will be redone in anchorMain)
 		TreeMap <Integer, Integer> clIdxMap = new TreeMap <Integer, Integer> ();
-		String st = "SELECT idx, hitnum" +
-      			" FROM pseudo_hits WHERE gene_overlap>0 and grp1_idx=" + qGrpIdx + " and grp2_idx=" + tGrpIdx;
+		String st = "SELECT idx, hitnum FROM pseudo_hits WHERE gene_overlap>0 and "
+				  + "grp1_idx=" + qGrpIdx + " and grp2_idx=" + tGrpIdx;
+		
 		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) clIdxMap.put(rs.getInt(2), rs.getInt(1)); // cHitNum, DB generated idx
 		rs.close();
@@ -263,7 +266,7 @@ public class GrpPair {
 			if (hpr.qGene!=null && hpr.geneIdx[Q]>0) {
 				ps.setInt(1, dbhitIdx); 
 				ps.setInt(2, hpr.geneIdx[Q]); 
-				ps.setInt(3, intScore(hpr.pGeneHitOlap[Q])); // CAS560 GeneHitCov->GeneHitOlap
+				ps.setInt(3, intScore(hpr.pGeneHitOlap[Q])); // GeneHitCov->GeneHitOlap
 				ps.setInt(4, intScore(hpr.pExonHitCov[Q])); 
 				ps.setInt(5, hpr.geneIdx[T]);
 				ps.addBatch();
@@ -286,7 +289,7 @@ public class GrpPair {
 				cntBatch=0;
 				ps.executeBatch();
 			}
-			if (cntAll%10000 ==0) Globals.rprt("   " + cntAll + " loaded hit annotations"); // CAS566 reduce output
+			if (cntAll%10000 ==0) Globals.rprt("   " + cntAll + " loaded hit annotations"); 
 		}
 		if (cntBatch> 0) ps.executeBatch();
 		Globals.rclear();	
@@ -300,7 +303,7 @@ public class GrpPair {
 	private int intScore(double score) {
 		if (score>99 && score<100.0)   score=99.0;
 		else if (score>100.0)          score=100.0;
-		else if (score>0 && score<1.0) score=1.0; // CAS548 add >0 check
+		else if (score>0 && score<1.0) score=1.0; 
 		return (int) Math.round(score);
 	}
 	///////////////////////////////////////////////////////////////////////
@@ -530,9 +533,8 @@ public class GrpPair {
 		}
 	}
 	protected String toResults() {
-		String tg = "    T genes: " + tGeneMap.size();
-		String qg = "    Q genes: " + qGeneMap.size();
-		return "GP " + tChr + " " + qChr + " " +  " Hits: " + grpHitList.size()  + tg + qg;
+		return String.format("GP %5s (%2d) %5s (%2d)  Q genes %,6d  T genes %,6d", 
+				qChr, qGrpIdx, tChr, tGrpIdx, qGeneMap.size(), tGeneMap.size());
 	}
 	public String toString() {return toResults();}
 }

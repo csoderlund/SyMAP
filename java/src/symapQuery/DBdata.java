@@ -45,8 +45,8 @@ public class DBdata implements Cloneable {
 	private static boolean isSingle=false, isSingleGenes = false, isIncludeMinor = true, isGeneNum=false; 
 	private static HashSet <Integer> grpIdxOnly=null;
 	
-	private static boolean isSelf=false; // CAS575
-	private static int cntMinorFail=0;	 // CAS575 self-synteny cannot do minors
+	private static boolean isSelf=false; 
+	private static int cntMinorFail=0;	 // self-synteny cannot do minors
 									
 	private static int cntDup=0, cntFilter=0; // Globals.TRACE
 	private static int cntPlus2=0;	// check for possible pre-v547
@@ -125,7 +125,7 @@ public class DBdata implements Cloneable {
          		String gene = qPanel.getGeneNum();
          		String x = (gene!=null) ? gene : "Hit";
          		String msg=String.format("%s has %d minor hits that could not be shown", x, cntMinorFail);
-         		util.Utilities.showWarning(msg);
+         		util.Popup.showWarning(msg);
          	}
          	if (Globals.TRACE) {
          		if (cntDup>0) System.out.format("%6d Dups\n", cntDup);
@@ -575,7 +575,7 @@ public class DBdata implements Cloneable {
          		HashSet <Integer> anno2 = new HashSet <Integer> ();
          		for (DBdata dd : rows) {
              		for (int x=0; x<2; x++) {
-             			if (dd.annotIdx[x]>0) {
+             			if (dd.annotIdx[x]>0 && !dd.geneTag[x].endsWith(Q.pseudo)) {
              				HashSet <Integer> anno = (x==0) ? anno1 : anno2;
              				if (!anno.contains(dd.annotIdx[x])) anno.add(dd.annotIdx[x]);
              			}
@@ -1059,9 +1059,8 @@ public class DBdata implements Cloneable {
 		return x;
 	}
 	protected boolean hasGene(int x) 	{
-		return (annotIdx[x]>0);				// CAS575 geneSet does not work for self, this changes minor count for non-self
-		//if (x==0) return geneSet0.size()>0;
-		//else      return geneSet1.size()>0;
+		if (x==0)   return geneSet0.size()>0;
+		else        return geneSet1.size()>0;
 	}
 	
 	protected boolean hasBlock() 	{return blockNum>0;}

@@ -29,6 +29,7 @@ import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
+import util.Popup;
 import util.Utilities;
 
 /***********************************************
@@ -104,7 +105,7 @@ public class UtilReport extends JDialog {
 	//	tmpRefMap key; a Gene# can be in the table multiple times, hence, the search key is "tag grpN"
 	/***************************************************************************/
 	protected UtilReport(TableMainPanel tdp) { // called 1st time for a Table; the report options can change, but not query
-		this.tdp = tdp;			// rows of the table are read for report
+		this.tPanel = tdp;			// rows of the table are read for report
 		
 		queryMultiN3 = tdp.queryPanel.getMultiN();	
 		spPanel = tdp.queryPanel.speciesPanel;
@@ -137,7 +138,7 @@ public class UtilReport extends JDialog {
 		int width = 100;
 		JPanel optPanel = Jcomp.createPagePanel();
 		
-		nSpecies = tdp.queryPanel.nSpecies;
+		nSpecies = tPanel.queryPanel.nSpecies;
 		
 		radSpecies = new JRadioButton[nSpecies];
 		txtSpKey =   new JTextField[nSpecies];
@@ -155,7 +156,7 @@ public class UtilReport extends JDialog {
 		
 		// width may change if longer species name;
 		for(int x=0; x<nSpecies; x++) {
-			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x)); 
+			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x), "Chromosome and location for this species"); 
 			width = Math.max(width, radSpecies[x].getPreferredSize().width);
 			bg.add(radSpecies[x]);
 		}
@@ -320,7 +321,7 @@ public class UtilReport extends JDialog {
 			}
 		});
 		
-		btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
+		btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				popupHelp();
@@ -351,7 +352,7 @@ public class UtilReport extends JDialog {
 				+ "\n   Hover over an option for more details.";
 		msg += "\n\nSee ? for details.\n";
 		
-		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	/**************************************************************8
 	 * Shared
@@ -367,7 +368,7 @@ public class UtilReport extends JDialog {
 			
 			spInputKey[x] = txtSpKey[x].getText().trim(); 
 			if (spInputKey[x].contains(" ") && !spInputKey[x].contains(keyC)) {
-				Utilities.showInfoMessage("Bad Key", "Keys must be separated by ',' and no space within a key '" + spInputKey[x] + "'");
+				Popup.showInfoMessage("Bad Key", "Keys must be separated by ',' and no space within a key '" + spInputKey[x] + "'");
 				return;
 			}
 			if (!spInputKey[x].isEmpty()) hasKey=true;	// if any have key
@@ -405,7 +406,7 @@ public class UtilReport extends JDialog {
 		Thread inThread = new Thread(new Runnable() {
     		public void run() {
 			try {
-				tdp.setBtnReport(false);
+				tPanel.setBtnReport(false);
 				btnOK.setEnabled(false); btnCancel.setEnabled(false); 
 				
 				buildCompute();
@@ -419,7 +420,7 @@ public class UtilReport extends JDialog {
 				}
 				
 				btnOK.setEnabled(true); btnCancel.setEnabled(true); 
-				tdp.setBtnReport(true);
+				tPanel.setBtnReport(true);
 			} catch(Exception e) {ErrorReport.print(e, "Ok report");}
 	    	}
 	    });
@@ -450,8 +451,8 @@ public class UtilReport extends JDialog {
 		
 		// tmpRowVec: Get all rows with both genes(or pseudos) and Ref is one of them
 		ArrayList <TmpRowData> rowDataVec = new ArrayList <TmpRowData>  ();
-		for (int row=0; row<tdp.theTableData.getNumRows(); row++) {
-			TmpRowData trd = new TmpRowData(tdp);
+		for (int row=0; row<tPanel.theTableData.getNumRows(); row++) {
+			TmpRowData trd = new TmpRowData(tPanel);
 			trd.loadRow(row);
 			
 			if (trd.spIdx[0]!=refSpIdx && trd.spIdx[1]!=refSpIdx) continue;
@@ -569,8 +570,8 @@ public class UtilReport extends JDialog {
 			}
 			// Using original rows, find links between non-ref
 			int cntLinks=0;
-			for (int row=0; row<tdp.theTableData.getNumRows(); row++) { 
-				TmpRowData trd = new TmpRowData(tdp);
+			for (int row=0; row<tPanel.theTableData.getNumRows(); row++) { 
+				TmpRowData trd = new TmpRowData(tPanel);
 				trd.loadRow(row);
 				
 				if (trd.geneTag[0].endsWith(Q.dash) || trd.geneTag[1].endsWith(Q.dash)) continue;
@@ -842,7 +843,7 @@ public class UtilReport extends JDialog {
 	 */
 	private boolean buildXannoMap() {
 	try {
-		TmpRowData rd = new TmpRowData(tdp);	  // to get anno for current row  
+		TmpRowData rd = new TmpRowData(tPanel);	  // to get anno for current row  
 		String xBreakSp = htmlBr+htmlSp;           // indent when wraparound for HTML; none for TSV
 		
 		String notFoundKey="";
@@ -895,7 +896,7 @@ public class UtilReport extends JDialog {
 			}
 		}
 		if (!notFoundKey.equals("")) {
-			Utilities.showWarningMessage("Keywords not found or low usage: " + notFoundKey);
+			Popup.showWarningMessage("Keywords not found or low usage: " + notFoundKey);
 			return false;
 		}
 		return true;
@@ -1420,7 +1421,7 @@ public class UtilReport extends JDialog {
 			String head = remark + title + " for " + refSpName ;
 			if (!bExTsv) head = "<b>" + head + "</b>";
 			else br = br + remark;				// for TSV, i.e. \n###, HTML says <br>
-			head += br + "Filter: " + tdp.theSummary;
+			head += br + "Filter: " + tPanel.theSummary;
 		
 			if (bIsCoSet2)      head += String.format("%s%,d Unions of Collinear Sets", br, unNum);
 			else if (bIsMulti3) head += String.format("%s%,d Rows with Multi-hit Genes", br, gnNum);
@@ -1463,7 +1464,7 @@ public class UtilReport extends JDialog {
 	    	
 			JFileChooser chooser = new JFileChooser(saveDir);
 			chooser.setSelectedFile(new File(fname));
-			if(chooser.showSaveDialog(tdp.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+			if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
 			if(chooser.getSelectedFile() == null) return null;
 			
 			String saveFileName = chooser.getSelectedFile().getAbsolutePath();
@@ -1475,12 +1476,12 @@ public class UtilReport extends JDialog {
 			}
 			
 			if (new File(saveFileName).exists()) {
-				if (!Utilities.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
+				if (!Popup.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
 			}
 			PrintWriter out=null;
 			try {
 				out = new PrintWriter(new FileOutputStream(saveFileName, false));
-				Globals.prt("Write to " + saveFileName); // CAS571 add
+				Globals.prt("Write to " + saveFileName);
 			}
 			catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
 			
@@ -1489,7 +1490,7 @@ public class UtilReport extends JDialog {
 	}
 	/*********************************************************************/
 	// Interface 
-	private TableMainPanel tdp;
+	private TableMainPanel tPanel;
 	private SpeciesPanel spPanel;
 	private JPanel mainPanel;
 	

@@ -4,17 +4,17 @@ import util.ErrorReport;
 
 /********************************************
  * Input 2 seqs and a type (NT, AA, AAframe)
- * The caller may get: getAlignSeq1, getAlignSeq2, matchSeq 
+ * Called from AlignPool to align subhits for closeup graphics and text align
+ * The caller may call: getAlignSeq1, getAlignSeq2, matchSeq 
  */
 public class AlignData {
-	public static boolean TRACE=false;
-	public static final int NT=0;
-	public static final int AA=1;
-	public static final int AAframe=2;
+	private static boolean TRACE=false;
+	protected static final int NT=0;
+	protected static final int AA=1;
+	private static final int AAframe=2;
 	
-	public static final String  gapStr = "-";
-	public static final char    gapCh  = '-';
-	public static final char    stopCh = '*';
+	protected static final char    gapCh  = '-';
+	protected static final char    stopCh = '*';
 	private static final String AA_POS = "+"; // aa pos sub
 	private static final String AA_NEG = " "; // aa neg sub
 	
@@ -24,17 +24,15 @@ public class AlignData {
 	private int alignType=0;
 	private String traceMsg="", trimMsg=null;
 	
-	public AlignData() {}
+	protected AlignData() {}
 	
-	public boolean align(int type, String seq1, String seq2, boolean bTrim, String traceMsg) {
+	protected boolean align(int type, String seq1, String seq2, boolean bTrim, String traceMsg) {
 		alignType=type;
 		isNT = (alignType==NT); 
 		this.traceMsg = traceMsg;
 		
 		AlignPair ap = new AlignPair();
-		if (alignType==AAframe) {
-			
-		}
+		if (alignType==AAframe) {}
 		else {
 			ap.DPalign(seq1, seq2, isNT);
 			alignSeq1 = ap.getAlignResult1();
@@ -48,11 +46,11 @@ public class AlignData {
 		
 		return true;
 	}
-	public String getAlignSeq1() { return alignSeq1;}
-	public String getAlignSeq2() { return alignSeq2;}
-	public String getAlignMatch() { return matchSeq;}
+	protected String getAlignSeq1() { return alignSeq1;}
+	protected String getAlignSeq2() { return alignSeq2;}
+	protected String getAlignMatch() { return matchSeq;}
 	
-	public String getScore() 	{// CAS563 more informative header
+	protected String getScore() 	{
 		double sim = ((double) cntMatch/(double) alignSeq1.length())*100.0;
 		String s =  String.format("%s %.1f", " DP %Id", sim);
 		String m =  String.format("Match %,d", cntMatch);
@@ -63,9 +61,9 @@ public class AlignData {
 		String t = (cntTrimS>0 || cntTrimE>0) ? "Trim " + cntTrimS + "," + cntTrimE : "";
 		return String.format("%s  %s  %s  %s  %s  %s", s, len, m, mm, g, t);
 	}
-	public int getStartOffset() {return startOffset;}
+	protected int getStartOffset() {return startOffset;}
 	
-	// Trim non-match off ends (this is different from TCW trimming gap overhangs)
+	// Trim non-match off ends 
 	private void trimEnds() {
 		try {
 			String s1 = alignSeq1.toUpperCase();

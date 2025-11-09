@@ -167,14 +167,14 @@ public class FilterData  {
 		return nonBlockColor;
 	}
 	
-	// accessed and changed by ColorDialog - do not change
-	protected static Color blockColor;
-	protected static Color nonBlockColor;
-	protected static Color blockRectColor; 
-	protected static Color blockGeneBothColor;
-	protected static Color blockGeneOneColor;
-	protected static Color geneBothColor; 				
-	protected static Color geneOneColor;
+	// accessed and changed by ColorDialog - do not change; protected does not work CAS576
+	public static Color blockColor;
+	public static Color nonBlockColor;
+	public static Color blockRectColor; 
+	public static Color blockGeneBothColor;
+	public static Color blockGeneOneColor;
+	public static Color geneBothColor; 				
+	public static Color geneOneColor;
 	
 	static {
 		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/dotplot.properties"));

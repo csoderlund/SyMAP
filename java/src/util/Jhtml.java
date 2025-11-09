@@ -24,20 +24,18 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
 /*********************************************************
- * CAS532 moved all HTML stuff from Utilities and SyMAP to here.
- * CAS500 change v4.2 to doc; CAS510 change base to github
  */
 public class Jhtml {
 	public static final String BASE_HELP_URL_prev51 = "http://www.agcol.arizona.edu/software/symap/doc/"; // not used
-	public static final String BASE_HELP_URL = 	"https://csoderlund.github.io/SyMAP/"; // CAS510
+	public static final String BASE_HELP_URL = 	"https://csoderlund.github.io/SyMAP/"; 
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
-	public static final String macVerify = "#macos"; 									// CAS559
+	public static final String macVerify = "#macos"; 									
 	
 	public static final String SYS_GUIDE_URL =    BASE_HELP_URL + "SystemGuide.html"; 
 	public static final String create = "#create";
-	public static final String ext = "#ext";										// CAS566
+	public static final String ext = "#ext";										
 	
-	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; // CAS534 moved from popups
+	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; 
 	public static final String build = 	"#build";
 	public static final String param1 = "#projParams";
 	public static final String param2Align = "#align2";
@@ -59,9 +57,9 @@ public class Jhtml {
 	public static final String query = 	"#query";
 	public static final String result = "#result";
 	
-	public static final String CONVERT_GUIDE_URL =  BASE_HELP_URL + "input/index.html"; // CAS557
+	public static final String CONVERT_GUIDE_URL =  BASE_HELP_URL + "input/index.html"; 
 	
-	public static JButton createHelpIconSysSm(String main, String id) { // CAS534
+	public static JButton createHelpIconSysSm(String main, String id) { 
 		return createHelpIcon("/images/helpSm.png", main + id);
 	}
 	
@@ -92,14 +90,12 @@ public class Jhtml {
 		if (!tryOpenURL(url) )
 			System.err.println("Error opening URL: " + url);
 	}
-	 /**********************************************************
-	  * CAS507 replace the old one with this
-	  */
+	
 	 public static boolean tryOpenURL (String theLink ) {
 	   	if (theLink == null) return false;
 	   	
 	   	try {
-	   		new URI(theLink); // CAS547 was URL which is depleted; just changed to URI and exception change
+	   		new URI(theLink); 
 	   	}
 		catch (URISyntaxException e) {
 			ErrorReport.print(e, "URI Syntax: " + theLink);
@@ -128,17 +124,17 @@ public class Jhtml {
 		return false;
 	}
 	
-	public static boolean tryOpenLinux (String theLink) { // CAS507 removed Applet
-		// Copied this from: http://www.centerkey.com/java/browser/   CAS507 added all listed browsers from this site
+	public static boolean tryOpenLinux (String theLink) { 
+		// Copied this from: http://www.centerkey.com/java/browser/  
 	   	try { 
 	   		if (isWindows()) {
-	   			String [] x = {"rundll32 url.dll,FileProtocolHandler", theLink}; // CAS547 single string depreciated
+	   			String [] x = {"rundll32 url.dll,FileProtocolHandler", theLink}; 
 	   			Runtime.getRuntime().exec(x); // no idea if this works on Windows
 	   			return true;
 	   		}
 	   		else { 
 	   			String [] browsers = {"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape",
-	   					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; // CAS507 added
+	   					   "google-chrome", "conkeror", "midori", "kazehakase", "x-www-browser"}; 
 	   			String browser = null; 
 	   			for (int count = 0; count < browsers.length && browser == null; count++) 
 	   				if (Runtime.getRuntime().exec( new String[] {"which", browsers[count]}).waitFor() == 0) 
@@ -156,7 +152,7 @@ public class Jhtml {
 	}
 	/********************************************************************
 	 * 1. The following provides popups for java/src/html
-	 * 2. The Try methods provide direct links to http URLs (CAS509 allow External links in html)
+	 * 2. The Try methods provide direct links to http URLs 
 	 * 3. The ProjectManagerFrameCommon.createInstructionsPanel shows  the main page
 	 */
 	/** Instance stuff - only class methods **/ 
@@ -271,10 +267,9 @@ public class Jhtml {
 		
 		return scrollPane;
 	}
-	// TableReport; CAS556 add for Query report
+	// TableReport; for Query report
 	public static void showHtmlPanel(JDialog parent, String title, String html) {
-		//JDialog dlgRoot = (parent == null ? new JDialog(helpParentFrame,title,false) : new JDialog(parent,title,false));
-		JDialog dlgRoot = new JDialog(parent,title,false); // CAS563 works if sent null, and does not bounce other frames around
+		JDialog dlgRoot = new JDialog(parent,title,false); // works if sent null, and does not bounce other frames around
 		dlgRoot.setPreferredSize(new Dimension(800,800));
 		Container dlg = dlgRoot.getContentPane();
 		dlg.setLayout(new BoxLayout(dlg,BoxLayout.Y_AXIS));
@@ -299,11 +294,8 @@ public class Jhtml {
 	
 		dlgRoot.pack();
 		dlgRoot.setVisible(true);
-		//dlgRoot.toFront();				 // CAS562 remove, makes it always jump to front, covering Report popup, but still forces to front
-		//dlgRoot.requestFocus();			 // CAS562 keyboard input, no change
-		//dlgRoot.setLocationRelativeTo(null); // CAS562 add, puts on top of dialog
 	}
-	// CAS556 added for TableReport
+	// for TableReport
 	public static String wrapLine(String line, int lineLength, String lineBreak) {
 	    if (line.length() == 0) return "";
 	    if (line.length() <= lineLength) return line;

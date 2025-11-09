@@ -1,6 +1,6 @@
 package symap.frame;
 
-import java.beans.PropertyChangeEvent;  // CAS521 replaced Depreciated Observer with this
+import java.beans.PropertyChangeEvent; 
 import java.beans.PropertyChangeListener;
 
 import java.awt.Color;

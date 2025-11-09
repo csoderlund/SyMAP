@@ -20,8 +20,8 @@ public class HitData {
 	private int covScore;				
 	private int nMerge;
 	private int geneOlp = -1; 
-	private boolean isPosOrient1, isPosOrient2, isBlkInv; // CAS572 add inv 	
-	protected int 	annot1_idx, annot2_idx; // pseudo changed to zero in MapperPool; CAS570
+	private boolean isPosOrient1, isPosOrient2, isBlkInv; 
+	protected int 	annot1_idx, annot2_idx; // pseudo changed to zero in MapperPool
 	private String 	query_seq, target_seq;  // coordinates of subhits
 	
 	protected int start1, end1, mid1, start2, end2, mid2;	// 1=q, 2=t; mid for paintComponent
@@ -210,7 +210,7 @@ public class HitData {
 		
 		String L="L ", R="R ";
 		String gn1 = "#"+mapper.getGeneNum1(annot1_idx), gn2 = "#"+mapper.getGeneNum2(annot2_idx);
-		String gn = isQuery  ? (L + gn1+"   "+R+ gn2) : (L +gn2+ "   "+ R + gn1); // CAS570 add
+		String gn = isQuery  ? (L + gn1+"   "+R+ gn2) : (L +gn2+ "   "+ R + gn1); 
 		
 		String msg1 =  Utilities.coordsStr(isPosOrient1, start1, end1);  
 		String msg2 =  Utilities.coordsStr(isPosOrient2, start2, end2); 
@@ -219,14 +219,14 @@ public class HitData {
 		
 		return  msg + "\n\n" + coords + "\n\n" + gn; // gn on end to be similar to popup
 	}
-	protected String createPopup(boolean isQuery) {//  slightly different from createHover; CAS570 made separate,
+	protected String createPopup(boolean isQuery) {//  slightly different from createHover
 		String msg = hitTag +  "\n"; 
 		
 		String op = (nMerge>0) ? "~" : "";
 		msg +=  "Id=" + op + pctid  + "%  ";
 		msg +=  "Sim="+ op + pctsim + "%  ";
 		msg +=  String.format("Cov=%,dbp  ", covScore); 
-		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; // CAS570 moved to end; only in popup
+		String n = (nMerge>0) ? "#Subhits=" + nMerge + "  " : "#Subhit=1  "; 
 		msg += n;
 		
 		String L="L ", R="R ";
@@ -255,6 +255,13 @@ public class HitData {
 	} 
 	protected int getCollinearSet() {return collinearSet;} 
 	
+	// for coloring hit line according to directions
+	protected String getOrients() { 
+		String x = (isPosOrient1) ? "+" : "-";
+		String y = (isPosOrient2) ? "+" : "-";
+		return x+y;
+	}
+		
 	/* ***** g2xN methods ******** */
 	protected boolean isHighG2xN()	{ return isHighG2xN;}
 	protected boolean isForceG2xN()	{ return isForceG2xN;}
@@ -283,7 +290,6 @@ public class HitData {
 	public boolean equals(Object obj) {
 		return (obj instanceof HitData && ((HitData)obj).idx == idx);
 	}
-
 	public static Comparator<HitData> sortByStart2() {
 		return new Comparator<HitData>() {
 			public int compare(HitData hd1, HitData hd2) {
@@ -293,17 +299,5 @@ public class HitData {
 			}
 		};
 	}
-	// for coloring hit line according to directions
-	protected String getOrients() { 
-		String x = (isPosOrient1) ? "+" : "-";
-		String y = (isPosOrient2) ? "+" : "-";
-		return x+y;
-	}
-	
-	public String toStr() 	{ 
-		String msg =  hitTag + " AnnoIdx " + annot1_idx + " " + annot2_idx;
-		return msg;
-	}
 	public String getName()		{ return "Hit #" + hitnum;}
-	
 }

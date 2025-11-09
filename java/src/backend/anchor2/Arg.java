@@ -5,9 +5,6 @@ import symap.Globals;
 
 /***************************************************************
  * Constants and input Parameters for backend.anchor2 only
- * CAS560 some filters were here, moved the rest of filters to here as static methods from HitPair and Hit
- *        set some values from input gene annotations; changed some defaults
- *        These rules were manually trained by observing results and fitting to what looks good
  */
 public class Arg {
 	// Command line; all default false
@@ -27,7 +24,7 @@ public class Arg {
 	protected static final String [] strType = {"Unk","G0", "G1t", "G1q", "G2"};
 	protected static final String sEE="EE", sEI="EI", sIE="IE", sII="II", sEn="En", snE="nE", sIn="In", snI="nI", snn="nn"; // HitPair.htype
 	
-	// CAS560 defaults from AI Chat Bot; used in setLenFromGenes
+	// defaults from AI Chat Bot; used in setLenFromGenes
 	protected static final int plantIntronLen =  500, plantGeneLen =  3500;  // plants (introns 150-500, genes 2k-5k)
 	protected static final int mamIntronLen   =  4500, mamGeneLen   = 25000; // mammalians (introns 3k-5.4k, genes 20k-30k)
 	
@@ -304,16 +301,16 @@ public class Arg {
 		return rc;
 	}
 	/////////////////////////////////////////////////////////
-	// gap is positive, olap is negative; does not work for contained; CAS560 was using in places w/o -1
+	// gap is positive, olap is negative; does not work for contained
 	protected static int pGap_nOlap(int s2, int e1) {return s2-e1-1;}
 	
 	// gap is positive; olap is negative; works for contained
 	protected static int pGap_nOlap(int s1, int e1, int s2, int e2) {
-		return -(Math.min(e1,e2) - Math.max(s1,s2) + 1); // CAS548 rm +1; CAS560 put back and change calling routine
+		return -(Math.min(e1,e2) - Math.max(s1,s2) + 1); 
 	}
 	// olap is positive
 	protected static int pOlapOnly(int s1, int e1, int s2, int e2) {
-		int olap = Math.min(e1,e2) - Math.max(s1,s2) + 1; // CAS560 add +1
+		int olap = Math.min(e1,e2) - Math.max(s1,s2) + 1; 
 		if (olap<0) return 0;
 		return olap;
 	}

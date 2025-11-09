@@ -30,7 +30,7 @@ import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
-import util.Utilities;
+import util.Popup;
 
 /***********************************************
  * Gene Report when there is no reference; 
@@ -80,7 +80,7 @@ public class UtilReportNR  extends JDialog {
 	
 	/***************************************************************************/
 	protected UtilReportNR(TableMainPanel tdp) { // this is called 1st time for Query
-		this.tdp = tdp;
+		this.tPanel = tdp;
 		spPanel = tdp.queryPanel.speciesPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -108,7 +108,7 @@ public class UtilReportNR  extends JDialog {
 	private void createSpecies() {
 		JPanel optPanel = Jcomp.createPagePanel();
 		
-		nSpecies = tdp.queryPanel.nSpecies;
+		nSpecies = tPanel.queryPanel.nSpecies;
 		
 		radSpecies = new JLabel [nSpecies];
 		txtSpKey =   new JTextField [nSpecies];
@@ -244,7 +244,7 @@ public class UtilReportNR  extends JDialog {
 			}
 		});
 		
-		btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
+		btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				popupHelp();
@@ -274,7 +274,7 @@ public class UtilReportNR  extends JDialog {
 				+ "\n   Hover over option for more detail.";
 		msg += "\n\nSee ? for details.\n";
 		
-		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	/**************************************************************8
 	 * Shared
@@ -288,7 +288,7 @@ public class UtilReportNR  extends JDialog {
 			
 			spInputKey[x] = txtSpKey[x].getText().trim(); 
 			if (spInputKey[x].contains(" ") && !spInputKey[x].contains(keyC)) {
-				Utilities.showInfoMessage("Bad Key", "Keys must be separated by ',' and no space within a key '" + spInputKey[x] + "'");
+				Popup.showInfoMessage("Bad Key", "Keys must be separated by ',' and no space within a key '" + spInputKey[x] + "'");
 				return;
 			}
 			if (!spInputKey[x].isEmpty()) hasKey=true;	// if any have key
@@ -314,7 +314,7 @@ public class UtilReportNR  extends JDialog {
 		Thread inThread = new Thread(new Runnable() {
     		public void run() {
 			try {
-				tdp.setBtnReport(false);
+				tPanel.setBtnReport(false);
 				btnOK.setEnabled(false); btnCancel.setEnabled(false); 
 				
 				buildCompute();
@@ -328,7 +328,7 @@ public class UtilReportNR  extends JDialog {
 				}
 				
 				btnOK.setEnabled(true); btnCancel.setEnabled(true); 
-				tdp.setBtnReport(true);
+				tPanel.setBtnReport(true);
 			} catch(Exception e) {ErrorReport.print(e, "Ok report");}
 	    	}
 	    });
@@ -362,8 +362,8 @@ public class UtilReportNR  extends JDialog {
 		HashMap <Integer, Clust> grpMap = new HashMap <Integer, Clust>  ();
 		HashSet <String> gnTagSet = new HashSet <String> ();
 		
-		for (int row=0; row<tdp.theTableData.getNumRows(); row++) {
-			TmpRowData rd = new TmpRowData(tdp);
+		for (int row=0; row<tPanel.theTableData.getNumRows(); row++) {
+			TmpRowData rd = new TmpRowData(tPanel);
 			rd.loadRow(row);		// only numbered pseudos will be in the clusters, as screened in ComputeClust
 			
 			Clust grpObj;
@@ -421,7 +421,7 @@ public class UtilReportNR  extends JDialog {
 	 */
 	private boolean buildXannoMap() {
 	try {
-		TmpRowData rd = new TmpRowData(tdp);
+		TmpRowData rd = new TmpRowData(tPanel);
 		
 		String notFoundKey="";
 		for (int nSp=0; nSp<nSpecies; nSp++) {
@@ -464,7 +464,7 @@ public class UtilReportNR  extends JDialog {
 				if (allVal=="") allVal = noAnno; 
 				nAnnoMap.put(tag, allVal);		// replace row number with anno 
 			}
-			int cutoff = (int) ((double)nAnnoMap.size()*0.01); // CAS563 a keyword may not show on Column because <50; but not show as missing
+			int cutoff = (int) ((double)nAnnoMap.size()*0.01); 
 			Globals.tprt("Keyword cutoff: " + cutoff + " from " + nAnnoMap.size());
 			for (String key : keyCntMap.keySet()) {	
 				if (keyCntMap.get(key)<cutoff) 	
@@ -472,7 +472,7 @@ public class UtilReportNR  extends JDialog {
 			}
 		}
 		if (!notFoundKey.equals("")) {
-			Utilities.showWarningMessage("Keywords not found or low usage: " + notFoundKey);
+			Popup.showWarningMessage("Keywords not found or low usage: " + notFoundKey);
 			return false;
 		}
 		return true;
@@ -656,7 +656,7 @@ public class UtilReportNR  extends JDialog {
 							"\nGroup too big: Group " + grpN + " size " + grpSz +
 							"\nIncrease memory or use Sorted Order";
 					Globals.eprt(msg);
-					Utilities.showWarningMessage(msg);
+					Popup.showWarningMessage(msg);
 					bLinkRow=false;
 				}
 			}
@@ -715,7 +715,7 @@ public class UtilReportNR  extends JDialog {
 			if (report==null) return;
 			
 			if (bPopHtml) {
-				util.Jhtml.showHtmlPanel(null, title, report); // CAS563 weird behavior if attached to this
+				util.Jhtml.showHtmlPanel(null, title, report); 
 			}
 			else {
 				outFH = getFileHandle();
@@ -882,7 +882,7 @@ public class UtilReportNR  extends JDialog {
 		private String strTitle(String remark, String br, int gnNum) { // br is "\n" if showing error, else it is <br>
 			String head = remark + title ;
 			br = br + remark;	
-			head += br + "Filter: " + tdp.theSummary;
+			head += br + "Filter: " + tPanel.theSummary;
 			head += String.format("%s%,d Cluster Hits Groups", br, gnNum);
 			String x = (bLinkRow) ? "; Link rows" : "; Unordered unique";
 			String note = (bLinkRow) ? String.format("; %,d All species rows", cntFullLink) : "";
@@ -901,14 +901,14 @@ public class UtilReportNR  extends JDialog {
 	    	
 			JFileChooser chooser = new JFileChooser(saveDir);
 			chooser.setSelectedFile(new File(fname));
-			if(chooser.showSaveDialog(tdp.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+			if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
 			if(chooser.getSelectedFile() == null) return null;
 			
 			String saveFileName = chooser.getSelectedFile().getAbsolutePath();
 			if (!saveFileName.endsWith(".html")) saveFileName += ".html";
 			
 			if (new File(saveFileName).exists()) {
-				if (!Utilities.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
+				if (!Popup.showConfirm2("File exists","File '" + saveFileName + "' exists.\nOverwrite?")) return null;
 			}
 			PrintWriter out=null;
 			try {
@@ -921,7 +921,7 @@ public class UtilReportNR  extends JDialog {
 	}
 	/*********************************************************************/
 	// Interface 
-	private TableMainPanel tdp;
+	private TableMainPanel tPanel;
 	private SpeciesPanel spPanel;
 	private JPanel mainPanel;
 	

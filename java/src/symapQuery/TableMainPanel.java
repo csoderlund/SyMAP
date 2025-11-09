@@ -324,6 +324,7 @@ public class TableMainPanel extends JPanel {
 	    chkSynGn = Jcomp.createCheckBox("Gene#", "If checked, show Gene#, else show Annotation", true);
 	    topRow.add(chkSynGn); 				topRow.add(Box.createHorizontalStrut(3));
 	    
+	    // false until something is selected; see setRowSelected
 	    btnShowRow.setEnabled(false); btnShowMSA.setEnabled(false); btnShowSynteny.setEnabled(false);
 	    cmbSynOpts.setEnabled(false); txtSynRegion.setEnabled(false); chkSynHigh.setEnabled(false); chkSynGn.setEnabled(false);
 	    
@@ -364,6 +365,7 @@ public class TableMainPanel extends JPanel {
 				showReport();
 			}
 		});     
+	    if (isSingle) btnReport.setEnabled(false);
 	    
 	    btnSearch = Jcomp.createButton("Search...", "Search for string and go to that row.");
 	    btnSearch.addActionListener(new ActionListener() {
@@ -835,30 +837,33 @@ public class TableMainPanel extends JPanel {
     	}
     	return total;
     }
-    // This disables doing anything with table while something is running
+    // This disables buttons while something is running; MsaAlign, Export, Report, 
     protected void setPanelEnabled(boolean enable) {
     	theTable.setEnabled(enable); // does not disabled sorting columns
     	rowCount.setEnabled(enable);
   
-    	txtSynRegion.setEnabled(enable);
-    	btnShowSynteny.setEnabled(enable);
-    	cmbSynOpts.setEnabled(enable);
-    	chkSynHigh.setEnabled(enable); chkSynGn.setEnabled(enable);
+    	btnShowCols.setEnabled(enable);
     	btnShowRow.setEnabled(enable);
     	btnExport.setEnabled(enable);
     	btnUnSelectAll.setEnabled(enable);
-    	btnReport.setEnabled(enable);
-    	if (!bMSArun) btnShowMSA.setEnabled(enable);
-    	btnShowCols.setEnabled(enable);
     	btnHelp.setEnabled(enable);
     	
     	for(int x=0; x<chkGeneralFields.length; x++)
     		chkGeneralFields[x].setEnabled(enable);
-    		
     	for(int x=0; x<chkSpeciesFields.length; x++) {
     		for(int y=0; y<chkSpeciesFields[x].length; y++)
     			chkSpeciesFields[x][y].setEnabled(enable);
     	}
+    	
+    	if (isSingle) enable=false; // CAS576 were becoming active after run
+    	
+    	if (!bMSArun) btnShowMSA.setEnabled(enable);
+    	txtSynRegion.setEnabled(enable);
+    	btnShowSynteny.setEnabled(enable);
+    	cmbSynOpts.setEnabled(enable);
+    	chkSynHigh.setEnabled(enable); chkSynGn.setEnabled(enable);
+    	btnReport.setEnabled(enable);
+    	
     	setRowSelected(); 
     }
   
@@ -866,7 +871,8 @@ public class TableMainPanel extends JPanel {
     	// assume 2 species
     	boolean b1 = (theTable.getSelectedRowCount() == 1)  ? true : false;
     	btnShowRow.setEnabled(b1);
-		if (isSingle) return;
+		
+    	if (isSingle) return;
 		
 		btnShowSynteny.setEnabled(b1);
     	cmbSynOpts.setEnabled(b1);	 lblSynAs.setEnabled(b1);
@@ -906,7 +912,7 @@ public class TableMainPanel extends JPanel {
 			TmpRowData rd = new TmpRowData(getInstance());
 			String outLine = rd.loadRowAsString(row);
 			
-			Utilities.displayInfoMonoSpace(this, "Row#" + (row+1), outLine, false);
+			util.Popup.displayInfoMonoSpace(this, "Row#" + (row+1), outLine, false);
 		}
     	catch(Exception e) {ErrorReport.print(e, "Show row");}
     }
@@ -939,7 +945,7 @@ public class TableMainPanel extends JPanel {
 			btnShowSynteny.setEnabled(false);		
 			
 			int selIndex = cmbSynOpts.getSelectedIndex();
-			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 500; // was 200 CAS575 
+			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 500;  
 			
 			UtilSelect uObj = new UtilSelect(this);
 			boolean bGene = chkSynGn.isSelected();
@@ -1016,7 +1022,8 @@ public class TableMainPanel extends JPanel {
       * calls setBtnReport before/after threaded computation
       */
      private void showReport() {
- 	   
+ 	    if (isSingle) return;
+ 	    
      	if (isClustN) {							
      		if (reportNoRefPanel==null) reportNoRefPanel = new UtilReportNR(getInstance()); 
  	    	reportNoRefPanel.setVisible(true); 
@@ -1029,7 +1036,7 @@ public class TableMainPanel extends JPanel {
      }
      protected void setBtnReport(boolean done) {// Called from UtilReport when computation starts/stops
      	if (!done) {
-     		Utilities.setCursorBusy(this, true); 
+     		Jcomp.setCursorBusy(this, true); 
      		btnReport.setText("Computing...");
          	setPanelEnabled(false); 
      	}
@@ -1040,7 +1047,7 @@ public class TableMainPanel extends JPanel {
      		else if (isClustN) title = "Cluster Report...";
      		btnReport.setText(title);
          	setPanelEnabled(true);
-         	Utilities.setCursorBusy(this, false); 
+         	Jcomp.setCursorBusy(this, false); 
      	}
      }
     
@@ -1325,7 +1332,7 @@ public class TableMainPanel extends JPanel {
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
 	
-	protected boolean isSelf=false; // CAS575
+	protected boolean isSelf=false; 
 	
 	// for Stop 
 	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.

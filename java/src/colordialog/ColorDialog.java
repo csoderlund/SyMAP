@@ -36,17 +36,12 @@ import util.ErrorReport;
  * 		Add to appropriate code to use value, in this case, it was in PseudoPseudoHits.java
  * 
  * Tabs are ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
- * @see JDialog, ActionListener, ColorDialogHandler
  * 
  * Tabs can be added by:
  * 		Add tab in colors.properties and in pFiles below
- * 
- * CAS517 made many changes for readability 
- * CAS520 properties reads in random order. So the alpha in colors.properties was replaced with order number
- * CAS532 fixed bug of defaults not always working by reading pFiles instead of using getColor
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ColorDialog extends JDialog implements ActionListener {
+	private static final long serialVersionUID = 1L;
 	private static final String TAB = "tab";
 	private static final String VAR_SEP = ":";
 
@@ -56,14 +51,12 @@ public class ColorDialog extends JDialog implements ActionListener {
 	private JTabbedPane tabbedPane;
 	private JButton okButton, cancelButton, defaultButton;
 	
-	private final String propsFile = "/properties/colors.properties"; // CAS521 moved from SyMAP.java
-	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot", "circle"}; // CAS532 add to save defaults; CAS541 add dotplot
+	private final String propsFile = "/properties/colors.properties"; 
+	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot", "circle"}; 
 	
-	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); // CAS532
+	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); 
 		
-	/**
-	 * @param cookie - user/.symap_saved_props - changes to colors are stored here
-	 */
+	/* cookie - user/.symap_saved_props - changes to colors are stored here */
 	public ColorDialog(PersistentProps cookie) {
 		super();
 
@@ -81,7 +74,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		okButton = new JButton("Save");
 		cancelButton = new JButton("Cancel");
 		defaultButton = new JButton("Default");
-		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.colorIcon); // CAS532 add
+		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.colorIcon); 
 
 		okButton.addActionListener(this);
 		cancelButton.addActionListener(this);
@@ -100,20 +93,19 @@ public class ColorDialog extends JDialog implements ActionListener {
 		pack();
 		setBackground(Color.white);
 		setAlwaysOnTop(true);
-		Dimension dim = getToolkit().getScreenSize(); // CAS554 so will not go behind the Circle one
+		Dimension dim = getToolkit().getScreenSize(); 
 		setLocation(dim.width / 2,dim.height / 5);
-		//setLocationRelativeTo(null); 
 	}
 
-	public void setDotplot() { // CAS541
+	public void setDotplot() { 
 		tabbedPane.setSelectedIndex(3);
 	}
-	public void setCircle() { // CAS554
+	public void setCircle() { 
 		tabbedPane.setSelectedIndex(4);
 	}
 
 	// read colors.properties
-	private void initPropColors() { // CAS532 moved from constructor and make separate method
+	private void initPropColors() { 
 	try {
 		Dimension iconDim = new Dimension(35,20);
 
@@ -149,7 +141,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 					dn = pvalue.substring(0,cInd).trim();
 					if (c2Ind != cInd) {
 						desc = pvalue.substring(cInd+1, c2Ind).trim();
-						nOrder = Integer.parseInt(pvalue.substring(c2Ind+1)); // CAS512 a = new Boolean(pvalue.substring(c2Ind+1)).booleanValue();
+						nOrder = Integer.parseInt(pvalue.substring(c2Ind+1)); 
 					}
 					else {
 						desc = pvalue.substring(cInd+1).trim();
@@ -178,7 +170,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		
 		for (ColorVariable colorVar : cvarsVec) {
 			name = (String)tabMap.get(colorVar.className);
-			ind = (tabOrderMap.get(name)==null) ? Integer.MAX_VALUE : tabOrderMap.get(name); // CAS532 was Integer conversion
+			ind = (tabOrderMap.get(name)==null) ? Integer.MAX_VALUE : tabOrderMap.get(name); 
 			
 			ColorTab colorTab = new ColorTab(name, ind);
 			
@@ -199,7 +191,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 	catch (Exception e) {ErrorReport.print(e, "init prop colors");}
 	}
 	
-	private void initDefaultProps() { // CAS532 add
+	private void initDefaultProps() { 
 	try {
 		for (String f : pFiles) {
 			String file = "/properties/" + f + ".properties";
@@ -244,10 +236,10 @@ public class ColorDialog extends JDialog implements ActionListener {
 						System.out.println("Invalid Color Variable: ["+c+"]");
 					}
 					else {
-						r = Integer.parseInt(cvars[0]); // CAS512 new Integer(cvars[0]).intValue();
-						g = Integer.parseInt(cvars[1]); //new Integer(cvars[1]).intValue();
-						b = Integer.parseInt(cvars[2]); //new Integer(cvars[2]).intValue();
-						if (cvars.length == 4) a = Integer.parseInt(cvars[3]); //new Integer(cvars[3]).intValue();
+						r = Integer.parseInt(cvars[0]); 
+						g = Integer.parseInt(cvars[1]);
+						b = Integer.parseInt(cvars[2]); 
+						if (cvars.length == 4) a = Integer.parseInt(cvars[3]); 
 						else a = 255;
 						
 						changeCookieColor(new ColorVariable(cn,vn,new Color(r,g,b,a)));
@@ -298,8 +290,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 				((ColorTab)comps[i]).commit();
 		}
 	}
-	/**CAS532 changed to just set defaults for current tab 
-	   The getSelectedIndex() gets wrong index on Linux, which adds extra components at the beginning */
+	
 	protected void defaultAction() {
 		try {
 			Component c = tabbedPane.getSelectedComponent();
@@ -338,7 +329,6 @@ public class ColorDialog extends JDialog implements ActionListener {
 	}
 	/********************************************************
 	 * Writes to static color variables in the specified file; called by ColorVariable on change
-	 * CAS532 removed some dead code looking for variableName.indexOf('[') which never happens
 	 */
 	protected static boolean setColor(String className, String variableName, Color color) {
 		try {
@@ -351,7 +341,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 		catch (Exception e) {ErrorReport.print(e, "set color"); return false;}
 	}
 
-	protected static Color getColor(String className, String variableName) {// replaced with getDefault
+	protected static Color getColor(String className, String variableName) {
 		Color color = null;
 		try {
 			Class <?> c = Class.forName(className);

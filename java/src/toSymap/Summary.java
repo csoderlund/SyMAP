@@ -14,6 +14,7 @@ import backend.Constants;
 import backend.Utils;
 import util.ErrorReport;
 import util.Utilities;
+import util.FileDir;
 
 /***************************************
  * Check for existence FASTA and GFF
@@ -107,7 +108,7 @@ public class Summary {
 		// print files
 		prt("");
 		if (seqDir.endsWith("/")) seqDir = seqDir.substring(0, seqDir.length()-1);
-		prt("Sequence directory: "   + seqDir + "      " + Utilities.fileDate(seqDir));
+		prt("Sequence directory: "   + seqDir + "      " + FileDir.fileDate(seqDir));
 		for (File f : seqFiles) prt("   " + f.getName());
 		
 		if (annoDir!=null) {
@@ -381,7 +382,7 @@ public class Summary {
 		}
 	}
 	
-	private String getPrefix(String tag) { // CAS558 rewrote
+	private String getPrefix(String tag) { 
 		if (tag.contains("_")) {
 			Pattern pat2 = Pattern.compile("([AN][A-Z])_(\\d*).*");	// NC_
 			Matcher m = pat2.matcher(tag);
@@ -583,7 +584,6 @@ public class Summary {
 		prt(7, cntMRNA, String.format("mRNAs from %,d %s", cntReadMRNAs, pc));
 		prt(7, cntExon, String.format("Exons from %,d ", cntReadExons));
 		
-		
 		if (bVerbose) {
 			prt("");
 			prt("Types: " + typeMap.size());
@@ -717,7 +717,7 @@ public class Summary {
 			if (!isDS) return;
 			
 			/////////////////////////////////
-			dsDirName = Utilities.fileNormalizePath(projDir, ncbi_dataset + ncbi_data);
+			dsDirName = FileDir.fileNormalizePath(projDir, ncbi_dataset + ncbi_data);
 					
 			dir = new File(dsDirName);
 			if (!dir.isDirectory()) {
@@ -735,7 +735,7 @@ public class Summary {
 				die(dsDirName + " missing sub-directory");
 				return;
 			}
-			seqDir = Utilities.fileNormalizePath(dsDirName, subDir);
+			seqDir = FileDir.fileNormalizePath(dsDirName, subDir);
 			annoDir = seqDir;
 			
 			getFiles();
@@ -743,8 +743,8 @@ public class Summary {
 		catch (Exception e) { die(e, "Checking " + projDir); }
 	}
 	private void setConvertDir() {
-		seqDir  = Utilities.fileNormalizePath(projDir, seqSubDir);
-		annoDir = Utilities.fileNormalizePath(projDir, annoSubDir);
+		seqDir  = FileDir.fileNormalizePath(projDir, seqSubDir);
+		annoDir = FileDir.fileNormalizePath(projDir, annoSubDir);
 		getFiles();
 	}
 	/**************************************************************************
@@ -770,8 +770,6 @@ public class Summary {
 			seqDir=null;
 			return;
 		}
-		
-		
 		sdf = new File(annoDir);
 		if (sdf.exists() && sdf.isDirectory()) {
 			for (File f2 : sdf.listFiles()) {
@@ -805,20 +803,20 @@ public class Summary {
 	 /*******************************************************
 	  * Print out whether convert has been run
 	  */
-	private void prtConvertLog() {
+	 private void prtConvertLog() {
 		try {	
 			File sdf = new File(projDir);
 			if (sdf.exists() && sdf.isDirectory()) {
 				for (File f2 : sdf.listFiles()) {
 					String name = f2.getName();
 					if (name.startsWith("xConvert")) {
-						prt("Convert log: " + name + "      " +  Utilities.fileDate(f2.getAbsolutePath()));
+						prt("Convert log: " + name + "      " +  FileDir.fileDate(f2.getAbsolutePath()));
 					}
 				}
 			}
 		}
 		catch (Exception e) {die(e, "Cannot search for convert log"); }
-	}
+	 }
 	 private boolean isDir(String dirName) {
 			File dir = new File(dirName);
 			if (!dir.isDirectory()) return false;

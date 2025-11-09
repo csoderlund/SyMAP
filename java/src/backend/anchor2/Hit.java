@@ -10,7 +10,6 @@ import java.util.HashSet;
  * Hit created when MUMmer read; overlap with genes are calculated at the same time
  * A hit is either GG, Gn, nG, or nn; a hit can be to multiple T and/or Q overlapping genes
  * A second Hit constructor is for merging hits in HitPair
- * CAS560 moved coverage filters to Arg
  */
 public class Hit {
 	private static final int T=Arg.T, Q=Arg.Q;
@@ -26,7 +25,7 @@ public class Hit {
 	protected boolean isStEQ=true;			 // same strand (T) diff strand (F)
 	
 	// set during read mummer
-	protected HashMap <Integer, HitGene> tGeneMap = null, qGeneMap=null; // CAS560 was two arrays
+	protected HashMap <Integer, HitGene> tGeneMap = null, qGeneMap=null;
 	
 	// set in GrpPairGx.mkGenePair
 	protected HashSet <String> gxPair = new HashSet <String> ();
@@ -149,6 +148,7 @@ public class Hit {
 		hStart[X] = s;
 		hEnd[X] = e;
 	}
+	
 	private class HitGene {
 		private HitGene(Gene xgene, int cov) {this.xgene=xgene; this.exonCov = cov; }
 		Gene xgene;
@@ -194,21 +194,18 @@ public class Hit {
 		);
 	}
 	
-	/******** For file output on -tt; CAS565 switch T&Q ******************/
+	/******** prtToFile on -tt  ******************/
 	protected String toDiff(Hit last) {
 		int maxGap = Arg.iGmIntronLenRm; 
 		String sdiff1="", sdiff2="", td="", qd="";
 		if (last!=null) {
 			int olap = Arg.pGap_nOlap(last.hStart[T], last.hEnd[T], hStart[T], hEnd[T]); // Negative is gap; make Olap neg
 			sdiff1 =   Arg.int2Str(olap);                       // returns string prefixed with - or blank
-			
 			if (Math.abs(olap)>maxGap) td = " T" + olap;
-		
 			olap =    Arg.pGap_nOlap(last.hStart[Q], last.hEnd[Q], hStart[Q], hEnd[Q]);
 			sdiff2 =  Arg.int2Str(olap);
 			if (Math.abs(olap)>maxGap) qd = " Q" + olap;
 		}
-		
 		String pre = "n";
 		if (bBothGene()) pre="g";
 		else if (bEitherGene()) pre="e";
@@ -217,10 +214,8 @@ public class Hit {
 		String e = isStEQ ? " EQ"  : " NE";
 		e += sign;
 		String ext = sbin + toGeneStr() + e + " ";
-		
 		String coords = String.format("#%-6d [Q %,10d %,10d %,5d %5s] [T %,10d %,10d %,5d %5s] [ID %3d]", 
 				 hitNum, hStart[Q], hEnd[Q], hLen[Q], sdiff1, hStart[T], hEnd[T], hLen[T], sdiff2, id);
-		
 		return coords + ext + qd + td;
 	}
 	protected String toGeneStr() {
@@ -233,7 +228,6 @@ public class Hit {
 			}
 		}
 		if (tmsg=="") tmsg="t--";
-		
 		if (qGeneMap!=null && qGeneMap.size()>0) {
 			for (HitGene hg : qGeneMap.values()) {
 				if (hg.exonCov>0) qmsg += " Eq";
@@ -242,7 +236,6 @@ public class Hit {
 			}
 		}		
 		if (qmsg=="") qmsg="q--";
-		
 		return "[" + qmsg + "][" + tmsg + "]" + cntGene + " ";
 	}
 }

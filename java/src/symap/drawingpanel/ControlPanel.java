@@ -30,8 +30,8 @@ import util.Jhtml;
 /**
  * 2D drawingpanel Control Panel
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ControlPanel extends JPanel implements HelpListener {	
+	private static final long serialVersionUID = 1L;
 	// These are accessed in DrawingPanel to match button text with function
 	protected static final String MOUSE_FUNCTION_ZOOM_ALL 		= "Zoom All Tracks";
 	protected static final String MOUSE_FUNCTION_ZOOM_SINGLE 	= "Zoom Select Track";
@@ -63,7 +63,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		this.cdh = cdh;
 
 		homeButton       = Jcomp.createIconButton(this,bar,null,"/images/home.gif",
-				"Home: Go to original zoom view.");	// CAS570 add 'zoom' as filters are not included in history
+				"Home: Go to original zoom view.");
 		backButton       =  Jcomp.createIconButton(this,bar,null,"/images/back.gif",
 				"Back: Go back in zoom history"); 
 		forwardButton    = Jcomp.createIconButton(this,bar,null,"/images/forward.gif",
@@ -77,7 +77,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 				"Increase the bases shown");
 		shrinkButton   = Jcomp.createIconButton(this,bar,buttonListener,"/images/shrink.png",
 				"Shrink space between tracks");
-		scaleButton    =  Jcomp.createBorderIcon(this,bar,buttonListener,"/images/scale.gif",
+		scaleButton    =  Jcomp.createBorderIconButton(this,bar,buttonListener,"/images/scale.gif",
 				"Scale: Draw all of the tracks to bp scale");
 		showImageButton  =  Jcomp.createIconButton(this, bar,buttonListener,"/images/print.gif",
 				"Save: Save as image.");
@@ -90,13 +90,13 @@ public class ControlPanel extends JPanel implements HelpListener {
 		
 		createMouseFunctionSelector(bar); // for drag&drop
 		
-		zoomPopupButton = Jcomp.createButtonNC(this,bar, null,"Zoom",
+		zoomPopupButton = Jcomp.createButtonGray(this,bar, null,"Zoom",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
-		showPopupButton = Jcomp.createButtonNC(this,bar, null,"Show",
+		showPopupButton = Jcomp.createButtonGray(this,bar, null,"Show",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
 		createSelectPopups(); 
 		
-		JPanel row = Jcomp.createGrayRowPanel();
+		JPanel row = Jcomp.createRowPanelGray();
 		
 		GridBagLayout gbl = new GridBagLayout();
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -293,7 +293,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		scaleButton.setBackground(Jcomp.getBorderColor(false));
 	}
 	
-	public String getHelpText(MouseEvent event) { 
+	public String getHelpText(MouseEvent event) { // symap.frame.HelpBar
 		Component comp = (Component)event.getSource(); 
 		Object source = event.getSource();
 		String msg = comp.getName();
@@ -309,7 +309,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		}
 		return msg;
 	}
-	public void setHistory(boolean toScale, String mouseFunction) { 
+	public void setHistory(boolean toScale, String mouseFunction) { // drawingPanel.DrawingPanel
 		scaleButton.setSelected(toScale);
 		dp.isToScale = toScale;
 		scaleButton.setBackground(Jcomp.getBorderColor(toScale));
@@ -336,23 +336,23 @@ public class ControlPanel extends JPanel implements HelpListener {
 	
 	///////////////// (i) ////////////////////////////////////////
 	
-	static final String SEQ_help = "Track Information:"
+	static final private String SEQ_help = "Track Information:"
 			+ "\n Hover on gene for information."
 			+ "\n Right-click on gene for popup with the full description."
-			+ "\n Right-click in non-gene track space for subset filter popup."
+			+ "\n Right-click in track space for subset filter popup."
 			+ "\n Problem: if there are more than 2 tracks and the sequence 'Annotation' is"
 			+ "\n   shown for the 2nd track, the mouse hover sometimes does not work correctly "
 			+ "\n   in the 3rd track."
 			+ "\n\n";
 
-	static final String HIT_help = "Hit-wire Information:"
+	static final private String HIT_help = "Hit-wire Information:"
 			+ "\n Hover on hit-wire for information (it will be highlighted)."
 			+ "\n Right-click on hit-wire for popup for full information "
 			+ "\n     (it must be highlighted to be clickable)."
 			+ "\n Right-click in white space of hit area for subset filter popup."
 			+ "\n\n";
 	
-	static final String FIL_help = "History Events (Home, > and <):" 
+	static final private String FIL_help = "History Events (Home, > and <):" 
 			+ "\n Changing the coordinates of the display is a history event."
 			+ "\n Coordinates are changed by any of the icons in the Control panel up to the first '|',"
 			+ "\n     plus the Sequence Filter coordinate changes."
@@ -379,7 +379,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	static final String Q_HELP = "See ? for details\n";
 			
 	private void popupHelp() {
-		util.Utilities.displayInfoMonoSpace(this, "2d Control Quick Help", 
+		util.Popup.displayInfoMonoSpace(this, "2d Control Quick Help", 
 				SEQ_help+HIT_help+FIL_help+DRAG_help+Q_HELP, false);
 	}
 }

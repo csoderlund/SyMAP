@@ -13,21 +13,23 @@ import java.util.Vector;
 import java.util.HashMap;
 import javax.swing.JTextField;
 
+import symap.Globals;
+import symap.Ext;	
+
 import util.ErrorReport;
 import util.Utilities;
-import symap.Globals;
-import symap.Ext;		// CAS566 arch/ext/paths are all in Ext
-
+import util.FileDir;
+	
 /***********************************
  * SyMAP Query MSA - align selected set using muscle or mafft
  * 
  * Called from MsaMainPanel, which adds all sequences and their names, then calls alignMafft or alignMuscle
  * Write fasta, run align, read result
  * 
- * CAS563 add MAFFT; was named MultiAlignmentData. This was written for NT or AA, but only used for NT
+ * This was written for NT or AA, but only used for NT
  */
 public class MsaRun {
-	private final static String TARGET_DIR  = Globals.alignDir;	// CAS563 make global constant called /queryAlign
+	private final static String TARGET_DIR  = Globals.alignDir;	
 	private final static String SOURCE_FILE = Globals.alignDir + "/Source.fa"; // put in directory and do not delete
 	private final static String TARGET_FILE = Globals.alignDir + "/Align.fa";
 	
@@ -39,9 +41,9 @@ public class MsaRun {
 	private JTextField progressField; 
 	private Vector<String> seqNames = null;		// input/output
 	private Vector<String> seqSeqs = null;		// input/output
-	protected String finalStats= " ";  			// Used in MsaMainPanel;  CAS563 add
+	protected String finalStats= " ";  			// Used in MsaMainPanel
 	private int maxSeq=0;
-	private MsaMainPanel msaMain=null;			// to checked Stopped; CAS564 add
+	private MsaMainPanel msaMain=null;			// to checked Stopped
 		
 	protected MsaRun(MsaMainPanel msaMain, String name, JTextField progressField) {
 		this.msaMain = msaMain;
@@ -50,7 +52,7 @@ public class MsaRun {
 		fileName = name;
 		this.progressField = progressField;
 		
-		Utilities.deleteFile(TARGET_FILE); // previous file; if error, could read old one if not removed
+		FileDir.deleteFile(TARGET_FILE); // previous file; if error, could read old one if not removed
 	}
 	protected boolean hasFilename() { return fileName != null; }
 	
@@ -70,7 +72,7 @@ public class MsaRun {
 	 * String cmd = ./ext/mafft/mac/mafft.bat Source.fa >Align.fa;			 // command line from /queryMSA
 	 * cmd = cmd + " --auto --reorder --thread " + cpus + " " + SOURCE_FILE; // used by TCW	
 	 **********************************************************************/
-	protected boolean alignMafft(String status, boolean bTrim, boolean bAuto, int cpu) {// CAS563 add MAFFT
+	protected boolean alignMafft(String status, boolean bTrim, boolean bAuto, int cpu) {
 		pgmStr = "MAFFT";
 		
 		String cmd  = Ext.getMafftCmd();
@@ -85,7 +87,7 @@ public class MsaRun {
 			long time = Utilities.getNanoTime();
 			
 			progressField.setText("Writing sequences to file");
-			Utilities.checkCreateDir(TARGET_DIR, true);
+			FileDir.checkCreateDir(TARGET_DIR, true);
 			writeFASTA(SOURCE_FILE);
 			
 			progressField.setText(status);
@@ -124,7 +126,7 @@ public class MsaRun {
 			return false;
 		}
 	}
-	private int runStdOut(String cmd, String outFile, String errFile) {// CAS563 copied from TCW for using >outfile
+	private int runStdOut(String cmd, String outFile, String errFile) {
 		int exitVal=0;
     	try {
     		String[] args = cmd.split("\\s+");
@@ -155,7 +157,7 @@ public class MsaRun {
 	 * MUSCLE
 	 * String cmd = path + " -in " + SOURCE_FILE + " -out " + TARGET_FILE;
 	 ***************************************************************/
-	protected boolean alignMuscle(String status, boolean bTrim) {// CAS563 set status in calling symapQuery.TableShow
+	protected boolean alignMuscle(String status, boolean bTrim) {// set status in calling symapQuery.TableShow
 		pgmStr = "MUSCLE";
 		String cmd  = Ext.getMuscleCmd();
 		
@@ -165,13 +167,13 @@ public class MsaRun {
 			long time = Utilities.getNanoTime();
 			
 			progressField.setText("Writing sequences to file");
-			Utilities.checkCreateDir(TARGET_DIR, true);
+			FileDir.checkCreateDir(TARGET_DIR, true);
 			writeFASTA(SOURCE_FILE);
 			
 			progressField.setText(status);
 			
-			String [] x = {cmd, "-in", SOURCE_FILE, "-out", TARGET_FILE}; 	// CAS557 single string depreciated 
-			Process pr = Runtime.getRuntime().exec(x); 						// CAS547 single string depreciated
+			String [] x = {cmd, "-in", SOURCE_FILE, "-out", TARGET_FILE}; 	
+			Process pr = Runtime.getRuntime().exec(x); 						
 			pr.waitFor();
 			
 			if (pr.exitValue()!=0) {
@@ -271,11 +273,11 @@ public class MsaRun {
 	/******************************************************/
 	private boolean readFASTA(String fname) {
 		try {
-			if (!Utilities.fileExists(fname)) { // CAS559 added check
-				Utilities.showErrorMessage("No output files were created. Make sure " + pgmStr + " exists");
+			if (!FileDir.fileExists(fname)) { 
+				util.Popup.showErrorMessage("No output files were created. Make sure " + pgmStr + " exists");
 				return false;
 			}
-			// The sequences in the alignment file are not in original order; save order to put back; CAS563 add
+			// The sequences in the alignment file are not in original order; save order to put back
 			int nSeqs = seqNames.size(); 
 			HashMap <String, Integer> seqPosMap = new HashMap <String, Integer> (nSeqs);
 			for (int i=0; i<seqNames.size(); i++) seqPosMap.put(seqNames.get(i), i);
@@ -331,7 +333,7 @@ public class MsaRun {
 				seqSeqs.add(seq[i]);
 			}
 			if (cntGood==0) {
-				Utilities.showErrorMessage("No results were found. Make sure " + pgmStr + " works.");
+				util.Popup.showErrorMessage("No results were found. Make sure " + pgmStr + " works.");
 				return false;
 			}
 			
@@ -400,7 +402,7 @@ public class MsaRun {
 						if (sc2.cnt==sc.cnt && bCntVec.get(i+1).sym!=gapOut) break;
 					}
 					if (sc.cnt>1) {
-						cc = Character.toLowerCase(sc.sym); // CAS563 check for lc in AlignPanel
+						cc = Character.toLowerCase(sc.sym); 
 						theConsensus += cc;
 						cntMis++;
 						break;
@@ -468,7 +470,7 @@ public class MsaRun {
 		}
 		return theSymbols.get(maxPos).sym;
 	}
-	// CAS563 used by MultiAlignPanel - but never really since not aligning AA
+	// Called by MsaPanel - but never really since not aligning AA
 	// Return true anytime the BLOSUM62 matrix value is >= 1. This seems to
 	// be how blast places '+' for a likely substitution in it's alignment.
 	static protected boolean isCommonAcidSub(char chAcid1, char chAcid2) {

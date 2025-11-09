@@ -1,7 +1,6 @@
 package util;
 
 /********************************************
- * CAS500 added so printStackTrace goes to file; does not need to be opened by caller
  * See util.ProgressDialog for write to logs/LOAD.log and progress window
  * See backend.Log for write to alignment specific symap.log file
  */
@@ -24,7 +23,7 @@ public class ErrorReport {
 		reportError(null, "Error: " + debugInfo, false);
 	}
 	
-	public static void print(String msg, String debugInfo) {// CAS505
+	public static void print(String msg, String debugInfo) {
 		msg = "Error: " + msg;
 			
 		System.err.println(msg);
@@ -44,19 +43,19 @@ public class ErrorReport {
 	}
 	
 	public static void die(Throwable e, String debugInfo) {
-		DBconn2.shutConns(); // CAS541 
-		reportError(e,    "Fatal Error " + Globals.VERDATE + "\n   " +  debugInfo, false); // CAS560 add version to log file
+		DBconn2.shutConns(); 
+		reportError(e,    "Fatal Error " + Globals.VERDATE + "\n   " +  debugInfo, false); 
 		System.exit(-1);
 	}
 	public static void die(String debugInfo) {
-		DBconn2.shutConns(); // CAS541 
+		DBconn2.shutConns(); 
 		reportError(null, "Fatal Error " + Globals.VERDATE + "\n   " +  debugInfo, false);
 		System.exit(-1);
 	}
 	public static void reportError(Throwable e, String msg, boolean replaceContents) {
 		System.err.println(msg);
-		if (e!=null && e.getMessage()!=null) { // CAS512 add 2nd check
-			String [] lines = e.getMessage().split("\n"); // CAS511 can include nested stacktrace
+		if (e!=null && e.getMessage()!=null) { 
+			String [] lines = e.getMessage().split("\n"); 
 			if (lines.length>5) {
 				System.err.println(lines[0]);
 				for (String l : lines) {
@@ -84,7 +83,7 @@ public class ErrorReport {
 			return;
 		}
 		
-		pWriter.println("\n " + Globals.VERDATE + " run on " + getDate()); // CAS560 add verdate
+		pWriter.println("\n " + Globals.VERDATE + " run on " + getDate()); 
 		pWriter.println(msg + "\n");
 		if (e != null)  {
 			e.printStackTrace(pWriter);

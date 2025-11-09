@@ -256,7 +256,7 @@ public class Hit implements Comparable <Hit> {
 	catch (Exception e) {ErrorReport.print(e, "Split MUMmer hit"); return null;}
 	}
 	/******************************************************************
-	 * to merge hit lists [mergeOverlappingHits; was called by clusterSubHits2 on bighits, which never ran]
+	 * to merge hit lists; CAS575 still merges, but does not save
 	 * called in AnchorsMain.preFilterHits2
 	 * not a complete merge b/c doesn't ever merge two clusters
 	 */
@@ -288,10 +288,11 @@ public class Hit implements Comparable <Hit> {
 	/***************************************************************
 	* called in AnchorsMain.clusterHits2 
 	*/
+	protected static int totalWS=0;
 	protected static Vector <Hit> clusterHits2(Vector<Hit> hitVec, HitType htype, AnnotElem qAnno, AnnotElem tAnno)  throws Exception {
 		Vector <Hit> retHits = new Vector <Hit> ();
 		if (hitVec.size()==0) return retHits;
-		
+	
 		Vector <Hit> rHits = new Vector <Hit> ();
 		Vector <Hit> sHits = new Vector <Hit> ();
 		for (Hit ht : hitVec) {
@@ -408,11 +409,12 @@ public class Hit implements Comparable <Hit> {
 			boolean isGnEQ = ts.equals(qs);
 			
 			if (bHtEQ!=isGnEQ) {// this is still processed
-				if (Globals.TRACE && numHits>5) {
+				if (Globals.TRACE && numHits>3 && totalWS<1) {
 					String msg = String.format("%2d subhits cluster (%s) for Q gene %6d (%s) and T %6d (%s)",
 						numHits, ht.strand, qAnno.genenum, qs, tAnno.genenum, ts);
 					System.out.println(msg);
 				}
+				if (numHits>3) totalWS++;
 			}
 			else ht.strand = qs + "/" + ts;
 		}

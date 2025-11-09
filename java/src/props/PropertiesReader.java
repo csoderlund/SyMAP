@@ -13,16 +13,11 @@ import util.ErrorReport;
 
 /**
  * Class PropertiesReader handles getting values from properties files
- * Add comments and removed dead methods 
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class PropertiesReader extends Properties {
-	
-	// backend.SyProps extends PropertiesReader; sets properties from this file
-	public PropertiesReader() {
-		super();
-	}
-	// called from 2D (sequence.java, etc) to display colors from the properties directory
+	private static final long serialVersionUID = 1L;
+
+	// colorDialog
 	public PropertiesReader(URL url) {
 		super();
 		try {
@@ -32,9 +27,9 @@ public class PropertiesReader extends Properties {
 			ErrorReport.print(e, "PropertiesReader unable to load "+url);
 		}
 	}
-	// ProjectManagerFrameCommon: read symap.config
-	// Project: get and update project params file
-	// PropertyFrame: read pair params file
+	// ManagerFrame: read symap.config
+	// Mproject: get and update project params file
+	// Mpair: read pair params file
 	public PropertiesReader(File file) {
 		super();
 		try {
@@ -44,6 +39,18 @@ public class PropertiesReader extends Properties {
 			ErrorReport.print(e, "PropertiesReader unable to load "+file);
 		}
 	}
+	
+	public String getString(String key) {
+		String s = (String)getProperty(key);
+		if (s != null) s = s.trim();
+		if (s != null) s = s.intern();
+		return s;
+	}
+
+	public Color getColor(String key) {
+		return parseColor((String)getProperty(key));
+	}
+	
 	private void fixProps() {
 		for (Enumeration<?> e = propertyNames(); e.hasMoreElements(); ) {
 			String propName = e.nextElement().toString();
@@ -54,36 +61,6 @@ public class PropertiesReader extends Properties {
 			}
 		}
 	}
-	public String getString(String key) {
-		String s = (String)getProperty(key);
-		if (s != null) s = s.trim();
-		if (s != null) s = s.intern();
-		return s;
-	}
-	
-	//CAS507 check for blank. Remove methods getInts and getDoubles -- not used
-	public int getInt(String key) {
-		String val = (String)getProperty(key).trim();
-		if (val.contentEquals("")) {
-			// System.out.println("Warning: No value for '" + key + "'. Using 0."); CAS513 - assume they mean 0
-			return 0;
-		}
-		return Integer.parseInt(val);
-	}
-
-	public float getFloat(String key) {
-		String val = (String)getProperty(key).trim();
-		if (val.contentEquals("")) {
-			//System.out.println("Warning: No value for '" + key + "'. Using 0.0.");
-			return 0;
-		}
-		return Float.parseFloat(val);
-	}
-
-	public Color getColor(String key) {
-		return parseColor((String)getProperty(key));
-	}
-
 	private Color parseColor(String colorString) {
 		StringTokenizer st = new StringTokenizer(colorString, ",");
 		int r = Integer.decode(st.nextToken()).intValue();
@@ -93,12 +70,5 @@ public class PropertiesReader extends Properties {
 		if (st.hasMoreTokens())
 			a = Integer.decode(st.nextToken()).intValue();
 		return new Color(r, g, b, a);
-	}
-
-	public boolean getBoolean(String key) {
-		String value = getProperty(key);
-		if (value != null && (value.equals("1") || value.toLowerCase().equals("true")))
-			return true;
-		return false;
 	}
 }

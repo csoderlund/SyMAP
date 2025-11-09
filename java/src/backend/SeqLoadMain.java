@@ -18,7 +18,6 @@ import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
 import blockview.BlockViewFrame;
 
 /*****************************************
@@ -40,7 +39,7 @@ public class SeqLoadMain {
 	private int totalnSeqs=0, cntFile=0, totalSeqIgnore=0, totalBasesWritten=0;
 	private Vector<String> grpList = new Vector<String>();
 	
-	public boolean run(DBconn2 dbc2, ProgressDialog plog, Mproject mProj) throws Exception {
+	protected boolean run(DBconn2 dbc2, ProgressDialog plog, Mproject mProj) throws Exception {
 		try {
 			tdbc2 = new DBconn2("SeqLoad-"+ DBconn2.getNumConn(), dbc2);
 			this.plog = plog;
@@ -96,7 +95,7 @@ public class SeqLoadMain {
 			String seqDir = projDir + Constants.seqSeqDataDir; // created with Add Project
 			plog.msg("   Sequence_files " + seqDir + " (Default location)"); 
 			
-			if (!Utilities.pathExists(seqDir)) {
+			if (!util.FileDir.pathExists(seqDir)) {
 				return rtError("Sequence files not found in " + seqDir);
 			}			
 			File sdf = new File(seqDir);
@@ -105,7 +104,7 @@ public class SeqLoadMain {
 				modDirDate = sdf.lastModified();
 				
 				File[] fs = sdf.listFiles();
-				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice; CAS575
+				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice
 				
 				for (File f2 : fs) {
 					if (!f2.isFile() || f2.isHidden()) continue; // macOS add ._ files in tar

@@ -21,7 +21,15 @@ public class HfilterData {
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
 	
 	public HfilterData() {
-		setDefaults();
+		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
+		bHiPopup = bHiNone = true;
+		
+		bCset = b2Gene = b1Gene = b0Gene =false; 
+		bBlock = true; bBlockAnd = true; bBlockOr = false; bBlockOnly=false;
+		bAll = false;					
+		
+		blkNum=0;
+		pctid=ANY_PCTID;
 	}
 	protected HfilterData copy(String msg) {
 		return new HfilterData(this);
@@ -45,19 +53,19 @@ public class HfilterData {
 			}
 			String x="";
 			if (bCset)	 	x += " CoSets,";
-			if (b2Gene) 	x += " 2 Genes,";
-			if (b1Gene) 	x += " 1 Gene,";
-			if (b0Gene) 	x += " 0 Genes,";			
+			if (b2Gene) 	x += " g2,";
+			if (b1Gene) 	x += " g1,";
+			if (b0Gene) 	x += " g0,";			
 			if (x.endsWith(",")) x = x.substring(0, x.length()-1);
 			if (x!="") show += p + x;
 			
 			if (show.equals("Show")) show += " All";
 		}
-		if (bHiBlock) 		show += "; High Blocks ";	// There will always be a show; put high last; CAS573
+		if (bHiBlock) 		show += "; High Blocks ";	// There will always be a show; put high last
 		else if (bHiCset) 	show += "; High CoSets "; 
-		else if (bHi2Gene) 	show += "; High =2 Genes ";
-		else if (bHi1Gene) 	show += "; High =1 Gene; ";
-		else if (bHi0Gene) 	show += "; High =0 Genes; ";
+		else if (bHi2Gene) 	show += "; High g2 ";
+		else if (bHi1Gene) 	show += "; High g1 ";
+		else if (bHi0Gene) 	show += "; High g0 ";
 		
 		if (!bHiPopup) 		show += "; No High Popup (or Query); "; // query; 
 		
@@ -80,18 +88,6 @@ public class HfilterData {
 		else            {setAll(true); setHiBlock(true);} 	// CAS575 add setAll
 	}
 	
-	private void setDefaults() {
-		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
-		bHiPopup = bHiNone = true;
-		
-		bCset = b2Gene = b1Gene = b0Gene =false; 
-		bBlock = true; bBlockAnd = true; bBlockOr = false; bBlockOnly=false;
-		bAll = false;					
-		
-		blkNum=0;
-		pctid=ANY_PCTID;
-	}
-
 	// this changes initial settings for dotplot and query table
 	public boolean setChanged(HfilterData hf, String msg) {
 		boolean changed = false;

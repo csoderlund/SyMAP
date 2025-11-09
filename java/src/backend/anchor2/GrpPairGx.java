@@ -108,7 +108,7 @@ public class GrpPairGx {
 	private class G2Pairs {
 		private ArrayList <HitPair> g2HprList  = new ArrayList <HitPair> (); // Final list, to be  added to gxPairList
 		private ArrayList <HitPair> wsPairList = new ArrayList <HitPair> (); // wrong strand - for -wsp
-		private int numPairsOrig=0, numFilter=0;
+		private int numFilter=0, numWS=0, numRmEnd=0, numRmLow=0;
 		
 		private G2Pairs() {
 			if (tGeneMap.size()==0 || qGeneMap.size()==0) return;
@@ -120,11 +120,11 @@ public class GrpPairGx {
 			
 			processWS(); 
 			grpPairObj.mainObj.cntG2Fil+=numFilter;
+			grpPairObj.mainObj.cntRmEnd+=numRmEnd;
+			grpPairObj.mainObj.cntRmLow+=numRmLow;
 		}
 		private void runG2(boolean isStEQ) {
 			if (tGeneMap.size()==0 || qGeneMap.size()==0) return;
-			
-			// CAS568 Globals.rprt("Find G2 hits for " + Arg.isEQstr(isStEQ));
 			
 			step1MkPairAndFilter(isStEQ); if (!bSuccess) return; // create g2HprList and filter
 			
@@ -148,12 +148,12 @@ public class GrpPairGx {
 			HashMap <String, HitPair> hprGeneMap = new HashMap <String, HitPair> (); // tgn.geneIdx:qgn.geneIdx -> hits
 			
 		// Build g2 multi and single hit pairs from genes with shared hits
-			for (Hit ht: grpHitList) { 			// Loop by hit assigning hpr to T-Q gene pairs		
+			for (Hit ht: grpHitList) { 				// Loop by hit assigning hpr to T-Q gene pairs		
 				if (ht.isStEQ!=isStEQ) continue;
 				
 				ht.mkGenePairs(); 					// makes pairs; tgn.geneIdx + ":" + qgn.geneIdx   
-				if (ht.gxPair.size()==0) continue;	
-				
+				if (ht.gxPair.size()==0) continue;			
+ 
 				for (String idxPair : ht.gxPair) { 	// Loop through pairs
 					HitPair nhp;
 					String [] tok = idxPair.split(":");
@@ -170,22 +170,22 @@ public class GrpPairGx {
 					ht.addGeneHit(tGene, qGene);
 				}
 			}
-			numPairsOrig = hprGeneMap.size();
-			
+	
 		// Filter wrong strand  - put rest on allHprList
 			ArrayList <HitPair> allHprList = new ArrayList <HitPair> ();
 			
 			for (HitPair hpr : hprGeneMap.values()) {		
 				hpr.setSign();  		
-				if (hpr.isRst) allHprList.add(hpr); // transfer to allHprList
-				else { 	
-					// CAS565 the WS output has quit working, add checks; CAS560 do not allow wrong strand; many singletons; 
+				if (hpr.isRst) {
+					allHprList.add(hpr); // transfer to allHprList
+				}
+				else { 	// do not allow wrong strand; many singletons; 
 					if (Arg.WRONG_STRAND_PRT && hpr.qGene!=null && hpr.tGene!=null) {
-						hpr.setScores(); 							// CAS565 need for EE check and to prints scores
+						hpr.setScores(); 							// need for EE check and to prints scores
 						if (hpr.htype.equals("EE")) wsPairList.add(hpr); 
 					}
 					else hpr.clear();
-					numFilter++;
+					numFilter++; numWS++;
 				}
 			}
 			hprGeneMap.clear();
@@ -201,11 +201,11 @@ public class GrpPairGx {
 			
 		// Filter main
 			for (HitPair hpr : allHprList) {		
-				if (hpr.nHits==0) {numFilter++; hpr.clear(); continue;} // all hits removed
+				if (hpr.nHits==0) {numFilter++; numRmEnd++; hpr.clear(); continue;} // all hits removed
 				
 				hpr.setScores();
 				
-				if (!Arg.bG2isOkay(hpr)) {numFilter++; hpr.clear(); continue;}	// Removes many!
+				if (!Arg.bG2isOkay(hpr)) {numFilter++; numRmLow++; hpr.clear(); continue;}	// Removes many!
 				
 				if (Arg.bG2passCov(0, hpr)) {
 					g2HprList.add(hpr);
@@ -216,7 +216,7 @@ public class GrpPairGx {
 				numFilter++;
 				
 				if (hpr.nHits>1) {
-					for (Hit ht : hpr.hitList) { 
+					for (Hit ht : hpr.hitList) { // create separate HPRs for subhits, some may pass on their own
 						HitPair nhp = new HitPair(Arg.type2, hpr.tGene, hpr.qGene, isStEQ);
 						nhp.addHit(ht);
 						nhp.setScores();
@@ -232,8 +232,7 @@ public class GrpPairGx {
 		}	
 		/********************************************************
 		 * Remove end hits if gap is intronLen (helps a lot) or large extends and is in another hit
-		 * Return true if should may be able to remove another
-		 * 20Dec24 Tried removing hits where the olap>len on both sides - only removed a few and did not reduce disorder
+		 * Return true if may be able to remove another
 		 */
 		private boolean rmEndHitsG2(HitPair hpr) {
 		try {
@@ -493,10 +492,13 @@ public class GrpPairGx {
 		}
 	
 		/********************************************************************
-		 * if -wsp, output wrong strand; CAS565 did not agree with documentation 
+		 * if -wsp, output wrong strand;
 		 */
 		private void processWS() { // all needed info is in wsPairList
-			if (!Arg.WRONG_STRAND_PRT) return;
+			if (!Arg.WRONG_STRAND_PRT) {
+				grpPairObj.mainObj.cntWS += numWS; 
+				return;
+			}
 			Globals.rclear();
 			if (wsPairList.size()==0) return; 
 				 
@@ -541,58 +543,13 @@ public class GrpPairGx {
 					Globals.prt(hpr.toWSResults());	
 				}
 			}
-			grpPairObj.mainObj.cntWS += cnt; // CAS565 there was no indication if there was no WS
+			grpPairObj.mainObj.cntWS += cnt; 
 		}
 		/**************************************************************
 		 * Counts content of notes from this file, booleans, and single/mult
 		 */
 		private void prtTrace(boolean isStEQ) {
 			if (!TRC) return;
-			
-			int cntM=0, cntDis=0, cntRm1=0, cntRmN=0, cntS=0;
-			int cntMajM=0, cntMajS=0, cntMinM=0, cntMinS=0, cntGoodM=0, cntGoodS=0;
-			int cntfM=0, cntfS=0,  cntIgnM=0, cntIgnS=0, cntFlip=0;
-			
-			sortForAssignGx(TQ, TQ, g2HprList);
-			for (HitPair hpr : g2HprList) {
-				if (!hpr.isOrder) cntDis++;
-				if (hpr.note.contains("rm1")) cntRm1++;
-				if (hpr.note.contains("rmN")) cntRmN++;
-				if (hpr.note.contains("Dup")) cntFlip++;
-				if (hpr.nHits==1) cntS++; else cntM++;
-				
-				if (hpr.flag==Arg.MAJOR) {
-					boolean bGood = hpr.note.contains("good");
-					if (hpr.nHits==1) {
-						cntMajS++; 
-						if (bGood) cntGoodS++;
-					}
-					else {
-						cntMajM++;
-						if (bGood) cntGoodM++;
-					}
-				}
-				else if (hpr.flag==Arg.MINOR) {
-					if (hpr.nHits==1) cntMinS++; else cntMinM++;
-				}
-				else if (hpr.flag==Arg.FILTER) {
-					if (hpr.nHits==1) cntfS++; 	else cntfM++;
-				}
-				else if (hpr.flag==Arg.IGN) {
-					if (hpr.nHits==1) cntIgnS++; else cntIgnM++;
-				}
-			}
-		
-			String msg =  String.format("  %s %,d (%,d) g2: M %,d (DO %,d, Rm %,d %,d) S %s", 
-					Arg.isEQstr(isStEQ), g2HprList.size(), numPairsOrig, cntM, cntDis, cntRm1, cntRmN, Arg.int2Str(cntS));
-			
-			String msgP = String.format("  Maj(G): M %,d (%,d)  S %,d (%,d)   Min: M %,d S %,d",
-					 cntMajM, cntGoodM, cntMajS, cntGoodS, cntMinM, cntMinS);
-			
-			String msgF = String.format("  f: M %,d  S %,d Ign: M %,d  S %,d  Exact: %,d", 
-					cntfM, cntfS, cntIgnM, cntIgnS, cntFlip);
-			
-			Utils.prtIndentMsgFile(plog, 1, String.format("%-40s %-40s %s", msg, msgP, msgF));
 			
 			if (grpPairObj.mainObj.fhOutHPR[2]!=null) {
 				grpPairObj.mainObj.fhOutHPR[2].println("## " + chrPair + " " + Arg.isEQstr(isStEQ) + " HPRs: " + g2HprList.size());
@@ -626,8 +583,6 @@ public class GrpPairGx {
 		}
 		private void runG1(int X, int Y, TreeMap <Integer, Gene> xGeneMap, boolean isStEQ) {
 			try {
-				// CAS568 Globals.rprt("Find G1 hits for " + Arg.isEQstr(isStEQ) + " side " + Arg.side[X]);
-				
 			// Process
 				stepMkPairs(X, Y, xGeneMap, isStEQ);
 			
@@ -682,7 +637,7 @@ public class GrpPairGx {
 							if (ht2.bin2>0) continue;
 		
 							int yDiff = Math.abs(ht2.hStart[Y]-ht1.hEnd[Y]); 
-							if (yDiff> intronLen2xG1) continue; 		// CAS560 changed from glen to Arg.iGmIntronLenG0
+							if (yDiff> intronLen2xG1) continue; 		
 							
 							HitPair hpr=null;
 							if (ht1.bin2==0) {						// make a hitPair if at least two hits within distance				
@@ -806,7 +761,6 @@ public class GrpPairGx {
 				}
 				if (hpr.nHits<=1) return false;
 			}
-			
 			return bDidRm;
 		}
 		catch (Exception e) {ErrorReport.print(e,"g1 rm end hits "); bSuccess=false; return false;}	
@@ -819,33 +773,6 @@ public class GrpPairGx {
 		try {
 			if (!TRC) return;
 			
-			int cntM=0, cntDis=0, cntS=0, cntRm1T=0, cntRmNT=0 , cntRm1F=0, cntRmNF=0;
-			int cntMajM=0, cntMajS=0, cntfM=0, cntfS=0;
-			
-			for (HitPair hpr : g1HprList) {
-				if (!hpr.isOrder) cntDis++;
-				if (hpr.note.contains("rmT0")) cntRm1T++;
-				else if (hpr.note.contains("rmF0")) cntRm1F++;
-				else if (hpr.note.contains("rmTn")) cntRmNT++;
-				else if (hpr.note.contains("rmFn")) cntRmNF++;
-				if (hpr.nHits==1) cntS++; else cntM++;
-				
-				if (hpr.flag==Arg.MAJOR) {
-					if (hpr.nHits==1) cntMajS++;  else cntMajM++;	
-				}
-				else if (hpr.flag==Arg.FILTER) {
-					if (hpr.nHits==1) cntfS++; 	else cntfM++;
-				}
-			}
-			String msg =  String.format("  %s %s g1: M %s (DO %,d, Rm T %,d %,d  F %,d %,d) S %s", 
-					Arg.isEQstr(isStEQ), Arg.int2Str(g1HprList.size()), Arg.int2Str(cntM), cntDis, cntRm1T, cntRmNT, cntRm1F, cntRmNF, Arg.int2Str(cntS));
-			
-			String msgP = String.format("  Maj : M %,5d  S %,d", cntMajM, cntMajS);
-			
-			String msgF = String.format("  f: M %,d  S %,d", cntfM, cntfS);
-			
-			Utils.prtIndentMsgFile(plog, 1, String.format("%-50s %-25s %s", msg, msgP, msgF));
-
 			// To file
 			if (grpPairObj.mainObj.fhOutHPR[1]!=null) {
 				grpPairObj.mainObj.fhOutHPR[1].println("##" +  Arg.side[X] + " " + Arg.isEQstr(isStEQ) + " HPRs: " + g1HprList.size());
@@ -858,10 +785,6 @@ public class GrpPairGx {
 	} // End G1
 	/***************************************************************
 	 * G0: Create pairs for G0, where both sides are bound by intron length
-	 * CAS560 changes:
-	 *  Was using constants 2500 for plants and 5000 for mammalian; now using (intron[0]+intron[1])/2 (see Arg.setLen)
-	 *  In filterMulti, the HitPair.bPassCovG0() now uses 2x the cutoff for hitscore and both T and Q must pass
-	 *  The first loop uses Math.abs for qDiff
 	 */
 	private class G0Pairs {
 		int cntG0Mf=0, cntG0Sf=0;	
@@ -882,7 +805,6 @@ public class GrpPairGx {
 				if (ht.isStEQ==isStEQ && ht.bNoGene()) g0HitList.add(ht); 
 			}
 			Hit.sortXbyStart(Q, g0HitList);
-			// CAS568 Globals.rprt("G0 hits " + String.format("%,d", g0HitList.size()) + " for " + Arg.isEQstr(isStEQ));
 			
 		// Multi: Loop thru g0 hits to create multi hprs
 			int tBin=1, nG0Hits=g0HitList.size();		
@@ -896,7 +818,7 @@ public class GrpPairGx {
 					if (ht2.bin2>0) continue;
 
 					int qDiff = ht2.hStart[Q]-ht1.hEnd[Q]; 
-					if (qDiff>intronLenG0) break;           // CAS560 Arg.useIntronLen has changed; see Arg.setLen
+					if (qDiff>intronLenG0) break;           
 					
 					int tDiff = (isStEQ) ? Math.abs(ht2.hStart[T] - ht1.hEnd[T]) 
 	                                     : Math.abs(ht1.hStart[T] - ht2.hEnd[T]); 
@@ -1023,24 +945,7 @@ public class GrpPairGx {
 		private void prtTrace(boolean isStEQ, ArrayList <HitPair> hprList) {
 		try {
 			if (!TRC) return;
-			int cntM=0, cntDis=0, cntS=0, cntRm1T=0, cntRm1F=0, cntRmNT=0, cntRmNF=0;
 			
-			for (HitPair hpr : hprList) {
-				if (!hpr.isOrder) cntDis++;
-				if (hpr.note.contains("rm0T")) cntRm1T++;
-				if (hpr.note.contains("rm0F")) cntRm1F++;
-				if (hpr.note.contains("rmNT")) cntRmNT++;
-				if (hpr.note.contains("rmNF")) cntRmNF++;
-				if (hpr.nHits==1) cntS++; else cntM++;
-			}
-			String msg =  String.format("  %s %s g0: M %s (DO %,d, Rm Eq %,d %,d Neq %,d %,d )   S %s", 
-					Arg.isEQstr(isStEQ), Arg.int2Str(hprList.size()), Arg.int2Str(cntM), cntDis, 
-					cntRm1T, cntRmNT,  cntRm1F, cntRmNF, Arg.int2Str(cntS));
-			
-			String msgF = String.format("  f: M %,d  S %,d", cntG0Mf, cntG0Sf);
-			
-			Utils.prtIndentMsgFile(plog, 1, String.format("%-50s %s", msg,  msgF));
-
 			// To file
 			if (grpPairObj.mainObj.fhOutHPR[0]!=null) {
 				grpPairObj.mainObj.fhOutHPR[0].println("##"  + Arg.isEQstr(isStEQ) + " HPRs: " + hprList.size());
@@ -1053,7 +958,7 @@ public class GrpPairGx {
 	} // End class G0
 	
 	///////////////////////////////////////////////////////////////////////////////////////
-	// CAS558 added this because had a violates 
+	// added this because had a violates 
 	protected void sortForAssignGx(int X, int Y, ArrayList <HitPair> gpList) {// G2, G1
 		try {
 			sortForAssignTry1(X, Y, gpList);

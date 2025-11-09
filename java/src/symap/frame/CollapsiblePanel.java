@@ -14,8 +14,11 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
 
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
+/*********************************************************
+ * 
+ */
 public class CollapsiblePanel extends JPanel {
+	private static final long serialVersionUID = 1L;
 	private JPanel panel; // for user-added components
 	private JSeparator sep = null;
 	private boolean collapsed;
@@ -26,7 +29,7 @@ public class CollapsiblePanel extends JPanel {
 	private static final ImageIcon expandIcon = createImageIcon("/images/plus.gif");
 	private static final ImageIcon collapseIcon = createImageIcon("/images/minus.gif");
 	
-	public CollapsiblePanel(String strTitle, String strDescription, boolean hasSeparator) {
+	protected CollapsiblePanel(String strTitle, String strDescription, boolean hasSeparator) {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		
 		expandButton = new JButton(strTitle);
@@ -79,7 +82,7 @@ public class CollapsiblePanel extends JPanel {
 	    }
 	}
 	
-	public void collapse() {
+	private void collapse() {
 		collapsed = true;
 		expandButton.setIcon(expandIcon);
 		expandButton.setToolTipText("Show");
@@ -88,7 +91,7 @@ public class CollapsiblePanel extends JPanel {
 		if (collapsedSize != null) setMaximumSize(collapsedSize); // prevent vertical stretching problem
 	}
 	
-	public void expand() {
+	protected void expand() {
 		collapsed = false;
 		expandButton.setIcon(collapseIcon);
 		expandButton.setToolTipText("Hide");
@@ -97,7 +100,7 @@ public class CollapsiblePanel extends JPanel {
 		setMaximumSize(null);
 	}
 	
-	public void doClick() {
+	protected void doClick() {
 		expandButton.doClick();
 	}
 }

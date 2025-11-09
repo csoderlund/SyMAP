@@ -43,7 +43,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private DBconn2 dbc2; 
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
-	private boolean isSelf=false;		 // CAS575 add
+	private boolean isSelf=false;		 
 	
 	// Called from DoAlignSynPair; 
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
@@ -257,49 +257,56 @@ public class SumFrame extends JDialog implements ActionListener {
 		catch (Exception e) {ErrorReport.print(e, "Create annotation"); return "error on project";}
 	}
 	/****************************************************************
-	 * CHwGN: query both+one with proj1/nHits   
-	 * GNwCH: query (#genes-orphans)/#genes
+	 * GNwCH: query (#genes-orphans)/#genes		or Every*, Genes:/#Genes		includes minors
+	 * CHwGN: query both+one with proj1/nHits   								does not include minors
 	 * Cover CH: if there is NO overlap, sum Hlen/genomeLen; otherwise, must take into account embedded vs overlap.
 	 * Cover SH: none of these numbers can be computed from the interface
 	 ***************************************************************/
 	private String createCluster() {
 	try {
 		String title = "Cluster Hits";
-		long startTime = Utils.getTime();
-		
 		nHits = dbc2.executeInteger("select count(*) from pseudo_hits where pair_idx=" + pairIdx); 
 		if (nHits<=0) return title + "\n No hits";
 		if (isSelf) nHits /= 2;
 		
 		String sq;
-		// %Genes with hits 
+		// %Genes with hits (GNwCH); this query never checked pair_idx - fixed in CAS576
 		sq = "select count(distinct pha.annot_idx) "
 				+ " from pseudo_annot      as pa "
 				+ " join pseudo_hits_annot as pha on pa.idx = pha.annot_idx"
 				+ " join pseudo_hits       as ph  on ph.idx = pha.hit_idx  "
-				+ " join xgroups            as xg on xg.idx = pa.grp_idx "
+				+ " join xgroups as xg  on xg.idx = pa.grp_idx " 
 				+ " where pa.type='gene' and ph.pair_idx=" + pairIdx +  " and xg.proj_idx=";
 		int gene1Hit = dbc2.executeInteger(sq + proj1Idx); // isSelf: distinct annot_idx takes care of mirrored hits
 		int gene2Hit = dbc2.executeInteger(sq + proj2Idx); // query:  gene1Hit = #totGene1-#orphan genes
 				
-		// %Hits with genes
-		/* sq = "select count(distinct ph.idx) from pseudo_hits as ph " 
-			+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx join pseudo_annot as pa  on pa.idx = pha.annot_idx " 
-			+ "join xgroups as xg  on xg.idx = pa.grp_idx where pair_idx=" + pairIdx + " and gene_overlap>0 "; // for pseudo
-		int hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx>0 and xg.proj_idx=" + proj1Idx); 
-		int hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx>0 and xg.proj_idx=" + proj2Idx); 
-		The following gives the same result for 2-genome; self was not correct; CAS575
-		*/
-		sq = "select count(distinct idx) from pseudo_hits where pair_idx=" + pairIdx;
-		if (isSelf) {
-			sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
+		// %Hits with genes; make sure not to count pseudo
+		int hitGene1, hitGene2;
+		int cntPseudo = dbc2.executeCount("select idx from pseudo_annot where type='pseudo' limit 1");
+		if (cntPseudo>0) {
+			sq = "select count(distinct ph.idx) from pseudo_hits as ph " 
+					+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx "
+					+ "join pseudo_annot as pa  on pa.idx = pha.annot_idx " 
+					+ "where pa.type='gene' and pair_idx=" + pairIdx; 
+			
+			if (isSelf) sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
+			
+			hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx=pha.annot_idx"); 
+			hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx=pha.annot_idx"); 
 		}
-		int hitGene1 = dbc2.executeInteger(sq  + " and annot1_idx>0"); 
-		int hitGene2 = dbc2.executeInteger(sq  + " and annot2_idx>0"); 
-
+		else {// pseudos can have gene_overlap=1, so cannot this simpler query
+			sq = "select count(distinct idx) from pseudo_hits where gene_overlap>0 and pair_idx=" + pairIdx; 
+			
+			if (isSelf) sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
+			
+			hitGene1 = dbc2.executeInteger(sq  + " and annot1_idx>0"); 
+			hitGene2 = dbc2.executeInteger(sq  + " and annot2_idx>0"); 
+		}
+				
 		int hit2Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=2 and pair_idx=" + pairIdx);
 		int hit1Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=1 and pair_idx=" + pairIdx);
 		int hit0Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=0 and pair_idx=" + pairIdx);
+		
 		if (isSelf) {hit2Gene /=2; hit1Gene /= 2; hit0Gene /=2;}
 
 /* Coverage */
@@ -307,7 +314,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		int totSh=0, totRev=0;
 		
 	/* Loop1: proj1 chrN  **/	
-		long chCov1=0, chCov1x=0, shCov1=0, shCov1x=0;	// Cov CH (Sh)
+		long chCov1=0, shCov1=0;	// Cov CH (Sh)
 		int cnt11=0, cnt12=0, cnt13=0, cnt14=0;	// SH <100, etc
 		
 		for (int g1=0; g1<proj1.grpIdx.size(); g1++) { // for the 1st project, go through its chromosome
@@ -350,17 +357,17 @@ public class SumFrame extends JDialog implements ActionListener {
 				rs.close();
 			}
 			// process arrays for proj1
-			for (byte a : clustArr) {if (a>0) chCov1++; if (a>1) chCov1x++; }
-			for (byte a : subArr)   {if (a>0) shCov1++; if (a>1) shCov1x++;}
+			for (byte a : clustArr) {if (a>0) chCov1++;  }
+			for (byte a : subArr)   {if (a>0) shCov1++;}
 			clustArr=subArr=null;
 		}
 		if (isSelf) {
 			cnt11  /= 2; cnt12  /= 2; cnt13   /= 2; cnt14 /= 2; 
-			chCov1 /= 2; shCov1 /=2;  chCov1x /= 2; shCov1x /= 2; 
+			chCov1 /= 2; shCov1 /= 2;  
 			totRev /= 2; totSh  /= 2; 
 		}
 	/* Loop2: proj2 chrN  **/
-		long chCov2=0, chCov2x=0, shCov2=0, shCov2x=0; // got overflow on human self
+		long chCov2=0, shCov2=0; // got overflow on human self
 		int cnt21=0, cnt22=0, cnt23=0, cnt24=0;
 		for (int g2=0; g2<proj2.grpIdx.size(); g2++) {
 			System.gc();
@@ -399,19 +406,19 @@ public class SumFrame extends JDialog implements ActionListener {
 				rs.close();
 			}
 			// process arrays for proj2 chrN
-			for (byte a : clustArr) {if (a>0) chCov2++; if (a>1) chCov2x++;}
-			for (byte a : subArr)   {if (a>0) shCov2++; if (a>1) shCov2x++;}
+			for (byte a : clustArr) {if (a>0) chCov2++;}
+			for (byte a : subArr)   {if (a>0) shCov2++;}
 			clustArr=subArr=null;
 		}
 		if (isSelf) {
 			cnt21  /= 2; cnt22  /= 2; cnt23   /= 2; cnt24 /= 2; 
-			chCov2 /= 2; shCov2 /=2;  chCov2x /= 2; shCov2x /= 2;  
+			chCov2 /= 2; shCov2 /=2;  
 		}
 		String pGNwCH1  = pct((double)gene1Hit, (double) proj1.nGenes);
 		String pGNwCH2  = pct((double)gene2Hit, (double) proj2.nGenes);
 		String pCHwGN1  = pct((double)hitGene1, (double) nHits);
 		String pCHwGN2  = pct((double)hitGene2, (double) nHits);
-		
+
 		String pchCov1 = pct((double)chCov1, (double)proj1.genomeLen); 
 		String pchCov2 = pct((double)chCov2, (double)proj2.genomeLen);
 		String pshCov1 = pct((double)shCov1, (double)proj1.genomeLen); 
@@ -424,7 +431,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (isSelf) nInBlock /= 2;
 		String pInBlock = pct((double)nInBlock, (double)nHits);
 
-	// make cluster only table; sane for both sides
+	// make cluster only table; same for both sides
 		String [] field1 = {"#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
 		int nCol1 = field1.length;
 		int [] justify1 =  new int [nCol1];
@@ -468,10 +475,9 @@ public class SumFrame extends JDialog implements ActionListener {
 	    rows[r][c++] = cntK(cnt14);
 	    
 	    r++; c=0;
-	    if (isSelf) { // proj2 can be a little different, but not enough to report
+	    if (isSelf) { // proj2 can be a little different 
 	    	for (c=0; c<fields.length; c++) rows[r][c]="";
-	    }
-	    else {   
+	    } else {
 	    	rows[r][c++] = proj2.name;
 		    rows[r][c++] = String.format("%s (%s)", pGNwCH2, pCHwGN2);  
 		    rows[r][c++] = String.format("%s (%s)", pchCov2, pshCov2);
@@ -483,22 +489,6 @@ public class SumFrame extends JDialog implements ActionListener {
 	    }
 	    String tab = util.Utilities.makeTable(nCol, nRow, fields, justify, rows);
 	    
-	    if (Globals.DEBUG) {
-	    	String cxCov1 = pct((double)chCov1x, (double)proj1.genomeLen); 
-			String cxCov2 = pct((double)chCov2x, (double)proj2.genomeLen);
-			String sxCov1 = pct((double)shCov1x, (double)proj1.genomeLen); 
-			String sxCov2 = pct((double)shCov2x, (double)proj2.genomeLen);			
-			
-			System.out.format("   Gene with hit: Proj1 %,d   Proj2 %,d\n", gene1Hit,  gene2Hit);	
-			System.out.format("   Hit with gene: Proj1 %,d (%s)  Proj2 %,d (%s)\n", hitGene1, pCHwGN1, hitGene2, pCHwGN2);
-			
-			System.out.format("   Cover 1x: CH %,10d %,10d    SH %,10d %,10d\n", chCov1,  chCov2, shCov1, shCov2 ); 
-	    	System.out.format("   Cover 2x: CH %,10d %,10d    SH %,10d %,10d\n", chCov1x,  chCov2x,  shCov1x,  shCov2x );
-	    			
-	    	System.out.format("   Cover 1x: CH %s %s    SH %s %s\n", pchCov1,  pchCov2, pshCov1, pshCov2 ); // in summary
-	    	System.out.format("   Cover 2x: CH %s %s    SH %s %s\n", cxCov1,   cxCov2,  sxCov1,  sxCov2 );
-	    	Utils.prtTimeMemUsage("Anchors: ", startTime); 
-		}
 	    return title + "\n" + tab1 + "\n" + tab;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Summary anchors"); return "error on anchors";}
@@ -522,7 +512,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	
 	/*****************************************************************
 	 * Block section
-	 * CAS575 was using original for finding coverage; same results but a wee bit slower
+	 * CAS575 was using original for finding coverage; same results, simplier to change, but a wee bit slower
 	 */
 	private String createBlock() {
 		try {
@@ -534,20 +524,22 @@ public class SumFrame extends JDialog implements ActionListener {
 			// genes in blocks
 			String sq ="select count(distinct pa.idx)"
 				 +" from pseudo_annot		as pa"
-				 +" join xgroups			as g  on pa.grp_idx=g.idx"
-				 +" join pseudo_hits_annot as pha on pha.annot_idx=pa.idx " 
-				 +" join pseudo_block_hits as pbh on pha.hit_idx=pbh.hit_idx"
-				 +" where pa.type='gene' and g.proj_idx=";
+				 +" join xgroups			as xg  on xg.idx=pa.grp_idx"
+				 +" join pseudo_hits_annot  as pha on pha.annot_idx=pa.idx " 
+				 +" join pseudo_hits        as ph  on ph.idx=pha.hit_idx "
+				 +" join pseudo_block_hits  as pbh on pha.hit_idx=pbh.hit_idx"
+				 +" where pa.type='gene' and ph.pair_idx= " + pairIdx + " and xg.proj_idx=";
 			int nBlkGenes1 = dbc2.executeInteger(sq + proj1Idx);
 			int nBlkGenes2 = dbc2.executeInteger(sq + proj2Idx);
-					
+			
 			String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); 
 			String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
 				
 	/* Coverage */
 			int nblks=0, ninv = 0;
-			int bcov1=0, bdcov1=0, b11=0, b12=0, b13=0, b14=0;
-			int bcov2=0, bdcov2=0, b21=0, b22=0, b23=0, b24=0;
+			long bcov1=0, bdcov1=0, bcov2=0, bdcov2=0; // CAS576 were ints; hsa overflow
+			int  b11=0, b12=0, b13=0, b14=0;
+			int  b21=0, b22=0, b23=0, b24=0;
 			
 			/* Proj1: count blocks for each chr-chr pair **/		
 			for (int g1=0; g1<proj1.nGrp; g1++) {
@@ -606,10 +598,9 @@ public class SumFrame extends JDialog implements ActionListener {
 					}
 					rs.close();	
 				}// finished proj2 chrN
-				for (byte a : arrB) {if (a>0) bcov2++;if (a>1) bdcov2++;}
+				for (byte a : arrB) {if (a>0) bcov2++; if (a>1) bdcov2++;}
 				arrB=null;
-			}
-			
+			}			
 			if (isSelf) {
 				nblks /= 2; ninv /= 2; bcov1 /= 2; bdcov1 /= 2;
 				b11 /= 2; b12 /= 2; b13 /= 2; b14 /= 2;
@@ -647,10 +638,10 @@ public class SumFrame extends JDialog implements ActionListener {
 		    rows[r][c++] = String.format("%,d", b14);
 		    
 		    r++; c=0;
-		    if (isSelf) { // proj2 can be a little different, but not enough to report
+		    
+		    if (isSelf) { // proj2 can be a little different, 
 		    	for (c=0; c<fields.length; c++) rows[r][c]="";
-		    }
-		    else {
+		    } else {
 		    	rows[r][c++] = proj2.name;
 			    rows[r][c++] = " ";// same for both
 			    rows[r][c++] = " ";
@@ -758,66 +749,12 @@ public class SumFrame extends JDialog implements ActionListener {
 		else if (t==0) 	ret = "0%";
 		else {
 			double x = ((double)t/(double)b)*100.0;
-			if (x<0) Globals.prt(String.format("%,d  %,d   %.3f", (long)t, (long)b, x));
+			if (x<0) Globals.tprt(String.format("%,d  %,d   %.3f", (long)t, (long)b, x));
 			ret = String.format("%4.1f%s", x, "%");
 		}
 		return String.format("%5s", ret);
 	}
-
-	// CAS575 delete private void createAnchorDelete() {
-	// CAS575 delete private String createBlockDelete() { 
-	/* CAS575 changed block to use simpler computation for coverage, same results 
-	private String createBlock() { // save old coverage for proj1
-	try {
-		ResultSet rs=null;
-		TreeMap<Integer,TreeMap<Integer,Integer>> bins2 = new TreeMap<Integer,TreeMap<Integer,Integer>>();
-		TreeMap<Integer,Integer> blks = new TreeMap<Integer,Integer>();
-		int nblks = 0, ninv = 0;
-		
-		rs = dbc2.executeQuery("select grp1_idx,grp2_idx, start1,end1,start2,end2, corr  " +
-				"from blocks where pair_idx=" + pairIdx);
-		while (rs.next()) {
-			nblks++;
-			float corr = 	rs.getFloat(7);
-			if (corr < 0)  	ninv++;
-			int idx = 		rs.getInt(1); 
-			long start = 	rs.getInt(3); // start1
-			int end = 		rs.getInt(4); // end1
-			assert(end>start);
-				
-			if (!bins2.containsKey(idx))  bins2.put(idx, new TreeMap<Integer,Integer>());
-
-			for (int b = (int)(start/1000); b <= (int)(end/1000); b++){
-				if (!bins2.get(idx).containsKey(b)) bins2.get(idx).put(b,1);
-				else								bins2.get(idx).put(b,1+bins2.get(idx).get(b));
-			}		
-			
-			int logsize = (int)(Math.log10(end-start));
-			if (!blks.containsKey(logsize)) blks.put(logsize, 1);
-			else							blks.put(logsize, 1+blks.get(logsize));
-		} 
-		
-		int b11=0,b21=0,b31=0,b41=0, bcov1=0,bdcov1=0;
-		for (int i = 0; i <= 4; i++) {
-			b11 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}
-		b21 = (blks.containsKey(5) ? blks.get(5) : 0);
-		b31 = (blks.containsKey(6) ? blks.get(6) : 0);
-		for (int i = 7; i <= 20; i++) {
-			b41 += (blks.containsKey(i) ? blks.get(i) : 0);
-		}		
-		
-		for (int i : bins2.keySet()) {
-			for (int j : bins2.get(i).keySet()) {
-				bcov1++;
-				if (bins2.get(i).get(j) > 1) bdcov1++;
-			}
-		}
-		blks.clear(); bins2.clear();
-	}
-	catch (Exception e) {ErrorReport.print(e, "Summary blocks orig"); return "error";}
-	}
-	*/
+	
 	/**********************************************************************
 	 * Mproject does not have group lengths
 	 */

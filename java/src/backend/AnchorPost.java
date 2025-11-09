@@ -30,7 +30,7 @@ public class AnchorPost {
 	private Mproject mProj1, mProj2;	// two projects
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;
-	private boolean isSelf=false; // CAS575 add
+	private boolean isSelf=false; 
 	
 	// initial; loaded from db	
 	private Vector <Hit> fHitVec = new Vector <Hit> ();
@@ -45,8 +45,8 @@ public class AnchorPost {
 	private int [] cntSizeSet = {0,0,0,0,0};// -dd
 	private String chrs;					// ErrorReport
 	
-	/** Called from SyntenyMain **/
-	public AnchorPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
+	/** Called from AnchorMain **/
+	protected AnchorPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
 		this.mPairIdx = pairIdx;
 		this.mProj1 = proj1;
 		this.mProj2 = proj2;
@@ -55,10 +55,7 @@ public class AnchorPost {
 		isSelf = proj1.getIdx()==proj2.getIdx();
 	}
 	
-	/*********************************************************
-	 * Called from SyntenyMain right after creating object
-	 */
-	public void collinearSets() {
+	protected void collinearSets() {
 		try {
 			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 			
@@ -71,14 +68,12 @@ public class AnchorPost {
 			
 			for (int grpIdx1 : map1.keySet()) {
 				for (int grpIdx2 : map2.keySet()) {
-					if (isSelf &&  grpIdx1<grpIdx2) continue;
+					if (isSelf && grpIdx1<grpIdx2) continue;
 					
 					chrs = map1.get(grpIdx1) + ":" + map2.get(grpIdx2);
 					String t = Utilities.getDurationString(Utils.getTime()-time);
 					Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
-					num2go--;
-					
-					// CAS575 if (grpIdx1==grpIdx2) continue; 		
+					num2go--;	
 					
 					if (!step0BuildSets(grpIdx1, grpIdx2)) return;
 					

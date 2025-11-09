@@ -14,15 +14,14 @@ import symap.mapper.Mapper;
 
 /***************************************************
  * Lays out tracks; called in DrawingPanels
- * CAS551 removed Point moveOffset - was always 0
  */
 public class TrackLayout implements LayoutManager {
-	private DrawingPanel dp; // CAS551 moved PADDING to dp so can shrink there
+	private DrawingPanel dp; 
 	private TrackHolder[] trackHolders; // N sequence
 	private Mapper[] mappers;			// N-1 hits joining 2 sequence
 	private JPanel buttonPanel;			// to contain Filter buttons
 	
-	private final int MAX_SPACE = 180; // maximum space for a track with added ruler and anno; CAS551 add
+	private final int MAX_SPACE = 180; // maximum space for a track with added ruler and anno
 	
 	public TrackLayout(DrawingPanel dp, TrackHolder[] trackHolders, Mapper[] mappers, JPanel buttonPanel) {
 		buttonPanel.setLayout(null);
@@ -43,7 +42,7 @@ public class TrackLayout implements LayoutManager {
 		buttonPanel.removeAll(); 
 		
 		int nTracks = trackHolders.length;
-		int accWid = 5; 								// accumulated width CAS551 start at 5 instead of 0
+		int accWid = 5; 								// accumulated width 
 		Dimension filterDim = new Dimension(0,0); 	    // filter buttons dimension
 		
 		// Set track dimensions and location and calculate button panel size
@@ -65,7 +64,7 @@ public class TrackLayout implements LayoutManager {
 			ithButton.setLocation(mid,1);
 			
 			// update dims
-			if (i>0 && nTracks>2) 	accWid += Math.min(dimTrack.width, MAX_SPACE); // CAS551 was making big gap if anno
+			if (i>0 && nTracks>2) 	accWid += Math.min(dimTrack.width, MAX_SPACE); 
 			else 					accWid += dimTrack.width;
 			
 			filterDim.height = Math.max(filterDim.height, ithButton.getHeight());

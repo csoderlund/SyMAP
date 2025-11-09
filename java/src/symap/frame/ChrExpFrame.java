@@ -33,18 +33,18 @@ import symap.drawingpanel.SyMAP2d;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.LinkLabel;
-import util.Utilities;
 import util.Jhtml;
+import util.Jcomp;
 import circview.CircFrame;
 import database.DBconn2;
 import dotplot.DotPlotFrame;
 
 /*****************************************************
  * Chromosome Explorer: Displays left side and controls right (circle, 2d, dotplot)
- * CAS571 moved Download Blocks to Manager
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class ChrExpFrame extends JFrame implements HelpListener {
+	private static final long serialVersionUID = 1L;
+
 	private final int MIN_WIDTH = 1100, MIN_HEIGHT = 900; // cardPanel will be 825; 
 	
 	private int VIEW_CIRC = 1, VIEW_2D = 2, VIEW_DP = 3;
@@ -76,7 +76,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		
-		Rectangle screenRect = Utilities.getScreenBounds(this);
+		Rectangle screenRect = Jcomp.getScreenBounds(this);
 		screenWidth  = Math.min(MIN_WIDTH, screenRect.width);
 		screenHeight = Math.min(MIN_HEIGHT, screenRect.height);
 		setSize(screenWidth, screenHeight); 
@@ -128,10 +128,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShowCircle.setSelected(true);
 		btnShowCircle.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Utilities.setCursorBusy(getContentPane(), true);
+				Jcomp.setCursorBusy(getContentPane(), true);
 				showCircleView();
 				selectedView = viewControlBar.getSelected();
-				Utilities.setCursorBusy(getContentPane(), false);
+				Jcomp.setCursorBusy(getContentPane(), false);
 			}
 		});		
 		viewControlBar.addButton(btnShowCircle);
@@ -145,7 +145,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShow2D.setEnabled(false);
 		btnShow2D.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Utilities.setCursorBusy(getContentPane(), true);
+				Jcomp.setCursorBusy(getContentPane(), true);
 				boolean success = show2DView();
 				if (success)
 					selectedView = viewControlBar.getSelected();
@@ -153,7 +153,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 					viewControlBar.setSelected(selectedView);
 					viewControlBar.getSelectedButton().setEnabled(true);
 				}
-				Utilities.setCursorBusy(getContentPane(), false);
+				Jcomp.setCursorBusy(getContentPane(), false);
 			}
 		});
 
@@ -168,10 +168,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		btnShowDotplot.setEnabled(false);
 		btnShowDotplot.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Utilities.setCursorBusy(getContentPane(), true);
+				Jcomp.setCursorBusy(getContentPane(), true);
 				showDotplotView();
 				selectedView = viewControlBar.getSelected();
-				Utilities.setCursorBusy(getContentPane(), false);
+				Jcomp.setCursorBusy(getContentPane(), false);
 			}
 		});
 		viewControlBar.addButton(btnShowDotplot);
@@ -232,10 +232,10 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         infoLink.setFont(new Font(infoLink.getFont().getName(), Font.PLAIN, infoLink.getFont().getSize()));
         infoLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				Utilities.setCursorBusy(ChrExpFrame.this, true);
+				Jcomp.setCursorBusy(ChrExpFrame.this, true);
 				if ( !Jhtml.tryOpenURL(Jhtml.USER_GUIDE_URL) )
 					System.err.println("Error opening URL: " + Jhtml.USER_GUIDE_URL);
-				Utilities.setCursorBusy(ChrExpFrame.this, false);
+				Jcomp.setCursorBusy(ChrExpFrame.this, false);
 			}
 		});
         
@@ -252,7 +252,6 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		controlPanel.add( projPanel );
 		controlPanel.add( infoCollapsiblePanel ); 	controlPanel.add( Box.createVerticalStrut(20) );
 		controlPanel.add( createViewControlBar() );	controlPanel.add( Box.createVerticalStrut(10) );
-		//controlPanel.add( createDownloadBar());		controlPanel.add( Box.createVerticalStrut(10) );
 		controlPanel.add( Box.createVerticalGlue() );
 		
 		splitPane.setLeftComponent(controlPanel);
@@ -357,7 +356,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		}
 		catch (OutOfMemoryError e) { 
 			symap2D = null;
-			Utilities.showOutOfMemoryMessage();
+			util.Popup.showOutOfMemoryMessage();
 		}
 		catch (Exception err) {ErrorReport.print(err, "2D view");}
 		
@@ -365,6 +364,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	}
 	
 	private class MutexButtonPanel extends JPanel implements ActionListener {
+		private static final long serialVersionUID = 1L;
 		private GridBagConstraints constraints;
 		
 		public MutexButtonPanel(String title, int pad) {
@@ -385,7 +385,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			label.setMinimumSize(label.getPreferredSize());
 		}
 		
-		public void addButton(JButton button) {
+		private void addButton(JButton button) {
 			button.setMargin(new Insets(0, 0, 0, 0));
 			button.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 			button.addActionListener(this);
@@ -398,7 +398,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			setMaximumSize(getPreferredSize());
 		}
 		
-		public JButton getSelectedButton() {
+		private JButton getSelectedButton() {
 			Component[] comps = getComponents();
 			for (int i = 0;  i < comps.length;  i++) {
 				if (comps[i] instanceof JButton) {
@@ -410,7 +410,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			return null;
 		}
 		
-		public int getSelected() {
+		private int getSelected() {
 			Component[] comps = getComponents();
 			for (int i = 0;  i < comps.length;  i++) {
 				if (comps[i] instanceof JButton) {
@@ -423,13 +423,13 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			return -1;
 		}
 		
-		public void setSelected(int n) {
+		private void setSelected(int n) {
 			Component c = getComponent(n);
 			if (c != null && c instanceof JButton)
 				setSelected((JButton)c);
 		}
 		
-		public void setSelected(JButton button) {
+		private void setSelected(JButton button) {
 			for (Component c : getComponents()) {// De-select all buttons
 				if (c instanceof JButton) {
 					JButton b = (JButton)c;
@@ -455,6 +455,8 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 	}
 	
 	private class MySplitPane extends JSplitPane {
+		private static final long serialVersionUID = 1L;
+
 		public MySplitPane(int newOrientation) {
 			super(newOrientation);
 		}

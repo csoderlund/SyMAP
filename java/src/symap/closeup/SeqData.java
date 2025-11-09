@@ -1,19 +1,15 @@
 package symap.closeup;
 
-import java.awt.Graphics;
-import java.awt.FontMetrics;
 import java.util.Arrays;
 import java.util.Vector;
 
 import util.ErrorReport;
 
 /***************************************************************
- * This is a minor class for displaying aligned text data,
- * manipulating data and formatting text
- * CAS560 split off the methods for TextShowInfo to SeqDataInfo
+ * This is a minor class for displaying aligned text data, manipulating data and formatting text
  */
 public class SeqData implements Comparable <SeqData> { 
-	public static final byte DASH = AlignData.gapCh;
+	private static final byte DASH = AlignData.gapCh;
 
 	private byte[] alignSeq;
 	private int realLength;
@@ -24,31 +20,34 @@ public class SeqData implements Comparable <SeqData> {
 	private int start=0;
 
 	// graphic and text align
-	public SeqData(String seq, String alignSeq, char strand) {
+	protected SeqData(String seq, String alignSeq, char strand) {
 		this.alignSeq = (alignSeq == null) ? new byte[0] : alignSeq.getBytes();
 		this.seqStr = seq;
 		this.strand = strand;
 		realLength = getRL(this.alignSeq,0,this.alignSeq.length);
 	}
 	// reverse align
-	public SeqData(String seq, char strand) {
+	protected SeqData(String seq, char strand) {
 		this.alignSeq = (seq == null) ? new byte[0] : seq.getBytes();
 		this.strand = strand;
 		realLength = getRL(this.alignSeq,0,this.alignSeq.length);
 	}
 	
 	// show seq
-	public SeqData (String seq, int start, char strand, String header) {
+	protected  SeqData (String seq, int start, char strand, String header) {
 		this.seqStr = seq;
 		this.start = start;
 		this.strand = strand;
 		this.seqHeader = header;
 	}
-	public SeqData (String seq, char strand, String header) {
+	protected  SeqData (String seq, char strand, String header) {
 		this.seqStr = seq;
 		this.strand = strand;
 		this.seqHeader = header;
 	}
+	protected char getStrand() {return strand;}
+	protected String getHeader() {return seqHeader;}
+	protected String getSeq() {return seqStr;}
 	
 	public boolean equals(Object obj) {
 		return obj instanceof SeqData && Arrays.equals(alignSeq,((SeqData)obj).alignSeq);
@@ -57,16 +56,7 @@ public class SeqData implements Comparable <SeqData> {
 		return start - a.start;
 	}
 	public String toString() {return new String(alignSeq);}	
-	public int getSeqLen() {return alignSeq.toString().length();}	
-	public char getStrand() {return strand;}
-	public boolean isPlus() {return strand == '+';}
-	public int length() {return alignSeq.length;}
-	public void draw(Graphics g, int x, int y) {g.drawBytes(alignSeq,0,alignSeq.length,x,y);}
-	public int getWidth(FontMetrics fm) {return fm.bytesWidth(alignSeq,0,alignSeq.length);}
-	
-	public String getHeader() {return seqHeader;}
-	public String getSeq() {return seqStr;}
-	
+
 	/************************************************
 	 *  Static calls
 	 */
@@ -76,11 +66,11 @@ public class SeqData implements Comparable <SeqData> {
 			if (seq[i] != DASH) ++r;
 		return r;
 	}
-	// these two are used by all methods that display coords; CAS540 add , for dbp; CAS544 add ()
-	public static String coordsStr(int start, int end) {
+	// these two are used by all methods that display coords
+	protected static String coordsStr(int start, int end) {
 		return String.format("%,d - %,d (%,dbp)", start, end, (end-start+1)) ; 
 	}
-	public static String coordsStr(char o, int start, int end) {
+	protected static String coordsStr(char o, int start, int end) {
 		return String.format("%c(%,d - %,d) %,dbp", o, start, end, (end-start+1)) ;
 	}
 	public static String coordsStr(boolean isStrandPos, int start, int end) {
@@ -101,7 +91,7 @@ public class SeqData implements Comparable <SeqData> {
     /**********************************************************
 	// these 3 methods are used to closeup.HitAlignment
 	 **********************************************************/
-	public static double[] getQueryMisses(SeqData qs, SeqData ts) { 
+	protected  static double[] getQueryMisses(SeqData qs, SeqData ts) { 
 	try {
 		Vector <Double> miss = new Vector<Double>();
 		double size = (double)ts.realLength;
@@ -112,7 +102,7 @@ public class SeqData implements Comparable <SeqData> {
 			byte b2 = toUpperCase(ts.alignSeq[i]);
 			if (b1 != b2 && qs.alignSeq[i] != DASH && ts.alignSeq[i] != DASH) {
 				if (pos != prev) {
-					miss.add((double)pos/(double)size); // CAS520 new Double
+					miss.add((double)pos/(double)size); 
 					prev = pos;
 				}
 			}
@@ -128,14 +118,14 @@ public class SeqData implements Comparable <SeqData> {
 		return null;
 	}
 	}
-	// CAS531 alignSeq was upperCase, but stopped doing that
-	 private static final byte UPPER_CASE_OFFSET = 'A' - 'a';
-	 private static byte toUpperCase(byte b) {
+	
+	private static final byte UPPER_CASE_OFFSET = 'A' - 'a';
+	private static byte toUpperCase(byte b) {
         if (b < 'a' || b > 'z') return b;
         return (byte) (b + UPPER_CASE_OFFSET);
     }
 			
-	public static double[] getQueryInserts(SeqData qs, SeqData ts) { 
+	protected static double[] getQueryInserts(SeqData qs, SeqData ts) { 
 	try {
 		Vector <Double> ins = new Vector <Double>();
 		double size = (double)ts.realLength;
@@ -144,7 +134,7 @@ public class SeqData implements Comparable <SeqData> {
 		for (i = 0; i < qs.alignSeq.length; ++i) {
 			if (ts.alignSeq[i] == DASH) {
 				if (pos != prev) {
-					ins.add((double)pos/(double)size); //CAS520 double
+					ins.add((double)pos/(double)size); 
 					prev = pos;
 				}
 			}
@@ -160,7 +150,7 @@ public class SeqData implements Comparable <SeqData> {
 	}
 	}
 
-	public static double[] getQueryDeletes(SeqData qs, SeqData ts) { 
+	protected static double[] getQueryDeletes(SeqData qs, SeqData ts) { 
 	try {
 		Vector <Double> dels = new Vector<Double>();
 		double size = (double)ts.realLength;
@@ -169,7 +159,7 @@ public class SeqData implements Comparable <SeqData> {
 		for (i = 0; i < qs.alignSeq.length; ++i) {
 			if (qs.alignSeq[i] == DASH) {
 				if (pos != prev) {
-					dels.add((double)pos/(double)size); //CAS520 double
+					dels.add((double)pos/(double)size);
 					prev = pos;
 				}
 			}
@@ -186,7 +176,7 @@ public class SeqData implements Comparable <SeqData> {
 	}
 	}
 	/*****************************************************
-	 * XXX DNA string; CAS531 make case-sensitive result
+	 * XXX DNA string
 	 */
 	// handle reverse complement of sequences for database changes
 	public static String revComplement(String seq) {
@@ -213,7 +203,7 @@ public class SeqData implements Comparable <SeqData> {
 	}
 	
 	/****************************************************************/
-	public static String translate(String seq) {
+	protected  static String translate(String seq) {
 	try {
 		String aaSeq="";
 		for (int i=0; i<seq.length()-2; i+=3) {

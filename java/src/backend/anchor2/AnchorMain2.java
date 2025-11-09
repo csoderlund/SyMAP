@@ -29,9 +29,11 @@ import util.Utilities;
  * 		each GrpPair has genes and hits for the pair; a gene can be in multiple GrpPairs, but a hit will only be in one
  * 
  * -tt outputs files of results and extended results to terminal
+ * I tried to add self-synteny, but it almost always did worse and was entering some hits twice...
  */
 public class AnchorMain2 {
 	private static final int T=Arg.T, Q=Arg.Q;
+	protected static boolean bTrace = Globals.TRACE;
 	
 	private AnchorMain mainObj=null;
 	
@@ -42,10 +44,10 @@ public class AnchorMain2 {
 	protected Mproject mProj1, mProj2;
 	protected int topN=0;
 	
-	protected long cntRawHits=0; // CAS571 add to logged output
+	protected long cntRawHits=0; // for logged output
 	protected int cntG2=0, cntG1=0, cntG0=0, cntClusters=0; 			// GrpPair.saveClusterHits
 	protected int cntG2Fil=0, cntG1Fil=0, cntG0Fil=0, cntPileFil=0;   	// GrpPair.createClusters
-	protected int cntWS=0;												// GrpPair.GrpPairGx 
+	protected int cntWS=0, cntRmEnd=0, cntRmLow=0;						// GrpPair.GrpPairGx 
 	
 	protected PrintWriter fhOutHit=null, fhOutCl=null, fhOutGene=null, fhOutPile=null;
 	protected PrintWriter [] fhOutHPR = {null,null,null};
@@ -58,12 +60,12 @@ public class AnchorMain2 {
 	
 	protected String proj1Name, proj2Name;
 	private boolean bSuccess=true;
-	private int [] avgGeneLen = {0,0}, avgIntronLen = {0,0}, avgExonLen = {0,0}; // T,Q: CAS560
+	private int [] avgGeneLen = {0,0}, avgIntronLen = {0,0}, avgExonLen = {0,0}; // T,Q: 
 	private double [] percentCov = {0,0};
 	
 	// created and processed per file
 	private TreeMap <String, GrpPair>  grpPairMap = new TreeMap <String, GrpPair> ();  // key chrT-chrQ
-
+	
 	/*********************************/
 	public AnchorMain2(AnchorMain mainObj) {
 		Arg.setVB();
@@ -114,19 +116,16 @@ public class AnchorMain2 {
 		Globals.rclear();
 		Utils.prtIndentMsgFile(plog, 1, String.format("Final totals    Raw hits %,d    Files %,d", cntRawHits, nfile));	
 		
-		String msg1 = String.format("Clusters  Both genes %,9d   One gene %,9d   No gene %,9d", // CAS572 8->9
-				cntG2, cntG1, cntG0);
+		String msg1 = String.format("Clusters   Both genes %,9d   One gene %,9d   No gene %,9d",  cntG2, cntG1, cntG0);
 		Utils.prtNumMsgFile(plog, cntClusters, msg1);	
 		
 		int total = cntG2Fil+cntG1Fil+cntG0Fil;
-		String msg2 = String.format("Filtered  Both genes %,9d   One gene %,9d   No gene %,9d   Pile hits %,d",
-				total, cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
+		String msg2 = String.format("Filtered   Both genes %,9d   One gene %,9d   No gene %,9d   Pile hits %,d",
+				cntG2Fil, cntG1Fil, cntG0Fil, cntPileFil);
 		Utils.prtNumMsgFile(plog, total, msg2);
+		if (Arg.WRONG_STRAND_PRT) Utils.prtNumMsgFile(plog, cntWS, "Wrong strand");
 		
-		if (Arg.WRONG_STRAND_PRT) { // CAS565 there was no output if there were no WS
-			Utils.prtNumMsgFile(plog, cntWS, "Wrong strand");
-		}
-		
+		if (bTrace) Globals.prt(String.format("Wrong strand %,d  Rm End %,d  Rm Low %,d", cntWS, cntRmEnd, cntRmLow));
 		if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", totTime); // also writes in AnchorMain after a few more comps
 		
 		return bSuccess;
@@ -245,7 +244,6 @@ public class AnchorMain2 {
 					if (gn.gLen>maxGene) maxGene = gn.gLen;
 				}
 			}
-			
 			avgGeneLen[X]   = (int) Math.round((double)sumGene/(double)nGene); 
 			avgExonLen[X]   = (int) Math.round((double)sumExon/(double)nExon); 
 			avgIntronLen[X] = (int) Math.round((double)sumIntron/(double)nIntron); 
@@ -276,9 +274,9 @@ public class AnchorMain2 {
 	try {
 		int nfile=0;
 		File[] fs = dh.listFiles();
-		Arrays.sort(fs); 			// CAS575 add sort
+		Arrays.sort(fs); 			
 		for (File f : fs) {
-			if (!f.isFile()) continue;
+			if (!f.isFile() || f.isHidden()) continue; //  macOS add ._ files in tar; CAS576 add isHidden
 			fileName = f.getName();
 			if (!fileName.endsWith(Constants.mumSuffix))continue;
 			nfile++;
@@ -298,7 +296,7 @@ public class AnchorMain2 {
 			
 			if (Arg.TRACE) Utils.prtTimeMemUsage(plog, "   Finish ", time);
 		}
-		return nfile;				// CAS572 add
+		return nfile;				
 	}
 	catch (Exception e) {ErrorReport.print(e, "analyze and save"); bSuccess=false; return 0;}
 	}
@@ -313,7 +311,7 @@ public class AnchorMain2 {
 		int [] cntHitGene = {0,0};
 		String line;
 		GrpPair pairObj;
-		int cntErr=0, cnt=0, cntNoChr=0;
+		int cntErr=0, cntHits=0, cntNoChr=0;
 		TreeSet <String> noChrSetQ = new TreeSet <String> ();
 		TreeSet <String> noChrSetT = new TreeSet <String> ();
 		
@@ -321,14 +319,13 @@ public class AnchorMain2 {
 		while ((line = reader.readLine()) != null) {	
 			line = line.trim();
 			if (line.equals("") || !Character.isDigit(line.charAt(0))) continue;
-			// CAS555 allow nucmer; removed code here that was not allowing it
 			
-			cnt++;
+			cntHits++;
 			String[] tok = line.split("\\s+");
-			if (tok.length<13) { 								// CAS561 add error check
+			if (tok.length<13) { 								
 				plog.msg("*** Missing values, only " + tok.length + " must be >=13                       ");
 				plog.msg("  Line: " + line);
-				plog.msg("  Line " + cnt + " of file " + fObj.getAbsolutePath());
+				plog.msg("  Line " + cntHits + " of file " + fObj.getAbsolutePath());
 				cntErr++;
 				if (cntErr>5) Globals.die("Too many errors in " + fObj.getAbsolutePath());
 				continue;
@@ -341,51 +338,42 @@ public class AnchorMain2 {
 			int id =       (int) Math.round(Double.parseDouble(tok[6]));
 			int sim = 	   (poffset==0) ? 0 : (int) Math.round(Double.parseDouble(tok[7]));
 			
-			int [] f =  {0, 0}; // not used
+			int [] f =  {0, 0}; // frame; in Hit but not used
 			if (poffset==2) {
-				int tf = Integer.parseInt(tok[11]);
-				int qf = Integer.parseInt(tok[12]);	
-				f[0] = tf; f[1] = qf;
+				f[T] = Integer.parseInt(tok[11]);
+				f[Q] = Integer.parseInt(tok[12]);	
 			}
-			String chrT = tok[11+poffset];
-			String chrQ = tok[12+poffset];
+			String [] chr = {"",""};
+			chr[T] = tok[11+poffset];
+			chr[Q] = tok[12+poffset]; 
+			
+		// Get grpIdx using name
+			int [] grpIdx = {0,0};
+			grpIdx[Q] = mProj1.getGrpIdxFromFullName(chr[Q]); // proj1 is Q, 2nd set of coords (Q==1, T==0)
+			if (grpIdx[Q]==-1) { 									
+				if (!noChrSetQ.contains(chr[Q])) noChrSetQ.add(chr[Q]);
+				cntNoChr++; continue;
+			}
+			grpIdx[T] = mProj2.getGrpIdxFromFullName(chr[T]); 
+			if (grpIdx[T]==-1) {									
+				if (!noChrSetT.contains(chr[T])) noChrSetQ.add(chr[T]);
+				cntNoChr++; continue;
+			}
 			
 			String strand = (start[Q] <= end[Q] ? "+" : "-") + "/" + (start[T] <= end[T] ? "+" : "-"); 	// copied from anchor1
 			if (Arg.isEqual(strand)) hitEQ++; else hitNE++;
 			
 			if (start[T]>end[T]) {int t=start[T]; start[T]=end[T]; end[T]=t;} 
 			if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
-
-		// Get grpIdx using name
-			int grpIdx1 = mProj1.getGrpIdxFromFullName(chrQ); 
-			if (grpIdx1==-1) { 									// CAS561 allow this 
-				if (!noChrSetQ.contains(chrQ)) {
-					Globals.rprt("No " + chrQ + " for " + proj1Name);
-					noChrSetQ.add(chrQ);
-				}
-				cntNoChr++;
-				continue;
-			}
-			int grpIdx2 = mProj2.getGrpIdxFromFullName(chrT); 
-			if (grpIdx2==-1) {									// CAS561 allow this 
-				if (!noChrSetT.contains(chrT)) {
-					Globals.rprt("No " + chrT + " for " + proj2Name);
-					noChrSetQ.add(chrT);
-				}
-				cntNoChr++;
-				continue;
-			}
-			
-			int [] grpIdx = {grpIdx2, grpIdx1}; // Query is Mproj1; second set of MUMMER coords
 			
 		// Add hit to pairObj 
-			String grp2grpkey=grpIdx2+"-"+grpIdx1;
+			String grp2grpkey=grpIdx[Q]+"-"+grpIdx[T]; 
 				
 			if (!grpPairMap.containsKey(grp2grpkey)) {
-				if (donePair.contains(grp2grpkey)) die(chrQ + " and " + chrT + " occurs in multiple files");
+				if (donePair.contains(grp2grpkey)) die(chr[Q] + " and " + chr[T] + " occurs in multiple files");
 				donePair.add(grp2grpkey);
 				
-				pairObj = new GrpPair(this, grpIdx2, proj1Name, chrQ, grpIdx1, proj2Name, chrT, plog);
+				pairObj = new GrpPair(this, grpIdx[T], proj2Name, chr[T], grpIdx[Q], proj1Name, chr[Q], plog);
 				grpPairMap.put(grp2grpkey, pairObj);
 			}
 			else pairObj = grpPairMap.get(grp2grpkey);
@@ -393,37 +381,39 @@ public class AnchorMain2 {
 		// Create hit
 			hitNum++;
 			Hit ht = new Hit(hitNum, id, sim, start, end, len, grpIdx, strand, f); 
-			if (len[T]>Arg.mamGeneLen || len[Q]>Arg.mamGeneLen) cntLongHit++;
 			pairObj.addHit(ht);
 			
 		// add hit to gene and vice versa;
-			if (qGrpGeneMap.size()>0 && qGrpGeneMap.containsKey(grpIdx1)) { // grp may have no genes
-				GeneTree qGrpGeneObj = qGrpGeneMap.get(grpIdx1); 
-			
+			if (qGrpGeneMap.size()>0 && qGrpGeneMap.containsKey(grpIdx[Q])) { // grp may have no genes
+				GeneTree qGrpGeneObj = qGrpGeneMap.get(grpIdx[Q]); 
 				TreeSet <Gene> qSet = qGrpGeneObj.findOlapSet(start[Q], end[Q], true);
+			
 				for (Gene gn : qSet) {
 					cntHitGene[Q]++;
 					pairObj.addGeneHit(Q, gn, ht);
 				}
 			}
-			if (tGrpGeneMap.size()>0 && tGrpGeneMap.containsKey(grpIdx2)) {
-				GeneTree tGrpGeneObj = tGrpGeneMap.get(grpIdx2); 
+			if (tGrpGeneMap.size()>0 && tGrpGeneMap.containsKey(grpIdx[T])) {
+				GeneTree tGrpGeneObj = tGrpGeneMap.get(grpIdx[T]); 
 				TreeSet <Gene> tSet = tGrpGeneObj.findOlapSet(start[T], end[T], true);
-				
+			
 				for (Gene gn : tSet) {
 					cntHitGene[T]++;
 					pairObj.addGeneHit(T, gn, ht);
 				}
 			}	
-		}
+			if (len[T]>Arg.mamGeneLen || len[Q]>Arg.mamGeneLen) cntLongHit++;
+		} // finish reading file
 		reader.close();
 		
+		/* ---------- Finish ----------- */
 		Globals.rclear();
 		String x =  (cntLongHit>0) ? String.format("Long Hits %,d", cntLongHit) : "";
 		String msg = String.format("Load %s  Hits %,d (EQ %,d NE %,d) %s", fileName, hitNum, hitEQ, hitNE, x);
+		if (Arg.VB)  Utils.prtIndentMsgFile(plog, 1, msg); else Globals.rprt(msg);	
+		
 		cntRawHits += hitNum;
 		
-		if (Arg.VB)  Utils.prtIndentMsgFile(plog, 1, msg); else Globals.rprt(msg);	
 		if (cntNoChr>0) { 
 			if (noChrSetQ.size()>0) {
 				msg = proj1Name + " (" + noChrSetQ.size() + "): ";
@@ -437,8 +427,8 @@ public class AnchorMain2 {
 			}
 		}
 							
-		if (Arg.TRACE) {
-			msg = String.format("Hit genes %s %,d   %s %,d", proj2Name, cntHitGene[Arg.T], proj1Name,  cntHitGene[Arg.Q]);							 
+		if (Arg.TRACE || bTrace) {
+			msg = String.format("SubHit->genes %s %,d   %s %,d", proj2Name, cntHitGene[Arg.T], proj1Name,  cntHitGene[Arg.Q]);
 			Utils.prtIndentMsgFile(plog, 2, msg); 
 		}
 	}

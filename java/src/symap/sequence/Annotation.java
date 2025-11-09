@@ -48,7 +48,7 @@ public class Annotation {
 	private String hitListStr1=null;  			// add to popup; computed in sequence.setForGenePopup using coords 
 	private String hitListStr2=null;			// add HitList for other side to popup
 	private int [] hitIdxArr1=null, hitIdxArr2=null;  // set value when hitListStr is set
-	private boolean bHasHits=false;				// On creation, T if any hits; on display GeneNum, changed to T if hit for this pair; CAS571
+	private boolean bHasHits=false;				// On creation, T if any hits; on display GeneNum, changed to T if hit for this pair
 	
 	private boolean bGeneLineOpt=false; 		// Show line on all genes
 	private boolean bHighPopup=false;			// Highlight gene if popup
@@ -75,7 +75,7 @@ public class Annotation {
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
 		this.genenum = genenum;
-		bHasHits = (numhits>0); // this could be from any synteny pair CAS571
+		bHasHits = (numhits>0); // this could be from any synteny pair 
 	
 		// see backend.AnnotLoadPost.computeTags for formatting
 		if (genenum==0) { 
@@ -107,7 +107,7 @@ public class Annotation {
 		this.bGeneLineOpt=bGeneLineOpt; // used these 3 in paintComponent
 		this.bHighPopup=bHighPopup;
 		this.bShowGeneNum=bShowGeneNum;  this.bShowGeneNumHit=bShowGeneNumHit;
-		if (bShowGeneNum && nG2xN!=0 && !isG2xN)  this.bShowGeneNum=false; // CAS570 add 
+		if (bShowGeneNum && nG2xN!=0 && !isG2xN)  this.bShowGeneNum=false; 
 
 		double x, y, height;
 		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
@@ -288,7 +288,7 @@ public class Annotation {
 	protected int getType() {return itype;}
 	protected boolean isGene() 	  { return itype == GENE_INT; }
 	protected boolean isExon() 	  { return itype == EXON_INT; }   
-	protected boolean isGap() 		  { return itype == GAP_INT; }
+	protected boolean isGap() 	  { return itype == GAP_INT; }
 	protected boolean isCentromere() { return itype == CENTROMERE_INT; }
 	
 	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
@@ -372,11 +372,11 @@ public class Annotation {
 		return longDes;
 	}
 	private String getLocLong() { // used in above two
-		return SeqData.coordsStr(bStrandPos, start, end); // update
+		return SeqData.coordsStr(bStrandPos, start, end); 
 	}
 	
 	protected boolean hasHitList() 			{return hitListStr1!=null; } // means it has been set, but may not have hits
-	protected boolean hasHits() 			{return hitIdxArr1!=null;} // set and has hits; CAS571
+	protected boolean hasHits() 			{return hitIdxArr1!=null;} // set and has hits
 	protected void setHitList(String hList, TreeMap <Integer, String> scoreMap) { // Calls 1st time popup or show GeneNum
 		hitListStr1=hList;
 		if (scoreMap.size() > 0) {
@@ -483,7 +483,7 @@ public class Annotation {
 		return start + ((end-start)/2);
 	}
 		
-	public void setIsPopup(boolean b) { // Called for gene only on popup; Annotation=true; Sequence when -tt; TextShowInfo=false
+	public void setIsPopup(boolean b) { // Called for gene only on popup; Annotation=true; TextShowInfo=false
 		isPopup=b; 
 		if (exonVec!=null) 
 			for (Annotation ad : exonVec) ad.isPopup=b; 

@@ -18,17 +18,20 @@ import util.Utilities;
 
 /********************************************************
  * Utils for A&S
+ * msgToFile prints to file and terminal, but not ProgressDialog
+ * msg and appendText  prints to file, terminal, ProgressDialog
  */
 public class Utils {
-	// msgToFile prints to file and terminal, but not ProgressDialog
-	// msg and appendText     prints to file, terminal, ProgressDialog
-	
+	public static void sleep(int milliseconds) {
+ 		try{ Thread.sleep(milliseconds); }
+ 		catch (InterruptedException e) { }
+	}
 	// time 
 	public static long getTime() { return System.currentTimeMillis();}
+	
 	public static String getElapsedTime(long startTime) {
 		return Utilities.getDurationString(getTime()-startTime);
 	}
-	
 	public static void prtMsgTimeFile(ProgressDialog prog, String msg, long startTime) {
 		String t = Utilities.getDurationString(getTime()-startTime);
 		prog.msgToFile(String.format("%-30s %s", msg, t));	
@@ -199,7 +202,7 @@ public class Utils {
 	// Pre-v569 did not have ".txt" suffix; this checks and renames
 	public static File getParamsFile(String dir, String fileName) {
 	try {
-		if (!Utilities.dirExists(dir)) return null; 
+		if (!util.FileDir.dirExists(dir)) return null; 
 		
 		File pfile = new File(dir,fileName); 
 		if (pfile.isFile()) return pfile;	// exists with new name

@@ -8,13 +8,11 @@ import util.Jhtml;
 /*****************************************************
  * This file checks what architecture and what /ext subdirectories to use.
  * extSubDir is set at startup, and cannot be changed; hence, it is okay these variables are static
- * CAS566 moved from backend.Constants
- * extDir + dirX + archDir 
  */
 public class Ext {
 	private static final String extDir = "ext/"; // directory of external programs
 	private static final String dirMummer="mummer/", dirMuscle="muscle/", dirMafft="mafft/";
-	private static String archDir;				 // set on startup (linux64, mac, macM4); user can set in symap.config; CAS566 
+	private static String archDir;				 // set on startup (linux64, mac, macM4); user can set in symap.config 
 	
 	private static String mummer4Path=null; 	 // can put full mummer4 path in symap.config; 
 	
@@ -36,7 +34,7 @@ public class Ext {
 		String plat =  System.getProperty("os.name").toLowerCase();
 		
 		if (plat.contains("linux")) {
-			archDir = "lintel64/";	// CAS568 was linux64 from v567 when cleaning some code
+			archDir = "lintel64/";	
 			return true;
 		}
 		if (!plat.contains("mac")) { 
@@ -128,7 +126,7 @@ public class Ext {
 				return;
 			}
 			
-			if (isMac()) { // CAS559 add this message
+			if (isMac()) { 
 				String m = 	"  On Mac, MUMmer executables needs to be verified for 1st time use; \n    see ";
 				String u = Jhtml.TROUBLE_GUIDE_URL + Jhtml.macVerify;
 				System.out.println(m+u);
@@ -153,7 +151,7 @@ public class Ext {
 			checkFile(mpath+ "mgaps");
 			checkDir(mpath+ "aux_bin");
 			checkFile(mpath+ "aux_bin/prepro"); 
-			checkFile(mpath+ "aux_bin/postpro"); // CAS559 only prepro was being checked
+			checkFile(mpath+ "aux_bin/postpro"); 
 			checkFile(mpath+ "aux_bin/prenuc");
 			checkFile(mpath+ "aux_bin/postnuc");
 			checkDir(mpath+"scripts");

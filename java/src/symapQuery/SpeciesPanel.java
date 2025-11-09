@@ -23,7 +23,7 @@ import symap.manager.Mproject;
 import symap.manager.Mpair;
 import util.ErrorReport;
 import util.Jcomp;
-import util.Utilities;
+import util.Popup;
 
 /******************************************************
  * For QueryPanel: 
@@ -38,7 +38,7 @@ public class SpeciesPanel extends JPanel {
 	private boolean isNoLoc=false;
 	private int dnameWidth = 100;  
 	
-	public SpeciesPanel(QueryFrame parentFrame, QueryPanel qPanel) {
+	protected SpeciesPanel(QueryFrame parentFrame, QueryPanel qPanel) {
 		qFrame = parentFrame;
 		this.qPanel = qPanel;
 		
@@ -260,7 +260,7 @@ public class SpeciesPanel extends JPanel {
 					int spidx2 = (isSelf) ? spidx[i] : spidx[j];
 					Mpair mp = qFrame.getMpair(spidx[i], spidx2);
 					if (mp==null) {
-						Utilities.showErrorMessage("No pair for IDX=" + spidx[i] + " " + spidx[j]);
+						Popup.showErrorMessage("No pair for IDX=" + spidx[i] + " " + spidx[j]);
 						return;
 					}
 					int idx = mp.getPairIdx();
@@ -269,7 +269,7 @@ public class SpeciesPanel extends JPanel {
 				}
 			}
 			
-			if (idList.equals("")) Utilities.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
+			if (idList.equals("")) Popup.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
 			else if (!idList.contains(",")) pairWhere = "PH.pair_idx=" + idList + " ";
 			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
 		} 
@@ -451,7 +451,7 @@ public class SpeciesPanel extends JPanel {
 				return end + getScaleDigits();
 			} 
 			catch(NumberFormatException e) {
-				Utilities.showWarningMessage("Invalid To (end) coordinate '" + etext + "'");
+				Popup.showWarningMessage("Invalid To (end) coordinate '" + etext + "'");
 				return null;
 			}
 		}

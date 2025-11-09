@@ -2,7 +2,6 @@ package symap.sequence;
 
 /*************************************************************
  * Holds a sequence track
- * CAS551 removed all checks for track==null; remove getOffset() { return track.getMoveOffset();}
  */
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -15,13 +14,13 @@ import symap.drawingpanel.DrawingPanel;
 import symap.drawingpanel.FilterHandler;
 import symap.frame.HelpBar;
 
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class TrackHolder extends JComponent  {	
+	private static final long serialVersionUID = 1L;
 	private HelpBar hb;
-	private int orientation; // left-right
-	private Sequence track=null;	// CAS550 track->sequence
+	private int orientation; 	// left-right
+	private Sequence track=null;// track->sequence
 	private FilterHandler fh;
-	private int trackNum;	// CAS517 add for Sequence track 
+	private int trackNum;		// for Sequence track 
 
 	private void dprt(String msg) {symap.Globals.dprt("TH " + msg);}
 	
@@ -38,14 +37,14 @@ public class TrackHolder extends JComponent  {
 		setVisible(false);
 	}
 
-	public Sequence getTrack() {return track;}// Called by DrawingPanel, Mapper - CAS550 return Sequence
+	public Sequence getTrack() {return track;}// Called by DrawingPanel, Mapper
 	
 	public int getTrackNum() {return trackNum;}
 	
 	public void setTrack(Sequence t) { // Called by DrawingPanel.setSequenceTrack 
 		if (t == track && t!=null) dprt("Has track " + track.toString());
 		if (t == null) dprt("null seq track ");
-		// CAS551 rm code to remove mouse listeners if track!=null
+		
 		track = t;
 		fh.setSfilter(track);
 		addMouseListener(track);
@@ -56,7 +55,7 @@ public class TrackHolder extends JComponent  {
 		track.setOrientation(orientation);
 	}
 	public void setTrackData(TrackData td) { // called by DrawingPanel.setMaps for History
-		track.setup(td); 					 // CAS551 rm code to set up new track
+		track.setup(td); 					 
 	}
 	public TrackData getTrackData() { return track.getData();} // called by DrawingPanelData for History; 
 		

@@ -8,8 +8,6 @@ import javax.swing.JButton;
 
 /**
  * Create and control History Events. Created in SyMAP2d
- * CAS550 remove unused buttons for reset, double back, clear; moved History class to here. 
- * CAS552 introduce Replace for annotation changes (highlight, text, and changing visible hit-wires)
  */
 public class HistoryControl implements ActionListener {
 	private HistoryListener listener;

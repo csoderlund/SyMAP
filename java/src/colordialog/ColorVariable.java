@@ -21,14 +21,14 @@ public class ColorVariable implements ActionListener {
 	private ColorIcon icon;
 	private Color defaultColor, prevColor;
 	private boolean alphaEnabled=true;
-	private int order; // CAS520
+	private int order; 
 	private JColorChooser colorChoose;
 	private JDialog dialog;
 
 	protected ColorVariable(String className, String variableName, String display_name,
 			String description, Dimension dim, int nOrder) {
 		
-		defaultColor = ColorDialog.getDefault(variableName); // CAS532 ColorDialog.getColor(className, variableName);
+		defaultColor = ColorDialog.getDefault(variableName); 
 		prevColor = defaultColor;
 
 		this.className = className;

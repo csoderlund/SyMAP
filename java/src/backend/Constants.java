@@ -4,11 +4,6 @@ import backend.anchor1.Proj;
 import symap.manager.Mpair;
 
 public class Constants {
-/***********************************************************
-* CAS500 v5 moved hard-coded constants for build to here; CAS522 removed FPC; 
-* CAS557 some constants are used by toSymap
-* CAS566 moved architecture and checking external to symap/Ext.java
-*****************************************************/
 	
 /**********************************************
  * Command line arguments
@@ -50,9 +45,9 @@ public static final String seqDataDir = 	"data/seq/";
 public static final String seqSeqDataDir = 	"/sequence/"; 
 public static final String seqAnnoDataDir = "/annotation/"; 
 
-// CAS569 MacOS Sequoia will no longer easily open files if they do not end with .txt; checked in Utils.getParamFile
+// MacOS Sequoia will no longer easily open files if they do not end with .txt; checked in Utils.getParamFile
 public static final String paramsFile = "/params.txt"; // in both seq/proj and seq_results/proj1_to_proj2
-public static final String usedFile =	"/params_align_used.txt"; // seq_results CAS568 add; CAS571 fixed
+public static final String usedFile =	"/params_align_used.txt"; // seq_results 
 
 //These file types, denoted by the .fas extension, are used by most large curated databases. 
 //Specific extensions exist for nucleic acids (.fna), nucleotide coding regions (.ffn), amino acids (.faa), 
@@ -120,7 +115,7 @@ public static final String tmpRunDir = 		 "/tmp/";
 	public static String getNameTmpPreDir(String n1,  String n2, String n) {
 		return getNameResultsDir(n1, n2) + tmpRunDir + n;
 	}	
-	public static String getOrderDir(Mpair mp) { // CAS568 renamed proj_ordered to this
+	public static String getOrderDir(Mpair mp) { 
 		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDBName() + Constants.orderDelim + mp.mProj2.getDBName();
 		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDBName() + Constants.orderDelim + mp.mProj1.getDBName();
 		return null;

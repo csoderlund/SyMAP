@@ -14,20 +14,18 @@ import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
+import util.FileDir;
 
 /****************************************************************
  * Called from SyntenyMain after blocks are created
- * v505 had major changes about when scaffolds are flipped
  */
 public class OrderAgainst {
-	
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;	
 	private Mpair mp;
 	private Mproject mProj1, mProj2;
 	
-	public OrderAgainst(Mpair mp, ProgressDialog mLog, DBconn2 dbc2) {
+	protected OrderAgainst(Mpair mp, ProgressDialog mLog, DBconn2 dbc2) {
 		this.mp = mp;
 		this.mProj1 = mp.getProj1();
 		this.mProj2 = mp.getProj2();
@@ -40,7 +38,7 @@ public class OrderAgainst {
 	// if !switch, mProj1 is draft to be ordered against mProj2 the target
 	// if  switch, mProj2 is draft to be ordered against mProj1 the target 
 	****************************************************************/
-	public void orderGroupsV2(boolean bSwitch)  {
+	protected void orderGroupsV2(boolean bSwitch)  {
 	try {
 		if (!bSwitch) {pDraft = mProj1; pTarget = mProj2; }
 		else          {pDraft = mProj2; pTarget = mProj1; }
@@ -50,7 +48,7 @@ public class OrderAgainst {
 		String chr0 = targPfx + "UNK";
 		int chr0Idx = 99999;
 		
-		long startTime = Utils.getTime();				// CAS568 add time
+		long startTime = Utils.getTime();				
 		mLog.msg("Ordering " + pDraft.getDBName() + " contigs against " + pTarget.getDBName());
 
 		if (!s1LoadDataDB(bSwitch, chr0, chr0Idx)) return;
@@ -179,7 +177,7 @@ public class OrderAgainst {
 	 ***/
 	private void s3WriteNewProj() {
 		try {
-			String ordProjName = Constants.getOrderDir(mp); // CAS568 new dir name	
+			String ordProjName = Constants.getOrderDir(mp); 
 			String ordDirName = Constants.seqDataDir + ordProjName;
 			
 			mLog.msg("   Creating new project " + ordDirName);
@@ -187,17 +185,17 @@ public class OrderAgainst {
 			File   ordDir = new File(ordDirName);
 			if (ordDir.exists()) {
 				mLog.msg("   Delete previous " + ordDirName);
-				Utilities.clearAllDir(ordDir);
+				FileDir.clearAllDir(ordDir);
 				ordDir.delete();
 			}	
-			Utilities.checkCreateDir(ordDirName, false); // CAS568 quite writing to stdout here; add ordDirName above
+			FileDir.checkCreateDir(ordDirName, false); 
 			
-			File ordSeqDir = Utilities.checkCreateDir(ordDir + Constants.seqSeqDataDir, false);
-			File ordFasta = Utilities.checkCreateFile(ordSeqDir, ordProjName + Constants.faFile, "SM fasta file");
+			File ordSeqDir = FileDir.checkCreateDir(ordDir + Constants.seqSeqDataDir, false);
+			File ordFasta = FileDir.checkCreateFile(ordSeqDir, ordProjName + Constants.faFile, "SM fasta file");
 			FileWriter ordFastaFH = 	new FileWriter(ordFasta);
 			
-			File ordAnnoDir = Utilities.checkCreateDir(ordDir + Constants.seqAnnoDataDir, false);
-			File ordGFF =   Utilities.checkCreateFile(ordAnnoDir, ordProjName + ".gff", "SM gff");
+			File ordAnnoDir = FileDir.checkCreateDir(ordDir + Constants.seqAnnoDataDir, false);
+			File ordGFF =   FileDir.checkCreateFile(ordAnnoDir, ordProjName + ".gff", "SM gff");
 			FileWriter ordGffFH = new FileWriter(ordGFF);
 			
 			int sepLen=100;
@@ -263,8 +261,8 @@ public class OrderAgainst {
 			ordFastaFH.close();
 			ordGffFH.close();
 			
-			File ordParam = Utils.getParamsFile(ordDir.getAbsolutePath(), Constants.paramsFile);// CAS569 to rename if exists
-			ordParam =   Utilities.checkCreateFile(ordDir, Constants.paramsFile, "SM params"); // deletes if exists
+			File ordParam = Utils.getParamsFile(ordDir.getAbsolutePath(), Constants.paramsFile);
+			ordParam =   FileDir.checkCreateFile(ordDir, Constants.paramsFile, "SM params"); // deletes if exists
 			FileWriter ordParamsFH = new FileWriter(ordParam);
 			ordParamsFH.write("category = " + pDraft.getdbCat() + "\n");
 			ordParamsFH.write("abbrev_name = Draf\n");
@@ -275,7 +273,7 @@ public class OrderAgainst {
 		}
 		catch (Exception e) {ErrorReport.print(e, "write chromosomes"); }
 	}
-	private String reverseComplement(String in){ // CAS569 moved from Utils 
+	private String reverseComplement(String in){ 
 		in = (new StringBuffer(in)).reverse().toString().toUpperCase();
 		in = in.replace('A', 't');
 		in = in.replace('G', 'c');
@@ -284,18 +282,18 @@ public class OrderAgainst {
 		return in.toLowerCase();
 	}
 	/***************************************************************************/
-	private String getOrderFile(Mpair mp) { // CAS568 renamed proj_ordered to this
+	private String getOrderFile(Mpair mp) { 
 		if (mp.isOrder1(Mpair.FILE)) return "/" + mp.mProj2.getDBName() + Constants.orderSuffix;
 		if (mp.isOrder2(Mpair.FILE)) return "/" + mp.mProj1.getDBName() + Constants.orderSuffix;
 		return null;
 	}
 	
-	private String getOrderDisplay(Mpair mp) { // CAS568 renamed proj_ordered to this
+	private String getOrderDisplay(Mpair mp) { 
 		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDisplayName() + "." + mp.mProj2.getDisplayName();
 		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDisplayName() + "." + mp.mProj1.getDisplayName();
 		return null;
 	}
-	private String getOrderDesc(Mpair mp) { // CAS568 used DBname instead of Display since it can change
+	private String getOrderDesc(Mpair mp) { 
 		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDisplayName() + " ordered against " + mp.mProj2.getDisplayName();
 		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDisplayName() + " ordered against " + mp.mProj1.getDisplayName();
 		return null;

@@ -24,18 +24,18 @@ import util.Jcomp;
 import util.Utilities;
 
 /*****************************************************
- * Search button: select column to search and search for the entered gene; CAS564 add
+ * Search button: select column to search and search for the entered gene
  */
 public class UtilSearch  extends JDialog{
 	private static final long serialVersionUID = 1L;
 
-	private TableMainPanel tdp;
+	private TableMainPanel tPanel;
 	private String [] displayedCols;
 	private AnnoData annoObj;
 	private int rowIndex=0;
 	
 	protected UtilSearch(TableMainPanel tpd, String [] cols, AnnoData spAnno) {
-		this.tdp = tpd;
+		this.tPanel = tpd;
 		this.displayedCols = cols;
 		this.annoObj = spAnno;
 		
@@ -78,7 +78,7 @@ public class UtilSearch  extends JDialog{
 			ButtonGroup bg = new ButtonGroup();
 			for (int i=0; i<numCols; i++) {
 				String col = searchCols.get(i);
-				radColArr[i] = Jcomp.createRadio(col);
+				radColArr[i] = Jcomp.createRadio(col, "Search on this column");
 				colPanel.add(radColArr[i]); colPanel.add(Box.createVerticalStrut(3));
 				bg.add(radColArr[i]);
 			}
@@ -114,7 +114,7 @@ public class UtilSearch  extends JDialog{
 		JButton btnOK = Jcomp.createButton("Search", "Search for string"); 	
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setVisible(false);	// CAS565 was in doSearch
+				setVisible(false);	
 				doSearch(); 
 			}
 		});
@@ -130,7 +130,7 @@ public class UtilSearch  extends JDialog{
 		});
     	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(5));
     	
-    	JButton btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help Popup");
+    	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				popupHelp();
@@ -155,7 +155,7 @@ public class UtilSearch  extends JDialog{
 			+  "\nSubstring: only do this for an annotation column (e.g. desc or product)."
 			+  "\nIf found, the table will redisplay on the first row with the string. ";
 		msg += "\n\nSee ? for details.\n";
-		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+		util.Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	
 	/***************************************************
@@ -166,7 +166,7 @@ public class UtilSearch  extends JDialog{
 		if (findStr.equals("")) {setVisible(false); return -1;}
 		
 		rowIndex=-1;
-		int nrows = tdp.theTable.getRowCount();
+		int nrows = tPanel.theTable.getRowCount();
 		
 		// find the column name selected in the dialog
 		String selColName="";
@@ -179,8 +179,8 @@ public class UtilSearch  extends JDialog{
 		
 		// find the column index in the table headers
 		int colIndex=-1;
-		for (int x=0; x<tdp.theTable.getColumnCount(); x++) {
-			String name = tdp.theTable.getColumnName(x);
+		for (int x=0; x<tPanel.theTable.getColumnCount(); x++) {
+			String name = tPanel.theTable.getColumnName(x);
 			if (name.contains("\n")) name = name.replace("\n", " ");
 			if (name.equals(selColName)) {
 				colIndex = x;
@@ -208,7 +208,7 @@ public class UtilSearch  extends JDialog{
 		
 		// search each row
 		for (int x=0; x<nrows; x++) {
-			Object colValObj = tdp.theTable.getValueAt(x, colIndex);
+			Object colValObj = tPanel.theTable.getValueAt(x, colIndex);
 			String colVal;
 			if (colValObj instanceof String) colVal = (String) colValObj;
 			else if (colValObj instanceof Integer) 	{ // Hit# only

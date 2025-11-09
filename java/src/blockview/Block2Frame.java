@@ -17,10 +17,10 @@ import symap.drawingpanel.SyMAP2d;
 import util.ErrorReport;
 import util.ImageViewer;
 import util.Utilities;
+import util.Jcomp;
 
 /********************************************
  * Block view for a single selected chromosome
- * CAS515 rearranged; made smaller; tried to get scrollbar and resize to work...
  */
 public class Block2Frame extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -74,8 +74,7 @@ public class Block2Frame extends JFrame {
 			this.getContentPane().removeAll();
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 			
-			mainPane = new JPanel();
-			mainPane.setBackground(Color.white);
+			mainPane = Jcomp.createPagePanel();
 			mainPane.setLayout(new GridBagLayout()); 
 			JScrollPane scroller = new JScrollPane(mainPane);
 			
@@ -84,24 +83,18 @@ public class Block2Frame extends JFrame {
 			cPane.fill = GridBagConstraints.NORTH;
 			
 			// top row
-			JPanel topRow = new JPanel();
-			topRow.setBackground(Color.white);
+			JPanel topRow = Jcomp.createPlainPanel();
 			topRow.setLayout(new GridBagLayout());	
 			
-			JLabel title = new JLabel(tarName+ " to " + refName + " " + grpPfx + mRefChr); 
-			title.setFont(new Font("Verdana",Font.BOLD,18));
+			JLabel title = Jcomp.createBoldLabel(tarName+ " to " + refName + " " + grpPfx + mRefChr, 18); 
 			GridBagConstraints cRow = new GridBagConstraints();
 			cRow.gridx = cRow.gridy = 0;
 			topRow.add(title,cRow);	
 			
 			cRow.gridx++;
 			topRow.add(new JLabel("      "),cRow);
-			
-			Icon icon = ImageViewer.getImageIcon("/images/print.gif"); 
-			saveBtn =  new JButton(icon);
-			saveBtn.setBackground(Color.white);
-			saveBtn.setBorder(null);
-			saveBtn.setToolTipText("Save Image");
+			 
+			saveBtn = Jcomp.createIconButton("/images/print.gif", "Save Image");
 			saveBtn.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					ImageViewer.showImage("Block", mainPane);
@@ -114,10 +107,9 @@ public class Block2Frame extends JFrame {
 			mainPane.add(topRow,cPane);
 
 		// Click for detail
-			JPanel selectRow = new JPanel();
-			selectRow.setBackground(Color.white);
-			JLabel select = new JLabel("Click block for 2D display"); 
-			select.setFont(new Font("Verdana",0,12));
+			JPanel selectRow =  Jcomp.createPlainPanel();
+			JLabel select = Jcomp.createVentanaLabel("Click block for 2D display", 12); 
+			
 			selectRow.add(select);
 			cPane.gridy++; 
 			mainPane.add(selectRow,cPane);
@@ -173,7 +165,7 @@ public class Block2Frame extends JFrame {
 			
 			rs = tdbc2.executeQuery("select name,length from xgroups join pseudos on pseudos.grp_idx=xgroups.idx " +
 					" where xgroups.idx=" + mGrpIdx);
-			if (!rs.next()) { // CAS560 was first()
+			if (!rs.next()) { 
 				System.out.println("Unable to find reference group " + mGrpIdx);
 				return false;
 			}
@@ -365,7 +357,7 @@ public class Block2Frame extends JFrame {
 		}
 		rs = tdbc2.executeQuery(sql);
 		while (rs.next()) {
-			int grp2 = rs.getInt("grp2"); //(unordered2 ? unGrp2 : rs.getInt("grp2"));
+			int grp2 = rs.getInt("grp2"); 
 			int start = rs.getInt("start");
 			int end = rs.getInt("end");
 			int s2 = rs.getInt("s2");
@@ -374,7 +366,7 @@ public class Block2Frame extends JFrame {
 			int idx = rs.getInt("idx");
 			boolean isInv = (rs.getFloat("corr")<0); 
 			String blockName = Utilities.blockStr(mGrp2Names.get(grp2), mRefChr, blocknum);
-			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, unordered2, isInv, blocknum); // CAS573 add blocknum for 2D
+			Block b = new Block(grp2, start/bpPerPx, end/bpPerPx, s2, e2, blockName, idx, unordered2, isInv, blocknum); 
 			mBlocks.add(b);
 		}
 		rs.close();
@@ -491,7 +483,7 @@ public class Block2Frame extends JFrame {
 		Rectangle2D blockRect;
 		boolean unordered;
 		boolean bInv;
-		int blockNum;	// CAS573 add for 2D
+		int blockNum;	// for 2D
 		
 		public Block(int _grp2, int _s, int _e, int _s2, int _e2, String _name, int _idx, 
 				boolean _unord, boolean isInv, int bnum)
@@ -532,13 +524,13 @@ public class Block2Frame extends JFrame {
 		}
 	}			
 	private void show2DBlock(Block b) {
-		Utilities.setCursorBusy(this, true); 
+		Jcomp.setCursorBusy(this, true); 
 		try {	
 			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
 			symap.getDrawingPanel().setTracks(2); 
 			
 			HfilterData hd = new HfilterData (); 
-			hd.setForDP(b.blockNum); 					// CAS573 only show block
+			hd.setForDP(b.blockNum); 					// only show block
 			symap.getDrawingPanel().setHitFilter(1,hd); // copy template
 			
 			symap.getDrawingPanel().setSequenceTrack(1,mRefIdx,mGrpIdx,Color.CYAN);
@@ -549,7 +541,7 @@ public class Block2Frame extends JFrame {
 			symap.getFrame().showX(); 
 		}
 		catch (Exception err) {ErrorReport.print(err, "Show 2D View");}
-		finally {Utilities.setCursorBusy(this, false);}
+		finally {Jcomp.setCursorBusy(this, false);}
 	}
 	private class BlockPanel extends JPanel implements MouseInputListener {
 		private static final long serialVersionUID = 1L;

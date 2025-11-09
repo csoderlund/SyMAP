@@ -17,7 +17,6 @@ import util.ErrorReport;
 /**
  * Called in Proj to load all groups 
  * Mainly used by AnchorMain - creates non-genes from hits that do not overlap genes
- * CAS575 removed a lot of old trace code
  */
 public class Group {
 	public  static boolean bSplitGene=false;// split hit/gene if true;  -sg will split
@@ -382,7 +381,7 @@ public class Group {
 			System.err.println("SyMAP error: filterAddtoHitBin " + start + " " + end);	 
 	}
 	
-	// Called from AnchorMain1 to add this groups filtered hits to the main hashset; CAS575 remove BinStats
+	// Called from AnchorMain1 to add this groups filtered hits to the main hashset
 	protected void filterFinalAddHits(HashSet<Hit> finalHits) throws Exception { 
 		for (HitBin hb : hitBins){
 			hb.filterFinalAddHits(finalHits);

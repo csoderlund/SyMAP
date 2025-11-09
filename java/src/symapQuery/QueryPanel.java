@@ -53,7 +53,7 @@ public class QueryPanel extends JPanel {
 	protected boolean isMinorOlap=true;					// show overlap or minor (used with Globals.INFO -ii)
 	private String coDefNum = "3", groupDefNum="4";		// coset and group defaults
 	private boolean AND=true;
-	private boolean isSelf=false; 						// CAS575 add
+	private boolean isSelf=false; 						
 	
 	// Only one checkbox is allowed to be selected at a time. See setChkEnable. 
 	private int nChkNone=0, nChkSingle=1, nChkBlk=2, nChkCoSet=3, nChkHit=4, nChkGene=5, nChkMulti=6, nChkClust=7;
@@ -76,7 +76,7 @@ public class QueryPanel extends JPanel {
 	/*************************************************************
 	 * XXX State and get
 	 */
-	protected boolean isSelf() {return qFrame.isSelf();} // CAS575 for DBdata
+	protected boolean isSelf() {return qFrame.isSelf();} // for DBdata
 	
 	protected boolean isGroup() { // for UtilReport
 		return isMultiN() || isClustN() || isGeneNum();
@@ -282,7 +282,7 @@ public class QueryPanel extends JPanel {
 		// Chr, loc
 		whereClause = makeJoinBool(whereClause, makeSpChrLocWhere(), AND);
 		
-		if (isSelf) { // DIR_SELF CAS575 add
+		if (isSelf) { // DIR_SELF 
 			int g1 = speciesPanel.getSelChrIdx(0); 
 			int g2 = speciesPanel.getSelChrIdx(1); 
 			
@@ -420,7 +420,7 @@ public class QueryPanel extends JPanel {
 		}
 		if (!isSet) return "";
 
-		if (nSpecies==2) { // this works for any 2 species; CAS575
+		if (nSpecies==2) { // this works for any 2 species
 			int i0 = speciesPanel.getSelChrIdx(0); 
 			int i1 = speciesPanel.getSelChrIdx(1); 
 			if (i0>0 && i1>0) return "((PH.grp1_idx = " + i0 + ") AND (PH.grp2_idx = " + i1 + ") )";
@@ -714,8 +714,8 @@ public class QueryPanel extends JPanel {
 		});
 		row.add(chkOnSingle); row.add(Box.createHorizontalStrut(5));
 		
-		radOrphan = Jcomp.createRadio("Orphan genes (no hits)");
-		radSingle = Jcomp.createRadio("All genes (w/o hits)");
+		radOrphan = Jcomp.createRadio("Orphan genes (no hits)", "Genes with no hits");
+		radSingle = Jcomp.createRadio("All genes (w/o hits)", "All genes in project");
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(radOrphan); bg.add(radSingle); radSingle.setSelected(true);
 		
@@ -791,7 +791,7 @@ public class QueryPanel extends JPanel {
 		radCoSetGE =  Jcomp.createRadio(">=", "Show collinear sets >= N"); 
 		radCoSetEQ =  Jcomp.createRadio("=", "Show collinear sets = N");  
 		radCoSetLE =  Jcomp.createRadio("<=" , "Show collinear sets <= N"); 
-		radCoSetIgn = Jcomp.createRadio("Ignore"); 
+		radCoSetIgn = Jcomp.createRadio("Ignore", "Do not search on sets"); 
 		
 		ButtonGroup g = new ButtonGroup();
 		g.add(radCoSetGE); g.add(radCoSetEQ); g.add(radCoSetLE); g.add(radCoSetIgn);
@@ -1139,7 +1139,7 @@ public class QueryPanel extends JPanel {
 			annoLabel.setEnabled(!isSel); 
 			txtAnno.setEnabled(!isSel); 
 		}
-		speciesPanel.setChkEnable(isSel, type, (isSelf && nChk==nChkSingle)); // CAS575 add isS
+		speciesPanel.setChkEnable(isSel, type, (isSelf && nChk==nChkSingle)); 
 		
 		setRefresh();
 	}

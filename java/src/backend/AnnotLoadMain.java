@@ -50,14 +50,14 @@ public class AnnotLoadMain {
 	private boolean bSuccess=true;
 	private int cntAllGene=0 , cntNoKey=0;
 	
-	public AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
+	protected AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
 		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
 		this.plog = log;
 		this.mProj = proj;
 		proj.loadDataFromDB();
 	}
 	
-	public boolean run(String projDBName) throws Exception {
+	protected boolean run(String projDBName) throws Exception {
 		long startTime = Utils.getTime();
 		
 		plog.msg("Loading annotation for " + projDBName);
@@ -395,7 +395,7 @@ public class AnnotLoadMain {
 				}
 				
 				File[] fs = ad.listFiles();
-				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice; CAS575
+				Arrays.sort(fs);			// If separate files, order is random; this isn't necessary, but nice
 				
 				for (File f2 : fs)  {
 					if (!f2.isFile() || f2.isHidden()) continue; //  macOS add ._ files in tar

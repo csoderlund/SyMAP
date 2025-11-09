@@ -18,7 +18,6 @@ import java.util.zip.GZIPInputStream;
  * 
  * Called from toSymap, but can be used stand-alone.
  * 
- * Written by CAS Oct2019; made part of toSymap and other changes for CAS557; altered in CAS558
  * This assumes input of, e.g:
  * 1. ftp://ftp.ensemblgenomes.org/pub/plants/release-45/fasta/<species>/dna/<species>.dna_sm.toplevel.fa.gz
  *    Note: either hard-masked (rm) where repeats are replaced with Ns, or soft-masked (sm) where repeats are in lower-case text.
@@ -86,7 +85,7 @@ public class ConvertEnsembl {
 	private final String parentAttrKey 	= "Parent"; 		// mRNA and Exon
 	private final String cdsProteinAttrKey = "protein_id";
 
-	private final String PROTEINID  = "proteinID=";  // CAS558 new keywords for gene attributes
+	private final String PROTEINID  = "proteinID=";  // new keywords for gene attributes
 	private final String MRNAID     = "rnaID="; 	// ditto
 	private final String DESC	    = "desc=";		// ditto
 	private final String RMGENE    = "gene:";
@@ -115,7 +114,7 @@ public class ConvertEnsembl {
 	private int cntChr=0, cntScaf=0, cntMtPt=0, cntUnk=0; // for counting regardless of write to file
 	private long chrLen=0, scafLen=0, mtptLen=0, unkLen=0, totalLen=0;
 	
-	private HashMap <String, String> hexMap = new HashMap <String, String> (); // CAS548 add
+	private HashMap <String, String> hexMap = new HashMap <String, String> (); 
 	
 	private TreeMap <Character, Integer> cntBase = new TreeMap <Character, Integer> ();
 	private PrintWriter fhOut, ghOut;
@@ -128,7 +127,7 @@ public class ConvertEnsembl {
 		isToSymap=false;
 		new ConvertEnsembl(args, defGapLen, null, false);
 	}
-	protected ConvertEnsembl(String[] args, int gapLen, String prefix, boolean bNum) { // CAS557 make accessible from ConvertFrame
+	protected ConvertEnsembl(String[] args, int gapLen, String prefix, boolean bNum) { 
 		if (args.length==0) { // command line
 			checkArgs(args);
 			return;
@@ -259,14 +258,14 @@ public class ConvertEnsembl {
 				
 				idCol1 = tok[0].trim();	
 				
-				isMtPt = idCol1.toLowerCase().startsWith("mt") // CAS557 MT or mtDNA... and add line check
+				isMtPt = idCol1.toLowerCase().startsWith("mt") //  MT or mtDNA...
 						|| idCol1.toLowerCase().startsWith("pt") 
 				        || line.contains("mitochondrion")
 				        || line.contains("plastid")
 				        || line.contains("mitochondrial")
 				        || line.contains("chloroplast");
 				
-				isChr  = isChrNum(idCol1) || line.contains("chromosome"); // CAS557 start checking for word
+				isChr  = isChrNum(idCol1) || line.contains("chromosome"); 
 				
 				isScaf = line.contains("scaffold"); 
 				
@@ -275,7 +274,7 @@ public class ConvertEnsembl {
 				else if (isScaf) cntScaf++;
 				else cntUnk++;
 				
-				if (prefixOnly!=null) { // CAS557 new parameter
+				if (prefixOnly!=null) { 
 					if (!idCol1.startsWith(prefixOnly)) {
 						cntNoOutSeq++;
 						continue;
@@ -594,9 +593,9 @@ public class ConvertEnsembl {
 				cntNoDesc++;
 			}
 			else {
-				if (desc.contains(source)) desc = desc.substring(0, desc.lastIndexOf(source)).trim(); // CAS558 change to last
+				if (desc.contains(source)) desc = desc.substring(0, desc.lastIndexOf(source)).trim(); 
 				
-				if (desc.contains("%")) { // CAS548 add
+				if (desc.contains("%")) { 
 					for (String hex : hexMap.keySet()) {
 						if (desc.contains(hex)) desc = desc.replace(hex, hexMap.get(hex));
 					}

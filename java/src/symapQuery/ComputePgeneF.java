@@ -15,6 +15,9 @@ import util.ErrorReport;
 import backend.Utils;
 import symap.Globals;
 
+/**********************************************************
+ * Original pgenef algorithm; now replaces Multi if run with -g
+ */
 public class ComputePgeneF {
     // Group the hits based on overlap on one side or the other. 
 	// The hits have to be binned by location in order to avoid all-against-all searches.
@@ -31,7 +34,7 @@ public class ComputePgeneF {
 	
 	// Summary counts
 	private HashMap<String,Integer> proj2regions = new HashMap<String,Integer> (); 
-	private HashMap<String, String> projMap; // CAS555 add to return string 
+	private HashMap<String, String> projMap;
 	
 	// Input:
 	private QueryPanel qPanel;
@@ -73,7 +76,6 @@ public class ComputePgeneF {
 		
 		computeGroups();
 		
-		// CAS563 add filter on N
 		int n = qPanel.getClustN(), nGrpNum=1;
 		HashMap<Integer,Integer> nhitIdx2Grp = new HashMap<Integer,Integer>(); 
 		HashMap<Integer,Integer> ngrpSizes   = new HashMap<Integer,Integer>(); 
@@ -266,7 +268,7 @@ public class ComputePgeneF {
  				progress.setText("PgeneF " + rowNum + " final groups");
     	} // end for loop
     	
-    	for (String proj : proj2regions.keySet()) { // CAS555 make string output for summary
+    	for (String proj : proj2regions.keySet()) { // make string output for summary
     		String x = String.format("Regions: %,7d", proj2regions.get(proj));
     		projMap.put(proj, x);
     	}

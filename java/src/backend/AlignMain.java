@@ -24,12 +24,13 @@ import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
+import util.FileDir;
 
 /*******************************************************
  * Set up to run MUMmer for alignments for one pair of genomes
  */
 public class AlignMain {
-	public boolean mCancelled = false;
+	protected boolean mCancelled = false;
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; // 1000000
 	private static final int maxFileSize = 60000000; // 'Concat' parameter works for demo using this size
@@ -56,8 +57,7 @@ public class AlignMain {
 	private String alignParams; // Set in pair_props from DoAlignSynPair;
 	private int nAlignDone=0;
 	
-	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp, int nMaxThreads, String alignLogDirName)
-	{
+	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp, int nMaxThreads, String alignLogDirName){
 		this.plog = log; // diaLog and syLog
 		this.nMaxCPUs = nMaxThreads;
 		this.mp = mp;
@@ -141,12 +141,12 @@ public class AlignMain {
 					plog.msg("Alignments:  success " + getNumCompleted());
 					
 					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);// only delete tmp files if successful
-					if (Globals.TRACE) {// CAS575 changed from Constants.Prt_stats
+					if (Globals.TRACE) {
 						Globals.prt("Do not delete " + tmpDir);
 					}
 					else {
 						File dir = new File(tmpDir);
-						Utilities.clearAllDir(dir);
+						FileDir.clearAllDir(dir);
 						dir.delete();
 					}
 				}
@@ -176,7 +176,7 @@ public class AlignMain {
 			
 			if (bdone && nAlignDone>0) {// could by SyMAP or user complete
 				plog.msg("Warning: " + nAlignDone + " alignment files exist - using existing files");
-				plog.msg("   If not correct, remove " + resultDir + " and re-align.");
+				plog.msg("   If not correct, remove " + resultDir + " and re-align");
 				paramsRead(Utils.getDateStr(f.lastModified()));
 				return true;
 			}
@@ -210,7 +210,6 @@ public class AlignMain {
 	/*********************************************************
 	 * Create alignParams for save to pairs.param for summary
 	 * If align, write to params_used, else read it. This is not in the /align directory, but its main directory
-	 * CAS568 add; nothing else has to be changed for this
 	 */
 	private void mummerParamsWrite() {
 		try {
@@ -254,18 +253,18 @@ public class AlignMain {
 			
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
-			Utilities.checkCreateDir(resultDir, true /* bPrt */);
+			FileDir.checkCreateDir(resultDir, true /* bPrt */);
 			mummerParamsWrite(); // write here after creating the directory
 			
 			// temporary directories to put data for alignment
 			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);
-			Utilities.checkCreateDir(tmpDir, false);
+			FileDir.checkCreateDir(tmpDir, false);
 			
 			boolean isSelf = (proj1Dir.equals(proj2Dir));
 			String tmpDir1 = Constants.getNameTmpPreDir(proj1Dir,  proj2Dir, proj1Dir);
 			String tmpDir2 = (isSelf) ? tmpDir1 : Constants.getNameTmpPreDir(proj1Dir, proj2Dir, proj2Dir);
-			File fh_tDir1 = Utilities.checkCreateDir(tmpDir1, false);
-			File fh_tDir2 = Utilities.checkCreateDir(tmpDir2, false);
+			File fh_tDir1 = FileDir.checkCreateDir(tmpDir1, false);
+			File fh_tDir2 = FileDir.checkCreateDir(tmpDir2, false);
 			
 		// Preprocessing for proj1
 			if (!writePreprocSeq(fh_tDir1, mProj1,  bDoCat, isSelf, "Query")) { // concat=true if Concat not checked
@@ -299,8 +298,8 @@ public class AlignMain {
 			// files in <p1> are aligned with files in <p2>. 
 			// For self, p1=p2
 			String alignDir = resultDir + Constants.alignDir;
-			Utilities.checkCreateDir(alignDir, false);
-			File[] fs1 = fh_tDir1.listFiles();		// order, not necessary, but nice; CAS575
+			FileDir.checkCreateDir(alignDir, false);
+			File[] fs1 = fh_tDir1.listFiles();		// order, not necessary, but nice
 			Arrays.sort(fs1);	
 			File[] fs2 = fh_tDir2.listFiles();
 			Arrays.sort(fs2);	
@@ -370,8 +369,8 @@ public class AlignMain {
 			String gmprop = (geneMask) ? "Masking non-genic sequence; " : "";
 			if (geneMask) plog.msg(projName + ": " + gmprop);
 				
-			if (Utilities.dirNumFiles(dir) > 0)
-				Utilities.clearAllDir(dir); // leaves directory, just removes files
+			if (FileDir.dirNumFiles(dir) > 0)
+				FileDir.clearAllDir(dir); // leaves directory, just removes files
 		
 		// Figure out what chromosomes to group into one file.
 			Vector<Vector<Integer>> groups = new Vector<Vector<Integer>>();
@@ -466,7 +465,7 @@ public class AlignMain {
 				long fileSize = 0; // must be long so does not become negative number
 				int count=0;
 				
-				File f = Utilities.checkCreateFile(dir,fileName, "AM WritePreprocSeq");
+				File f = FileDir.checkCreateFile(dir,fileName, "AM WritePreprocSeq");
 				FileWriter fw = new FileWriter(f);
 				
 				for (int gIdx : groups.get(i)) {

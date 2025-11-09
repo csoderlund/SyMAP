@@ -19,7 +19,7 @@ import symap.mapper.HitData;
  * Display Hit Alignments; created in AlignPool; drawn from CloseUpComponent
  */
 public class HitAlignment implements Comparable<HitAlignment> { 
-	public static final String tokS=" ",     tokO=" "; // CAS548 was S and N (selected and not-selected?_
+	public static final String tokS=" ",     tokO=" "; 
 	private final       String tokpS=" ", tokpO=" ";
 	private final boolean drawLine=false;
 	
@@ -36,7 +36,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 	private Rectangle2D.Double bounds;
 	private int layer;
 	
-	public HitAlignment(HitData hd, String proj1, String proj2,
+	protected HitAlignment(HitData hd, String proj1, String proj2,
 			SeqData selectAlign, SeqData otherAlign, SeqData match,  
 			int selectStart, int selectEnd, int otherStart, int otherEnd, 
 			int fullAlignWidth, int offset, String scoreStr, String numSubHit) 
@@ -64,7 +64,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		selected = false;
 	}
 	// for reverse text alignments
-	public HitAlignment(HitAlignment ha,
+	protected HitAlignment(HitAlignment ha,
 			SeqData selectAlign, SeqData otherAlign, SeqData match,  
 			int selectStart, int selectEnd, int otherStart, int otherEnd, 
 			int fullAlignWidth, int offset, String scoreStr) 
@@ -85,22 +85,18 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		this.numSubHit = ha.numSubHit;
 		layer = 1;
 	}
-	public String getHitName() {return hitDataObj.getName();}
-	public String toString() {return toText(true, proj1, proj2);  }
-
+	
 	// for TextPopup and closeup
-	public String toText(boolean isClose, String p1, String p2) {
+	protected String toText(boolean isClose, String p1, String p2) {
 		String sSeq = selectData.toString(), nSeq = otherData.toString();
 		String mSeq = matchData.toString();
 		
-		String sCoord = SeqData.coordsStr(selectData.getStrand(), sStart, sEnd);// CAS504 format 
+		String sCoord = SeqData.coordsStr(selectData.getStrand(), sStart, sEnd);
 		String nCoord = SeqData.coordsStr(otherData.getStrand(), oStart, oEnd);
 		String hitN = hitDataObj.getName() + "." + numSubHit;
 		
 		if (isClose) {
-			int max = Math.max(p2.length(), p1.length());
-			//max = Math.max(max, p2.length()); // was max(hitN.length(), p2.length(),p1.length())
-			max += 1;
+			int max = Math.max(p2.length(), p1.length())+1;
 			String format =  "%-" + max + "s "; 
 			
 			String desc = String.format(format, hitN) + scoreStr;
@@ -109,8 +105,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 			
 			return "\n " + desc  + 
 				   "\n " + sName + sCoord + 
-				   "\n " + nName + nCoord + 
-				   "\n" +
+				   "\n " + nName + nCoord +  "\n" +
 				   "\n " + sSeq + 
 				   "\n " + mSeq + 
 				   "\n " + nSeq + " \n"; 
@@ -123,14 +118,14 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		}
 	}
 	
-	public String toTextAA(String p1, String p2) {
+	protected String toTextAA(String p1, String p2) {
 		String qd = selectData.toString(), td = otherData.toString();
 		String mk = matchData.toString();
 		
 		String qn = p1 + tokpS;
 		String tn = p2 + tokpO;
 		
-		String qc = SeqData.coordsStr(sStart, sEnd);// CAS504 format
+		String qc = SeqData.coordsStr(sStart, sEnd);
 		String tc = SeqData.coordsStr(oStart, oEnd);
 		
 		String desc = hitDataObj.getName() + "." + numSubHit;
@@ -138,7 +133,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		return desc  + "\t" + qn + qc + "   "+ tn + tc + "\t" 	+ qd + "\t" + mk + "\t" + td;
 	}
 	// for TextShowInfo
-	public int [] getCoords( ) {
+	protected int [] getCoords( ) {
 		int [] coords = new int[4];
 		coords[0]=sStart+startOffset;
 		coords[1]=sEnd;
@@ -147,10 +142,9 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		return coords;
 	}
 	/*******************************************************************/
-	public void setBounds(int startBP, double pixelStart, double bpPerPixel, double y) {
+	protected void setBounds(int startBP, double pixelStart, double bpPerPixel, double y) {
 		setBounds( getX(startBP, pixelStart, bpPerPixel), y, bpPerPixel );
 	}
-
 	private void setBounds(double x, double y, double bpPerPixel) {
 		if (bounds == null) {
 			hitLine = new ArrowLine();
@@ -159,18 +153,12 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		}
 		bounds.y = y;
 		bounds.x = x;
-		bounds.width = alignWidth / bpPerPixel; // CAS531 was (sEnd - sStart) which was non-aligned
+		bounds.width = alignWidth / bpPerPixel; 
 	
-		hitLine.setBounds(bounds, CloseUpComponent.LINE_HEIGHT, CloseUpComponent.ARROW_DIM,
-				ArrowLine.NO_ARROW); // CAS531 needs clarification pointLeft() ? ArrowLine.LEFT_ARROW : ArrowLine.RIGHT_ARROW);
+		hitLine.setBounds(bounds, CloseUpComponent.LINE_HEIGHT, CloseUpComponent.ARROW_DIM,ArrowLine.NO_ARROW);
 	}
-
-	public Rectangle2D getBounds() {
-		if (bounds == null) return new Rectangle2D.Double();
-		return bounds;
-	}
-	// CAS531 this does not add anything; bpPerPixel=1, startBP=start of graphics, pixelStart=HORZ_BORDER
-	public void paintLine (Graphics2D g2, double bpPerPixel, int startBP, int pixelStart) {
+	
+	protected void paintLine (Graphics2D g2, double bpPerPixel, int startBP, int pixelStart) {
 		if (drawLine) {
 			double x1 = getX(startBP, pixelStart, bpPerPixel);
 			double x2 = alignWidth/bpPerPixel;
@@ -184,9 +172,9 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		}
 	}
 
-	public void paintName(Graphics2D g2, FontMetrics fm, Color fontColor, double vertSpace, double bpPerPixel) {
+	protected void paintName(Graphics2D g2, FontMetrics fm, Color fontColor, double vertSpace, double bpPerPixel) {
 		String m = hitDataObj.getName().replace("Hit ", "");
-		String n = m + "." + numSubHit.substring(0, numSubHit.indexOf("/")); // CAS531 was otherName
+		String n = m + "." + numSubHit.substring(0, numSubHit.indexOf("/")); 
 		double w = alignWidth/bpPerPixel; 
 		double x = bounds.x + (w - fm.stringWidth(n)) / 2.0;
 		double y = bounds.y - vertSpace;
@@ -195,7 +183,7 @@ public class HitAlignment implements Comparable<HitAlignment> {
 		g2.drawString(n,(float)x,(float)y);
 	}
 
-	public void paint(Graphics2D g2) {
+	protected void paint(Graphics2D g2) {
 		Color c = CloseUpComponent.hitColor;
 		if (!selected) 	g2.setPaint(c);
 		else			g2.setPaint(c.brighter());	
@@ -242,33 +230,31 @@ public class HitAlignment implements Comparable<HitAlignment> {
 	private double getX(int startBP, double pixelStart, double bpPerPixel) {
 		return (getMinSelectCoord()-startBP) / bpPerPixel + pixelStart; 
 	}
-	//private boolean pointLeft() { return selectData.isPlus() != otherData.isPlus(); }
-	
 	private long getID() 				{return hitDataObj.getID(); }
-	private int getMinSelectCoord () 	{return (sStart < sEnd) ? sStart+startOffset : sEnd+startOffset; } // CAS531 add offset
+	private int getMinSelectCoord () 	{return (sStart < sEnd) ? sStart+startOffset : sEnd+startOffset; } 
 	
-	// CloseUpComponetn
-	public int getWidthAlign () 		{return alignWidth; }
-	public void setLayer (int layer) 	{this.layer = layer + 1; }
-	public int getLayer () 			 	{return this.layer; }
-	public boolean contains(Point2D p) 	{return bounds.contains(p); }
+	// CloseUpComponent
+	protected int getWidthAlign () 			{return alignWidth; }
+	protected void setLayer (int layer) 	{this.layer = layer + 1; }
+	protected int getLayer () 			 	{return this.layer; }
+	protected boolean contains(Point2D p) 	{return bounds.contains(p); }
 	
 	// CloseUpDialog
-	public void setSelected (boolean status) {this.selected = status; }
-	public int getAend()   				{return sStart + alignWidth; }
+	protected void setSelected (boolean status) {this.selected = status; }
+	protected int getAend()   				{return sStart + alignWidth; }
 	
 	// AlignPool.alignSubHitRev, CloseUpComponent.assignHitLayers, CloseUpDialog.setvView, HitAlignment.compareTo
-	public int getSstart() 				{return sStart; }
-	public int getSend()   				{return sEnd; }
+	protected int getSstart() 				{return sStart; }
+	protected int getSend()   				{return sEnd; }
 	
 	// AlignPool.alignSubHitRev
-	public int getOstart() 				{return oStart; }
-	public int getOend()   				{return oEnd; }
-	public String getSelectSeq() 		{return selectData.getSeq();}
-	public String getOtherSeq() 		{return otherData.getSeq();}
-	public char getSelectStrand() 		{return selectData.getStrand();}
-	public char getOtherStrand() 		{return otherData.getStrand();}
-	public String getSubHitName()		{return getHitName() + "." + numSubHit;}
+	protected int getOstart() 				{return oStart; }
+	protected int getOend()   				{return oEnd; }
+	protected String getSelectSeq() 		{return selectData.getSeq();}
+	protected String getOtherSeq() 			{return otherData.getSeq();}
+	protected char getSelectStrand() 		{return selectData.getStrand();}
+	protected char getOtherStrand() 		{return otherData.getStrand();}
+	protected String getSubHitName()		{return hitDataObj.getName() + "." + numSubHit;}
 	
 	public boolean equals(Object obj) {
 		return obj instanceof HitAlignment && ((HitAlignment)obj).getID() == getID();
@@ -276,8 +262,10 @@ public class HitAlignment implements Comparable<HitAlignment> {
 	public int compareTo(HitAlignment ha) {
 		return getSstart() - ha.getSend();
 	}
+	public String toString() {return toText(true, proj1, proj2);  }
+
 	/****************************************************************
-	 * Insert Icon; Arrow down, CAS533 was a separate file in util
+	 * Insert Icon; Arrow down
 	 */
 	public class InsIcon implements Icon {
 	    public static final double POINT_DOWN  = 0;

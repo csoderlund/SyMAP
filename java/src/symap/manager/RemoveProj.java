@@ -8,17 +8,17 @@ import backend.Constants;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
+import util.Popup;
+import util.FileDir;
 
 /***********************************************************
  * Methods for removing projects
- * CAS568 removed threads and progressLog; popups and stdout out probably regards state of DB/disk
- * Note: the protected methods do similar things, but the messages are tailored
  */
 public class RemoveProj {
 	final static String sp= "   ";
 	private FileWriter fw = null;
 	
-	public RemoveProj(FileWriter fw) {this.fw = fw;}
+	protected RemoveProj(FileWriter fw) {this.fw = fw;}
 	private void close() {
 		try {
 			if (fw!=null) {fw.close(); fw=null;}
@@ -31,7 +31,7 @@ public class RemoveProj {
 	protected void removeProjectDB(Mproject pj) { 
 		String msg = "Remove " + pj.getDisplayName() + " from database"; 
 		
-		if (Utilities.showConfirm2("Remove from database",msg)) {
+		if (Popup.showConfirm2("Remove from database",msg)) {
 			pj.removeProjectFromDB();
 			try {
 				fw.append("Remove project " + pj.getDisplayName() + " from database " + Utilities.getDateTime()+ "\n");
@@ -50,7 +50,7 @@ public class RemoveProj {
 		try {
 			int rc;
 			if (pj.hasExistingAlignments(false)) { // if directory exists, even if no /align
-				rc = Utilities.showConfirm3(title,msg +
+				rc = Popup.showConfirm3(title,msg +
 						"\n\nOnly: Remove alignment directories from disk" + // may want to remove alignments and not project
 						"\nAll:  Remove alignments and project directory from disk");
 				if (rc==0) {close(); return;}
@@ -61,11 +61,11 @@ public class RemoveProj {
 				if (rc!=2) {close(); return;}
 			}
 			// project directory
-			if (!Utilities.showConfirm2(title,msg + "\n\nRemove from disk:\n   " + path)) {close(); return;}
+			if (!Popup.showConfirm2(title,msg + "\n\nRemove from disk:\n   " + path)) {close(); return;}
 			
 			System.out.println("Remove project from disk: " + path);
 			File f = new File(path);
-			Utilities.deleteDir(f);
+			FileDir.deleteDir(f);
 			if (f.exists()) f.delete();// not removing topdir on Linux, so try again
 			
 			close();
@@ -79,10 +79,10 @@ public class RemoveProj {
 		try {
 			String msg = "Reload project " + pj.getDisplayName();
 			if (!pj.hasExistingAlignments(true)) { // only care if there is a /align
-				if (!Utilities.showConfirm2("Reload project",msg)) {close(); return false;}
+				if (!Popup.showConfirm2("Reload project",msg)) {close(); return false;}
 			}
 			else {
-				int rc = Utilities.showConfirm3("Reload project",msg +
+				int rc = Popup.showConfirm3("Reload project",msg +
 					"\n\nOnly: Reload project only" +
 					  "\nAll:  Reload project and remove alignments from disk");
 				if (rc==0) {close(); return false;}
@@ -105,12 +105,12 @@ public class RemoveProj {
 		String msg = "Clear pair " + p1.getDBName() + " to " + p2.getDBName();
 		int rc = 2;
 		if (mp.isPairInDB()) {
-			rc = Utilities.showConfirm3("Clear pair", msg + 
+			rc = Popup.showConfirm3("Clear pair", msg + 
 				"\n\nOnly: remove synteny from database" +
 				"\nAll: remove synteny and alignments from disk for this pair");
 		}
 		else { 										
-			if (!Utilities.showConfirm2("Clear alignments",msg 
+			if (!Popup.showConfirm2("Clear alignments",msg 
 					+ "\nRemove alignments for this pair from disk")) {close(); return;}
 		}
 		if (rc==0) {close(); return;}
@@ -119,7 +119,7 @@ public class RemoveProj {
 			if (rc==2) {
 				String path = Constants.getNameResultsDir(p1.getDBName(),  p2.getDBName());
 				msg = "Remove MUMmer files in:\n   " + path;
-				if (!Utilities.showConfirm2("Remove from disk", msg)) {
+				if (!Popup.showConfirm2("Remove from disk", msg)) {
 					System.out.println(sp + "cancel removal of " + path);
 					return;
 				}
@@ -129,7 +129,7 @@ public class RemoveProj {
 			}
 			if (mp.isPairInDB()) {
 				mp.removePairFromDB(true); // True = redo numHits; 
-				Globals.prt("Removed from database " + p1.getDBName() + " to " + p2.getDBName()); // CAS572 add
+				Globals.prt("Removed from database " + p1.getDBName() + " to " + p2.getDBName()); 
 			}
 			
 			close();
@@ -162,7 +162,7 @@ public class RemoveProj {
 				String msg = (rmTopDir) ? "Remove directory: " : "Remove MUMmer files in: ";
 				msg +=  "\n   " + Constants.seqRunDir + f.getName();
 				
-				if (!Utilities.showConfirm2("Remove from disk", msg)) {// CAS565 add confirm
+				if (!Popup.showConfirm2("Remove from disk", msg)) {
 					System.out.println(sp + "cancel removal of " + f.getName());
 					continue;
 				}
@@ -170,7 +170,7 @@ public class RemoveProj {
 					System.out.println(sp + "remove " + f.getName());
 					fw.append("Remove align directory " + f.getName()  + "   " + Utilities.getDateTime()+ "\n");
 					
-					Utilities.deleteDir(f);
+					FileDir.deleteDir(f);
 					if (f.exists()) f.delete();
 				}
 				else {
@@ -192,13 +192,13 @@ public class RemoveProj {
 	try {
 		File f1 = new File(f.getAbsoluteFile() + "/" + Constants.alignDir);
 		if (f1.exists()) {
-			Utilities.deleteDir(f1);
+			FileDir.deleteDir(f1);
 			if (f1.exists()) f1.delete();
 		}
 		else System.out.println(sp + "MUMmer files " + f.getName() + " already deleted");
 		
 		File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
-		Utilities.deleteDir(f2);
+		FileDir.deleteDir(f2);
 		if (f2.exists()) f2.delete();
 		
 		File f3 = new File(f.getAbsoluteFile() + "/" + Constants.usedFile);

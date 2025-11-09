@@ -27,7 +27,7 @@ import symap.closeup.CloseUp;
 import symapQuery.TableMainPanel;
 
 import util.ErrorReport;
-import util.Utilities;
+import util.Popup;
 
 /**
  * The DrawingPanel is the area that the maps are drawn onto. 
@@ -35,8 +35,9 @@ import util.Utilities;
  * 
  * 1. Create frame. 2. Assign trackholders. 3. Assign Sequence. 
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class DrawingPanel extends JPanel implements ColorListener, HistoryListener { 
+	private static final long serialVersionUID = 1L;
+
 	private static Color backgroundColor = Color.white;
 	
 	public double trackDistance = 100; // distance between tracks, used in TrackLayout; can be changed (was PADDING)
@@ -154,7 +155,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		if (frame2dListener != null) frame2dListener.setFrameEnabled(enabled);
 	}
 
-	public PropsDB getPropDB() 	{return propDB;} 
+	public PropsDB getPropDB() 		{return propDB;} 
 	public DBconn2 getDBC() 		{return dbc2; }		// CloseUpDialog, Sequence, TextShowSeq; 
 	protected JComponent getView() 	{return scrollPane;}
 	protected void setCloseUp(CloseUp closeup) {this.closeup = closeup;}
@@ -366,7 +367,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 	
 	///////////////////////////////////////////////////////////////	
 	public boolean amake() { // called on 1st view, or resetColors; 
-		return make(); // if fails, quit trying to display; CAS572
+		return make(); // if fails, quit trying to display
 	}	
 	public boolean smake(String msg) { // called when graphics changes: Sfilter, Sequence.mousePress, DrawingPanel.changeRegions
 		return make();
@@ -404,7 +405,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		catch (Exception exc) {ErrorReport.print(exc, "Drawing panel make: exception");} 
 		catch (OutOfMemoryError me) {
 			ErrorReport.print(me, "Drawing panel make: " +me.getCause());
-			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
+			Popup.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1);
 			frame2dListener.setFrameEnabled(false);
 			throw me;
 		}
@@ -450,7 +451,7 @@ public class DrawingPanel extends JPanel implements ColorListener, HistoryListen
 		catch (OutOfMemoryError me) {
 			System.out.println("Caught OutOfMemoryError in SyMAP::setMaps() - "+me.getCause());
 			ErrorReport.print(me, "out of memory");
-			Utilities.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
+			Popup.showErrorMessage("SyMAP is out of memory. Please restart your browser.", -1); 
 			frame2dListener.setFrameEnabled(false);
 			throw me;
 		}

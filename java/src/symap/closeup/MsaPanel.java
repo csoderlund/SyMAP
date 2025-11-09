@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 
 /**************************************
  * SyMAP query multiple alignment panel; this is the top part of AlignMainPanel, where the key table is the bottom
- * CAS563 remove the extend AlignPanelBase, merged with this, and cleanup; AA align is still here, but would need work...
  **************************************/
 public class MsaPanel extends JPanel {
 	private static final long serialVersionUID = 8622662337486159085L;
@@ -415,7 +414,7 @@ public class MsaPanel extends JPanel {
 		if (nPos < seqStarts[0] || nPos >seqStops[0]) return true;
 		return false;
 	}
-	// CAS563 use MultiAlignData.isCommonAcidSub instead of AlignmentData, which has been deleted
+	
 	private boolean getIsSubAt(String seq, int nPos)  {       // sub both strands
 		return !isDNA && seqSeqs[0].charAt(nPos) != seq.charAt(nPos)
 				&& MsaRun.isCommonAcidSub(seqSeqs[0].charAt(nPos), seq.charAt(nPos)); 
@@ -532,7 +531,7 @@ public class MsaPanel extends JPanel {
 	
 	// Attibutes for positioning
 	private double dMinPixelX = 0;		// The lowest pixel (associated base at min index) 
-	private int nMaxIndexf = 1;			// CAS563 removed nMinIndex because always zero
+	private int nMaxIndexf = 1;			
 	private double dFontMinHeight = 0;  // The minimum sized box a letter will fit in based on our font
 	private double dFontCellWidth = 0;	
 	private double dFontAscent = 0;		// The distance from the top of the write cell to the baseline

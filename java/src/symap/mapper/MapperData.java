@@ -3,6 +3,7 @@ package symap.mapper;
 /**
  * Class MapperData holds the data of a mapper which can be
  * used to recreate the same state of a Mapper - may be used for History.
+ * DrawingPanel and Mapper
  */
 public class MapperData {
 

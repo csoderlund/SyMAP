@@ -12,27 +12,17 @@ import database.DBconn2;
 import util.Cancelled;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
 
 /******************************************************
- * CAS512 added for post-processing of annotation
-v5.1.2 	Exons pseudo_annot.gene_idx and tag to map exon to gene in AnnotLoadMain (was doing here too, but removed 518)
-		Genenum was computed in AnchorsPost, then AnnotLoadMain
-v5.1.4	Gene# Replaced the result table #Gene column: it was computed per query, whereas the replacement is stored in the database. The replacement is the order number of the gene along the chromosomes, which stays constant across all queries and is shown on the Chromosome Explorer Annotation and the hover of the gene.
-v5.1.7 	Gene# Overlapping genes have been numbered with the same gene number; now they are given a suffix, e.g. Gene #1011a, Gene #1011b.
-v5.1.8 	Gene# Overlapping genes: the algorithm has been redone so that all overlapping and contained genes have the same number with suffixes a-z; and if there are more than 26 overlapping genes, then it starts over with numbers following the a-z; e.g. Gene #100a, #100z, #100a1, #100b1, ...
-		No longer support having exons in separate file.
-v5.1.9	Gene # This computes the Gene#, and was allowing a gap of 3 without calling them overlap; this has been changed to 0.
-
-AnchorsPost uses genenum for collinear computation 
-The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix from the pseudo_annot.tag 
- */
+* AnchorsPost uses genenum for collinear computation 
+* The 2D gene placement algorithm uses the pseudo_annot.genenum but not the suffix from the pseudo_annot.tag 
+*/
 
 public class AnnotLoadPost {
-	private final int MAX_GAP_FOR_OLAP=0; // CAS519 changed from 3
+	private final int MAX_GAP_FOR_OLAP=0; 
 	private ProgressDialog plog;
 	private DBconn2 dbc2;
-	private Mproject mProj;      // CAS546 was syProj
+	private Mproject mProj;      
 	
 	private HashMap <Integer, GeneData> geneMap = new HashMap <Integer, GeneData> (); 
 	private Vector <Integer> geneOrder = new Vector <Integer> ();
@@ -58,7 +48,7 @@ public class AnnotLoadPost {
 			
 			TreeMap <Integer, String> grpIdxList = mProj.getGrpIdxMap();
 			for (int idx : grpIdxList.keySet()){
-				computeGeneNum(idx, grpIdxList.get(idx)); if (!isSuccess) return isSuccess;	// CAS512 moved from SyntenyMain
+				computeGeneNum(idx, grpIdxList.get(idx)); if (!isSuccess) return isSuccess;	
 				computeTags(idx, grpIdxList.get(idx));    if (!isSuccess) return isSuccess;	
 			}
 			Globals.rclear();
@@ -119,7 +109,7 @@ public class AnnotLoadPost {
 			}
 			assignSuf(genenum, numList); // last one
 			
-			for (GeneData gd : geneMap.values()) gd.tag = gd.genenum + "." + gd.suffix; // CAS543 "Gene #" + gd.genenum + gd.suffix; 
+			for (GeneData gd : geneMap.values()) gd.tag = gd.genenum + "." + gd.suffix;  
 			
 			Globals.rprt(grpName + " " + genenum + " genes");
 			totGeneNum+= genenum;
@@ -182,7 +172,6 @@ public class AnnotLoadPost {
 				}
 			}
 			rs.close();
-			// CAS560 remove an old -z flag
 			if (Cancelled.isCancelled()) {isSuccess=false;return;}
 				
 		// WRITE write to db; names parsed in Annotation.java getLongDescription
@@ -196,7 +185,7 @@ public class AnnotLoadPost {
 				
 				// Annotation.java and Sequence.java depends on this format! Gene #dn (d, dbp(
 				String elen = String.format(" %,d", gene.exonLen);
-				String tag = gene.tag + " (" + gene.exonIdx.size() + elen + ")"; // CAS543 " (" + gene.exonIdx.size() + elen + "bp)"
+				String tag = gene.tag + " (" + gene.exonIdx.size() + elen + ")"; 
 
 				// update gene
 				ps.setInt(1, gene.genenum);
@@ -209,7 +198,7 @@ public class AnnotLoadPost {
 				int nExon=1;
 				for (int i=0; i<gene.exonIdx.size(); i++) {
 					int exonIdx = gene.exonIdx.get(i);
-					tag = ""+nExon;							// CAS543 was "Exon #" + nExon;
+					tag = ""+nExon;							
 					nExon++;
 					
 				    ps.setInt(1, 0);

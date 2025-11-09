@@ -17,7 +17,7 @@ import symap.frame.HelpBar;
 import util.ErrorReport;
 
 /*********************************************************
- * Draw circle view. CAS521 remove lots of dead code
+ * Draw circle view. 
  * Draws on screen size 825x900; set in ManagerFrame and ChrExpFrame after creation
  */
 public class CircFrame extends JFrame {
@@ -64,37 +64,33 @@ public class CircFrame extends JFrame {
 			if (lastParams!=null) controls.setLastParams((int)lastParams[0],
 					lastParams[1]==1, lastParams[2]==1, lastParams[3]==1);
 			
-			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); // CAS552 moved init() here
+			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
 			addWindowListener(new WindowAdapter() {
 				public void windowClosed(WindowEvent e) {
 					clear();
 				}
 			});
 			
-			// Dimensions are set in calling program; i.e. ManagerFrame (CAS552 changed d) and ChrExpFrame
+			// Dimensions are set in calling program; i.e. ManagerFrame  and ChrExpFrame
 			setLayout( new BorderLayout() );
 			add( controls, BorderLayout.NORTH );
 			add( circPanel.getScrollPane(),BorderLayout.CENTER );
 			if (bIsWG) add( helpPanel, BorderLayout.SOUTH );
 			
-			Dimension dim = getToolkit().getScreenSize(); // CAS534
+			Dimension dim = getToolkit().getScreenSize(); 
 			setLocation(dim.width / 4,dim.height / 4);
-			
-			//setLocationRelativeTo(null); //puts to side of MF
 		}
 		catch(Exception e){ ErrorReport.print(e, "Creating circle panel");}
 	}	
 	
-	public void clear() {// CAS541 for new DBconn2, added circPanel clear
+	public void clear() {
 		tdbc2.close();
 		circPanel.clear();
 	} 
-	public double [] getLastParams() { return circPanel.getLastParams();} // CAS553 use last settings
+	public double [] getLastParams() { return circPanel.getLastParams();} // use last settings; called from frame.ChrExpFrame
 	
 	/**************************************************************
 	 * XXX Color control
-	 * CAS521 moved from CirPanel to get it out of the way of the display logic
-	 * CAS553 made if call-able from CircPanel and added 2nd set, scale, sort, shuffle
 	 */
 	private double scale = 1.0;
 	private Vector<Integer> mColors = new Vector <Integer> ();

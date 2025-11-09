@@ -36,6 +36,8 @@ import database.Version;
 import util.Cancelled;
 import util.ErrorReport;
 import util.Utilities;
+import util.FileDir;
+import util.Popup;
 import util.Jhtml;
 import util.Jcomp;
 import util.LinkLabel;
@@ -69,9 +71,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private static final String HTML = "/html/ProjMgrInstruct.html";
 	
-	private final Color cellColor = new Color(0,170,0,85); // new Color(85,200,100,85);pale green; for selected box 
-	//private final Color textColor = new Color(0,0,170,255); // deep blue;  change to green CAS575
-	private final Color textColor = new Color(0,100,0,255); // dark green for "Select a Pair..." text Color(0,102,000,255)
+	private final Color cellColor = new Color(0,170,0,85);  // pale green; for selected box 
+	private final Color textColor = new Color(0,100,0,255); // dark green for "Select a Pair..." 
 	
 	// If changed - don't make one a substring of another!!
 	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
@@ -152,7 +153,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (dbc2 == null) { // 1st init mysql
 				dbc2 = makeDBconn();
 				
-				new Version(dbc2).check(); // check was made separate; CAS575
+				new Version(dbc2).check(); // check was made separate
 				
 				if (bSQL) dbc2.checkVariables(true); 
 			}
@@ -166,8 +167,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (!inReadOnlyMode) { 											// read remaining projects from disk
 				String strDataPath = Constants.dataDir;
 				
-				if (Utilities.dirExists(strDataPath)) { 					
-					Utilities.checkCreateDir(Constants.logDir,true/*bPrt*/);
+				if (FileDir.dirExists(strDataPath)) { 					
+					FileDir.checkCreateDir(Constants.logDir,true/*bPrt*/);
 					
 					loadProjectsFromDisk(strDataPath,  Constants.seqType); 	// must come after loadFromDB
 				}
@@ -202,7 +203,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	/*******************************************************************/
 	public void refreshMenu() {
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		initProjects(false); // recreates project lists on every refresh; easier then modifing projVec etc
 		
@@ -212,7 +213,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		else
 			splitPane.setRightComponent( instructionsPanel );
 		
-		Utilities.setCursorBusy(this, false);
+		Jcomp.setCursorBusy(this, false);
 	}
 
 	/** Left Panel  of all projects **************************************************************/
@@ -449,66 +450,66 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			text2.setAlignmentX(Component.LEFT_ALIGNMENT);
 			text2.setForeground(textColor); 
 		
-			btnSelAlign = Jcomp.createButtonNC("Selected Pair", "Run Align/Clust/Synteny on the selected pair"); 
+			btnSelAlign = Jcomp.createButtonGray("Selected Pair", "Run Align/Clust/Synteny on the selected pair"); 
 			btnSelAlign.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					alignSelectedPair();
 				}
 			} );
-			btnSelClearPair = Jcomp.createButtonNC("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
+			btnSelClearPair = Jcomp.createButtonGray("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
 			btnSelClearPair.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					btnSelClearPair.setEnabled(false);// (wheel does not stay)
-					Utilities.setCursorBusy(getInstance(), true); 
+					Jcomp.setCursorBusy(getInstance(), true); 
 					
 					removeClearPair();
 					
-					Utilities.setCursorBusy(getInstance(), false); 
+					Jcomp.setCursorBusy(getInstance(), false); 
 					btnSelClearPair.setEnabled(true);
 				}
 			} );	
 			
-			btnAllPairs = Jcomp.createButtonNC("All Pairs", "Run Align/Clust/Synteny on all pairs"); 
+			btnAllPairs = Jcomp.createButtonGray("All Pairs", "Run Align/Clust/Synteny on all pairs"); 
 			btnAllPairs.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					alignAllPairs();
 				}
 			});	
-			btnSelDotplot = Jcomp.createButtonNC("Dot Plot", "Display Dot Plot for selected pair");
+			btnSelDotplot = Jcomp.createButtonGray("Dot Plot", "Display Dot Plot for selected pair");
 			btnSelDotplot.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showDotplot();
 				}
 			});
-			btnSelBlockView = Jcomp.createButtonNC("Blocks", "Display Blocks View for selected pair"); 
+			btnSelBlockView = Jcomp.createButtonGray("Blocks", "Display Blocks View for selected pair"); 
 			btnSelBlockView.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showBlockView();
 				}
 			});
-			btnSelCircView = Jcomp.createButtonNC("Circle", "Display Circle View for selected pair"); 
+			btnSelCircView = Jcomp.createButtonGray("Circle", "Display Circle View for selected pair"); 
 			btnSelCircView.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showCircleView();
 				}
 			});
 			
-			btnSelReports = Jcomp.createButtonNC("Reports...", "Select 'Summary' or 'Block Report'");
+			btnSelReports = Jcomp.createButtonGray("Reports...", "Select 'Summary' or 'Block Report'");
 			showReports();
 			
-			btnAllChrExp = Jcomp.createButtonNC("Chromosome Explorer", "Select chromosomes from all pairs for the 2D display"); 
+			btnAllChrExp = Jcomp.createButtonGray("Chromosome Explorer", "Select chromosomes from all pairs for the 2D display"); 
 			btnAllChrExp.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showChrExp();
 				}
 			});
-			btnAllDotplot = Jcomp.createButtonNC("Dot Plot", "Display Dot Plot for all pairs"); 
+			btnAllDotplot = Jcomp.createButtonGray("Dot Plot", "Display Dot Plot for all pairs"); 
 			btnAllDotplot.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
 					showAllDotPlot();
 				}
 			});
-			btnAllQueryView = Jcomp.createButtonNC("Queries", "Query all pairs");
+			btnAllQueryView = Jcomp.createButtonGray("Queries", "Query all pairs");
 			btnAllQueryView.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					showQuery();
@@ -534,7 +535,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			JLabel lbl1 = new JLabel("Align & Synteny"); 
 			JLabel lbl2 = new JLabel("Selected Pair  ");  
-			JLabel lbl3 = new JLabel("All " + TBL_DONE + " Pairs"); // CAS575
+			JLabel lbl3 = new JLabel("All " + TBL_DONE + " Pairs"); 
 			JLabel lbl4 = new JLabel("               "); 
 			Dimension d = lbl1.getPreferredSize();
 			lbl2.setPreferredSize(d); lbl3.setPreferredSize(d); lbl4.setPreferredSize(d);
@@ -569,7 +570,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			else {	
 				mainPanel.add( Jcomp.createHorizPanel( new Component[] { tableScroll, new JLabel(" ")}, sp, ex ));			
 			}
-			btnPairParams = Jcomp.createButtonNC("Parameters", "Set parameters for Align&Synteny");
+			btnPairParams = Jcomp.createButtonGray("Parameters", "Set parameters for Align&Synteny");
 			btnPairParams.addActionListener(showPairProps);
 			
 			if (!inReadOnlyMode) {
@@ -716,12 +717,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		int numProj =  pairTable.getRowCount();
 		btnAllPairs.setEnabled(numProj>1 && isAlignAllPairs());
 		
-		int numDone = getNumCompleted(false); // do not ignore self; 
+		int numDone = getNumCompleted(false); 	// !ignore isSelf; 
 		btnAllChrExp.setEnabled(numDone>0);
-		btnAllQueryView.setEnabled(numDone>0); // CAS575 allow for self
+		btnAllQueryView.setEnabled(numDone>0); 	// allow for isSelf
 		
-		numDone = getNumCompleted(true); // ignore selfs
-		btnAllDotplot.setEnabled(numDone>0);   // this does not work for self-align
+		numDone = getNumCompleted(true); 		// ignore isSelfs
+		btnAllDotplot.setEnabled(numDone>0);    // this does not work for isSelf
 		
 		if ((projects!=null)) {
 			int nRow = pairTable.getSelectedRow();
@@ -837,7 +838,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					Mproject ex = projObjMap.get(mp.strDisplayName);
 					msg += "\n   Existing project with display name: Directory " + ex.getDBName(); 
 					
-					Utilities.showWarningMessage(msg); 
+					Popup.showWarningMessage(msg); 
 				}
 			}
 		}
@@ -904,7 +905,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_DONE)));
 	}
-	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame CAS575
+	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame 
 	public Mpair getMpair(int idx1, int idx2) { // projIdx
 		String key = idx1 + ":" + idx2;
 		if (pairObjMap.containsKey(key)) return pairObjMap.get(key);
@@ -923,7 +924,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			nRow = pairTable.getSelectedRow(); // Row is >=0 Col is >=1
 			nCol = pairTable.getSelectedColumn();
 	
-			// If none selected, automatically select one if 1 or 2 rows; CAS575 select if 1 row 
+			// If none selected, automatically select one if 1 or 2 rows; works for isSelf 
 			if (nRow < 0 || nCol <= 0) {
 				int n = pairTable.getRowCount(); 
 				if (n!=1 && n!=2) return null;
@@ -1080,7 +1081,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	/***********************************************************************/
 	private void showChrExp() { 
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		try {
 			ChrExpInit symapExp = new ChrExpInit(frameTitle + " - ChrExp", dbc2, selectedProjVec);
 			
@@ -1088,18 +1089,18 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception err) {ErrorReport.print(err, "Show SyMAP graphical window");}
 		finally {
-			Utilities.setCursorBusy(this, false);
+			Jcomp.setCursorBusy(this, false);
 		}
 	}
 	/*********************************************************************/
 	private void showQuery() {
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		try { 
 			Vector <Mproject> pVec = new Vector <Mproject> ();
 			for (Mproject p : selectedProjVec) 
-				if (p.hasSynteny()) pVec.add(p); // CAS575; changed from isLoaded
+				if (p.hasSynteny()) pVec.add(p); 
 			
-			boolean isSelf = (selectedProjVec.size()==1 && pVec.size()==1);// self synteny,  added CAS575
+			boolean isSelf = (selectedProjVec.size()==1 && pVec.size()==1);// self synteny
 			if (isSelf) pVec.add(pVec.get(0));					// this makes the following loop work for counts
 			
 			boolean useAlgo2=true; // used for new "EveryPlus"
@@ -1121,7 +1122,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				}
 			}
 			
-			if (isSelf)  { // create second Mproject; CAS575
+			if (isSelf)  { // create second Mproject
 				Mproject p = synVec.get(0);
 				Mproject cp = p.copyForQuery();
 				if (cp==null) return;
@@ -1141,12 +1142,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Show Query");}
 		finally {
-			Utilities.setCursorBusy(this, false);
+			Jcomp.setCursorBusy(this, false);
 		}
 	}
 	/*****************************************************************/
 	private void showDotplot() { 
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
 		if (p==null) return;
@@ -1159,11 +1160,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		frame.setSize( new Dimension(MIN_WIDTH, MIN_HEIGHT) );
 		frame.setVisible(true);
 		
-		Utilities.setCursorBusy(this, false);
+		Jcomp.setCursorBusy(this, false);
 	}
 	/*****************************************************************/
 	private void showBlockView()  { 
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
 		if (p==null) return;
@@ -1179,7 +1180,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		catch (Exception e) {ErrorReport.die(e, "Show block view");
 		}
 		
-		Utilities.setCursorBusy(this, false);
+		Jcomp.setCursorBusy(this, false);
 	}
 	/*****************************************************************/
 	private void showReports() {
@@ -1217,7 +1218,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
         });
 	}
 	private void showSummary(){
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
 		if (p==null) return;
@@ -1230,10 +1231,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				
 		new SumFrame(frameTitle + " - Summary", dbc2, mp, inReadOnlyMode); // dialog made visible in SumFrame; 
 		
-		Utilities.setCursorBusy(this, false);		
+		Jcomp.setCursorBusy(this, false);		
 	}
 	private void showReport(){ 
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
 		if (p==null) return;
@@ -1246,11 +1247,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				
 		new Report(dbc2, p, mp); // dialog made visible in Report; 
 		
-		Utilities.setCursorBusy(this, false);		
+		Jcomp.setCursorBusy(this, false);		
 	}
 	/*****************************************************************/
 	private void showCircleView() { 
-		Utilities.setCursorBusy(this, true);
+		Jcomp.setCursorBusy(this, true);
 		
 		Mproject[] p = getSelectedPair();
 		if (p==null) return;
@@ -1265,7 +1266,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
 		frame.setVisible(true);
 		
-		Utilities.setCursorBusy(this, false);
+		Jcomp.setCursorBusy(this, false);
 	}
 	/*****************************************************************/
 	private void showAllDotPlot()	{
@@ -1401,7 +1402,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
 			String info = theProject.loadProjectForView();
 			
-			Utilities.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
+			Popup.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
 		}
 	};
 	private void removeClearPair() {
@@ -1456,7 +1457,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	try {
 		String msg = "Reload annotation " + mProj.getDisplayName();
 		
-		if (!Utilities.showConfirm2("Reload annotation", msg +							
+		if (!Popup.showConfirm2("Reload annotation", msg +							
 			"\n\nYou will need to re-run the synteny computations for this project," +  
 			"\nany existing alignment files will be used.")) return; 					
 		
@@ -1528,7 +1529,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		msg += "\nCPUs " + maxCPUs + ";  ";						
 		if (Constants.VERBOSE) msg += "Verbose on;  "; else msg += "Verbose off;  ";
 		
-		if (!Utilities.showConfirm2("All Pairs", msg)) return; 
+		if (!Popup.showConfirm2("All Pairs", msg)) return; 
 		
 	/*-------- Alignment, Clustering, Synteny -----------------*/
 		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
@@ -1554,18 +1555,18 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mp==null) return; 			 // shouldn't happen
 		
 		String title;
-		boolean isSelf = selProjs[0].getIdx()==selProjs[1].getIdx();
-		if (isSelf) title = selProjs[0].getDisplayName() + " to itself";
-		else        title = selProjs[0].getDisplayName() + " and " + selProjs[1].getDisplayName(); // Pair
-		
-		if (isSelf && mp.isAlgo2(Mpair.FILE)) { 
-			util.Utilities.showInfoMessage(title, "Please select Algorithm 1 from Parameters");
-			return;
+		if (selProjs[0].getIdx()==selProjs[1].getIdx()) { // isSelf
+			title = selProjs[0].getDisplayName() + " to itself";
+			if (mp.isAlgo2(Mpair.FILE)) { 				 // is disabled, but could get changed in file
+				Popup.showInfoMessage(title, "Please select Algorithm 1 from Parameters");
+				return;
+			}
 		}
+		else  title = selProjs[0].getDisplayName() + " and " + selProjs[1].getDisplayName(); // Pair
 		
 		// Special cases
 		if (mp.bPseudo)  { 
-			if (!Utilities.showConfirm2(title, "Pseudo only")) return;
+			if (!Popup.showConfirm2(title, "Pseudo only")) return;
 			
 			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, true); // align has been done
 			new Version(dbc2).updateReplaceProp();
@@ -1581,12 +1582,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mp.bSynOnly)     msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
 		else if (bAlignDone) msg = "Clust&Synteny"+ "\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
 		else    			 msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
-
+		
 		if (!bAlignDone) msg += "CPUs " + nCPU + ";  ";						
 		
-		if (Constants.VERBOSE) msg += "Verbose on"; else msg += "Verbose off";
+		if (Constants.VERBOSE) msg += "Verbose On"; else msg += "Verbose Off";
 		
-		if (!Utilities.showConfirm2(title, msg)) return;
+		if (!Popup.showConfirm2(title, msg)) return;
 		
 	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
 		
@@ -1598,7 +1599,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private int getCPUs() {
 		try { maxCPU = Integer.parseInt(txtCPUs.getText()); }
 		catch (Exception e) {
-			Utilities.showErrorMessage("Please enter a valid value for number of CPUs to use.");
+			Popup.showErrorMessage("Please enter a valid value for number of CPUs to use.");
 			return -1;
 		}
 		if (maxCPU <= 0) maxCPU = 1;
@@ -1608,9 +1609,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
 	private boolean alignCheckProjDir() { 
 		try {
-			Utilities.checkCreateDir(DATA_PATH, true);
-			Utilities.checkCreateDir(Constants.seqRunDir,  true);
-			Utilities.checkCreateDir(Constants.seqDataDir, true); 
+			FileDir.checkCreateDir(DATA_PATH, true);
+			FileDir.checkCreateDir(Constants.seqRunDir,  true);
+			FileDir.checkCreateDir(Constants.seqDataDir, true); 
 			
 			return true;
 		}
@@ -1629,7 +1630,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 			if (ordDir.exists()) {
 				String msg = "Directory exists: " + ordDirName  + "\nIt will be over-written.\n"; 
-				if (!Utilities.showContinue("Order against", msg)) return false;
+				if (!Popup.showContinue("Order against", msg)) return false;
 			}	
 			return true;
 		}
@@ -1639,11 +1640,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/**************************************************************************/
     private void addNewProjectFromUI(String name) {
     	if (projNameMap.containsKey(name)) {
-    		Utilities.showWarningMessage("Project '" + name + "' exists");
+    		Popup.showWarningMessage("Project '" + name + "' exists");
     		return;
     	}
     	String dir = DATA_PATH + Constants.seqType + "/" + name;
-		Utilities.checkCreateDir(dir, true);
+		FileDir.checkCreateDir(dir, true);
     }
    
 	/**************************************************************************/
@@ -1828,17 +1829,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		private boolean isAddValid() { 
 			String name = txtName.getText().trim();
 			if (name.length()==0) {
-				Utilities.showErrorMessage("Must enter a name");
+				Popup.showErrorMessage("Must enter a name");
 				return false;
 			}
 			if (!name.matches("^[\\w]+$")) {
-				Utilities.showErrorMessage("Name must be characters, numbers or underscore");
+				Popup.showErrorMessage("Name must be characters, numbers or underscore");
 				return false;
 			}
 			String strDataPath = DATA_PATH;
-			Utilities.checkCreateDir(strDataPath, true);
-			Utilities.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
-			Utilities.checkCreateDir(Constants.seqRunDir,  true);
+			FileDir.checkCreateDir(strDataPath, true);
+			FileDir.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
+			FileDir.checkCreateDir(Constants.seqRunDir,  true);
 			
 			return true;
 		}

@@ -36,13 +36,11 @@ import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import util.Jcomp;
 import util.Jhtml;
+import util.Popup;
 import util.Utilities;
 
 /**
  * Sequence filter
- * CAS570 add showG2xNCheck and update G2xN options; CAS571 add GeneNum with hit and Annot with Hit options
- * CAS572 add Block# 1st; CAS573 NC for Linux and change Gene# to have checkMark instead of "clear"
- * CAS575 some changes to how the Gene and Annotation are arranged
  */
 public class Sfilter extends JDialog {	
 	private static final long serialVersionUID = 1L;
@@ -141,42 +139,42 @@ public class Sfilter extends JDialog {
 		int textLen=7;
 		
 	// Checkbox options; takes effect immediately; but lost on cancel (must use save)
-		rulerCheck 		= Jcomp.createCheckNC("Ruler", "Show ruler along side of track"); 
+		rulerCheck 		= Jcomp.createCheckBoxGray("Ruler", "Show ruler along side of track"); 
 						rulerCheck.addChangeListener(listener);
-		gapCheck 		= Jcomp.createCheckNC("Gaps", "Show gaps sympbol along sequence"); 
+		gapCheck 		= Jcomp.createCheckBoxGray("Gaps", "Show gaps sympbol along sequence"); 
 						gapCheck.addChangeListener(listener);		
-		centromereCheck = Jcomp.createCheckNC("Centromere", "Show centromere symbol along sequence"); 
+		centromereCheck = Jcomp.createCheckBoxGray("Centromere", "Show centromere symbol along sequence"); 
 						centromereCheck.addChangeListener(listener);	
-		geneCheck 		= Jcomp.createCheckNC("Genes", "Show gene graphics along sequence"); 
+		geneCheck 		= Jcomp.createCheckBoxGray("Genes", "Show gene graphics along sequence"); 
 						geneCheck.addChangeListener(listener);    
-		hitLenCheck 	= Jcomp.createCheckNC("Hit length", "Show hit length line along the inner boundary of the sequence");			
+		hitLenCheck 	= Jcomp.createCheckBoxGray("Hit length", "Show hit length line along the inner boundary of the sequence");			
 						hitLenCheck.addChangeListener(listener);		
-		scoreLineCheck 	= Jcomp.createCheckNC("Hit %Id bar", "Placement of Hit length is proportional to the %Identity");			
+		scoreLineCheck 	= Jcomp.createCheckBoxGray("Hit %Id bar", "Placement of Hit length is proportional to the %Identity");			
 						scoreLineCheck.addChangeListener(listener);
-		geneHighCheck 	= Jcomp.createCheckNC("Gene popup", "Highlight the gene when its Gene Popup is displayed"); 
+		geneHighCheck 	= Jcomp.createCheckBoxGray("Gene popup", "Highlight the gene when its Gene Popup is displayed"); 
 						geneHighCheck.addChangeListener(listener);
-		annotCheck 		= Jcomp.createCheckNC("Annotation", "Show the annotation in a grey box on the side of the track (zoom in to show)");	
+		annotCheck 		= Jcomp.createCheckBoxGray("Annotation", "Show the annotation in a grey box on the side of the track (zoom in to show)");	
 						annotCheck.addChangeListener(listener);
-		geneNumCheck 	= Jcomp.createCheckNC("Gene#", "Show the Gene# beside the gene");    
+		geneNumCheck 	= Jcomp.createCheckBoxGray("Gene#", "Show the Gene# beside the gene");    
 						geneNumCheck.addChangeListener(listener);  
-		annotHitCheck 	= Jcomp.createCheckNC("Annotation", "Only show the annotation if the gene has a hit (zoom in to show)");	
+		annotHitCheck 	= Jcomp.createCheckBoxGray("Annotation", "Only show the annotation if the gene has a hit (zoom in to show)");	
 						annotHitCheck.addChangeListener(listener);
-		geneNumHitCheck = Jcomp.createCheckNC("Gene#", "Only show the Gene# if it has a hit");   
+		geneNumHitCheck = Jcomp.createCheckBoxGray("Gene#", "Only show the Gene# if it has a hit");   
 						geneNumHitCheck.addChangeListener(listener); 
-		geneLineCheck 	= Jcomp.createCheckNC("Delimiter", "Seperate gene graphics with a horizonal bar");	
+		geneLineCheck 	= Jcomp.createCheckBoxGray("Delimiter", "Seperate gene graphics with a horizonal bar");	
 						geneLineCheck.addChangeListener(listener);
 				
-		block1stTextRadio = Jcomp.createRadioNC("Block# 1st", "Show the Block# beside the 1st hit of block");	
+		block1stTextRadio = Jcomp.createRadioGray("Block# 1st", "Show the Block# beside the 1st hit of block");	
 						block1stTextRadio.addChangeListener(listener);	
-		blockTextRadio 	= Jcomp.createRadioNC("Block# All", "Show the Block# beside the each hit");	
+		blockTextRadio 	= Jcomp.createRadioGray("Block# All", "Show the Block# beside the each hit");	
 						blockTextRadio.addChangeListener(listener);	
-		csetTextRadio 	= Jcomp.createRadioNC("Collinear#", "Show the Collinear# beside the hit");	
+		csetTextRadio 	= Jcomp.createRadioGray("Collinear#", "Show the Collinear# beside the hit");	
 						csetTextRadio.addChangeListener(listener);
-		scoreTextRadio 	= Jcomp.createRadioNC("Hit %Id", "Show the %Identity beside the hit");	
+		scoreTextRadio 	= Jcomp.createRadioGray("Hit %Id", "Show the %Identity beside the hit");	
 						scoreTextRadio.addChangeListener(listener);
-		hitNumTextRadio = Jcomp.createRadioNC("Hit#", "Show the Hit# beside the hit");			
+		hitNumTextRadio = Jcomp.createRadioGray("Hit#", "Show the Hit# beside the hit");			
 						hitNumTextRadio.addChangeListener(listener);
-		noTextRadio 	= Jcomp.createRadioNC("None", "Do not show any text beside the hit");	
+		noTextRadio 	= Jcomp.createRadioGray("None", "Do not show any text beside the hit");	
 						noTextRadio.addChangeListener(listener);
 		ButtonGroup geneBG = new ButtonGroup();
 		geneBG.add(block1stTextRadio);geneBG.add(blockTextRadio);
@@ -184,27 +182,27 @@ public class Sfilter extends JDialog {
 		geneBG.add(csetTextRadio); geneBG.add(noTextRadio); 	
 			
 		// Ref only when 3-track
-		highG2x2Radio = Jcomp.createRadioNC("g2x2", "Conserved gene: both L and R have g2 hit"); 
+		highG2x2Radio = Jcomp.createRadioGray("g2x2", "Conserved gene: both L and R have g2 hit"); 
 						highG2x2Radio.addChangeListener(listener);
-		highG2x1Radio = Jcomp.createRadioNC("g2x1", "Not conserved: only L or R has g1 hit");    
+		highG2x1Radio = Jcomp.createRadioGray("g2x1", "Not conserved: only L or R has g1 hit");    
 						highG2x1Radio.addChangeListener(listener);
-		highG2x0Radio = Jcomp.createRadioNC("None", "Ignore"); 		      
+		highG2x0Radio = Jcomp.createRadioGray("None", "Ignore"); 		      
 						highG2x0Radio.addChangeListener(listener);
 		ButtonGroup hitBG = new ButtonGroup();
 		hitBG.add(highG2x2Radio); hitBG.add(highG2x1Radio); hitBG.add(highG2x0Radio); 
-		showG2xNCheck = Jcomp.createCheckNC("High only", "Only show the highlighted hit-wires");		
+		showG2xNCheck = Jcomp.createCheckBoxGray("High only", "Only show the highlighted hit-wires");		
 		showG2xNCheck.addChangeListener(listener);
 		
 	// Coordinate options; takes effect on Apply; only specific listeners
-		flippedCheck = Jcomp.createCheckNC("Flip sequence    ", "Flip sequence so coordinates are Descending order"); 	
+		flippedCheck = Jcomp.createCheckBoxGray("Flip sequence    ", "Flip sequence so coordinates are Descending order"); 	
 		
-		fullButton = Jcomp.createMonoButtonSmNC("Full", "Set start/end to full sequence");
+		fullButton = Jcomp.createMonoButtonSmGray("Full", "Set start/end to full sequence");
 		fullButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setFullSequence();
 			}
 		});
-		JPanel flipPanel = Jcomp.createGrayRowPanel(); 
+		JPanel flipPanel = Jcomp.createRowPanelGray(); 
 		flipPanel.add(flippedCheck); flipPanel.add(fullButton);
 			
 		startText = new JTextField("0.0",textLen); 
@@ -220,15 +218,15 @@ public class Sfilter extends JDialog {
 		endCombo.setSelectedItem(DEFAULT_UNIT_KB);
 		endCombo.setMaximumSize(endCombo.getPreferredSize()); endCombo.setMinimumSize(endCombo.getPreferredSize());
 		
-		JPanel coordPanel = Jcomp.createGrayRowPanel(); 
-		startLabel = Jcomp.createLabelNC(b2+"Start", "Enter start coordinate for display"); startLabel.setEnabled(true);
+		JPanel coordPanel = Jcomp.createRowPanelGray(); 
+		startLabel = Jcomp.createLabelGray(b2+"Start", "Enter start coordinate for display"); startLabel.setEnabled(true);
 		coordPanel.add(startLabel); coordPanel.add(startText); coordPanel.add(startCombo);
-		endLabel = Jcomp.createLabelNC(b2+"End", "Enter end coordinate for display"); endLabel.setEnabled(true);
+		endLabel = Jcomp.createLabelGray(b2+"End", "Enter end coordinate for display"); endLabel.setEnabled(true);
 		coordPanel.add(endLabel);   coordPanel.add(endText); coordPanel.add(endCombo);
 		
-		JPanel genePanel = Jcomp.createGrayRowPanel(); 
+		JPanel genePanel = Jcomp.createRowPanelGray(); 
 		genePanel.add(new JLabel(b2+ "or   "));
-		geneNCheck =  Jcomp.createCheckNC("Gene#", "Enter Gene# to search on"); 
+		geneNCheck =  Jcomp.createCheckBoxGray("Gene#", "Enter Gene# to search on"); 
 		geneNCheck.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				geneNText.setEnabled(geneNCheck.isSelected());
@@ -237,18 +235,18 @@ public class Sfilter extends JDialog {
 		});
 		geneNText =   new JTextField("",7); 
 		geneNText.setMaximumSize(geneNText.getPreferredSize()); geneNText.setMinimumSize(geneNText.getPreferredSize());
-		JLabel reg = Jcomp.createMonoLabelNC(" (region " + Globals.MAX_2D_DISPLAY_K + ")",
+		JLabel reg = Jcomp.createMonoLabelGray(" (region " + Globals.MAX_2D_DISPLAY_K + ")",
 				"Center on gene; gene take precedences over start/end"); 
 		genePanel.add(geneNCheck); genePanel.add(geneNText); genePanel.add(reg); 
 		
 	// Lower button panel
-		okButton = Jcomp.createButtonNC("Save","Apply coordinate changes, save all changes, and close");
+		okButton = Jcomp.createButtonGray("Save","Apply coordinate changes, save all changes, and close");
 		okButton.addActionListener(listener);
 
-		cancelButton = Jcomp.createButtonNC("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createButtonGray("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = Jcomp.createButtonNC("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createButtonGray("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 		
 		helpButton = Jhtml.createHelpIconUserSm(Jhtml.seqfilter);
@@ -284,7 +282,7 @@ public class Sfilter extends JDialog {
 		int rem = GridBagConstraints.REMAINDER;
 		 
 		// section 1
-		JLabel retain = Jcomp.createMonoLabelNC(" Save to retain changes", "Does not create new history event");
+		JLabel retain = Jcomp.createMonoLabelGray(" Save to retain changes", "Does not create new history event");
 		addToGrid(contentPane, gbl, gbc, retain, rem);
 		
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Highlight"), 1); 
@@ -296,7 +294,7 @@ public class Sfilter extends JDialog {
 		addToGrid(contentPane, gbl, gbc, annotCheck, rem); 
 		
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"  "), 1); 
-		addToGrid(contentPane, gbl, gbc, new JLabel(" Has hit"), 1); // CAS575 move this before others; Changed some labels.
+		addToGrid(contentPane, gbl, gbc, new JLabel(" Has hit"), 1); 
 		addToGrid(contentPane, gbl, gbc, geneNumHitCheck,  1); 
 		addToGrid(contentPane, gbl, gbc, annotHitCheck, rem); 
 		
@@ -324,11 +322,9 @@ public class Sfilter extends JDialog {
 		addToGrid(contentPane, gbl, gbc, hitLenCheck, 1);
 		addToGrid(contentPane, gbl, gbc, scoreLineCheck, rem);
 		
-		
-		
 		// section 4
 		addToGrid(contentPane, gbl, gbc, new JSeparator(),rem);
-		JLabel apply = Jcomp.createMonoLabelNC(" Save to apply changes", "Create new history event");
+		JLabel apply = Jcomp.createMonoLabelGray(" Save to apply changes", "Create new history event");
 		addToGrid(contentPane, gbl, gbc, apply, rem);
 		
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Coordinates   "), 1);
@@ -339,7 +335,7 @@ public class Sfilter extends JDialog {
 		if (seqObj.isRef() && seqObj.is3Track() && numGenes>0) { 
 			addToGrid(contentPane, gbl, gbc, new JSeparator(),rem);
 			
-			JLabel refOnly = Jcomp.createMonoLabelNC(" Reference only", "Does not create new history event");
+			JLabel refOnly = Jcomp.createMonoLabelGray(" Reference only", "Does not create new history event");
 			addToGrid(contentPane, gbl, gbc, refOnly, rem);
 			
 			addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Highlight"), 1); 
@@ -581,7 +577,7 @@ public class Sfilter extends JDialog {
 		
 		if (geneNCheck.isSelected()) {
 			if (!Utilities.isValidGenenum(gStr)) {
-				Utilities.showWarning(gStr + " is not a valid Gene#");
+				Popup.showWarning(gStr + " is not a valid Gene#");
 				return false;
 			}
 			if (!gStr.equals(savGeneNStr)) { 
@@ -589,7 +585,7 @@ public class Sfilter extends JDialog {
 				
 				int mid = seqObj.getSelectGeneCoord(gStr); // highlight if found
 				if (mid<0) {
-					Utilities.showWarning(gStr + " is not found on this chromosome."); 
+					Popup.showWarning(gStr + " is not found on this chromosome."); 
 					return false;
 				}
 				bGeneNCheck = true;
@@ -734,7 +730,7 @@ public class Sfilter extends JDialog {
 		try {
 			tstart = Double.parseDouble(sStr); 
 		} catch (NumberFormatException nfe) {
-			Utilities.showErrorMessage(sStr + " is not a valid start point");
+			Popup.showErrorMessage(sStr + " is not a valid start point");
 			return false;
 		}
 		tstart = tstart * BpNumber.getUnitConversion(BpNumber.ABS_UNITS[sInd]);
@@ -742,13 +738,13 @@ public class Sfilter extends JDialog {
 		try {
 			tend = Double.parseDouble(eStr);
 		} catch (NumberFormatException nfe) {
-			Utilities.showErrorMessage(eStr + " is not a valid end point");
+			Popup.showErrorMessage(eStr + " is not a valid end point");
 			return false;
 		}
 		tend = tend * BpNumber.getUnitConversion(BpNumber.ABS_UNITS[eInd]);
 		
 		if (tstart>=tend) {
-			Utilities.showErrorMessage("The start (" + tstart + ") must be less than end (" + tend + ")");
+			Popup.showErrorMessage("The start (" + tstart + ") must be less than end (" + tend + ")");
 			return false;
 		}
 		seqObj.setStart((int)tstart);
@@ -1108,7 +1104,6 @@ public class Sfilter extends JDialog {
 				+  "\n  Highlights, etc are often lost when view is changed."
 				;
 		}
-		util.Utilities.displayInfoMonoSpace(this, "Sequence Filter Quick Help", 
-				msg, false);
+		Popup.displayInfoMonoSpace(this, "Sequence Filter Quick Help", msg, false);
 	}
 }

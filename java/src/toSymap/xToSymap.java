@@ -3,7 +3,7 @@ package toSymap;
 /**************************************************
  * toSymap is part of the symap package, but has its own main.
  * The files ConvertNCBI and ConvertEnsembl can be extracted, modified and run stand-alone
- * PrtLengths and CheckDir use backend.Constants and backend.Util
+ * The other files use backend.Constants and backend.Util, so can not be directly extracted
  */
 public class xToSymap {
 	protected static boolean isDebug=false;

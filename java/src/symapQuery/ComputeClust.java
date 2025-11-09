@@ -36,7 +36,7 @@ public class ComputeClust {
  	private int clNum=0;
  	private boolean bSuccess=true;
  	
-	public ComputeClust(
+	protected ComputeClust(
 			Vector <DBdata> rowsFromDB, 		// in/out
 			QueryPanel lQueryPanel,JTextField progress,
 			HashMap<Integer,Integer> hitIdx2Grp, HashMap<Integer,Integer> grpSizes, // output structures
@@ -72,11 +72,11 @@ public class ComputeClust {
 	try {
 		int rowNum=0;
 		for (DBdata dd : inRows) {
-			if (rowNum++ % Q.INC ==0) { // CAS564 checked stopped
-				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // CAS564 uses Stopped
+			if (rowNum++ % Q.INC ==0) { 
+				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // uses Stopped
 				loadStatus.setText("Cluster " + rowNum + " rows...");
 			}
-			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue; // pseudo_genes have annotIdx; CAS565 
+			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue; // pseudo_genes have annotIdx
 			if (filterRow(dd)) continue;
 			
 			Cluster clObj0 = gnClMap.containsKey(dd.annotIdx[0]) ?  gnClMap.get(dd.annotIdx[0]) : null;

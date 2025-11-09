@@ -27,11 +27,11 @@ public class RWdb {
 	/***************************************************** 
 	 * Load hits for chromosome pair 
 	 * ***************************************************/
-	protected Vector <SyHit> loadHitsForGrpPair(int grpIdx1, int grpIdx2, boolean isGrpSelf, String orient) {
+	protected Vector <SyHit> loadHitsForGrpPair(int grpIdx1, int grpIdx2, String orient) {
 	try {
 		Vector<SyHit> hits = new Vector<SyHit>();
 		
-      	String st = "SELECT h.idx, h.hitnum, h.start1, h.end1, h.start2, h.end2, h.pctid, h.runnum" + 
+      	String st = "SELECT h.idx, h.hitnum, h.start1, h.end1, h.start2, h.end2, h.pctid, h.runnum, h.gene_overlap" + 
             " FROM pseudo_hits as h " +  
             " WHERE h.proj1_idx=" + mProj1Idx  + " AND h.proj2_idx=" +  mProj2Idx +
             " AND h.grp1_idx=" + grpIdx1 + " AND h.grp2_idx=" + grpIdx2 ;
@@ -39,7 +39,7 @@ public class RWdb {
       	if (orient.equals(orientSame))      st += " AND (h.strand = '+/+' or h.strand = '-/-')";
       	else if (orient.equals(orientDiff)) st += " AND (h.strand = '+/-' or h.strand = '-/+')";
       	
-      	if (isGrpSelf) st += " AND h.start1 > h.start2 "; // DIR_SELF (old <) these have refIdx=0; refIdx>0 is used to mirror blocks
+      	if (grpIdx1==grpIdx2) st += " AND h.start1 > h.start2 "; // DIR_SELF (old <) these have refIdx=0; refIdx>0 is used to mirror blocks
   	
 		ResultSet rs = tdbc2.executeQuery(st);
 		while (rs.next()) {
@@ -53,15 +53,9 @@ public class RWdb {
 			int end2 = rs.getInt(i++);
 			int pctid = rs.getInt(i++);
 			int runnum = rs.getInt(i++);
+			int genes = rs.getInt(i++);
 			
-			// CAS575 not needed; Ignore diagonal hits for self-alignments; This doesn't really work though because tandem gene families create many near-diagonal hits. 
-			/*if (isGrpSelf) {
-				int pos1 = (start1 + end1)/2; int pos2 = (start2 + end2)/2;
-				if (pos1 <= pos2) continue; // find only upper triangle blocks, and reflect them later.
-				if (Utils.intervalsOverlap(start1, end1, start2, end2, 0)) continue;
-			}*/	
-			
-			hits.add(new SyHit(start1, end1, start2, end2,id, pctid, runnum, hitnum));
+			hits.add(new SyHit(start1, end1, start2, end2,id, pctid, runnum, hitnum, genes));
 		}
 		rs.close();
 
@@ -72,7 +66,7 @@ public class RWdb {
 	
 	/*************************************************************
 	* Save blocks to DB
-	* if bSwap is true, enter the synmetric block fo self-synteny; CAS575 add bMirror
+	* if bSwap is true, enter the synmetric block fo self-synteny
 	 *************************************************************/
 	protected void saveBlocksToDB(Vector<SyBlock> blocks, boolean bMirror)  {
 	try {
@@ -141,7 +135,8 @@ public class RWdb {
 					if (ht.mIdx>0) {
 						int s = ht.mIdx;
 						ht.mIdx = tdbc2.executeInteger("select idx from pseudo_hits where refidx=" + ht.mIdx);
-						if (ht.mIdx<=0 && SyntenyMain.bTrace) Globals.prt(String.format("%6d no refidx (%d) %s", s, ht.mIdx, b));
+						if (ht.mIdx<=0 && SyntenyMain.bTrace) 
+							Globals.prt(String.format("%6d no refidx: %s   ", s, ht));
 					}
 				}
 			}
@@ -194,9 +189,4 @@ public class RWdb {
 	}
 	
 	 /** CAS575 replace with above: symmetrizeBlocks() {} Self-synteny Add the mirror reflected blocks for self alignments **/ 
-	
-	/******************************************************************
-	 * Write blocks and anchors to file; this is deleted since it is easy to get the same thing from query and report.
-	 * CAS575 removed again since self-synteny query works; protected void writeResultsToFile(ProgressDialog mLog, String resultDir)  {
-	 */
 }

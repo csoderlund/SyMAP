@@ -29,14 +29,10 @@ import symapQuery.QueryFrame;
 import symapQuery.TableMainPanel;
 import util.ErrorReport;
 import util.Jcomp;
-import util.Utilities;
 /**************************************
- * For Symap Query: align selected set using muscle or mafft (CAS563 add MAFFT)
+ * For Symap Query: align selected set using muscle or mafft 
  * Called from SyMAPQueryFrame; calls methods to build alignments and displays
  * MsaPanel is the actual align panel and MsaRun runs the alignment
- * 
- * CAS521: pass in shortName instead of computing here. pass in lines for the legend (lower table)
- * CAS563: rearrange, cleanup, was AlignmentViewPanel; add split pane
  */
 public class MsaMainPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;
@@ -172,7 +168,7 @@ public class MsaMainPanel extends JPanel {
 	private void createMsaPanel() {
 		msaPanel = new MsaPanel(msaData);
 		
-		msaScroll = new JScrollPane();	// CAS563 add scroll
+		msaScroll = new JScrollPane();	
 		msaScroll.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				handleClickAlign(e);
@@ -185,7 +181,7 @@ public class MsaMainPanel extends JPanel {
 	private void createLowerPanel() {
 		lowerPanel = new TablePanel(); 
 		
-		lowerScroll = new JScrollPane();	// CAS563 add scroll
+		lowerScroll = new JScrollPane();	
 		lowerScroll.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				handleClickAlign(e);
@@ -200,7 +196,7 @@ public class MsaMainPanel extends JPanel {
 		add(Box.createVerticalStrut(10));
 		
 		JPanel theRow = Jcomp.createRowPanel();
-		cmbRatio = new JComboBox <String> (); // CAS563 this was a class, but not necessary since index+1=ratio
+		cmbRatio = new JComboBox <String> (); 
 		cmbRatio.addItem("Zoom 1:1");
 		cmbRatio.addItem("Zoom 1:2");
 		cmbRatio.addItem("Zoom 1:3");
@@ -238,7 +234,7 @@ public class MsaMainPanel extends JPanel {
 		
 		btnExport = Jcomp.createButton("Export", "Export consensus and aligned sequences");
 		btnExport.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) { // CAS563 change to file chooser; was just input popup
+			public void actionPerformed(ActionEvent arg0) { 
 				if (msaPanel == null) return;
 				
 				String fname = "consensus.fa";
@@ -292,7 +288,7 @@ public class MsaMainPanel extends JPanel {
 	 * Status at top of page while alignment is running
 	 */
 	private void createProgress() {
-		progressField = new JTextField(130); // CAS563 was 100
+		progressField = new JTextField(130); 
 		progressField.setEditable(false);
 		progressField.setMaximumSize(progressField.getPreferredSize());
 		progressField.setBackground(Color.WHITE);
@@ -322,14 +318,14 @@ public class MsaMainPanel extends JPanel {
 		if (theThread==null) return;
 		
 		if (bDone) {
-			if (!Utilities.showConfirm2("Stop MSA", "MSA complete. Stop displaying results?")) return;
+			if (!util.Popup.showConfirm2("Stop MSA", "MSA complete. Stop displaying results?")) return;
 		}
 		
 		tablePanel.setMsaButton(true); // unfreeze button
 		
 		queryFrame.removeResult(this); // remove from left side
 		
-		Utilities.showInfoMessage("Stop MSA", // writes to terminal
+		util.Popup.showInfoMessage("Stop MSA", // writes to terminal
 				"You must stop MAFFT (distbfast) or MUSCLE (muscle) manually; "
 				+ "\n   see the online documentation for help. ");
 		
@@ -341,7 +337,7 @@ public class MsaMainPanel extends JPanel {
 	}
 	
 	/***********************************************
-	 * Draws the table of hit information beneath alignment; CAS moved from its own LegendPanel
+	 * Draws the table of hit information beneath alignment; 
 	 */
 	private class TablePanel extends JPanel {
 		private static final long serialVersionUID = -5292053168212278988L;

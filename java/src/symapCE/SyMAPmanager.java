@@ -10,23 +10,21 @@ import symap.Ext;
 import symap.Globals;
 import symap.manager.ManagerFrame;
 import util.ErrorReport;
-import util.Utilities;
 
 /*********************************************
- * Called by symap and viewSymap scripts
- * ManagerFrame displays interface, SyMAPFrame calls showExplorer
+ * Called by symap and viewSymap scripts; print help; set options; starts ManagerFrame 
  */
 
 public class SyMAPmanager extends ManagerFrame {
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String args[])  {	
-		printVersion(); // CAS575 put first so seen in help
+		printVersion(); 
 		if (equalOption(args, "-h") || equalOption(args, "-help") || equalOption(args, "--h")) {
 			prtParams(args); // see ManagerFrame for all variable stuff
 			System.exit(0);
 		}
-		if (equalOption(args, "-hh")) {// CAS575 added for me
+		if (equalOption(args, "-hh")) {// for me
 			prtHiddenParams(args);
 			System.exit(0);
 		}
@@ -37,7 +35,7 @@ public class SyMAPmanager extends ManagerFrame {
 		frame.setVisible(true);
 	}
 	
-	SyMAPmanager(String args[]) {
+	private SyMAPmanager(String args[]) {
 		super(); // Creates ManagerFrame; 
 	}
 
@@ -50,7 +48,7 @@ public class SyMAPmanager extends ManagerFrame {
 	/******************************************************************
 	 * Command line parameters
 	 */
-	public static void prtParams(String args[]) {
+	private static void prtParams(String args[]) {
 		// Do not start new parameters with -c or -p; see startsWith below vs equals
 		if (equalOption(args, "-r")) System.out.println("Usage:  ./viewSymap [options]");
 		else 						 System.out.println("Usage:  ./symap [options]");
@@ -71,7 +69,7 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
 		System.out.println("  -h        : show help to terminal and exit");
 	}
-	public static void prtHiddenParams(String args[]) {
+	private static void prtHiddenParams(String args[]) {
 		System.out.println("Developer only special flags ");
 		System.out.println("  -ii  Extra info on 2d popups, Queries ");
 		System.out.println("  -tt  Trace output, and query zTest files ");
@@ -125,25 +123,25 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.bRedoSum = true;
 		}
 		// A&S
-		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output; CAS561 new option
+		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output
 			Constants.VERBOSE = true;		
 			System.out.println("-v A&S verbose output");
 		}
-		if (equalOption(args, "-mum")) { // CAS559 add (remove obsolete -oo for old ordering of groups)
+		if (equalOption(args, "-mum")) { 
 			System.out.println("-mum  Do not remove any mummer result files");
 			Constants.MUM_NO_RM = true;
 		}
-		if (equalOption(args, "-wsp")) { // CAS548
+		if (equalOption(args, "-wsp")) {
 			System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
 			Constants.WRONG_STRAND_PRT = true;
 		}
 		
-		// CAS565 not shown on -h
-		if (equalOption(args, "-acs")) { // CAS556 July24; leave for possible updates
+		// not shown on -h or -hh; leave for possible updates
+		if (equalOption(args, "-acs")) { 
 			System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
 			Constants.CoSET_ONLY = true;
 		}
-		if (equalOption(args, "-sg")) { // CAS540
+		if (equalOption(args, "-sg")) { 
 			System.out.println("-sg  Split genes (Algo1)");
 			Group.bSplitGene= true;
 		}
@@ -167,7 +165,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.DBDEBUG = true;
 		}
 		
-		// Synteny: experimental synteny tests - not shown in -h help; 
+		// Synteny: experimental synteny tests; only shown in -hh 
 		if (equalOption(args, "-bt")) {  
 			System.out.println("-bt Synteny trace");
 			backend.synteny.SyntenyMain.bTrace = true;
@@ -208,7 +206,7 @@ public class SyMAPmanager extends ManagerFrame {
 	try {
 		String paramsfile = Globals.MAIN_PARAMS;
 		
-		if (Utilities.fileExists(paramsfile)) System.out.println("Configuration file " + paramsfile);
+		if (util.FileDir.fileExists(paramsfile)) System.out.println("Configuration file " + paramsfile);
 		else ErrorReport.die("Configuration file not available: " + paramsfile);		
 		
 		PropertiesReader dbProps  = new PropertiesReader(new File(paramsfile));

@@ -6,8 +6,8 @@ import javax.swing.BoxLayout;
 import java.awt.GridLayout;
 import java.util.Vector;
 
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 class ColorTab extends JPanel implements Comparable<ColorTab> {
+	private static final long serialVersionUID = 1L;
 	private Vector<ColorVariable> cvVec;
 	private int nRows=3;
 	private int order;
@@ -37,7 +37,7 @@ class ColorTab extends JPanel implements Comparable<ColorTab> {
 		
 		setLayout(new GridLayout(1, nRows));
 		
-		// CAS520 add order - this assumes the order# are correctly entered in colors.properties 1-size
+		// this assumes the order# are correctly entered in colors.properties 1-size
 		ColorVariable [] orderComps = new ColorVariable [nCells];
 		for (int i=0; i<nCells; i++) {
 			int j = cvVec.get(i).getOrder();

@@ -6,39 +6,39 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 
 import util.ErrorReport;
-import util.Utilities;
+import util.FileDir;
 
 /*************************************************************
  * This reads/writes from user.dir/.symap_saved_props
  *   ColorDialog.setColors() getProp; setCookie() setProp and deleteProp; name=SyMapColors
  *   symapQuery.FieldData setColumnDefaults(), saveColumnDefaults(); name=SyMapColumns1 and name=SyMapColumns2
- *   util.SizedJFrame and SyMAPframe, name=SyMAPDisplayPosition
+ *   SyMAPframe, name=SyMAPDisplayPosition
  * 
- * util.PropertiesReader reads from /properties
- * 
- * CAS521 this was a stupid interface with 3 basically useless files i/f to it. Reduced to one simple file.
+ * PropertiesReader reads from /properties
  */
 public class PersistentProps {
 	private Properties props;
     private File file;
     private String name;
     
-    public static final  String PERSISTENT_PROPS_FILE = symap.Globals.PERSISTENT_PROPS_FILE; // CAS553 access Globals
+    public static final  String PERSISTENT_PROPS_FILE = symap.Globals.PERSISTENT_PROPS_FILE; 
 	private static final String PP_HEADER = "SyMAP Saved Properties. Do not modify.";
     
-	public PersistentProps(Properties props, File file, String name) {
+	public PersistentProps() {
+		file = FileDir.getFile(PERSISTENT_PROPS_FILE,true);
+		props = new Properties();
+		readProps(props,file);
+	}
+	
+    public PersistentProps copy(String name) {
+    	return new PersistentProps(props, file, name);
+    };
+    private PersistentProps(Properties props, File file, String name) { 
 		this.file = file;
 		this.props = props;
 		this.name = name;
 	}
-	public PersistentProps() {
-		file = Utilities.getFile(PERSISTENT_PROPS_FILE,true);
-		props = new Properties();
-		readProps(props,file);
-	}
-    public PersistentProps copy(String name) {
-    	return new PersistentProps(props, file, name);
-    };
+    
     public boolean equals(Object obj) {
 		if (obj instanceof PersistentProps) {
 		    PersistentProps ch = (PersistentProps)obj;
@@ -62,14 +62,12 @@ public class PersistentProps {
 		    writeProps(props,file);
 		}
     }
-
     public void deleteProp() {
 		synchronized (props) {
 		    props.remove(name);
 		    writeProps(props,file);
 		}
     }
-
     private synchronized static void readProps(Properties props, File file) {
 		try {
 		    if (file.isFile())
@@ -79,7 +77,6 @@ public class PersistentProps {
 			ErrorReport.print(e, "Reading " + PERSISTENT_PROPS_FILE);
 		}
     }
-
     private synchronized static void writeProps(Properties props, File file) {
 		try {
 		    props.store(new FileOutputStream(file),PP_HEADER);

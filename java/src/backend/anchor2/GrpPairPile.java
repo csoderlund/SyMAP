@@ -153,7 +153,7 @@ public class GrpPairPile {
 			
 			int tn=0;
 			for (HitPair hpr : pile.hprList) {
-				if (hpr.flag==Arg.PILE || Arg.isGoodPileHit(hpr)) continue;		 // CAS560 add check for already in pile
+				if (hpr.flag==Arg.PILE || Arg.isGoodPileHit(hpr)) continue;
 				
 				if (hpr.xMaxCov<thresh || tn>=Arg.topN) {
 					hpr.flag = Arg.PILE;

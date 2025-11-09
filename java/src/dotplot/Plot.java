@@ -19,15 +19,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import util.Utilities;
 import symap.frame.HelpListener;
 import symap.frame.HelpBar;
 
 /**
  * Draws the dotplot
  **/
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
 public class Plot extends JPanel implements HelpListener {
+	private static final long serialVersionUID = 1L;
 	private final int X = Data.X, Y = Data.Y;
 	private final double pctidLow = 30.0; // values don't seem to be lower than this, so use a constant
 	private Data data;
@@ -42,7 +41,7 @@ public class Plot extends JPanel implements HelpListener {
 	private int cntHitsTot, cnt0GeneTot, cnt1GeneTot, cnt2GeneTot;
 	private String lastInfoMsg="";
 	private boolean is2D=false;
-	protected boolean bPlusMinusScroll=false; // if +/- used, scroll to selected block in Tile view; CAS573
+	protected boolean bPlusMinusScroll=false; // if +/- used, scroll to selected block in Tile view
 
 	protected Plot(Data data, HelpBar hb, boolean is2D) {
 		super(null);
@@ -260,9 +259,7 @@ public class Plot extends JPanel implements HelpListener {
 		int x2 = x + (int)((hx + s)  *  xPixelBP),	y2 = y + (int)((hy + as) *  yPixelBP);
 	
 		if (!isBlock && isMix) {
-			g.drawLine(x1,y1,x2,y2); // the oval is always kind of big, so this line is a dot; CAS573
-			//g.drawOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); // x, y, width, height
-			//g.fillOval((x1+x2)/2, (y1+y2)/2, sizeNB, sizeNB); 
+			g.drawLine(x1,y1,x2,y2);  
 			return;
 		}
 		if (bLen) {
@@ -331,9 +328,7 @@ public class Plot extends JPanel implements HelpListener {
 			int y2 = (int)((hits[i].getY() + Math.abs(s)) * yPixelBP) + MARGIN;
 			
 			if (!hits[i].isBlock() && isMix) {
-				g.drawLine(x1,y1,x2,y2); // Dot is a dot; CAS573
-				//g.drawOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
-				//g.fillOval((x1+x2)/2, (y1+y2)/2, dotSizeNB, dotSizeNB); 
+				g.drawLine(x1,y1,x2,y2);  
 				continue;
 			}
 			int sz = dotSizeB;
@@ -409,7 +404,7 @@ public class Plot extends JPanel implements HelpListener {
 			g.drawRect(	Math.min(sX1,sX2), Math.min(sY1,sY2), 
 						Math.max(sX1,sX2)-Math.min(sX1,sX2), Math.max(sY1,sY2)-Math.min(sY1,sY2));
 		}
-		if (bPlusMinusScroll) { // Keep highlighted rectangle in view; CAS753
+		if (bPlusMinusScroll) { // Keep highlighted rectangle in view
 			bPlusMinusScroll=false;
 			
 			if (r2c!=null) {
@@ -463,7 +458,7 @@ public class Plot extends JPanel implements HelpListener {
 	}
 	
 	// Info
-	protected String prtCntsInfo() { // CAS571 was part of prtCntsS
+	protected String prtCntsInfo() { 
 		boolean p=false;
 		String b = String.format("Block Hits %s  Annotated: Both %s  One %s  None %s   ", 
 				pStr(cntHitBlk, cntHitsTot,p),  pStr(cnt2GeneBlk, cntHitBlk,p), 
@@ -481,7 +476,7 @@ public class Plot extends JPanel implements HelpListener {
 	protected String prtCntsS() { 
 		String  w=">> ", x, b, nb, msg, fn="";
 		if (data.isTileView()) {
-			if (data.isSelf) { // CAS575 add isSelf
+			if (data.isSelf) {
 				w += data.getProject(X).getDisplayName() + " self-synteny " + data.getCurrentGrp(X).getFullName() + " " +  data.getCurrentGrp(Y).getFullName();
 				if (data.getCurrentGrp(X).getFullName().equals(data.getCurrentGrp(Y).getFullName()))
 					fn =  "\nStats cover both sides of diagonal";
@@ -647,7 +642,7 @@ public class Plot extends JPanel implements HelpListener {
 			long bpX = (long)((x-MARGIN)/xPixelBP);
 			long bpY = (long)((y-MARGIN)/yPixelBP);
 			
-			Utilities.setCursorBusy(Plot.this, true);  
+			util.Jcomp.setCursorBusy(Plot.this, true);  
 			
 			if (data.isTileView()) { // 2d-view 
 				data.selectBlock(bpX, bpY);	// If in a block, will set it as selected
@@ -656,7 +651,7 @@ public class Plot extends JPanel implements HelpListener {
 			else if (x >= MARGIN && x <= MARGIN+dim.width && y >= MARGIN && y <= MARGIN+dim.height) {
 				if (data.selectTile(bpX, bpY)) repaint(); 
 			}
-			Utilities.setCursorBusy(Plot.this, false); 
+			util.Jcomp.setCursorBusy(Plot.this, false); 
 		}
 		
 		public void mouseReleased(MouseEvent arg0) {
@@ -690,7 +685,6 @@ public class Plot extends JPanel implements HelpListener {
 	}
 	/****************************************************************/
 	// dotplot.properties was removed and hardcoded here
-	
 	private static final Color FAR_BACKGROUND = 	Color.white;
 	private static final Color BACKGROUND =		 	Color.white;
 	private static final Color BACKGROUND_BORDER = 	Color.black;

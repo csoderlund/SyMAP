@@ -24,7 +24,7 @@ import backend.Constants;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
-import util.Utilities;
+import util.Popup;
 
 /******************************************************
  * Interface to run convertNCBI, convertEnsembl, and getLengths
@@ -96,7 +96,7 @@ public class ToFrame extends JDialog implements WindowListener {
 			public void actionPerformed(ActionEvent arg0) {	// XXX
 				String dir = txtDir.getText().trim();
 				if (dir.equals(rootDir) || dir.isEmpty()) {
-					Utilities.showInfoMessage("Project", "Please select a project directory");
+					Popup.showInfoMessage("Project", "Please select a project directory");
 					setDisable();
 					return;
 				}
@@ -222,7 +222,7 @@ public class ToFrame extends JDialog implements WindowListener {
 			public void actionPerformed(ActionEvent arg0) { // XXX
 				String dir = txtDir.getText().trim();
 				if (dir.equals(rootDir) || dir.isEmpty()) {
-					Utilities.showInfoMessage("Project", "Please select a project directory");
+					Popup.showInfoMessage("Project", "Please select a project directory");
 					return;
 				}
 				new Lengths(dir);
@@ -235,7 +235,7 @@ public class ToFrame extends JDialog implements WindowListener {
 			public void actionPerformed(ActionEvent arg0) { // XXX
 				String dir = txtDir.getText().trim();
 				if (dir.equals(rootDir) || dir.isEmpty()) {
-					Utilities.showInfoMessage("Project", "Please select a project directory");
+					Popup.showInfoMessage("Project", "Please select a project directory");
 					return;
 				}
 				new Split(dir);
@@ -252,7 +252,7 @@ public class ToFrame extends JDialog implements WindowListener {
 		});
 		row.add(btnExit);		row.add(Box.createHorizontalStrut(30));
 		
-		JButton help1 = Jcomp.createIconButton("/images/info.png", "Quick Help"); // not used yet
+		JButton help1 = Jcomp.createBorderIconButton("/images/info.png", "Quick Help"); // not used yet
 		help1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				quickHelp();
@@ -271,7 +271,7 @@ public class ToFrame extends JDialog implements WindowListener {
 	private void convert() {
 		String dir = txtDir.getText().trim();
 		if (dir.equals(rootDir) || dir.isEmpty()) {
-			Utilities.showInfoMessage("Project", "Please select a project directory");
+			Popup.showInfoMessage("Project", "Please select a project directory");
 			return;
 		}
 		Vector <String> args = new Vector <String> ();
@@ -283,19 +283,19 @@ public class ToFrame extends JDialog implements WindowListener {
 			if (g.contains(",")) g = g.replace(",", "");
 			gapLen = Integer.parseInt(g);
 			if (gapLen<100) {
-				Utilities.showInfoMessage("Gap size", "Gap size must at least be 100, i.e. " + g +" is too small. Using 100.");
+				Popup.showInfoMessage("Gap size", "Gap size must at least be 100, i.e. " + g +" is too small. Using 100.");
 				g = "100";
 				gapLen=100;
 				return;
 			}
 		}
 		catch (Exception e) {
-			Utilities.showInfoMessage("Gap size", "Gap size must be an integer.");
+			Popup.showInfoMessage("Gap size", "Gap size must be an integer.");
 			return;
 		}
 		
 		if (chkOnlyPrefix.isSelected() && txtPrefix.getText().trim().isEmpty()) {
-			Utilities.showInfoMessage("Only prefix", "When 'Only prefix' is checked, a prefix must be entered.");
+			Popup.showInfoMessage("Only prefix", "When 'Only prefix' is checked, a prefix must be entered.");
 			return;
 		}
 		String prefix = (chkOnlyPrefix.isSelected()) ? txtPrefix.getText().trim() : null;
@@ -314,7 +314,7 @@ public class ToFrame extends JDialog implements WindowListener {
 		}	
 		else {
 			if (chkEonlyNum.isSelected() && prefix!=null) {
-				Utilities.showInfoMessage("Only options", "Select either 'Only #, X, Y, I' or 'Only prefix', not both.");
+				Popup.showInfoMessage("Only options", "Select either 'Only #, X, Y, I' or 'Only prefix', not both.");
 				return;
 			}
 			String [] s = args.toArray(new String [args.size()]);
@@ -355,7 +355,7 @@ public class ToFrame extends JDialog implements WindowListener {
 	/***************************************************/
 	private void quickHelp() {
 		String msg="";
-		util.Utilities.displayInfoMonoSpace(this, "Quick Help", msg, false);
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	
 	private void radDisable() {

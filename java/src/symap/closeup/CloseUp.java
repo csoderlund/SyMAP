@@ -11,9 +11,6 @@ import util.ErrorReport;
 
 /*******************************************************
  * created in symap.SyMAP at startup
- * CAS531 major rewrite of all closeup files
- * CAS531 it use to just have different subhits next to each other where gaps were so it
- * would correspond to sequence coordinates - now the gaps are there, so the coords will be a little off
  */
 public class CloseUp  {
 	private DrawingPanel dp;
@@ -32,7 +29,7 @@ public class CloseUp  {
 	try {
 		if (dp != null) dp.setFrameEnabled(false);
 	
-		CloseUpDialog cuDialog = new CloseUpDialog(this, hitList, seqObj,start,end, isQuery, otherChr, numShow); // CAS531 changed from HitDialogInterface
+		CloseUpDialog cuDialog = new CloseUpDialog(this, hitList, seqObj,start,end, isQuery, otherChr, numShow); 
 	
 		if (dp != null) dp.setFrameEnabled(true);
 		if (cuDialog != null && cdh != null) cdh.addListener(cuDialog);

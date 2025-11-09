@@ -101,7 +101,7 @@ public class TableSort extends JTable implements ListSelectionListener {
         	else if (cl == Long.class) {
         		compLbl.setText(addCommas(compLbl.getText()));
         	}
-        	if (compLbl.getText().contains("/")) { // For hit sign; cannot change earlier because MSA needs actual signs; CAS572
+        	if (compLbl.getText().contains("/")) { // For hit sign; cannot change earlier because MSA needs actual signs
         		String txt = compLbl.getText();
         		if (txt.equals("-/-") || txt.equals("+/+")) compLbl.setText("==");
         		else if (txt.equals("-/+") || txt.equals("+/-")) compLbl.setText("!=");

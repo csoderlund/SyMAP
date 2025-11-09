@@ -10,7 +10,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 /****************************************************************
- * Hit line and Ruler; CAS533 was a separate file in util
+ * Hit line and Ruler; 
  */
 public class ArrowLine implements Shape {
 	protected static final int NO_ARROW    = 0, LEFT_ARROW  = 1, RIGHT_ARROW = 2, BOTH_ARROWS = 3;
@@ -126,7 +126,7 @@ public class ArrowLine implements Shape {
 
 	public boolean intersects(Rectangle2D r) {return poly.intersects(r);}
 
-	private class DoublePolygon extends Polygon {//CAS533 was static
+	private class DoublePolygon extends Polygon {
 		public DoublePolygon() {super();}
 		public void addPoint(double x, double y) {
 			super.addPoint((int)Math.round(x),(int)Math.round(y));

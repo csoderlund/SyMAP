@@ -16,7 +16,6 @@ import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
 
 /**************************************************************
  * AnchorMain:
@@ -28,7 +27,7 @@ import util.Utilities;
  */
 public class AnchorMain {
 	public boolean doAlgo1=false;
-	private boolean isSelf=false;  // CAS575 add
+	private boolean isSelf=false;  
 	
 	// variables may be accessed directly by AnchorMain1 or AnchorMain2
 	public DBconn2 dbc2;
@@ -58,7 +57,7 @@ public class AnchorMain {
 			else plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);
 			
 			String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
-			if ( !Utilities.pathExists(resultDir) ) {
+			if (!util.FileDir.pathExists(resultDir)) {
 				plog.msg("Cannot find pair directory " + resultDir);
 				ErrorCount.inc();
 				return false;
@@ -102,7 +101,7 @@ public class AnchorMain {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Run load anchors"); return false;}		
 	}
-	public void interrupt() {bInterrupt = true;	}
+	protected void interrupt() {bInterrupt = true;	}
 	
 	/***************************************************************
 	 * Assign hitnum, with them ordered by start1 ASC, len DESC
@@ -128,7 +127,7 @@ public class AnchorMain {
 				HashMap <Integer, Integer> hitNumMap = new HashMap <Integer, Integer> ();
 				int hitcnt=1;
 				ResultSet rs = dbc2.executeQuery("select idx, (end1-start1) as len from pseudo_hits "
-						+ " where grp1_idx= " + g1 + " and grp2_idx=" + g2  + " and refidx=0"  // CAS575 add refidx for isSelf
+						+ " where grp1_idx= " + g1 + " and grp2_idx=" + g2  + " and refidx=0"  // refidx for isSelf
 						+ " order by start1 ASC, len DESC");
 				
 				while (rs.next()) {
@@ -164,9 +163,9 @@ public class AnchorMain {
 	}
 	/********************************************************************
 	 * Count number of hits per gene; these include all pairwise projects
-	 * CAS575 this includes self, but self hits get counted for both sides of the diagonal
+	 * This includes isSelf, but self hits get counted for both sides of the diagonal
 	 */
-	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB; add bPrt CAS575 so does not show on remove
+	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB
 		if (bPrt) Globals.rprt("Compute and save gene numHits"); 
 		
 		TreeMap <Integer, String> idxList1 = mp.mProj1.getGrpIdxMap();
@@ -191,7 +190,7 @@ public class AnchorMain {
 					+ "from pseudo_annot           as pa "
 					+ "join pseudo_hits_annot      as pha   on pha.annot_idx  = pa.idx "
 					+ "join pseudo_hits			   as ph	on pha.hit_idx    = ph.idx "
-					+ "where pa.type='gene' and pa.grp_idx=" + grpIdx);		// CAS575 remove ph.proj1_idx != ph.proj2_idx
+					+ "where pa.type='gene' and pa.grp_idx=" + grpIdx);		// works for isSelf too
 			
 			while (rs.next()) {
 				int aidx = rs.getInt(1);
@@ -386,7 +385,7 @@ public class AnchorMain {
 			cntPseudo[i] += hitGeneMap.size();
 			
 		// pseudo_annot
-			String name= "ID=pseudo-" + mProj1.getDBName() +"-"+mProj2.getDBName() + // was abbrev, which can change; CAS575
+			String name= "ID=pseudo-" + mProj1.getDBName() +"-"+mProj2.getDBName() + 
 					";" + annoKey[i] + "=Not annotated; ";
 			
 			int countBatch=0, cnt=0;
@@ -429,7 +428,7 @@ public class AnchorMain {
 			rs.close();
 			
 			countBatch=cnt=0;
-			ps = dbc2.prepareStatement("update pseudo_hits set " + annoStr + "=? where idx=?");
+			ps = dbc2.prepareStatement("update pseudo_hits set " + annoStr + "=? where idx=?");// gene_overlap stays 0 or 1
 			for (Hit ht: hitGeneMap.values()) {
 				ps.setInt(1, ht.annotIdx);
 				ps.setInt(2, ht.hitIdx);
