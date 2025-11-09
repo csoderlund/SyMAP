@@ -16,6 +16,10 @@
 <a href="#build">Build database</a>
 <a href="#projParams">Project Parameters</a>
 <a href="#pairParams">Pair Parameters</a>
+<a href="#align2">&nbsp;&nbsp;Alignment</a>
+<a href="#clust">&nbsp;&nbsp;Cluster Algo</a>
+<a href="#clParam">&nbsp;&nbsp;Cluster Params</a>
+<a href="#syn">&nbsp;&nbsp;Synteny</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -653,20 +657,19 @@ projects, while NUCmer is used for self alignments.
 <!------------------------------------------------------------------------>
 <a id="clust"></a>
 <h3>3.c Cluster Hits</h3>
-
-<table class="tz">
-<tr>
-<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
-<td><a href="#clParam">Parameter description</a>
-<td><a href="#pseudo">Pseudo and Piles</a>
-<td class="colrt"><a href="#top">Go to top</a>
-</table>
+	<table class="tz">
+	<tr>
+	<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
+	<td><a href="#clParam">Parameter description</a>
+	<td><a href="#pseudo">Pseudo and Piles</a>
+	<td class="colrt"><a href="#top">Go to top</a>
+	</table>
 
 <a id="a1a2"></a>
 <h4>3.c.I  Algo1 vs Algo2</h4>
 
 <table class="ty">
-<tr><td colspan="2"><ttl>Algorithm 1 (modified original, updated v5.4.0, abbreviated Algo1)</ttl>:
+<tr><td colspan="2"><ttl>Algorithm 1 (modified original, abbreviated Algo1)</ttl>:
 <tr><td>Pros<td>This is an generic algorithm that has knowledge of genes versus intergenic hits.
 <br>It is recommended for ordering sequence contigs and when there are little or no gene annotation.
 <br>It <u>must</u> be used for self-synteny.
@@ -674,7 +677,7 @@ projects, while NUCmer is used for self alignments.
 <tr><td>Cons<td>It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
 <tr><td>Parameters<td>It only has one parameter, which is easier to run but there is no control over what hits are filtered.
 
-<tr><td colspan="2"><ttl>Algorithm 2 (exon-intron, last update v5.6.0, abbreviated Algo2)</ttl>:
+<tr><td colspan="2"><ttl>Algorithm 2 (exon-intron, abbreviated Algo2)</ttl>:
 <tr><td>Pros<td>This is a new algorithm with explicit knowledge of gene pairs and their exon-intron structure.
 <br>When there is good gene annotations for both genomes, this is definitely the superior algorithm.
 
@@ -683,7 +686,7 @@ projects, while NUCmer is used for self alignments.
 <br>when SyMAP generates the MUMmer files. This is also a "Pro" as it takes less memory.
 
 <tr><td>Parameters<td>It has two set of parameters, hence, more control over results than <ttl>Algo1</ttl>. See <a href="#hint">Hints</a>
-below the parameter explanation. (As of v5.6.0, the parameters generally do not need adjusting.)
+below the parameter explanation; the parameters generally do not need adjusting.
 </table>
 <p><ttl>Algo1</ttl> is the default since it works for all inputs.
 
@@ -721,43 +724,52 @@ by increasing all parameters a small amount, this reduced to just over 100k.
 <!-------------------------------------------------------------------------->
 <a id="clParam"></a>
 <h4>3.c.II  Parameter description</h4>
+<table class="tx">
+<tr><td>
+<a href="img/parameters2b.png">
+<img src="img/parameters2b.png" alt="Cluster parameters" style="border: 1px solid black; width: 300px"></a>
+<td>The image on the left shows the defaults. The exception is:
+<p>
+<ul><li><ttl>Algorithm 2 (Algo2)</ttl>: Is default if both projects have annotation and it is not self-synteny.
+<p>
+<li><ttl>Algorithm 1 (Algo1)</ttl>: Is default if at least one project does not have annotation or it is self-synteny.
+</ul>
+</table>
 
 <table class="ty">
-<tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
+<tr><td><i>Parameter</i><td><i>Description</i>
 <tr><td style="white-space: nowrap;"><ttl>Number Pseudo</ttl><td>If selected, the un-annotated ends of hits will be assigned a
 pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
-<td>No
+
 <tr><td colspan=2><ttl>Algo1 (original)</ttl>
-    <td>Yes
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
 	<td>It will retain the top N hits of a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>), as
 		well as all hits with score at least 80% of the Nth hit.
-	<td>2
 <tr><td colspan=2><ttl>Algo2 (gene-centric)</ttl>
-    <td>No
+
 <tr><td>&nbsp;&nbsp;<ttl>Scale</ttl>
 	<td>
 	Increase a scale to filter out more clustered hits, decrease to filter out less.
 	<br><center><table class="ty">
-		<tr><td><ttl>Gene</ttl>
+		<tr><td><ttx>Gene</ttx>
 			<td>Determines the percentage of required gene coverage.
-		<tr><td><ttl>Exon</ttl>
+		<tr><td><ttx>Exon</ttx>
 			<td>Determines the percentage of required exon coverage.
-		<tr><td><ttl>Len</ttl>
+		<tr><td><ttx>Len</ttx>
 			<td>For G2 and G1<sup>*</sup>, minimum size hit unless it completely covers a gene.
 			<br>Default minimum is 300bp (N*300bp is minimum).
-		<tr><td><ttl>G0_Len</ttl>
+		<tr><td><ttx>G0_Len</ttx>
 			<td>For G0<sup>*</sup>, minimum size hit.
 			<br>Default minimum is 1000bp (N*1000bp is minimum).
 			<br>Suggestion: increase for closely related species.
 		<tr><td colspan="2"><sup>*</sup><small>G2=gene to gene, G1=gene to non-gene, G0=non-gene to non-gene</small>
 		</table></center>
 
-	<i>A clustered hit must pass multiple rules regarding coverage</i>.
+	<br><i>&rarr;A clustered hit must pass multiple rules regarding coverage</i>.
 	<br>For example, the <ttl>Exon</ttl>
 	coverage parameter may be made more stringent, yet there will still be some low exon scores due to
 	good gene coverage, etc.
-	<td>N=1.0
+
 <tr><td>&nbsp;&nbsp;<ttl>Keep piles</ttl>
 	<td><ttl>EE</ttl>, <ttl>EI</ttl>, <ttl>En</ttl>, <ttl>II</ttl>, <ttl>In</ttl> (E=exon, I=intron, n=non-gene)
 		<br>&bullet;&nbsp;This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
@@ -765,12 +777,13 @@ pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
 		<br>&bullet;&nbsp;Hits are filtered before pile analysis.
 		<br>&bullet;&nbsp;Intergenic-intergenic pile hits, and any unchecked categories, are filtered
 		<br>&nbsp;&nbsp;as described in the next row.
-	<td><ttl>EE, EI, En</ttl>
+
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Top N piles</ttl>
-	<td><ttx>Algo2</ttx> uses <ttx>Algo1</ttx> <ttl>Top N</ttl> parameter
-for any uncheck categories, but in a more conservative way. It will retain the <ttl>Top N</ttl> hits of a piled region that are within
-80% of the length of the longest hit.
-	<td>2
+	<td><ttl>Algo2</ttl> uses <ttl>Algo1</ttl> <ttl>Top N</ttl> parameter
+for any uncheck categories, but in a more conservative way.
+It will retain the <ttl>Top N</ttl> hits of a piled region that have lengths within
+80% of the longest hit.
+
 </table>
 
 <a id="pseudo"></a>
@@ -832,11 +845,18 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <a id="syn"></a>
 <h3>3.d Synteny</h3>
 
+<table class="tx">
+<tr><td>
+<a href="img/parameters2s.png">
+<img src="img/parameters2s.png" alt="Cluster parameters" style="border: 1px solid black; width: 300px"></a>
+<td>The image on the left shows the defaults. The one exception is that <ttl>Strict</ttl> is turned off
+for draft sequence.
+</table>
+
 <table class="ty">
-<tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
+<tr><td><i>Parameter</i><td><i>Description</i>
 <tr><td>&nbsp;&nbsp;<ttl>Min Hits</ttl>
 	<td>Minimum number of anchors required to define a synteny block.
-	<td>7
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Strict</ttl>
 	<td>This uses the <ttl>Original</ttl> algorithm with the following changes:
 	<ul>
@@ -846,30 +866,24 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 	and collinear sets to see if they are contained in another block, and if so, merges them regardless of orientation;
 	this merge happens regardless of the <ttl>Merge</ttl> setting.
 	</ul>
-	<p>By default, the <ttl>Original</ttl> algorithm is run.
-	However,  <ttl>Strict</ttl>  typically works better than the <ttl>Original</ttl>
-	for complete genome sequence projects;
-	see <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a>.
-	It is not recommended for draft sequence!
-	<td>Off
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Orient</ttl>
 	<td>All hits in a block must have hits of the same orientation ('+/+' or '-/-') or
 	different orientation ('+/-' or '-/+').
-	<td>Off
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Merge</ttl>
 	<td><ttx>Overlap</ttx>: The blocks must overlap to be merged.
 	<br><ttx>Close</ttx>: Blocks that overlap or are close will be merged.
-	<td>None
 </table>
 
-<p>The following three images show the same regions when evaluated with the following 3 parameter sets:
-<br>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<p>See <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a> for comparison of using the different
+synteny parameters. The following is a brief comparison of three images of the same regions
+when evaluated with the following 3 parameter sets:
+
+<p>Default (one block)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> (three blocks)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <ttl>Same orient</ttl> with <ttl>Merge</ttl> (two blocks).
 <a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
 <br>In the last image, the reverse orientation block is embedded in another block
-<p>See <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a> for further comparison of using the different
-synteny parameters.
+
 
 <a id="order"></a>
 <h4>Order against</h4>

@@ -1099,13 +1099,13 @@ will be performed when the mouse is released.
 		<td>The allows viewing the actual basepair sequence in a track.
 		A sequence must first be selected, then a popup menu will have the options:
 			<table class="ty">
-			<tr><td><ttx>Hit</ttx><td>Show the sequences of the clustered subhits on the positive strand.
+			<tr><td><ttx>Subhits</ttx><td>Show the sequences of the clustered subhits on the positive strand.
 			If the hit is on the negative strand, it will be reverse complemented (RC).
-			<tr><td><ttx>Reverse Hit</ttx><td>Show the sequences of the subhits on the negative strand.
+			<tr><td><ttx>Reverse</ttx><td>Show the sequences of the subhits on the negative strand.
 			If the hit is on the positive strand, it will be reverse complemented.
-			<tr><td><ttx>Full Hit</ttx><td>Concatenate and show the sequence from the start of the first
+			<tr><td><ttx>Full Hit</ttx><td>Show the sequence from the start of the first
 			cluster hit to the end of the last cluster subhit.
-			<tr><td><ttx>Region</ttx><td>Show the sequence from the region selected.
+			<tr><td><ttx>Region</ttx><td>Show the sequence from the selected region.
 			</table>
 		<td><ttl>Show Seq</ttl>
 		</table>
@@ -1254,8 +1254,6 @@ the other gene options are disabled).
 </table>
 <sup>1</sup> The <ttx>Gaps</ttx> and <ttx>Centromere</ttx> options are disabled in the image above, as there are none for this chromosome.
 <p>
-
-
 
 <a id="sfcoor"></a>
 <br>
@@ -1546,13 +1544,16 @@ below shows three genomes; A.thal is the reference, which can be changed with th
 <a id="self"></a>
 <h3>Self-synteny</h3>
 For self-synteny, hits are computed for the lower part of the <ttp>Dot Plot</ttp> diagonal, then mirrored to
-the upper part. The <ttx>Hit#</ttx> is assigned in consecutive order along the larger of the two chomosomes.
+the upper part. The <ttx>Hit#</ttx> is assigned in consecutive order along the alphanumeric larger chromosome
+name.
 
 <p>Self-synteny can be viewed in all views
 (e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
 <p>
 <ul>
-<li><ttp>Circle</ttp> view works, but it ribbon colors work a bit strangely since there is only one genome.
+<li><ttp>Dotplot</ttp>: For the self-chromosome, you <u>must</u> select a region from the lower diagonal.
+<li><ttp>Circle</ttp>: The <ttx>Scale</ttx> option makes no difference in the display with only
+one species.
 <p>
 <li><ttp>2D</ttp>: From the <ttp>Chromosome Explorer</ttp>, it does not directly work for a chromosome compared to itself.
 However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in

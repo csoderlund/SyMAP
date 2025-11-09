@@ -345,7 +345,7 @@ acid alignment except for the three self-syntenies, which used nucleotide alignm
 	<tr><td>Maize x self<td><b>&gt;48hr</b><td> 28m:52s<td>&nbsp;<td>2.1Gb x 2.1Gb, duplication
 </table>
 The exact time for running MUMmer on Maize x self is approximate; there were 55 alignments that took
-anywhere between 5hr and 1hr each; I did not run it all at once. Maize has a lot of duplication, hence, the
+anywhere between 1-5 hours each; I did not run it all at once. Maize has a lot of duplication, hence, the
 longer time.
 <p><li> MacOS x86_64 with 64Gb has been tested on 2-4 above. For comparison, the following A&S was computed
 with 4 CPUs; note the longer time for the synteny computation on the older Mac machine.
@@ -527,7 +527,7 @@ This is useful if you have multiple SyMAP databases.
 <td><a href="#rundemo">Running the demo</a>
 <td><a href="#demoseq">Two genome synteny</a>
 <td><a href="#draft">Draft ordering</a>
-<td><a href="#self">Self-synteny</a>
+<td><a href="#demoself">Self-synteny</a>
 <td style="text-align: right"><a href="#top">Go to top</a>
 </table>
 
@@ -608,9 +608,9 @@ Once the alignments are computed, the A&S parameters can be experimented without
 having to redo the alignments. This is done by changing the options on the pair
 <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> panel.
 <p>See <a href="Demo.html#dot" class="ext" target="_blank">Demo Results</a> for the results from
-using the <ttl>Cluster Algo2 (exon-intron)</ttl> and <ttl>Synteny Strict</ttl>.
+using the <ttl>Cluster Algo1 (modified original)</ttl> and <ttl>Synteny Original</ttl>.
 <td>
-<a href="img/demoSum.png"><img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 400px"></a>
+<a href="img/demoSum2.png"><img src="img/demoSum2.png" alt="demoSum Algo2 Strict" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <a id="draft"></a>
@@ -618,9 +618,10 @@ using the <ttl>Cluster Algo2 (exon-intron)</ttl> and <ttl>Synteny Strict</ttl>.
 
 <table>
 	<tr><td style="vertical-align: text-top;">
-From the <ttp>Manager</ttp> left side, select <ttx>Demo-Draft</ttx> and <ttx>Demo-Seq2</ttx>. Load <ttx>Demo-Draft</ttx>.
+From the <ttp>Manager</ttp> left side, select <ttx>Demo-Draft</ttx> and <ttx>Demo-Seq2</ttx>.
+Load <ttx>Demo-Draft</ttx>.
 Open the <a href="./SystemHelp.html#over2" class="ext" target="_blank">Parameters</a> panel;
-at the bottom, select <ttx>Draf->Seq2</ttx>.
+at the bottom, select <ttx>Draf->Seq2</ttx> and uncheck <ttx>Strict</ttx>.
 		<td>
 <a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
 	<tr><td style="colspan: 2; height: 40px;">&nbsp;
@@ -671,13 +672,15 @@ the <ttx>Demo_Draft.Demo_Seq2</ttx> display name can be shortened.
 
 <table>
 <tr>
-<td>To perform self-synteny, select the cell for <ttx>Demo_seq</ttx> row and column (it turns green) followed by
-<ttb>Selected Pair</ttb>.
-This computes a few tiny 'iffy' blocks, as described in
-<a href="Demo.html#self" class="ext" target="_blank">Demo self-synteny</a>. See <a href="#self">A.thal self</a> for a better example.
+<td>To perform self-synteny, select the cell for <ttx>Demo_seq</ttx> row and column (it turns green).
+The default for synteny computation is <ttx>Strict</ttx>, which results in zero blocks for <u>this</u> project. Hence,
+open the <a href="SystemHelp.html#syn" class="ext" target="_blank">Parameters</a> panel,
+unselect <ttx>Strict</ttx>, then <ttl>Save</ttl>. <ttb>Selected Pair</ttb> from the <ttp>Manager</ttp>.
+
 <td><a href="img/selfDemo.png"><img src="img/selfDemo.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
-
+This computes a few tiny 'iffy' blocks, as described in
+<a href="Demo.html#self" class="ext" target="_blank">Demo self-synteny</a>. See <a href="#self">A.thal self</a> for a better example.
 <br>
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->
@@ -905,8 +908,6 @@ is compared to every other chromosome including itself.
 Parameters</a> panel has an option to set <ttx>Self Args</ttx>,
 which is only used when comparing the chromosome sequence file to itself.
 <li>Make sure that the <ttx>Cluster Hits Algorithm 1</ttx> option is selected.
-<li>If the <ttx>Synteny Original</ttx> appears to miss an obvious block (i.e. a diagonal line of dots
-exists on the <ttp>Dot plot</ttp> without a block), use <ttx>Synteny Strict</ttx>.
 </ul>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
