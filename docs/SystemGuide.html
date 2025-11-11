@@ -9,7 +9,7 @@
 <body>
 <!------ left side index - customize ----------------------------------------------------->
 <div class="sidenav">
-<a href="http://www.agcol.arizona.edu">
+<a href="https://csoderlund.github.io">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
 <p class=sidetit>&nbsp;&nbsp;System Guide</p>
 <p>
@@ -263,6 +263,9 @@ to <a href="MUMmer.html#cmd"  class="ext" target="_blank">run MUMmer on a differ
 results to the <tt>symap_5/data/seq_results</tt> directory.
 The results in <a href="#time">Tested datasets and timings</a> gives an idea of compute times and memory.
 
+<p>If gene discovery is not important, then masking all but the gene sequences <i>greatly</i> reduces the time and memory.
+See <a href="#mask">Masked</a> below.
+
 <p>If SyMAP runs out of memory, see <a href="TroubleShoot.html#memory" class="ext" target="_blank">Trouble Shoot</a>.
 
 <p> For viewing alignments with <tt>viewSymap</tt>, CPU and memory needs are typically negligible, unless
@@ -329,7 +332,7 @@ SyMAP has been tested on the following:
 the SyMAP output, which uses the Java system time functions (clock times
 are greater than the Java CPU system times). Repeated execution can result in times
 varying by approximately +/-5secs.  All the following results use 4 CPUs (thread/core) and are amino
-acid alignment except for the three self-syntenies, which used nucleotide alignment and 6 CPUs.
+acid alignment except for the self-syntenies, which used nucleotide alignment and 6 CPUs.
 
 <p><table class="tx">
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u><td>&nbsp;&nbsp;&nbsp;<td><u>Size</u>
@@ -342,11 +345,17 @@ acid alignment except for the three self-syntenies, which used nucleotide alignm
 	<tr><td>Peach x Pyedo<td>0h:44m<td> 1m:29s<td>&nbsp;<td>227Mb x 408Mb, Pyedo ordered by peach
 	<tr><td>Peach x Pyedo.Peach<td>0h:40m<td> 0m:20s<td>&nbsp;<td>227Mb x 270Mb
 	<tr><td>B.raba x self  <td>0h:15m <td>1m:17s<td>&nbsp;<td>297Mb x 297Mb
-	<tr><td>Maize x self<td><b>&gt;48hr</b><td> 28m:52s<td>&nbsp;<td>2.1Gb x 2.1Gb, duplication
+	<tr><td>Maize x self<sup>+</sup><td><b>&gt;48hr</b><td> 28m:52s<td>&nbsp;<td>2.1Gb x 2.1Gb, duplication
+	<tr><td>Maize x self<sup>++</sup><td><b><font color=green>0h:16m</font></b><td> 5m:03s<td>&nbsp;<td>2.1Gb x 2.1Gb, <font color=green>MASKED</font>
 </table>
-The exact time for running MUMmer on Maize x self is approximate; there were 55 alignments that took
+<a id="mask"></a>
+<sup>+</sup> The exact time for running MUMmer on Maize x self is approximate; there were 55 alignments that took
 anywhere between 1-5 hours each; I did not run it all at once. Maize has a lot of duplication, hence, the
 longer time.
+<br><sup>++</sup> <i>By masking everything but the genes, it only took 16 minutes for MUMmer</i> and produced equivalent
+results, albeit, without possible gene discovery; i.e. all hits link two genes. To mask the genes, select the masked checkbox
+on <a href="SystemHelp.html#align2" target="_blank" class="ext">Mask parameter</a>.
+
 <p><li> MacOS x86_64 with 64Gb has been tested on 2-4 above. For comparison, the following A&S was computed
 with 4 CPUs; note the longer time for the synteny computation on the older Mac machine.
 
@@ -459,7 +468,7 @@ Each has subdirectories:
 <pre>     arch={your directory architecture name}</pre>
 </ol>
 Note that I do not have an alternative machine to try this on, but it should work. Email me
-at <ttl>symap@agcol.arizona.edu</ttl> if it does not.
+at <ttl>cas1@arizona.edu</ttl> if it does not.
 
 <p>For MUMmer, see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>
 and <a href="MUMmer.html#mum4" class="ext" target="_blank">Using MUMmer4</a>.
@@ -805,13 +814,16 @@ See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for
 <table class="tx">
 <tr><td style="vertical-align: text-top;">See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
 on setting the pair parameters for the this step.
-
-<p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these
-two options.
-<p>Then select <ttb>Selected Pair</ttb>
-to run the Align&amp;Synteny.
+<p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these two options.
+<p>Then select <ttb>Selected Pair</ttb> to run the Align&amp;Synteny.
 <td><a href="img/demoTable2.png"><img src="img/demoTable2.png" alt="align and synteny" style="border: 1px solid black; width: 500px"></a>
 </table>
+
+<p>For initial fast results:
+<ul>
+<li>Select the <ttl>Mask</ttl> option for both sequences <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> before aligning.
+<li>Then, if the initial results look good and gene-discovery is desired, <ttl>Clear Pair</ttl> and redo without the masking.
+</ul>
 
 <p><u>Align&amp;Synteny files</u>:
 The result files are in the following directory:
@@ -1046,18 +1058,14 @@ moving the source sequences on disk.
 <h3>FPC project</h3>
 
 For working with FPC<sup>8,9</sup>, it is suggested you use release v5.0.8 from
-<a href="http://www.agcol.arizona.edu/software/symap">AGCoL</a>.
-
+<a href="https://github.com/csoderlund/SyMAP/releases">SyMAP releases</a>.
 <ol>
 <li>It has the FPC demo files.
 <li>It has BLAT<sup>10</sup>  in the <tt>/ext</tt> directory.
 <li>It has the tar file <tt>doc.tar.gz</tt> of the documentation.
-<li>The AGCoL documentation applies to this release. See AGCoL
-<a href="http://www.agcol.arizona.edu/software/symap/doc/SystemGuide.html#fpc" class="ext" target="_blank">System Guide</a>.
-<li>This is the last release made from AGCoL, so the documentation will stay consistent.
-<li>It is also available from <a href="https://github.com/csoderlund/SyMAP/releases"  class="ext" target="_blank">Github</a>.
+<li>The AGCoL documentation applies to this release.
 </ol>
-If you run into any problems, please do not hesitate to contact symap@agcol.arizona.edu.
+If you run into any problems, please do not hesitate to contact cas1@arizona.edu.
 
 <!---------------------------------------------------------->
 <!---------------------------------------------------------->
@@ -1111,7 +1119,7 @@ Locating sequence on FPC maps and selecting a minimal tiling path. Genome Resear
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+<p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 </div>
 </body>

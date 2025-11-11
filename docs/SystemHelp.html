@@ -9,7 +9,7 @@
 <body>
 <!------ left side index - customize ----------------------------------------------------->
 <div class="sidenav">
-<a href="http://www.agcol.arizona.edu">
+<a href="https://csoderlund.github.io">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
 <p class=sidetit>&nbsp;&nbsp;Parameters</p>
 <p>
@@ -272,8 +272,6 @@ entered as a command line argument (-p N).
 	<li>It is not saved as a parameter. This can also be turned on using a command line argument:
 	<tt>symap -v</tt>
 	</ul>
-
-
 <hr>
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
@@ -526,7 +524,6 @@ more information in the context of the pair parameters.
 	<tr><td><b>A</b><td>Yes<td>No
 	<tr><td>&#10004;<td>Yes<td>Yes
 	</table>
-
 	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 550px"></a>
 </table>
 
@@ -586,8 +583,11 @@ not relevant.
 
 <tr><td style="white-space: nowrap;"><ttl>Mask</ttl> &lt;abbrev&gt;<td>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
 be provided).
-<p>The &lt;abbrev&gt; is set in the <ttb>Project parameters</ttb> popup <ttl>Abbreviation</ttl> parameter,
-and the corresponding project's sequence is masked.
+<p>The &lt;abbrev&gt;, which is set in the <a href="#projParams">Project parameters</a> popup <ttl>Abbreviation</ttl> parameter,
+is used to determine which sequence will be masked.
+
+<p>Both sequences may both be masked, which results in <i>very fast execution</i>
+and gene-based synteny.
 
 <p>If <ttl>Mask</ttl> is changed after <ttl>A&amp;S</ttl>, the alignment files need to be
 removed with <ttb>Clear Pair</ttb> and <ttl>A&amp;S</ttl> run again.
@@ -993,7 +993,7 @@ see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p class="trailer">  Email Comments To: <a href="mailto:symap@agcol.arizona.edu">symap@agcol.arizona.edu</a></p>
+<p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 </div>
 </body>
