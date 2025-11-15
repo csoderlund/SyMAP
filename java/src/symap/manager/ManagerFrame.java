@@ -82,6 +82,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			+ TBL_QDONE + "  : alignment is partially done.";
 	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";// Click a lower diagonal cell to select the project pair.
 		
+	private final String pseudoOnly = "Pseudo Only";
+	
 	protected String frameTitle="SyMAP " + Globals.VERSION; // all frames use same title
 	protected DBconn2  dbc2 = null; // master, used for local loads, and used as template for processes
 	
@@ -737,7 +739,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
 				if (mp!=null) {
 					if (mp.bSynOnly) btnSelAlign.setText("Synteny Redo");
-					else if (mp.bPseudo) btnSelAlign.setText("Pseudo Only");
+					else if (mp.bPseudo) btnSelAlign.setText(pseudoOnly);
+					
+					if (Constants.CoSET_ONLY) btnSelAlign.setText("Collinear");
 				}
 			}	
 			else btnSelAlign.setText("Selected Pair");	
@@ -1572,7 +1576,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			new Version(dbc2).updateReplaceProp();
 			return;
 		}
-		
 		if (!alignCheckOrderAgainst(mp)) return; 
 		
 		// Compose confirm popup
@@ -1580,8 +1583,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		String msg;
 		if (mp.bSynOnly)     msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
-		else if (bAlignDone) msg = "Clust&Synteny"+ "\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
-		else    			 msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
+		else if (bAlignDone) {
+			if (Constants.CoSET_ONLY) msg = "Collinear Only\n"; // For v5.7.7, flag -cs; CAS577
+			else 					  msg = "Clust&Synteny"+ "\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
+		}
+		else     			 msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
 		
 		if (!bAlignDone) msg += "CPUs " + nCPU + ";  ";						
 		

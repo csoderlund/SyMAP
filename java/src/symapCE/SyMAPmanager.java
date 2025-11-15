@@ -62,6 +62,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("  -v        : A&S verbose output (same as checking Verbose on Manager)");
 			System.out.println("  -mum      : do not remove any mummer files");
 			System.out.println("  -wsp      : for Algo2, print MUMmer hits that differ from gene strand");
+			System.out.println("  -cs  		: Recompute collinear sets for v5.7.7");
 		}
 		System.out.println("\nDisplay:");
 		System.out.println("  -a        : 2D: do not trim alignments");
@@ -136,11 +137,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Constants.WRONG_STRAND_PRT = true;
 		}
 		
-		// not shown on -h or -hh; leave for possible updates
-		if (equalOption(args, "-acs")) { 
-			System.out.println("-acs  On A&S, ONLY execute the collinear sets computation");
-			Constants.CoSET_ONLY = true;
-		}
+		// not shown on -h; leave for possible updates
 		if (equalOption(args, "-sg")) { 
 			System.out.println("-sg  Split genes (Algo1)");
 			Group.bSplitGene= true;
@@ -164,11 +161,13 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-dbd Database - add tables to DB");
 			Globals.DBDEBUG = true;
 		}
-		
-		// Synteny: experimental synteny tests; only shown in -hh 
 		if (equalOption(args, "-bt")) {  
 			System.out.println("-bt Synteny trace");
 			backend.synteny.SyntenyMain.bTrace = true;
+		}
+		if (equalOption(args, "-cs")) { // shown on -h for v5.7.7
+			System.out.println("-cs  On A&S, ONLY execute the collinear sets computation");
+			Constants.CoSET_ONLY = true;
 		}
 	}
 	

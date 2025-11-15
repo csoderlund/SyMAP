@@ -238,42 +238,13 @@ public class DBdata implements Cloneable {
 	}
 	catch (Exception e) {ErrorReport.print(e, "filter rows");}
 	}
-	//  Multi is sorted in ComputeMulti
+	/***********************************************************************
+	 * Initial sort and numbering of rows; should be like TableData.compare
+	 * Multi is sorted in ComputeMulti
+	 */
 	private static void sortRows() {
 	try {
-		if (qPanel.isCollinear() || qPanel.isBlock()) {
-			Collections.sort(rows, new Comparator<DBdata> () {
-				public int compare(DBdata a, DBdata b) {
-					String as="", bs="";
-					if (qPanel.isBlock()) 	{as=a.blockStr;     bs=b.blockStr;}
-					else 					{as=a.collinearStr; bs=b.collinearStr;}
-					
-					if (as.equals(Q.empty) && !bs.equals(Q.empty)) return 1;
-					if (!as.equals(Q.empty) && bs.equals(Q.empty)) return -1;
-					if (as.equals(bs)) return a.hitNum-b.hitNum;
-					
-					int retval=0;
-					String [] av = (qPanel.isBlock()) ? as.split(Q.SDOT) :  as.split(Q.GROUP); 
-					String [] bv = (qPanel.isBlock()) ? bs.split(Q.SDOT) :  bs.split(Q.GROUP); 
-					int n = Math.min(av.length, bv.length);
-					
-					for(int x=0; x<n && retval == 0; x++) { // copied from TableData
-						boolean valid = true;
-						Integer leftVal = -1, rightVal = -1; 
-						try {
-							leftVal  = Integer.parseInt(av[x]); 
-							rightVal = Integer.parseInt(bv[x]);      
-						}
-						catch(Exception e) {valid = false; } // e.g. chr X
-						
-						if (valid) retval = rightVal.compareTo(leftVal);
-						else       retval = bv[x].compareTo(av[x]);
-					}
-					return -retval;	// reverse sort
-				}
-			});
- 		}
-		else if (qPanel.isGroup()) {
+		if (qPanel.isGroup()) { // highest precedence CAS577
 			Collections.sort(rows, new Comparator<DBdata> () {
 				public int compare(DBdata a, DBdata b) {
 					String as=a.grpStr, bs=b.grpStr;
@@ -301,6 +272,41 @@ public class DBdata implements Cloneable {
 				}
 			});
 		}
+		else if (qPanel.isCollinear() || qPanel.isBlock()) { // if change here, change in TableData.compare
+			Collections.sort(rows, new Comparator<DBdata> () {
+				public int compare(DBdata a, DBdata b) {
+					String as="", bs="";
+					if (qPanel.isCollinear()) 	{as=a.collinearStr; bs=b.collinearStr;} // precedence to collinear; CAS577
+					else 						{as=a.blockStr;     bs=b.blockStr;}
+					
+					if (as.equals(Q.empty) && !bs.equals(Q.empty)) return 1;
+					if (!as.equals(Q.empty) && bs.equals(Q.empty)) return -1;
+					if (as.equals(bs)) return a.hitNum-b.hitNum;
+					
+					int retval=0;
+					String [] av = as.split(Q.SDOT); 
+					String [] bv = bs.split(Q.SDOT); 
+					int n = Math.min(av.length, bv.length);
+					boolean bCS = qPanel.isCollinear();
+					
+					for(int x=0; x<n && retval == 0; x++) { // copied from TableData
+						if (bCS && x==2) continue; 				// ignore size; cosets numbered by size CAS577
+						
+						boolean valid = true;
+						Integer leftVal = -1, rightVal = -1; 
+						try {
+							leftVal  = Integer.parseInt(av[x]); 
+							rightVal = Integer.parseInt(bv[x]);      
+						}
+						catch(Exception e) {valid = false; } // e.g. chr X
+						
+						if (valid) retval = rightVal.compareTo(leftVal);
+						else       retval = bv[x].compareTo(av[x]);
+					}
+					return -retval;	// reverse sort
+				}
+			});
+ 		}
 		else {
 			Collections.sort(rows, new Comparator<DBdata> () {
 				public int compare(DBdata a, DBdata b) {
@@ -310,6 +316,7 @@ public class DBdata implements Cloneable {
 				}
 			});
 		}
+		// Number results for display
 		int rnum=1;
 		for (DBdata r : rows) r.rowNum = rnum++;
 	}

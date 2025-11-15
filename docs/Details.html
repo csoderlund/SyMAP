@@ -79,12 +79,9 @@ green is the 2nd; these are <a href="UserGuide.html#wheel" class="ext" target="_
 <ttx>Highlight1</ttx> and <ttx>Highlight2</ttx> colors. The sets were broken by an extra gene on Human Chr01.
 <p>A collinear set either has all hits/genes to the same strand (+/+, -/-) or different (+/-, -/+).
 In the image on the right, all genes in both sets are on different strands.
-<p><b>Note</b>: if <ttl>Algo2</ttl>
-was used, this guarantees that the strands for the two homologous genes are the same as their hit; this is not
-the case for <ttl>Algo1</ttl> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>).
+<p><b>Note</b>: The above is not guaranteed when using <ttl>Algo1</ttl> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>),
+as the hit strands may be different than the strands assigned to the homologous genes.
 
-
-<p>&nbsp;
 <p>The collinear set algorithm does not consider the amount of overlap of the hit to a gene, or the similarity
 of the hit sequences.
 <p>Sometimes a hit looks like it overlaps a gene, but the gene is actually in the gap of a clustered hit, so is not a gene hit.

@@ -70,6 +70,30 @@ which is aware of the exon-intron structure.
 </table>
 
 <a id="v576"></a>
+<h3>Release: v5.7.7 (15-Nov-25)</h3>
+Some small changes to collinear set computation and display.
+<br>For an existing SyMAP database, to update collinear sets:
+<br>&nbsp;&nbsp;&nbsp;Run: <tt>./symap -cs</tt>, then
+select the <ttl>Collinear</ttl> button on the <ttp>Manager</ttp>
+<br>This does not take long to execute.
+<p>
+<ul>
+
+<li><ttp>A&S</ttp> <ttx>Collinear Sets:</ttx>
+<ul>
+<li>The sets were numbered weird. Now they are numbered by the size, with the largest size set being #1. For
+sets of the same size, they are numbered by the first <ttx>hitNum</tt>.
+<li>Self-synteny self-chromosome bug fix: Was sometimes using hit and it's mirrored hit for a collinear set.
+</ul>
+<li><ttp>Query</ttp>:
+<ul>
+<li>If <ttx>Collinear size</ttx> was selected, the resulting table will be sorted on collinear sets and the <ttl>View 2D</ttl>
+will default to <ttx>Collinear</ttx>. Similarly for blocks and groups, where the precedence is groups, collinear sets, blocks.
+<li><ttl>View 2D</ttl>: The default value of the pulldown will depend on whether groups, collinear sets, or blocks was queried on.
+<li><ttp>2D</ttp> tiny bug fix: The hover hit-wire would not show information in lower bar if the selected hit was below it.
+</ul>
+</ul>
+<a id="v576"></a>
 <h3>Release: v5.7.6 (9-Nov-25)</h3>
 Some small interface changes and tiny bug fixes.
 <p>

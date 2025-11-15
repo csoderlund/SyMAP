@@ -2,6 +2,8 @@ package backend;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
@@ -23,6 +25,7 @@ import util.Utilities;
  * - The annot_idx are sequential for sequential genes, but have gaps for exons. The temporary tnum is sequential.
  * - The hits for collinear may not be sequential when a gene has two hits.
  * - Only hits to two genes are downloaded from DB, hence, if a gene has a g1 and g2 hit, the g1 hit is ignored.
+ * CAS577 the cosets were numbered weird, this is fixed
  */
 public class AnchorPost {
 	// parameters
@@ -33,16 +36,16 @@ public class AnchorPost {
 	private boolean isSelf=false; 
 	
 	// initial; loaded from db	
-	private Vector <Hit> fHitVec = new Vector <Hit> ();
-	private Vector <Hit> rHitVec = new Vector <Hit> ();
-	private TreeMap <Integer, Gene> geneMap1 = new TreeMap <Integer, Gene> (); 		 // tnum, gene
-	private TreeMap <Integer, Gene> geneMap2 = new TreeMap <Integer, Gene> (); 		 // tnum, gene
-	private HashMap <Integer, Integer> gidxTnum = new HashMap <Integer, Integer> (); // idx, tnum 
+	private Vector <Hit> fHitVec = new Vector <Hit> (); // forward set
+	private Vector <Hit> rHitVec = new Vector <Hit> (); // reverse set
+	private Vector <Hit> csHitVec = new Vector <Hit> ();  // all grp-grp 
+	private TreeMap <Integer, Gene> geneMap1 = new TreeMap <Integer, Gene> (); 		 // tmpNum (tnum), gene
+	private TreeMap <Integer, Gene> geneMap2 = new TreeMap <Integer, Gene> (); 		 // tmpNum (tnum), gene
+	private HashMap <Integer, Integer> gidxTnum = new HashMap <Integer, Integer> (); // geneIdx, tmpNum to maintain order 
 	
 	private int totalRuns=0;
-	private int runnum;	// step2AssignRunNum
+	private int coSetNum;	// collinear set number
 	
-	private int [] cntSizeSet = {0,0,0,0,0};// -dd
 	private String chrs;					// ErrorReport
 	
 	/** Called from AnchorMain **/
@@ -77,7 +80,7 @@ public class AnchorPost {
 					
 					if (!step0BuildSets(grpIdx1, grpIdx2)) return;
 					
-					totalRuns+= (runnum-1);
+					totalRuns+= (coSetNum-1);
 				}
 				if (Cancelled.isCancelled()) return; 		
 			}
@@ -98,17 +101,16 @@ public class AnchorPost {
 	 */	
 	private boolean step0BuildSets(int grpIdx1, int grpIdx2) {
 	try {
-		runnum=1;
+		coSetNum=1;
 		if (!step1LoadFromDB(grpIdx1, grpIdx2)) return false;  // fHitVec, rHitVec, geneMap1, geneMap2, gidxTnum
 		
 		if (!step2AssignRunNum(false, fHitVec)) return false;
-		if (!step3SaveToDB(fHitVec)) return false;
-		
 		if (!step2AssignRunNum(true,  rHitVec)) return false;
-		if (!step3SaveToDB(rHitVec)) return false;
+		
+		if (!step3SaveToDB()) return false;
 		
 		geneMap1.clear(); geneMap2.clear(); gidxTnum.clear();
-		fHitVec.clear(); rHitVec.clear(); 
+		fHitVec.clear(); rHitVec.clear(); csHitVec.clear();
 
 		return true;
 	}
@@ -128,11 +130,14 @@ public class AnchorPost {
 			ResultSet rs;
 			
 		// Hits with 2 genes - annot1 and annot2 have the best overlap; ignore others; 
-			rs = dbc2.executeQuery("select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx " +
-				" from pseudo_hits 				AS PH  " +
-				" LEFT JOIN pseudo_block_hits 	AS PBH ON PBH.hit_idx=PH.idx" +
-				" where PH.grp1_idx=" + grpIdx1 + " and PH.grp2_idx=" + grpIdx2 + 
-				" and PH.gene_overlap>1 order by PH.hitnum"); // algo1 does not enter them ordered 
+			String sql = "select PH.idx, PH.strand, PH.hitnum, PH.annot1_idx, PH.annot2_idx " +
+					" from pseudo_hits 				AS PH  " +
+					" LEFT JOIN pseudo_block_hits 	AS PBH ON PBH.hit_idx=PH.idx" +
+					" where PH.grp1_idx=" + grpIdx1 + " and PH.grp2_idx=" + grpIdx2;
+			if (isSelf && grpIdx1==grpIdx2) sql += " AND PH.start1 > PH.start2 "; // DIR_SELF CAS577
+			sql +=	" and PH.gene_overlap>1 order by PH.hitnum";// algo1 does not enter them ordered 
+			
+			rs = dbc2.executeQuery(sql); 
 			while (rs.next()) {
 				int i=1;
 				int hidx = 		rs.getInt(i++);
@@ -202,7 +207,7 @@ public class AnchorPost {
 		
 		while (row1 < nHits-1 && row2 < nHits) {
 			hObj1 = xHitVec.get(row1);
-			if (hObj1.frunnum>0) {
+			if (hObj1.setNum>0) {
 				row1++; 
 				continue;
 			}
@@ -219,7 +224,7 @@ public class AnchorPost {
 			row2 = row1+1;
 			while (row2 < nHits) { // either breaks or row2++ 
 				hObj2 = xHitVec.get(row2);
-				if (hObj2.frunnum>0) {
+				if (hObj2.setNum>0) {
 					row2++;
 					continue;	
 				}		
@@ -241,10 +246,10 @@ public class AnchorPost {
 				else if (d1>1 && (d2>1 || d2<1)) { 
 					if (coHitSet.size()>1) { 			// finish current set
 						for (int i: coHitSet) {
-							xHitVec.get(i).frunnum = runnum;
-							xHitVec.get(i).frunsize = coHitSet.size();
+							xHitVec.get(i).setNum = coSetNum;
+							xHitVec.get(i).setSize = coHitSet.size();
 						}
-						runnum++; 	
+						coSetNum++; 	
 					}
 					if (backRow1!=0) row1=backRow1; // only have value if there was a coSet, i.e. row1 can only become this backRow value once
 					else 			 row1++;
@@ -263,6 +268,7 @@ public class AnchorPost {
 			
 			if (++cnt % 10000 == 0) 
 				symap.Globals.rprt("Iterations: " + cnt + " Row: " + row1 + " of " + nHits + " rows for " + chrs);
+			
 			if (cnt>max) { // insurance: in case a bizarre situation causes an endloop
 				symap.Globals.eprt("Too many iterations: " + cnt + " Row1: " + row1 + " of " + nHits);
 				prtLine(bInv, coHitSet,"C", hObj1, hObj2, r1G1, r1G2, r2G1, r2G2, row1, row2, d1, d2);
@@ -271,13 +277,17 @@ public class AnchorPost {
 		}
 		if (coHitSet.size()>1) { // finish last set
 			for (int i: coHitSet) {
-				xHitVec.get(i).frunnum = runnum;
-				xHitVec.get(i).frunsize = coHitSet.size();
-			}
-			runnum++; 
+				xHitVec.get(i).setNum = coSetNum;
+				xHitVec.get(i).setSize = coHitSet.size();
+			} 
+			coSetNum++;			// add 1 for inv
+		}
+		// put all hits in coset in csHitVec for save to db
+		for (Hit ht : xHitVec) { 
+			if (ht.setSize>0) csHitVec.add(ht);
 		}
 		if (cnt> nHits+10) dprt("Iterations " + cnt); // cnt is generally < nHits
-		prtWrong(bInv, xHitVec);
+		
 		return true;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Build sets " + chrs); return false; }
@@ -285,40 +295,40 @@ public class AnchorPost {
 	/***************************************************
 	 * Trace and verify print routines
 	 */
-	private void prtWrong(boolean bInv, Vector <Hit> xHitVec) { // unexpected situation...
+	private void prtWrong() { // unexpected situation...
 		HashMap <Integer, Set> csetMap = new HashMap <Integer, Set> ();
-		Set cs;
+		Set cset;
 		
-		for (Hit hObj : xHitVec) {
-			if (hObj.frunnum==0) continue;
+		for (Hit hObj : csHitVec) {
+			if (hObj.setNum==0) continue;
 			
 			int tnum1 = gidxTnum.get(hObj.gidx1);
 			int tnum2 = gidxTnum.get(hObj.gidx2);
 			
-			if (csetMap.containsKey(hObj.frunnum)) cs = csetMap.get(hObj.frunnum);
+			if (csetMap.containsKey(hObj.setNum)) cset = csetMap.get(hObj.setNum);
 			else {
-				cs = new Set(hObj.frunsize);
-				csetMap.put(hObj.frunnum, cs);
+				cset = new Set(hObj.setSize);
+				csetMap.put(hObj.setNum, cset);
 			}
-			cs.add(tnum1, tnum2);
+			cset.add(tnum1, tnum2);
 		}
 		
 		for (int rn : csetMap.keySet()) {
-			cs = csetMap.get(rn);
-			int tsz = cs.tnum1.size();
-			if (tsz!=cs.sz) dprt("Error in set Size " + chrs + " " + cs.sz + "." + rn + " hits " + tsz);
+			cset = csetMap.get(rn);
+			int tsz = cset.tnum1.size();
+			if (tsz!=cset.sz) dprt("Error in set Size " + chrs + " " + cset.sz + "." + rn + " hits " + tsz);
 			
 			for (int i=0; i<tsz-1; i++) {
-				int r1G1 = cs.tnum1.get(i);
-				int r2G1 = cs.tnum1.get(i+1);
-				int r1G2 = cs.tnum2.get(i);
-				int r2G2 = cs.tnum2.get(i+1);
+				int r1G1 = cset.tnum1.get(i);
+				int r2G1 = cset.tnum1.get(i+1);
+				int r1G2 = cset.tnum2.get(i);
+				int r2G2 = cset.tnum2.get(i+1);
 				
-				int d1 =           r2G1 - r1G1;
-				int d2 = (!bInv) ? r2G2 - r1G2 : r1G2 - r2G2;
+				int d1 = r2G1 - r1G1;
+				int d2 = Math.abs(r1G2 - r2G2);
 				
 				if (d1!=1 || d2!=1) {
-					dprt("Error in set Order "+ chrs +  " " + cs.sz + "." + rn);
+					dprt("Error in set Order "+ chrs +  " " + cset.sz + "." + rn);
 					break;
 				}
 			}
@@ -346,7 +356,7 @@ public class AnchorPost {
 		String x2 =  (d2==1)? "T" : "F"; if (t1Tag2.equals(t2Tag2)) x2="=";;
 		
 		String s1 = String.format("%s %s%s #%d.%d; R %3d %3d; D %5d %5d; ",
-				xxx, x1, x2, coHitSet.size(), runnum, r1, r2, d1, d2); 
+				xxx, x1, x2, coHitSet.size(), coSetNum, r1, r2, d1, d2); 
 		int h2 = (hObj2 != null) ? hObj2.hitnum : 0;
 		String s2 = String.format("#%-4d #%-4d; t1 %4d %4d; t2 %4d %4d; gn1 %7s %7s; gn2 %7s %7s", 
 				hObj1.hitnum,  h2, t1G1, t2G1, t1G2, t2G2, t1Tag1,  t2Tag1, t1Tag2,  t2Tag2);	
@@ -356,35 +366,57 @@ public class AnchorPost {
 	
 	/////////////////////////////////////////////////////////////////
 	/*****************************************************************/
-	private boolean step3SaveToDB(Vector <Hit> xHitVec) {
+	private boolean step3SaveToDB() {
 	try {
-		PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
-		for (Hit hObj : xHitVec) {
-			if (hObj.frunnum!=0 && hObj.frunsize>1) { 
-				ps.setInt(1, hObj.frunsize);
-				ps.setInt(2, hObj.frunnum);
-				ps.setInt(3, hObj.hidx);
-				ps.addBatch();
+		// Reassign coset num based on size and hitnum
+		Collections.sort(csHitVec, new Comparator<Hit>() {
+			public int compare(Hit a1, Hit a2) { 
+				if (a2.setSize==a1.setSize) return a1.hitnum - a2.hitnum;
+				return a2.setSize - a1.setSize;		  
 			}
+		});
+		coSetNum=1;
+		HashMap <Integer, Integer> numMap = new HashMap <Integer, Integer> ();
+		for (Hit ht : csHitVec) {
+			if (numMap.containsKey(ht.setNum)) {
+				ht.setNum = numMap.get(ht.setNum);
+			}
+			else {
+				numMap.put(ht.setNum, coSetNum);
+				ht.setNum = coSetNum++;
+			}
+		}
+		prtWrong(); // just checking
+		
+		PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set runsize=?, runnum=? where idx=?");
+		for (Hit hObj : csHitVec) {
+			ps.setInt(1, hObj.setSize);
+			ps.setInt(2, hObj.setNum);
+			ps.setInt(3, hObj.hidx);
+			ps.addBatch();
 		}
 		ps.executeBatch();
 		
-		// counts
-		for (Hit hObj : xHitVec) {
-			int rsize = hObj.frunsize;
-			if (rsize>1) {
-				if (rsize==2)       cntSizeSet[0]++;
-				else if (rsize==3)  cntSizeSet[1]++;
-				else if (rsize<=5)  cntSizeSet[2]++;
-				else if (rsize<=10) cntSizeSet[3]++;
-				else cntSizeSet[4]++;
-			}
-		}
 		if (isSelf) { // mirror collinear for self
 			dbc2.executeUpdate("update pseudo_hits as ph1, pseudo_hits as ph2 "
 				+ " set ph2.runsize=ph1.runsize, ph2.runnum=ph1.runnum "
 				+ " where ph1.pair_idx=" + mPairIdx + " and ph2.pair_idx=" + mPairIdx
 				+ " and ph1.idx=ph2.refidx");
+		}
+		if (Globals.DEBUG && isSelf) { // -dd
+			int [] cntSizeSet = {0,0,0,0,0};
+			HashSet <Integer> set = new HashSet <Integer> ();
+			for (Hit hObj : csHitVec) {
+				if (set.contains(hObj.setNum)) continue;
+				
+				set.add(hObj.setNum);
+				int rsize = hObj.setSize;
+				if (rsize==2)       cntSizeSet[0]++; else if (rsize==3)  cntSizeSet[1]++;
+				else if (rsize<=5)  cntSizeSet[2]++; else if (rsize<=10) cntSizeSet[3]++; else cntSizeSet[4]++;
+			}
+			int tot = cntSizeSet[0]+cntSizeSet[1]+cntSizeSet[2]+cntSizeSet[3]+cntSizeSet[4];
+			if (tot>0) Globals.prt(String.format("%10s    2: %,-5d    3: %,-5d    4-5: %,-5d    6-10: %,-5d   >10: %,-5d   Total: %,d", chrs,
+					cntSizeSet[0], cntSizeSet[1], cntSizeSet[2], cntSizeSet[3], cntSizeSet[4], tot));
 		}
 		return true;
 	}
@@ -402,7 +434,7 @@ public class AnchorPost {
 		}
 		private int hidx, hitnum;			// hitnum debugging only
 		private int gidx1=-1, gidx2=-1;     // best
-		private int frunsize=0, frunnum=0;	// to be saved to db
+		private int setSize=0, setNum=0;	// to be saved to db
 	}
 	
 	/******************************************************

@@ -208,6 +208,8 @@ public class SeqHits  {
 	 public void paintComponent(Graphics2D g2) {
 		lastText1=lastText2=0;
 		
+		mapper.setHelpText(null); // will be set if hover; CAS577
+		
 		Point stLoc1 = seqObj1.getLocation();
 		Point stLoc2 = seqObj2.getLocation();
 		int trackPos1 = mapper.getTrackPosition(seqObj1); // left or right
@@ -247,6 +249,7 @@ public class SeqHits  {
 		// Set block 1st/last for this display
 		if (seqObj1.getShowBlock1stText() || seqObj2.getShowBlock1stText()) {
 			for (Block blk : blockMap.values()) blk.hitnum1 = blk.hitnumN = 0;
+			
 			for (DrawHit h : allHitsArray) {
 				if (h.isOlapHit() && !h.isFiltered()) { 
 					int n = h.getBlock();
@@ -351,7 +354,7 @@ public class SeqHits  {
 	}
 	public void mouseMoved(MouseEvent e) {
 		for (DrawHit h : allHitsArray)
-			h.mouseMoved(e);
+			if (h.mouseMovedHit(e)) return; // once wire is highlighted, do not need to check the rest; CAS577
 	}
 	// Need to do this otherwise hits will stay highlighted when exited.
 	public void mouseExited(MouseEvent e) { 
@@ -556,12 +559,15 @@ public class SeqHits  {
 		 }
 		
 		 // provide hover; called from main mouseMoved
-		 private void mouseMoved(MouseEvent e) {
-			 if (!isDisplayed) return;
+		 private boolean mouseMovedHit(MouseEvent e) {
+			 if (!isDisplayed) return false;
 	
-			 boolean b = isOlapHit() && lineContains(e.getPoint());
-	 
-			 if (setHover(b)) mapper.getDrawingPanel().repaint();
+			 boolean b = isOlapHit() && lineContains(e.getPoint()); 
+			 if (setHover(b)) {
+				 mapper.getDrawingPanel().repaint();
+				 return true;
+			 }
+			 return false;
 		 }
 		
 		 protected boolean setHover(boolean bHover) { // mouseMoved/isHover
@@ -646,10 +652,7 @@ public class SeqHits  {
 					 }
 				 }
 				 // Hover over hit line connector; creation in HitData 
-				 if (isHover) { 						
-					 mapper.setHelpText(hitDataObj.createHover(st1LTst2));
-				 }
-				 else mapper.setHelpText(null);
+				 if (isHover) mapper.setHelpText(hitDataObj.createHover(st1LTst2));
 			 }
 			 else {/******** text from sequence.Filter 'Show text' ***********/
 				 int xr=4, xl=19; 

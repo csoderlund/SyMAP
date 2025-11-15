@@ -45,7 +45,6 @@ import database.DBconn2;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
-import util.Utilities;
 import symap.Globals;
 
 /**************************************************
@@ -71,9 +70,11 @@ public class TableMainPanel extends JPanel {
 		this.isSingle		= isSingle;
 		this.theQuery 		= query;
 		this.theSummary 	= sum;
+		this.isBlock		= queryPanel.isBlock();
 		this.isCollinear	= queryPanel.isCollinear();
 		this.isMultiN		= queryPanel.isMultiN();
 		this.isClustN		= queryPanel.isClustN();
+		this.isGroup		= queryPanel.isGroup();
 		this.isSelf			= queryPanel.isSelf();
 		
 		if(selCols != null) {
@@ -304,14 +305,12 @@ public class TableMainPanel extends JPanel {
 	    cmbSynOpts.addItem("Collinear");	// showSET=1
 	    cmbSynOpts.addItem("Block");		// showBLOCK=2
 	    cmbSynOpts.addItem("Group-chr");    // showGRP=3
-	    cmbSynOpts.setSelectedIndex(0);
 	    topRow.add(cmbSynOpts);					topRow.add(Box.createHorizontalStrut(1));
-	    cmbSynOpts.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				boolean b = (cmbSynOpts.getSelectedIndex()==showREGION);
-				txtSynRegion.setEnabled(b);
-			}
-		}); 
+	    /*CAS577 removed addActionListener  and added following defaults*/
+	    if (isCollinear)  cmbSynOpts.setSelectedIndex(showSET);
+	    else if (isGroup) cmbSynOpts.setSelectedIndex(showGRP);
+	    else if (isBlock) cmbSynOpts.setSelectedIndex(showBLOCK);
+	    else              cmbSynOpts.setSelectedIndex(showREGION);
 	    
 		txtSynRegion = Jcomp.createTextField((Globals.MAX_2D_DISPLAY/1000)+"","Distance on both sides of selected hit", 2);
 	    topRow.add(txtSynRegion); topRow.add(Box.createHorizontalStrut(1));
@@ -1331,7 +1330,7 @@ public class TableMainPanel extends JPanel {
 	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; 
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
-	
+	protected boolean isBlock=false, isGroup=false;			// set 2d pull-down based on query; CAS577
 	protected boolean isSelf=false; 
 	
 	// for Stop 

@@ -364,7 +364,7 @@ public class TableData implements Serializable {
 		}
 		catch (Exception e) {} // With sort error, seems to work okay anyway {ErrorReport.print(e, "Sort by column");}
     }
-    // XXX
+    // XXX 
     private class ColumnComparator implements Comparator<Object []> {
     	protected ColumnComparator(int column) {
     		nColumn = column;
@@ -400,7 +400,7 @@ public class TableData implements Serializable {
 				if(arrHeaders[nColumn].isAscending()) retval = -1;
 				else retval = 1;
 			}
-			else if (colHeader.equals(Q.grpCol)) { // sort on grp# instead of sz; is Sz-Grp (no chr)
+			else if (colHeader.equals(Q.grpCol)) { // sort on grp# instead of sz; is Sz-Grp (no chr); change here, change in DBdata.sortRows
 				String [] vals1 = ((String)o1[nColumn]).split(Q.GROUP); 
 				String [] vals2 = ((String)o2[nColumn]).split(Q.GROUP);
 				int n = Math.min(vals1.length, vals2.length);
@@ -444,18 +444,21 @@ public class TableData implements Serializable {
 					else  retval = vals1[x].compareTo(vals2[x]);// geneNum suffix a,b....
 				}
 			}
-			// sorts left to right; chr.chr.sz.num
+			// sorts left to right; chr.chr.sz.num; if change here, change in DBdata.sortRows
 			else if (colHeader.equals(Q.blockCol) || colHeader.equals(Q.cosetCol)) {
+				boolean b = colHeader.equals(Q.cosetCol);
 				String [] vals1 = ((String)o1[nColumn]).split(Q.SDOT); 
 				String [] vals2 = ((String)o2[nColumn]).split(Q.SDOT);
 				int n = Math.min(vals1.length, vals2.length);
 			
-				for(int x=0; x<n && retval == 0; x++) {
+				for (int x=0; x<n && retval == 0; x++) {
+					if (b && x==2) continue; // ignore size; cosets numbered by size CAS577
+					
 					boolean valid = true;
 					Integer leftVal = null, rightVal = null;
 					
 					try {
-						leftVal = Integer.parseInt(vals1[x]); 
+						leftVal  = Integer.parseInt(vals1[x]); 
 						rightVal = Integer.parseInt(vals2[x]);      
 					}
 					catch(Exception e) {valid = false;} 

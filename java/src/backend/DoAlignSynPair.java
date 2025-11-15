@@ -67,7 +67,10 @@ public class DoAlignSynPair extends JFrame {
 			pseudoOnly(diaLog, mProj1, mProj2);
 			return;
 		}
-		
+		if (Constants.CoSET_ONLY) {
+			collinearOnly(diaLog, mProj1, mProj2);
+			return;
+		}
 		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
 		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
