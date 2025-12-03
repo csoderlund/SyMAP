@@ -66,8 +66,8 @@ public class SyMAPmanager extends ManagerFrame {
 		}
 		System.out.println("\nDisplay:");
 		System.out.println("  -a        : 2D: do not trim alignments");
-		System.out.println("  -q        : Queries: show gene overlap instead of exon for Cluster Algo2");
-		System.out.println("  -g        : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
+		System.out.println("  -go       : Queries: show gene overlap instead of exon for Cluster Algo2");
+		System.out.println("  -pg       : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
 		System.out.println("  -h        : show help to terminal and exit");
 	}
 	private static void prtHiddenParams(String args[]) {
@@ -107,13 +107,13 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-sql  check MySQL settings ");
 		}
 		
-		if (equalOption(args, "-q")) { 
+		if (equalOption(args, "-go")) { 
 			Globals.bQueryOlap=true;
-			System.out.println("-q  Show gene overlap instead of exon for Algo2");
+			System.out.println("-go  Show gene overlap instead of exon for Algo2");
 		}
-		if (equalOption(args, "-g")) { // CAS563 add
+		if (equalOption(args, "-pg")) { // CAS563 add
 			Globals.bQueryPgeneF=true;
-			System.out.println("-g  Run PgeneF algorithm in place of Cluster algorithm");
+			System.out.println("-pg  Run PgeneF algorithm in place of Cluster algorithm");
 		}
 		if (equalOption(args, "-a")) { 
 			Globals.bTrim=false;

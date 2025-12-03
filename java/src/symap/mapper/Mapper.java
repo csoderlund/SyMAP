@@ -200,9 +200,9 @@ public class Mapper extends JComponent implements  MouseMotionListener, MouseLis
 		return (trackHolders[0].getTrack()!=null && trackHolders[1].getTrack()!=null);
 	}
 	/******************************************************************/
-	// called by HelpBar
+	// called by HelpBar; see HelpBar.setHelp for removing \n if from Query 2D
 	public String getHelpText(MouseEvent e) { 
-		if (helpText == null) return hitFilData.getFilterText() + "    \n" + seqHitObj.getInfo();
+		if (helpText == null) return hitFilData.getFilterText() + "\n" + seqHitObj.getInfo(); // CAS57 remove blanks before \n
 		
 		return helpText; 
 	}

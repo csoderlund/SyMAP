@@ -23,6 +23,16 @@ public class Popup {
 	 * XXX Popups
 	 */
 	// isModal=true means that everything is frozen until the window is closed
+	// these allow formatted messages, but only have OK at the bottom of window
+	public static void showMonoWarning(Component parent, String message) {
+		displayInfoMonoSpace(parent, "Warning", message, true);
+	}
+	public static void showMonoError(Component parent, String message) {
+		displayInfoMonoSpace(parent, "Error", message, true);
+	}
+	public static void showMonoError(Component parent, String title, String message) {
+		displayInfoMonoSpace(parent, title, message, true);
+	}
 	public static void displayInfoMonoSpace(Component parentFrame, String title, 
 			String theMessage, boolean isModal) {
 		JOptionPane pane = new JOptionPane();
@@ -98,6 +108,10 @@ public class Popup {
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
 		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+	}
+	
+	public static void showErrorMsg(String msg) {
+		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 	
 	public static void showErrorMessage(String msg) {

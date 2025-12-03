@@ -42,11 +42,14 @@ public class DBdata implements Cloneable {
 	private static QueryPanel qPanel;
 	private static SpeciesPanel spPanel;
 	private static JTextField loadStatus;
-	private static boolean isSingle=false, isSingleGenes = false, isIncludeMinor = true, isGeneNum=false; 
+	private static boolean isSingle=false, isIncludeMinor = true; 
 	private static HashSet <Integer> grpIdxOnly=null;
 	
 	private static boolean isSelf=false; 
 	private static int cntMinorFail=0;	 // self-synteny cannot do minors
+	
+	private static String geneNum=null;
+	private static int geneOlap=0;
 									
 	private static int cntDup=0, cntFilter=0; // Globals.TRACE
 	private static int cntPlus2=0;	// check for possible pre-v547
@@ -67,9 +70,10 @@ public class DBdata implements Cloneable {
 		loadStatus 	= loadTextField;
 		
 		isSingle 		= qPanel.isSingle();
-		isSingleGenes 	= qPanel.isSingleGenes();
 		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
-		isGeneNum		= qPanel.isGeneNum();
+		if (qPanel.isGeneNum()) geneNum = qPanel.getGeneNum();
+		if (qPanel.isGeneOlap()) geneOlap = qPanel.getGeneOlap();
+		
 		isSelf			= qPanel.isSelf();
 		cntMinorFail    = 0; // isSelf only
 		
@@ -82,11 +86,11 @@ public class DBdata implements Cloneable {
 		grpIdxOnly = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
 		
 		try {
-			rsMakeRows(rs);	if (!bSuccess) return null;
-			filterRows();   	if (!bSuccess) return null;
+			rsMakeRows(rs);	if (!bSuccess) return null;		// DBdata will have both halfs (unless single)
+			filterRows();   if (!bSuccess) return null;
 		
 		// Finish
-			if (isGeneNum) { 					
+			if (geneNum!=null) { // Fill in other side from DB				
 				DBconn2 dbc = qPanel.getDBC(); 
 				boolean isAlgo2 = qPanel.isAlgo2();
 				
@@ -96,7 +100,8 @@ public class DBdata implements Cloneable {
          	}
 			cntRowNum=0;
          	for (DBdata dd : rows) {
-         		if (!dd.finishRow()) return rows;
+         		if (!dd.finishRow()) return rows;		// Create block string, chromosome strings and make anno keys 	
+         		
          		cntRowNum++;
 				if (cntRowNum%1000 ==0)  {
      				loadStatus.setText("Finished " + cntRowNum + " rows...");
@@ -105,8 +110,8 @@ public class DBdata implements Cloneable {
          	}
          	if (tablePanel.bStopped) return null;
          	
-         	if (isGeneNum) { 
-         		runSingleGene(rows);
+         	if (geneNum!=null) { 
+         		runGeneNum(rows);
          	}
          	else if (qPanel.isMultiN()) { // Multi - may remove rows and renumber
          		loadStatus.setText("Compute multi-hit genes...");
@@ -189,17 +194,20 @@ public class DBdata implements Cloneable {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
 	}
-	/************************************************************/
+	/************************************************************
+	 * Rows have been merged, but not finished
+	 * Singles use 
+	 */
 	private static void filterRows() {
 	try {
-		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || isGeneNum
-						|| qPanel.isOneAnno() || qPanel.isOlapAnno());
+		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || geneNum!=null || geneOlap>0
+				|| qPanel.isOlapAnno()); // isOlapAnno -ii
 		if (!isFilter) return;
 			
 		cntRowNum=0;
 		Vector <DBdata> filterRows = new Vector <DBdata> ();
 		for (DBdata dd : rows) {
-			if (dd.passFilters()) {
+			if (dd.passRowFilters()) {
 				filterRows.add(dd);	
 				
 				cntRowNum++;
@@ -213,28 +221,7 @@ public class DBdata implements Cloneable {
 		}
 		rows.clear();
 		rows = filterRows;
-		
-	// Single only filter
-		if (isSingleGenes) {
-			int lastIdx=-1;
-			cntRowNum=0;
-			filterRows.clear();
-			for (DBdata dd : rows) {
-				if (lastIdx!= dd.geneSet0.first())  {// you have to have a gene
-					lastIdx = dd.geneSet0.first();
-					
-					filterRows.add(dd);	
-					cntRowNum++;
-					dd.rowNum = cntRowNum;
-					if (cntRowNum%Q.INC ==0) {
-						loadStatus.setText("Filtered " + cntRowNum + " rows...");
-						if (tablePanel.bStopped) {bSuccess=false; return;}
-					}
-				}
-			}
-			rows.clear();
-			rows = filterRows;
-		}		
+		// CAS578 removed single code that did nothing but prevent annotation from working
 	}
 	catch (Exception e) {ErrorReport.print(e, "filter rows");}
 	}
@@ -471,7 +458,7 @@ public class DBdata implements Cloneable {
 	/*************************************************
 	 * Add other geneTag of query; put results from Gene# in groups; 
 	 */
-	private static void runSingleGene(Vector <DBdata> rows) {
+	private static void runGeneNum(Vector <DBdata> rows) {
 	try {
 	/* Compute group  */
 		String inputGN = qPanel.getGeneNum();
@@ -537,15 +524,16 @@ public class DBdata implements Cloneable {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////
-	private static Vector <DBdata> runClustHits(Vector <DBdata> rows, HashMap<String, String> projMap ) {
+	// statsProjMap shows in statistics at end of each projects row
+	private static Vector <DBdata> runClustHits(Vector <DBdata> rows, HashMap<String, String> statsProjMap ) {
 		try {
 			HashMap<Integer,Integer> hitIdx2Grp = new HashMap<Integer,Integer>(); // hitIdx, Clust
     		HashMap<Integer,Integer> grpSizes = new HashMap<Integer,Integer>();   // Clust, size
     		
 			if (!Globals.bQueryPgeneF)  
-				new ComputeClust(rows,  qPanel, loadStatus, hitIdx2Grp,  grpSizes, projMap);
+				new ComputeClust(rows,  qPanel, loadStatus, hitIdx2Grp,  grpSizes); 
 			else {
-				new ComputePgeneF(rows, qPanel, loadStatus, hitIdx2Grp,  grpSizes, projMap); 
+				new ComputePgeneF(rows, qPanel, loadStatus, hitIdx2Grp,  grpSizes, statsProjMap); 
 			}	 	              
 			
 			hitIdx2Grp.put(0, 0); // for the annots that didn't go into a group
@@ -887,7 +875,7 @@ public class DBdata implements Cloneable {
 	 * The locations and hit gene filters are done here instead of MySQL where statement
 	 * This has to be performed after all hits are read for the isOneAnno and isOlapAnno
 	 */
-	private boolean passFilters() {
+	private boolean passRowFilters() {
 		try {
 			if (isSingle) { // anno check is in query; see below why it needs to be done here for !isSingle
 				if (grpStart.size()==0) return true;
@@ -918,13 +906,16 @@ public class DBdata implements Cloneable {
 					}
 				}
 			}
-						
+			if (qPanel.isGeneOlap()) { // Not checked in MySQL because will only return one-half, which looks the same as pseudo. CAS578
+				if (!geneTag[0].equals(Q.empty) && golap[0]<geneOlap) return false;
+				if (!geneTag[1].equals(Q.empty) && golap[1]<geneOlap) return false;
+			}
 			// only show if selected chr or no selection
 			boolean bChr0 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0]));
 			boolean bChr1 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1]));
 				
 			// when doing anno search as query, returned hits without anno if they overlap
-			// check to make sure anno is on the selected chr-only; put before one
+			// check to make sure anno is on the selected chr-only
 			if (qPanel.isAnnoTxt()) { 
 				String anno = qPanel.getAnnoTxt().toLowerCase();
 				
@@ -940,22 +931,19 @@ public class DBdata implements Cloneable {
 				return b;
 			}
 				
-			if (isGeneNum) {
-				String inputGN = qPanel.getGeneNum();
-				if (inputGN==null) {Globals.eprt("No gene num"); return false;}
-				
+			if (geneNum!=null) {
 				String tag0 = geneTag[0].replace(Q.minor,"").trim();	
 				String tag1 = geneTag[1].replace(Q.minor,"").trim();
 				
-				if (inputGN.endsWith(".")) inputGN = inputGN.substring(0, inputGN.length()-1);
+				if (geneNum.endsWith(".")) geneNum = geneNum.substring(0, geneNum.length()-1);
 				
-				if (!inputGN.contains(".")) { // e.g. 16.a and 16.b and inputNum=16
+				if (!geneNum.contains(".")) { // e.g. 16.a and 16.b and inputNum=16
 					tag0 = Utilities.getGenenumIntOnly(tag0);
 					tag1 = Utilities.getGenenumIntOnly(tag1);
 				}
 				
-				if (bChr0 && tag0!="-" && tag0.equals(inputGN)) return true;	
-				if (bChr1 && tag1!="-" && tag1.equals(inputGN))  return true;
+				if (bChr0 && tag0!="-" && tag0.equals(geneNum)) return true;	
+				if (bChr1 && tag1!="-" && tag1.equals(geneNum)) return true;
 					
 				return false;
 			}
@@ -1060,6 +1048,7 @@ public class DBdata implements Cloneable {
 	 */
 	protected int    getSpIdx(int x) 	{return spIdx[x];}
 	protected int    getChrIdx(int x) 	{return chrIdx[x];}
+	protected String getChrNum(int x) 	{return chrNum[x];} // For ComputeClust CAS578
 	protected int 	 getHitIdx() 		{return hitIdx;}
 	protected int [] getCoords() {
 		int [] x = {hstart[0], hend[0], hstart[1], hend[1]}; 

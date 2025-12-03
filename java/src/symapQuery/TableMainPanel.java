@@ -2,7 +2,6 @@ package symapQuery;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -59,6 +58,7 @@ public class TableMainPanel extends JPanel {
 	protected static final int showREGION=0, showSET=1, showBLOCK=2,  showGRP=3; 
 	
 	static protected TableSort theLastTable = null; // keep using last order of columns for session
+	private int abbrWidth, abbrSp=7;
 	
 	// called by QueryFrame
 	protected TableMainPanel(QueryFrame parentFrame, String tabName,  boolean [] selCols,
@@ -76,6 +76,9 @@ public class TableMainPanel extends JPanel {
 		this.isClustN		= queryPanel.isClustN();
 		this.isGroup		= queryPanel.isGroup();
 		this.isSelf			= queryPanel.isSelf();
+		
+		String ab=""; for (int i=0; i<Globals.abbrevLen; i++) ab+=i+"";
+		abbrWidth = new JLabel(ab).getPreferredSize().width;
 		
 		if(selCols != null) {
 			theOldSelCols = new boolean[selCols.length];
@@ -461,15 +464,17 @@ public class TableMainPanel extends JPanel {
     	
     	for(int x=0; x<species.length; x++) {
     		JPanel row = Jcomp.createRowPanel();
+        	row.add(Box.createHorizontalStrut(5));
         	
-    		row.add(createSpeciesLabel(species[x]));
-    		row.add(Box.createHorizontalStrut(5));
+    		JLabel abbr = Jcomp.createMonoLabel(species[x], 11);
+    		row.add(abbr);
+    		row.add(Box.createHorizontalStrut(Jcomp.getWidth(abbrWidth, abbr) + abbrSp));
     		
     		for (int i=0; i<cntCol; i++) { 
     			chkSpeciesFields[x][i] = Jcomp.createCheckBox(colHeads[i], colDesc[i], colDefs[i]);   
     			chkSpeciesFields[x][i].addActionListener(colSelectChange);
     			row.add(chkSpeciesFields[x][i]);
-        		row.add(Box.createHorizontalStrut(4));
+        		row.add(Box.createHorizontalStrut(5));
     		}
         	page.add(row);
         	if (x < species.length - 1) page.add(new JSeparator());
@@ -480,11 +485,7 @@ public class TableMainPanel extends JPanel {
 
     	return page;
     }
-    private JLabel createSpeciesLabel(String name) {
-    	JLabel label = new JLabel(name,JLabel.RIGHT);
-    	label.setFont(new Font("Monospaced",Font.PLAIN, 11));
-    	return label;
-    }
+  
     /*******************************************
      *  Annotation from gff file
      */
@@ -521,8 +522,9 @@ public class TableMainPanel extends JPanel {
         	
         	// Species name
         	String abbrev = theAnnoKeys.getSpeciesAbbrev(spPos[pos]);
-        	JLabel spLabel = createSpeciesLabel(abbrev);
-        	row.add(spLabel); 		row.add(Box.createHorizontalStrut(10));
+        	JLabel spLabel = Jcomp.createMonoLabel(abbrev, 11);
+        	row.add(spLabel); 
+        	row.add(Box.createHorizontalStrut(Jcomp.getWidth(abbrWidth, spLabel) + abbrSp));
         	
         	int curWidth = ANNO_COLUMN_WIDTH;
         	Iterator<JCheckBox> annoIter = spIter.next().iterator();
@@ -542,8 +544,7 @@ public class TableMainPanel extends JPanel {
         		row.add(Box.createHorizontalStrut(5));
         	}
         	colPanel.add(row);
-        	if(spIter.hasNext())
-        		colPanel.add(new JSeparator());
+        	if(spIter.hasNext()) colPanel.add(new JSeparator());
         	pos++;
     	}
     	retVal.add(colPanel);

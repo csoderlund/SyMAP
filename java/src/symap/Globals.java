@@ -14,8 +14,8 @@ import java.io.File;
  * Version changes may be in (1) database.Version, (2) in code calling DBconn2.tableCheckAddColumn or (3) Version.isVerLt
  */
 public class Globals {
-	public static final String 	VERSION = "v5.7.7";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
-	public static final String 	DATE = " (15-Nov-25)";
+	public static final String 	VERSION = "v5.7.8";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
+	public static final String 	DATE = " (3-Dec-25)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -34,8 +34,8 @@ public class Globals {
 	public static boolean bMySQL=false;		  // -sql; check MySQL 
 	public static boolean bTrim=true;		  // -a do not trim 2D alignments; see closeup.AlignPool
 	public static boolean bRedoSum=false;	  // -s redo summary 
-	public static boolean bQueryOlap=false;   // -q show gene olap for algo2 instead of exon
-	public static boolean bQueryPgeneF=false; // -g run old PgeneF algo instead of new Cluster;
+	public static boolean bQueryOlap=false;   // -go show gene olap for algo2 instead of exon (was -q CAS578)
+	public static boolean bQueryPgeneF=false; // -pg run old PgeneF algo instead of new Cluster; (was -g CAS578)
 
 	public static final String exonTag = "Exon #";	 // type exon
 	public static final String geneTag = "Gene #";   // type gene
@@ -50,6 +50,7 @@ public class Globals {
 	public static final String pseudoChar = "~";	 // pseudo tag;
 	public static final String minorAnno = "*";      // used in Query and Anno popup for hit to non-assigned anno
 	public static final String DOT = ".", SDOT="\\.";// separates block, collinear, gene#; second is for split
+	public static final int abbrevLen = 5;			 // max length of abbreviation of project name; CAS578 
 	
 	public static final int MAX_CLOSEUP_BP=50000;	// Used in CloseUp and Query; 
 	public static final String MAX_CLOSEUP_K = "50kb";
@@ -59,7 +60,7 @@ public class Globals {
 	
 	public static final int T=0, Q=1;				// for target (2) and query (1); 
 	
-	public static final String IGN = "IGN";		// self-synteny; for Report
+	public static final String IGN = "IGN";			// self-synteny; for Report
 	
 	public static final int NO_VALUE = Integer.MIN_VALUE;
 

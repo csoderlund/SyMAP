@@ -57,7 +57,7 @@ public class QueryFrame extends JFrame {
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
 		String [] ab = getAbbrevNames();
-		for (int i=0; i<ab.length-1; i++) {// Dup abbrev are not checked in ProjParams
+		for (int i=0; i<ab.length-1; i++) {// This is now checked in ProjParams, but to be sure...
 			for (int j=i+1; j<ab.length; j++) {
 				if (ab[i].equals(ab[j])) {
 					Popup.showErrorMessage("Duplicate abbreviations of " + ab[i] + "\nPlease fix with symap and try again.");

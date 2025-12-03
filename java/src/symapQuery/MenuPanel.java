@@ -106,6 +106,7 @@ public class MenuPanel extends JPanel {
 		removeAll();
 		repaint();
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		add(Box.createVerticalStrut(15));		// add space at top
 		
 		for(int x=0; x<theOptions.length; x++) {
 			add(theOptions[x]);

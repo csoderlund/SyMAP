@@ -34,6 +34,7 @@ import backend.Utils;
  */
 
 public class Mproject implements Comparable <Mproject> {
+	private final int abbrevLen = Globals.abbrevLen;
 	public String strDBName; 	// This is SQL project.name, and seq/dirName
 	public String strDisplayName;
 	
@@ -585,7 +586,7 @@ public class Mproject implements Comparable <Mproject> {
 		finishParams();
 	}
 
-	private void finishParams() { 
+	private void finishParams() { // DisplayName, Abbrev
 		strDisplayName = getDBVal(sDisplay).trim(); 
 		if (Utilities.isEmpty(strDisplayName)) {
 			strDisplayName = getProjVal(sDisplay).trim(); 
@@ -599,13 +600,10 @@ public class Mproject implements Comparable <Mproject> {
 		if (Utilities.isEmpty(abbrev)) {
 			abbrev = getProjVal(sAbbrev).trim();
 			
-			if (Utilities.isEmpty(abbrev)) {
+			if (Utilities.isEmpty(abbrev)) { // could get duplicate for new project, but checked in Param Save and QueryFrame
 				int len = strDisplayName.length();
-				if (len>4) abbrev = strDisplayName.substring(len-4);
-				else {
-					abbrev=strDisplayName;
-					for (int i=len; i<4; i++) abbrev += "_";
-				}
+				if (len>abbrevLen) abbrev = strDisplayName.substring(0, abbrevLen);// 1st char (was last CAS578)
+				else 			   abbrev = strDisplayName;
 				setProjVal(sAbbrev, abbrev);
 			}
 		}
@@ -652,6 +650,7 @@ public class Mproject implements Comparable <Mproject> {
 		numSynteny = dbc2.executeCount("select count(*) from pairs where proj1_idx=" + projIdx +
 				" or proj2_idx=" + projIdx); 
 	}
+	// The writeParamsFile is in ProjParams; this is for new projects
 	private void writeNewParamsFile() { 
 		if (Utilities.isEmpty(strDBName)) return; // OrderAgainst writes the file, but not with Mproject
 		String dir = Constants.seqDataDir + strDBName;
@@ -663,9 +662,9 @@ public class Mproject implements Comparable <Mproject> {
 		
 		try {
 			PrintWriter out = new PrintWriter(pfile);
-			out.println("#");
-			out.println("#  " + strDisplayName + " project parameter file");
+			out.println("#  Directory " + strDBName + " project parameter file");
 			out.println("#  Note: changes MUST be made in SyMAP parameter window");
+			out.println("#");
 			out.println(getKey(sDisplay) + " = " + strDisplayName);
 			out.println(getKey(sAbbrev) + " = " + getProjVal(sAbbrev));
 			out.println(getKey(sDesc) + " =  New project");
@@ -753,7 +752,7 @@ public class Mproject implements Comparable <Mproject> {
 	private String [] paramDesc = { 
 			"Select a Category from the drop down or enter a new one in the text box.", 
 			"This name will be used for the project everywhere.", 
-			"This must be exactly 4 characters to be used in Queries.", 
+			"This must be <= characters to be used in Queries.", 
 			"Group type is generally 'Chromosome'; this is used as a label on the Selected panel.", 
 			"The description is information to display with the project.", 
 			"If there are at least this many occurances of a keyword, it will be a column in Queries",

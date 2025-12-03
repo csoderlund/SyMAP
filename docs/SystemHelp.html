@@ -343,17 +343,18 @@ values are saved in the <tt>symap_5/data/seq/&lt;project-name&gt;/params.txt</tt
 	and <ttl>project-names</ttl></i>.
 
 	<td><ttl>project-name</ttl>
-	<td><ttl>Selected</ttl> and all displays.
+	<td><ttl>Selected</ttl><br>and all displays
 
 <tr><td>&nbsp;&nbsp;<ttl>Abbreviation</ttl>
-	<td>A name this is exactly 4 characters.
+	<td>A name must be &lt;= 5 characters.
 	Names must be composed of only letters, numbers, dash, underscore, period.
 
 	<p>Uniqueness is not required over other <ttl>Abbreviation</ttl>.
 	It can be the same as the corresponding <ttl>Display name</ttl>
-	or <ttl>project-name</ttl> if they are only 4 characters.
-	<td>Last 4 characters of <ttl>Display name</ttl>.
-	<td><ttb>Queries</ttb> column headings, and other places where a guaranteed short name is needed.
+	or <ttl>project-name</ttl>. However, it must be different between projects
+	that are compared in <ttl>Queries</ttl>.
+	<td>First 5 characters of <ttl>Display name</ttl>
+	<td><ttb>Queries</ttb> column headings and <ttp>Pair Parameters</ttp>
 
 <tr><td>&nbsp;&nbsp;<ttl>Description</ttl>
 	<td>Description of the project.
@@ -489,8 +490,6 @@ viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
 <p>When the project is loaded, all parameters are saved to the database except the <ttl>A&amp;S</ttl> parameters
 (<ttl>Mask-genes</ttl> and <ttl>Order-against</ttl>).
 When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are saved to the database.
-
-<p>Any parameter that does not have the default value will be shown on the <ttb>View</ttb> popup.
 
 <hr>
 <!----------------------------------------------------------------------->

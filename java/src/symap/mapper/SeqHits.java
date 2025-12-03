@@ -48,7 +48,7 @@ public class SeqHits  {
 	private boolean st1LTst2=true; 	   // if seqObj1.track# <seqObj2.track#, query is left track, else, right
 	
 	private String infoMsg=""; 
-	private int cntShowHit=0, cntHighHit=0;
+	private int cntShowHit=0, cntHighHit=0;	
 	private int lastText1=0, lastText2=0;		// Do not print text on top of another
 	
 	private int nG2xN=0;
@@ -214,7 +214,7 @@ public class SeqHits  {
 		Point stLoc2 = seqObj2.getLocation();
 		int trackPos1 = mapper.getTrackPosition(seqObj1); // left or right
 		int trackPos2 = mapper.getTrackPosition(seqObj2);
-		ArrayList<DrawHit> highHits = new ArrayList<DrawHit>(); 
+		ArrayList<DrawHit> selHits = new ArrayList<DrawHit>(); 
 		
 		TreeMap <Integer, Integer> highMap = new TreeMap <Integer, Integer> (); // if collinear or blocks is highlighted
 		int hcolor=1; 
@@ -266,7 +266,7 @@ public class SeqHits  {
 		HashSet <Integer> numSet = new HashSet <Integer> (); // count blocks/sets shown
 		hcolor=1; 
 
-		// Draw all lines but hover
+		// Draw all lines but hover or selected from Query Table
 		for (DrawHit dh : allHitsArray) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
@@ -274,7 +274,7 @@ public class SeqHits  {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 				if (set!=0) hcolor = highMap.get(set);
 			}
-			if (dh.isHover || dh.isQuerySelHit) highHits.add(dh); 
+			if (dh.isHover || dh.isQuerySelHit) selHits.add(dh); 
 			else {
 				dh.paintComponent(g2, trackPos1, trackPos2, stLoc1, stLoc2, hcolor, false);
 				if (bHiLight) {
@@ -283,9 +283,10 @@ public class SeqHits  {
 				}
 			}
 		}
+		int cntGrpHits=0;
 		
 		// Draw hover hits on top with highlight
-		for (DrawHit dh : highHits) {
+		for (DrawHit dh : selHits) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
 			dh.paintComponent(g2,trackPos1,trackPos2,stLoc1,stLoc2, 1, false);
@@ -293,6 +294,7 @@ public class SeqHits  {
 				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
 				if (set!=0 && !numSet.contains(set)) numSet.add(set);
 			}
+			if (dh.isQuerySelHit) cntGrpHits++;
 		}
 		
 		// Draw text on top of hits
@@ -302,10 +304,12 @@ public class SeqHits  {
 			}
 		}
 				
-		// Information box on Stats
+		// Information box on Stats; \n and extra blanks removed for Query 2D in HelpBar.setHelp
 		infoMsg =  String.format("Hits:   %,d", cntShowHit);
 		
 		if (bHi)          infoMsg += String.format("\nHigh:   %,d",  cntHighHit);// after hits since it high hits
+		if (cntGrpHits>0) infoMsg += String.format("\nGroup Hits: %,d",  cntGrpHits);// only from Queries Group
+		
 		if (bHiBlock)     infoMsg += String.format("\nBlocks: %,d", numSet.size());
 		else if (bHiCset) infoMsg += String.format("\nCosets: %,d", numSet.size());
 		
@@ -485,8 +489,9 @@ public class SeqHits  {
 			 if (isHover)     return Mapper.pseudoLineHoverColor;	
 			
 			 HfilterData hf = mapper.getHitFilter(); 
+			 
 			 if (hf.isHiPopup() && hitDataObj.isPopup()) return Mapper.pseudoLineGroupColor;
-			 if (hf.isHiPopup() && isQuerySelHit)        return Mapper.pseudoLineGroupColor;	
+			 if (hf.isHiPopup() && isQuerySelHit)        return Mapper.pseudoLineGroupColor;
 			 
 			 if (hitDataObj.isHighG2xN()) { // takes precedence over highlight
 				 if (hitDataObj.isForceG2xN()) {

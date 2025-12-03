@@ -81,8 +81,9 @@ public class FileDir {
 		try {
 			File f = new File(dir);
 			if (f.exists() && f.isFile()) {
-				ErrorReport.die("Please remove file " + f.getName()
+				Popup.showErrorMessage("Please remove file " + f.getName()
 					+ " as SyMAP needs to create a directory at this path");
+				return null;
 			}
 			if (!f.exists()) {
 				f.mkdir();

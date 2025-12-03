@@ -279,7 +279,8 @@ a single chromosome can be selected, but location cannot be entered.
 <td><a href="#block">Block</a>
 <td><a href="#genehit">Annotated</a>
 <td><a href="#coset">Collinear size</a>
-<td><a href="#enter">Enter value</a>
+<td><a href="#hitge">Hit &gt;=</a>
+<td><a href="#enter">Exact</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
@@ -289,11 +290,11 @@ Each hit connects two <i>species (projects)</i> and hence represents a <i>pair</
 regions for two of the selected species.
 <p>Filters are as follows:
 <td><a href="img/query_pair.png">
-<img src="img/query_pair.png" alt="Pair" style="border: 1px solid black; width: 400px"></a>
+<img src="img/query_pair.png" alt="Pair" style="border: 1px solid black; width: 500px"></a>
 </table>
 
 <a id="block"></a>
-<p><ttl>In Block (Synteny Hit)</ttl>
+<p><ttlb>In Block (Synteny Hit)</ttlb>
 <table class="tx">
 <tr><td  style="vertical-align: text-top;"><ttl>Yes</ttl><td><td>&nbsp;<td>Only hits that are part of a synteny
 block will be returned. All hits will have a value for the <ttx>Block</ttx> column.
@@ -302,7 +303,7 @@ block will be returned. No hits will have a value for the <ttx>Block</ttx> colum
 </table>
 
 <a id="genehit"></a>
-<p><ttl>Annotated (Gene Hit)</ttl>
+<p><ttlb>Annotated (Gene Hit)</ttlb>
 <table class="tx">
 	<tr><td style="vertical-align: text-top;">
 		<ttl>Every</ttl><td>&nbsp;
@@ -330,7 +331,7 @@ the hit must be on the species chromosome, but the "one" gene can be on either e
 </table>
 
 <a id="coset"></a>
-<p><ttl>Collinear size</ttl>
+<p><ttlb>Collinear size</ttlb>
 <table class="tx">
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttl>&gt;=, =, &lt;= N</ttl>
@@ -343,37 +344,58 @@ the hit must be on the species chromosome, but the "one" gene can be on either e
 	<tr><td colspan=3>See <a href="Details.html" class="ext" target="_blank">Collinear</a>, which explains the SyMAP collinear sets.
 </table>
 
+<a id="hitge"></a>
+<p><ttlb>Hit &gt;=</ttlb>
+<table class="tx"><tr><td>Enter the lower limit number for one or more text boxes, where they correspond to the column of the same name, i.e.
+<ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx>, <ttx>%Olap</ttx>.
+The first 3 are not relative to any gene.
+For <ttx>%Olap</ttx>, the lower limit will be on each <ttx>%Olap</ttx> gene in a row.
+</table>
+
 <a id="enter"></a>
-<p><u>Enter value:</u> For the following 4 filters, <i>do not include the 'Chr' number</i>. Instead use the chromosome pull-downs
+<p><ttlb>Exact</ttlb>
+<table class="tx">
+<tr><td colspan=2>For the following 4 filters, <i>do not include the 'Chr' number</i>. Instead use the chromosome pull-downs (from <ttl>General</ttl> section)
 to narrow the search to a specific chromosome, as exampled in <ttl>Block#</ttl>.
-<p><ttl>Block#</ttl>
-<br>Enter a single block number (<u>the <ttx>Block</ttx> column is formatted Chr.Chr.Block#</u>).
-<br>This will display all hits with this block number from any chromosome pair.
-<p>Example using the chromosome pull-downs: if you select Chr 1 from the first project, Chr 2 from a second project, and enter block=3, you will see
-hits in block 1.2.3.
 
-<p><ttl>Collinear Set#</ttl>
-<br>Enter a set number (<u>the <ttx>Collinear</ttx> column is formatted Chr.Chr.Size.Set#</u>).
-<br>This will display all hits with this set number from any chromosome pair. See <ttl>Block</ttl> example.
+<tr><td  style="white-space: nowrap;vertical-align: text-top;"><ttl>Block#</ttl><td>
+Enter a single block number (<u>the <ttx>Block</ttx> column is formatted Chr.Chr.Block#</u>).
+<br>Narrow the search by using the chromosome pull-downs, as shown in the examples below.
+<ol>
+<li>Enter block=3. All hits from N.M.3 blocks will be shown, where N and M are chromosome numbers.
 
-<p><ttl>Hit#</ttl>
-<br>Enter a hit number. Both major and minor gene hits will be shown.
-<br>This will display all hits with this number from any chromosome pair. See <ttl>Block</ttl> example.
+<li>Enter block=3 and select Chr 2 from the second project. All hits from N.2.3 blocks will be shown.
+
+<li>Enter block=3, select Chr 1 from the first project, Chr 2 from a second project.
+All hits in block 1.2.3 will be shown.
+</ol>
+<tr><td  style="vertical-align: text-top;"><ttl>Collinear Set#</ttl>
+<td>Enter a set number (<u>the <ttx>Collinear</ttx> column is formatted Chr.Chr.Size.Set#</u>).
+<br>Narrow the search by using the chromosome pull-downs.
+
+<tr><td  style="white-space: nowrap;vertical-align: text-top;"><ttl>Hit#</ttl>
+<td>Enter a hit number. Both major and minor gene hits will be shown.
+<br>Narrow the search by using the chromosome pull-downs.
 
 <a id="genenum"></a>
-<p><ttl>Gene#</ttl>
-<br>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u>, where suffix may be blank).
-<br>A row will only show if the gene has a hit. All hits with the <ttx>Gene#</ttx> on either end will be shown.
-<br>&rarr; If a gene has a suffix:
-<br>&nbsp;&bull; If only a number is entered, all genes with the numeric prefix will be displayed (including minor hits).
-<br>&nbsp;&bull; If a number.suffix is entered, the exact gene will be displayed, including minor hits.
-<br>&rarr; Select a chromosome:
-<br>&nbsp;&bull; The hit has to have one end to the chromosome, but the <ttx>Gene#</ttx> can be on either end.
-<br>&nbsp;&bull; By unselecting the other species (see <a href="#active">Unselect species</a>), the <ttx>Gene#</ttx> will only be on the specified end.
-<br>&rarr; Group:
-<br>&nbsp;&bull; When a gene hits multiple places on the same opposite chromosome, the hits are put in a group
-<br>&nbsp;&nbsp;&nbsp;(see <ttx>Group</ttx> column), which can be viewed with the
-<ttl>2D</ttl> <a href="#group">Group</a> pull-down option (similar to <a href="#group_ex">Multi-hit</a>).
+<tr><td  style="white-space: nowrap;vertical-align: text-top;"><ttl>Gene#</ttl>
+<td>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u>).
+<ul>
+<li>If a gene has a suffix:
+<ul>
+<li>If only a number is entered, all genes with the numeric prefix will be displayed, including minor hits.
+<li>If a number.suffix is entered, the exact gene will be displayed, including minor hits.
+</ul>
+<br>
+<li>All hits with the <ttx>Gene#</ttx> on either end will be shown unless narrowed
+by the chromosome pull-downs as follows:
+<ul>
+<li>The hit has to have one end to the selected chromosome, but the <ttx>Gene#</ttx> can be on either end.
+<li>By unselecting the other species (see <a href="#active">Unselect species</a>),
+the <ttx>Gene#</ttx> will <i>only</i> be on the selected chromosome.
+</ul>
+</ul>
+</table>
 <!--------------------------------------------------->
 <a id="pfs"></a>
 <h3>4. Compute Groups</h3>
@@ -385,7 +407,8 @@ hits in block 1.2.3.
 
 <p>These two options are computed on the fly.
 They produce query results with values for the <ttx>Group</ttx> column; this in turn
-allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used.
+allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used. See
+<a href="#stat">Statistics</a> for their summary.
 
 <a id="multi"></a>
 <h4>4.1. <ttl>Multi-hit genes</ttl></h4>
@@ -395,12 +418,9 @@ allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used.
 <p>List all genes that have <ttl>&gt;= N</ttl> hits <i>to the same species</i>.
 <ul>
 <li>The <u>target</u> gene refers to the gene with &gt;= N hits to the <u>opposite</u> species.
-<li>The target must be a gene, but it can be to non-gene hits on the opposite species.
-<li>Used with the following filters:
-<ul>
-<li><ttl>Both</ttl> (<ttx>Annotated Genes</ttx>): if selected, the opposite species must also have a gene hit.
-<li><ttl>Chr</ttl>: If one or more chromosomes are selected, the target genes will only be on those chromosomes.
-</ul>
+<li>The target must be a gene, but it can be to un-annotated hits on the opposite species, regardless if they are numbered pseudos.
+Use the <ttl>Both</ttl> genes filter to exclude them.
+<li>These can be pre-filtered by species chromosome, <ttl>%Olap</ttl>,  etc.
 <li>See <a href="#rmulti">Multi-hit Gene Report...</a> for a good way to see a condensed view of the results.
 </ul>
 <br>The options are as follows:
@@ -445,8 +465,10 @@ same 2D display).
 <li>This algorithm finds clusters of overlapping genes. That is, every gene in the cluster aligns to at least one
 other gene in the cluster, and all genes that align to any gene in the cluster are included.
 <li>Each cluster is given a group number, which is shown in the Query Results table (column name <ttx>Group</ttx>).
-<li>These can be pre-filtered by species chromosome, <ttl>One</ttl> gene,  etc.
-<li>Pseudo (un-annotated) will be included if they are number.
+<li>These can be pre-filtered by species chromosome, <ttl>%Olap</ttl>,  etc.
+<li>Pseudo (un-annotated) will be included if they are number. Use <ttl>Both</ttl> genes to exclude pseudo;
+use <ttl>One</ttl> gene to only show gene to pseudo.
+<li>See <a href="#rclust">Cluster Report...</a> for a good way to see a condensed view of the results.
 </ul>
 
 <table class="tx"><tr><td>
@@ -468,14 +490,13 @@ other gene in the cluster, and all genes that align to any gene in the cluster a
 </table>
 
 <p><u>Alternative algorithm</u>:
-<br><ttl>PgeneF</ttl>: If you start <ttp>viewSymap</ttp> with the "-g" flag, you will see the
+<br><ttl>PgeneF</ttl>: If you start <ttp>viewSymap</ttp> with the "-pg" flag, you will see the
 filters from the original PgeneF cluster algorithm.
 &rarr;<i>Note: the PgeneF feature has not been tested for a long time except superficially
 (i.e. making sure it has the same results as the previous release)</i>.
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
-If you start <ttp>viewSymap</ttp> with the "-g" flag, you will see the
-filters as shown on the right. The one addition to v5.6.3 is the &gt;= N hits filter.
+If you start <ttp>viewSymap</ttp> with the "-pg" flag, you will see the filters as shown on the right.
 <td><a href="img/query_clust1.png">
 	<img src="img/query_clust1.png" alt="Cluster3" style="border: 1px solid black; width: 360px"></a>
 </table>
@@ -508,7 +529,7 @@ using all hits.
 <img src="img/query_result.png" alt="query results" style="border: 1px solid black; width: 600px"></a>
 
 <ul>
-<li><ttx>Pair Hits</ttx>:
+<li><ttx>Pair hits</ttx>:
 	<ul>
 	<li>The table contains columns for <i>all</i> of the selected species, but each hit only connects two species, and the other species columns are empty.
 	<li>Each <ttx>Hit#</ttx> is only listed once unless minor genes are included (see <a href="#rules">Rules</a>).
@@ -618,6 +639,8 @@ are the full descriptions of the columns.
 	the <i>gene overlap</i>.
 	<br><ttx>Algo2</ttx>: If <i>all</i> of the project pairs used <ttx>Algo2</ttx>, then this column will be
 	the <i>exon overlap</i>.
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		In order to view the <i>gene overlap</i> instead, start <ttp>viewSymap</ttp> with the "-go" flag.
 
 <tr><td colspan=3><ttl>Annotation</ttl>: one row for each species
 <tr><td colspan=3>The keywords for the annotations of each species are listed;
@@ -673,11 +696,12 @@ hidden by selecting <ttl>Hide Stats</ttl>.
 <p><a href="img/query_stats.png"><img src="img/query_stats.png" alt="result stats" style="border: 1px solid black; width: 450px"></a>
 
 <p>Most of the statistics are self-explanatory except the following:
+<p><ttx>Hits</ttx>: These are not shown if there are just two species.
 <p><ttx>Annotated</ttx> and <ttx>Genes</ttx>: The first is the number of hits that
 overlap one or more genes, where a gene can have multiple hits.
 The second is the number of Genes with at least one hit.
-<p><ttx>Groups</ttx>: This statistic is only shown if the <ttl>Group</ttl> column is populated.
-<br>For <ttl>Multi-hit Genes</ttl>: there is a column with the number of groups with each of the other species.
+
+<p>For <ttl>Multi-hit Genes</ttl>: For each species, there is a column with the number of groups with a multi-hit gene.
 If there is over 2 species, this will also include the highest group number in parenthesis. For example,
 <table>
 <tr><td>
@@ -821,9 +845,7 @@ The region displayed can be specified by the drop-down beside the <ttl>View 2D</
 	will be shown (see 2D image on lower right).
 </table>
 
-
 <p><u>Example:</u>
-
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 	<td style="vertical-align: text-top;">

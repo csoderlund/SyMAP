@@ -448,7 +448,8 @@ public class Jcomp {
 		return (width > lab.getPreferredSize().width);
 	}
 	public static int getWidth(int width, JLabel lab) {// use with Box.createHorizontalStrut for spacing
-		return width - lab.getPreferredSize().width;
+		if (isWidth(width, lab)) return width - lab.getPreferredSize().width;
+		return 0;
 	}
 	public static boolean isWidth(int width, JComponent lab) {
 		return (width > lab.getPreferredSize().width);

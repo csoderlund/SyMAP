@@ -6,6 +6,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 
+import symap.Globals;
 import symap.manager.Mproject;
 import util.Jcomp;
 
@@ -16,103 +17,115 @@ public class OverviewPanel extends JPanel {
 	private static final long serialVersionUID = 6074102283606563987L;
 	
 	protected OverviewPanel(QueryFrame parentFrame) {
-		theQueryFrame = parentFrame;
+		qFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
-		buildOverview();
+		buildOverview(qFrame.isSelf);
 		add(mainPanel);
 	}
 	
-	private void buildOverview() {
+	private void buildOverview(boolean isSelf) {
 		mainPanel = Jcomp.createPagePanel();
 		mainPanel.add(Box.createVerticalStrut(30));
 		
-		// Project table
+	// Project table
 		mainPanel.add(Jcomp.createItalicsBoldLabel("Selected projects:", 12)); mainPanel.add(Box.createVerticalStrut(2));
-		Vector<Mproject> projVec = theQueryFrame.getProjects();
+		Vector<Mproject> projVec = qFrame.getProjects();
 		
-		int w=8, cntHasGenes=0;
+		int w=5, cntHasGenes=0;
 		for (Mproject p : projVec) w = Math.max(w, p.getDisplayName().length());
-		String nf = String.format("     %s%ds", "%-", w); // e.g. "%-20s"
+		String fmt = "    %-" + w + "s   %-" + Globals.abbrevLen + "s  %7s   %s";	 // add Globals.abbrevLen CAS578
 		
-		String headings = String.format(nf, "Name") +
-				      String.format("   %4s   %7s   %s",  "Abbr", "#Genes", "Description");
+		String headings = String.format(fmt, "Name" , "Abbr", "#Genes", "Description");
 		JLabel lblHead = Jcomp.createItalicsLabel(headings, 12);
 		mainPanel.add(lblHead); mainPanel.add(Box.createVerticalStrut(2));
 
 		for (Mproject mp : projVec) {
-			String line= String.format(nf, mp.getDisplayName()) +
-					String.format("   %4s   %,7d   %s", mp.getdbAbbrev() , mp.getGeneCnt(), mp.getdbDesc());
-			mainPanel.add(Jcomp.createMonoLabel(line, 12));
+			String gc = String.format("%,d", mp.getGeneCnt());
+			String line = String.format(fmt, mp.getDisplayName(), mp.getdbAbbrev() , gc, mp.getdbDesc());
+			mainPanel.add(Jcomp.createMonoLabel(line, 12)); // font size
 			mainPanel.add(Box.createVerticalStrut(5));
 			
 			if (mp.getGeneCnt()>0) cntHasGenes++;
 		}
-		mainPanel.add(Box.createVerticalStrut(20));
-		
-		// Notes
+		int w1=20, w2=8; // section, items within section
+		mainPanel.add(Box.createVerticalStrut(w1));
+	
 		String head = "<html><body style='font-family: verdana, Times New Roman; font-size: 10px'>";
 		String tail = "</body></html>";
+		String indent = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+		head += indent;
+		
+	// Notes: either gene or no gene 
+		int cntPseudo = qFrame.cntUsePseudo; 
+		int cntSynteny = qFrame.cntSynteny;
 		
 		mainPanel.add(Jcomp.createItalicsBoldLabel("Notes:", 12)); mainPanel.add(Box.createVerticalStrut(5));
-		String msg = head;
 		
+		if (isSelf) {
+			String self = "Self-synteny: Project ending with 'X' has homologous regions within the same project.";
+			mainPanel.add(Jcomp.createLabel(head + self + tail)); mainPanel.add(Box.createVerticalStrut(w2));
+		}
 		if (cntHasGenes>0) {
-			// Olap
-			String algo = theQueryFrame.isAlgo2() ? "<i>Algo2:</i>  " : "<i>Algo1:</i>  "; 
+			// Algo
+			String algo = qFrame.isAlgo2() ? "<i>Algo2:</i>&nbsp;  " : "<i>Algo1:</i>&nbsp;  "; 
 			algo += "The Olap column is ";
-			algo += theQueryFrame.isAlgo2() ? "exon overlap; Olap may be 0 if hits only overlap intron." 
-					                        : "gene overlap; at least one project used Algo1 or has no genes.";
-			msg += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + algo;	
+			if  (qFrame.isAlgo2() && Globals.bQueryOlap==false) 
+										algo += "exon overlap; Olap may be 0 if hits only overlap intron.";
+			else {
+				if (Globals.bQueryOlap) algo += "gene overlap; flag -go was used.";
+				else 					algo += "gene overlap; at least one project used Algo1 or has no genes.";
+			}
+			mainPanel.add(Jcomp.createLabel(head + algo + tail)); mainPanel.add(Box.createVerticalStrut(w2));
 			
 			// Pseudo
-			msg += "<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Pseudo</i>: "; 
-			int cntPseudo = theQueryFrame.cntUsePseudo; 
-			int cntSynteny = theQueryFrame.cntSynteny;
-			
-			String pg = "Un-annotated Pseudo Gene# assigned";
-			if (projVec.size()==2)  msg += (cntPseudo==1) ? pg : "No " + pg;	
+			String pseudo = "<i>Pseudo</i>: "; 
+			String pg = " assigned Pseudo Gene# for un-annotated.";
+			if (projVec.size()==2)  pseudo += (cntPseudo==1) ? "Pair has " + pg : "Pair does not have " + pg;	
 			else {
-				if (cntPseudo>0 && cntPseudo!=cntSynteny)  
-									    msg += cntPseudo + " pairs of " + cntSynteny + " have " + pg;
-				else if (cntPseudo>0)	msg += "All pairs have " + pg;
-				else 					msg += "No pairs have " + pg;
-			}
-			
-			// Synteny
-			if (projVec.size()!=2) {
-				int nProjSyn = (projVec.size()*(projVec.size()-1))/2;
-				if (nProjSyn!=cntSynteny) {
-					msg+="<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>Synteny</i>: ";
-					String s = " (from " + nProjSyn + " possible)";
-					if (cntSynteny==1) msg+="One pair has synteny " + s;
-					else               msg+= cntSynteny + " pairs have synteny " + s;
+				if (cntPseudo>0 && cntPseudo!=cntSynteny)  {
+					if (cntPseudo==1) pseudo += cntPseudo + " pair of " + cntSynteny + " has " + pg;
+					else 			  pseudo += cntPseudo + " pairs of " + cntSynteny + " have " + pg;
 				}
+				else if (cntPseudo>0) pseudo += "All pairs have " + pg;
+				else 				  pseudo += "No pairs have " + pg;
+			}
+			mainPanel.add(Jcomp.createLabel(head + pseudo + tail)); mainPanel.add(Box.createVerticalStrut(w2));
+		}
+		else {
+			String gene = (cntHasGenes==0) ?
+					"<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks."
+				  : "<i>Only one species has genes</i>. Some of the filters will not be relevant.";
+			mainPanel.add(Jcomp.createLabel(head + gene + tail)); 
+		}
+		
+		// Synteny
+		if (projVec.size()!=2) {
+			int nProjSyn = (projVec.size()*(projVec.size()-1))/2;
+			if (nProjSyn!=cntSynteny) {
+				String syn = "<i>Synteny</i>: ";
+				if (cntSynteny==1) syn += cntSynteny + " pair of " + nProjSyn + " has synteny.";
+				else               syn += cntSynteny + " pairs of " + nProjSyn + " have synteny.";
+				
+				mainPanel.add(Jcomp.createLabel(head + syn + tail)); mainPanel.add(Box.createVerticalStrut(w2));
 			}
 		}
-		mainPanel.add(Jcomp.createLabel(msg + tail)); mainPanel.add(Box.createVerticalStrut(5));
+					
+		mainPanel.add(Box.createVerticalStrut(w1));
 		
-		if (cntHasGenes<=1) {
-			msg = head;
-			if (cntHasGenes==0) msg += "<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks.";
-			else                msg += "<i>Only one species has genes</i>. Some of the filters will not be relevant.";
-			mainPanel.add(Jcomp.createLabel(msg + tail)); 
-		}
-		mainPanel.add(Box.createVerticalStrut(20));
+	// instructions
+		mainPanel.add(Jcomp.createItalicsBoldLabel("Instructions:", 12)); mainPanel.add(Box.createVerticalStrut(w2));
 		
-		// instructions
-		mainPanel.add(Jcomp.createItalicsBoldLabel("Instructions:", 12)); mainPanel.add(Box.createVerticalStrut(8));
+		String instruct =  "&gt; Query Setup: click to set filters, followed by search, producing a table of results.";
+		mainPanel.add(Jcomp.createLabel(head + instruct + tail)); mainPanel.add(Box.createVerticalStrut(w2));
 		
-		msg =  head + "&gt; Query Setup: click to set filters, followed by search, producing a table of results.";
-		mainPanel.add(Jcomp.createLabel(msg+ tail)); mainPanel.add(Box.createVerticalStrut(8));
+		instruct = "&gt; Results: click to view the list of query results, and to remove results.";
+		mainPanel.add(Jcomp.createLabel(head + instruct + tail)); mainPanel.add(Box.createVerticalStrut(w2));
 		
-		msg =  head + "&gt; Results: click to view the list of query results, and to remove results.";
-		mainPanel.add(Jcomp.createLabel(msg + tail)); mainPanel.add(Box.createVerticalStrut(8));
-		
-		msg= head + "The query results are listed under the Results tab, and can be viewed by selecting one.</html";
-		mainPanel.add(Jcomp.createLabel(msg + tail));
+		instruct = "The query results are listed under the Results tab, and can be viewed by selecting one.</html";
+		mainPanel.add(Jcomp.createLabel(head + instruct + tail));
 	}
 
-	private QueryFrame theQueryFrame = null;
+	private QueryFrame qFrame = null;
 	private JPanel mainPanel = null;
 }

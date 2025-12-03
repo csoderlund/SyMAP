@@ -25,13 +25,13 @@ public class SummaryPanel  extends JPanel {
 	private Vector <DBdata> rowsFromDB;
 	private  QueryPanel qPanel;
 	private SpeciesPanel spPanel;
-	private HashMap <String, String> projMap; 
+	private HashMap <String, String> projGrpMap; 
 	private HashMap <Integer, Integer> geneCntMap; // computed in DBdata.makeGeneCounts
 	
 	private boolean isSelf=false; 			  
 	
 	public SummaryPanel(Vector <DBdata> rowsFromDB, QueryPanel qPanel,  // rows have been merged
-			HashMap <String, String> projMap, 			// Clust and Multi summary 
+			HashMap <String, String> projMap, 			// PgeneN and Multi summary 
 			HashMap <Integer, Integer> geneCntMap) {    // spIdx annotidx counts
 		
 		if (statsPanel == null) statsPanel = Jcomp.createPagePanel();
@@ -39,7 +39,7 @@ public class SummaryPanel  extends JPanel {
 		
 		this.rowsFromDB = rowsFromDB;
 		this.qPanel = qPanel;
-		this.projMap = projMap;
+		this.projGrpMap = projMap;
 		this.geneCntMap = geneCntMap;
 		isSelf = qPanel.isSelf();
 		spPanel = qPanel.getSpeciesPanel();
@@ -64,7 +64,7 @@ public class SummaryPanel  extends JPanel {
    
     	Vector <Integer> order = new Vector <Integer> (); // needed so stats are in order
     	
-    	for (int p = 0; p < spPanel.getNumSpecies(); p++) { // Chromosome stats
+    	for (int p = 0; p < spPanel.getNumSpecies(); p++) { // Chromosome stats; used if not Group
     		String projName = spPanel.getSpName(p);
     		if (!isSelf || p==0) order.add(spPanel.getSpIdx(p));
     		else                 order.add(order.get(0)+1);  // +1 Used in DBdata.makeGeneCnts and below
@@ -97,12 +97,11 @@ public class SummaryPanel  extends JPanel {
 	private void createPairHits(HashMap <String, String>  chrStrMap, // project name, N chr of M
 							   Vector <Integer> order) {
 		try {
-			int either=0, both=0, none=0, block=0, collinear=0, maxGrp=0; 
-			int minor=0; 
-			HashMap <Integer, Integer> proj2hits =  new HashMap <Integer, Integer> ();
-			HashMap <Integer, Integer> proj2annot = new HashMap <Integer, Integer> ();
-			HashMap <String, Integer> blockCnt = new HashMap <String, Integer> ();
-			HashMap <String, Integer> collinearCnt = new HashMap <String, Integer> ();
+			int either=0, both=0, none=0, block=0, collinear=0, maxGrp=0, minor=0; 
+			HashMap <Integer, Integer> proj2hits 	=  new HashMap <Integer, Integer> ();
+			HashMap <Integer, Integer> proj2annot 	= new HashMap <Integer, Integer> ();
+			HashMap <String, Integer>  blockCnt		= new HashMap <String, Integer> ();
+			HashMap <String, Integer>  collinearCnt = new HashMap <String, Integer> ();
 			
 			for (DBdata dd : rowsFromDB) {
 				int spIdx1 = dd.getSpIdx(0);
@@ -137,27 +136,42 @@ public class SummaryPanel  extends JPanel {
 					if (n>maxGrp) maxGrp=n;
 				}
 			}
-			// Add 1st line of summary
+		// Add 1st line of summary
 			String label = String.format("Block (Hits): %,d (%,d)   Annotated: Both %,d  One %,d  None %,d", 
 					 blockCnt.size(), block, both, either, none); 				
 			if (minor>0)	 label += String.format("  Minor %,d", minor); 		// only >0 if Every+
+			if (maxGrp>0)    label += String.format("   Groups: #%,d", maxGrp); // runs off page if not before collinear, which then runs off page..
 			if (collinear>0) label += String.format("   Collinear (Hits): %,d (%,d)", collinearCnt.size(), collinear);
-			if (maxGrp>0)    label += String.format("  Groups: #%,d", maxGrp);
 			
 			JLabel theLabel = Jcomp.createMonoLabel(label, 12);
 			statsPanel.add(theLabel);
 			statsPanel.add(Box.createVerticalStrut(5));
 			
-			// 2nd two lines with Project gene counts
-			int w=8; // find width
+		// 2nd lines with Project gene counts
+			// format:
+			int w=5, h=0, a=0, g=0; // find width
 			for (int spIdx : order ) {
 				String pName = spPanel.getSpNameFromSpIdx(spIdx);
 				w = Math.max(w, pName.length());
+				
+				if (order.size()>2) {// hits is all the same unless more than 2 species
+					int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
+					h = Math.max(h, String.format("%,d", nHit).length());
+				}
+				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
+				a = Math.max(a, String.format("%,d", nAnno).length());
+				
+				int nUnq =       geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0;
+				g = Math.max(g, String.format("%,d", nUnq).length());
+				
 				if (isSelf) break;
 			}
-			String nf = String.format("%s%ds", "%-", w);
-			int x=0;
+			String nf;
+			if (h==0) nf = "%-" + w + "s   Annotated: %," + a + "d   Genes: %," + g + "d";
+			else 	  nf = "%-" + w + "s   Hits: %," + h + "d   Annotated: %," + a + "d   Genes: %," + g + "d";
 			
+			// Loop through species
+			int x=0;
 			for (int spIdx : order ) {
 				String pName;
 				if (!isSelf) pName = spPanel.getSpNameFromSpIdx(spIdx);
@@ -165,19 +179,18 @@ public class SummaryPanel  extends JPanel {
 				
 				int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
 				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
+				int nUnq =  geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0; 	// isSelf will have spIdx
+				
+				if (h==0) label = String.format(nf, pName,  nAnno, nUnq);
+				else      label = String.format(nf, pName, nHit, nAnno, nUnq);
 				
 				String chrStr =  chrStrMap.containsKey(pName)  ? chrStrMap.get(pName) : "Unk";
-				int nUnq =       geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0; // isSelf will have spIdx
-				
-				statsPanel.add(Box.createVerticalStrut(2));
-				label = String.format(nf, pName);
-				if (order.size()==2) label += String.format("    Annotated: %,7d   Genes: %,6d", nAnno, nUnq);
-				else                 label += String.format("    Hits: %,7d    Annotated: %,7d   Genes: %,6d", nHit, nAnno, nUnq);
-				
-				if (projMap.containsKey(pName)) label += "   " + projMap.get(pName);
-				else 							label += "    Chr: " + chrStr;
+				if (projGrpMap.containsKey(pName)) label += "   " + projGrpMap.get(pName); // Multi&PgeneF has project stats
+				else 							   label += "    Chr: " + chrStr;		   // else, Chr n of m
 				
 				theLabel = Jcomp.createMonoLabel(label, 12);
+				
+				statsPanel.add(Box.createVerticalStrut(2));
 				statsPanel.add(theLabel);
 			}
 		}

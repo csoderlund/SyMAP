@@ -36,13 +36,13 @@ public class SpeciesPanel extends JPanel {
 
 	protected static int locOnly=1, locChr=2;
 	private boolean isNoLoc=false;
-	private int dnameWidth = 100;  
+	private int dnameWidth = 85; // good fit for display name of 12 characters  
 	
-	protected SpeciesPanel(QueryFrame parentFrame, QueryPanel qPanel) {
-		qFrame = parentFrame;
+	protected SpeciesPanel(QueryFrame qFrame, QueryPanel qPanel) {
+		this.qFrame = qFrame;
 		this.qPanel = qPanel;
 		
-		spPanels = new Vector<SpeciesSelect> (); // Sorted by DisplayName
+		spRows = new Vector<SpeciesSelect> (); // Sorted by DisplayName
 		setBackground(Color.WHITE);
 		
 		createPanelsFromProj(); 
@@ -50,30 +50,30 @@ public class SpeciesPanel extends JPanel {
 		refreshAllPanels();
 	}
 	protected void setClear() {
-		for (SpeciesSelect p : spPanels) p.setClear();
+		for (SpeciesSelect p : spRows) p.setClear();
 		isNoLoc = false; 
 	}
 	protected void setChkEnable(boolean isChk, int type, boolean isSelf) { // QueryPanel
 		isNoLoc = isChk;
-		for (SpeciesSelect p : spPanels) {
+		for (SpeciesSelect p : spRows) {
 			if (type==locOnly) 	p.setLocDisable(isChk);   // Block, Collinear, or Hit check
 			else 				p.setGeneActive(isChk);   // Gene or Single check changes
 		}
-		if (isSelf && type==locChr && isChk) {// disable; CAS575
+		if (isSelf && type==locChr && isChk) {
 			if (isChk) {
-				spPanels.get(1).chkSpActive.setSelected(false); // force the 1st to be used
-				spPanels.get(1).chkSpActive.setEnabled(false);  // and do not let it change
+				spRows.get(1).chkSpActive.setSelected(false); // force the 1st to be used
+				spRows.get(1).chkSpActive.setEnabled(false);  // and do not let it change
 			}
-			else spPanels.get(1).chkSpActive.setSelected(true);  // put back in default state
+			else spRows.get(1).chkSpActive.setSelected(true);  // put back in default state
 		}
 	}
 	
-	protected int getNumSpecies() 			{return spPanels.size();}
+	protected int getNumSpecies() 			{return spRows.size();}
 	
 	// i is the index into the array, which is sorted by DisplayName
-	protected int getSpIdx(int i)			{return spPanels.get(i).getSpIdx();}
-	protected String getSpName(int i) 		{return spPanels.get(i).getSpName();}
-	protected String getSpAbbr(int i)		{return spPanels.get(i).getSpAbbr();}
+	protected int getSpIdx(int i)			{return spRows.get(i).getSpIdx();}
+	protected String getSpName(int i) 		{return spRows.get(i).getSpName();}
+	protected String getSpAbbr(int i)		{return spRows.get(i).getSpAbbr();}
 	protected String getSelfName(int i)		{return selfName[i];}
 	
 	protected HashMap <String, Integer>  getSpName2spIdx() {return spName2spIdx;}
@@ -107,7 +107,7 @@ public class SpeciesPanel extends JPanel {
 		return "0";
 	}
 	protected int getChrIdxFromChrNumSpIdx(String chrNum, int spIdx) {
-		for (SpeciesSelect sp : spPanels) {
+		for (SpeciesSelect sp : spRows) {
 			if (spIdx== sp.spIdx) {
 				for (int i=0; i<sp.chrNumList.length; i++) {
 					if (sp.chrNumList[i].equals(chrNum)) {
@@ -119,24 +119,24 @@ public class SpeciesPanel extends JPanel {
 		return 0;
 	}
 	protected boolean isAtLeastOneSpChecked() {
-		for (SpeciesSelect sp : spPanels) if (sp.isSpEnabled()) return true;
+		for (SpeciesSelect sp : spRows) if (sp.isSpEnabled()) return true;
 		return false;
 	}
-	protected boolean isSpEnabled(int p) 		{return spPanels.get(p).isSpEnabled();} 
-	protected String [] getChrIdxList(int p) 	{return spPanels.get(p).getChrIdxList();}
-	protected String getChrIdxStr(int p) 		{return spPanels.get(p).getChrIdxStr();}
-	protected String [] getChrNumList(int p) 	{return spPanels.get(p).getChrNumList();}
+	protected boolean isSpEnabled(int p) 		{return spRows.get(p).isSpEnabled();} 
+	protected String [] getChrIdxList(int p) 	{return spRows.get(p).getChrIdxList();}
+	protected String getChrIdxStr(int p) 		{return spRows.get(p).getChrIdxStr();}
+	protected String [] getChrNumList(int p) 	{return spRows.get(p).getChrNumList();}
 	
-	protected int getSelChrIdx(int p)			{return spPanels.get(p).getSelChrIdx();}
-	protected String getSelChrNum(int p) 		{return spPanels.get(p).getSelChrNum();}
-	protected String getChrStart(int p) 		{return spPanels.get(p).getStartFullNum();}
-	protected String getChrStop(int p) 			{return spPanels.get(p).getStopFullNum();}
+	protected int getSelChrIdx(int p)			{return spRows.get(p).getSelChrIdx();}
+	protected String getSelChrNum(int p) 		{return spRows.get(p).getSelChrNum();}
+	protected String getChrStart(int p) 		{return spRows.get(p).getStartFullNum();}
+	protected String getChrStop(int p) 			{return spRows.get(p).getStopFullNum();}
 	protected String getPairIdxWhere() 			{ return pairWhere;}
 	
 	protected String getAllChrIdxForGene() { 
 		String sql=null;
-		for (int p=0; p<spPanels.size(); p++) {
-			String list = spPanels.get(p).getAllChrIdxForSingle();
+		for (int p=0; p<spRows.size(); p++) {
+			String list = spRows.get(p).getAllChrIdxForSingle();
 			if (list!=null) {
 				if (sql==null) sql  = list;
 				else           sql += "," + list;
@@ -145,11 +145,11 @@ public class SpeciesPanel extends JPanel {
 		return sql;
 	} 
 	// For summary
-	protected String getStartkb(int panel) 	{return spPanels.get(panel).getStartkb();}
-	protected String getStopkb(int panel) 	{return spPanels.get(panel).getStopkb();}
+	protected String getStartkb(int panel) 	{return spRows.get(panel).getStartkb();}
+	protected String getStopkb(int panel) 	{return spRows.get(panel).getStopkb();}
 	
 	private void refreshAllPanels() {
-		if(spPanels == null || spPanels.size() == 0) return;
+		if(spRows == null || spRows.size() == 0) return;
 		removeAll();
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -173,8 +173,8 @@ public class SpeciesPanel extends JPanel {
 		
 		add(labelPanel);
 		
-		//Adjust the chromosome select controls
-		Iterator<SpeciesSelect> iter = spPanels.iterator();
+		// Adjust the chromosome select controls
+		Iterator<SpeciesSelect> iter = spRows.iterator();
 		Dimension maxSize = new Dimension(0,0);
 		while(iter.hasNext()) {
 			Dimension tempD = iter.next().getChromSize();
@@ -182,15 +182,15 @@ public class SpeciesPanel extends JPanel {
 				maxSize = tempD;
 		}
 
-		for(int x=0; x<spPanels.size(); x++) {
-			SpeciesSelect temp = spPanels.get(x);
+		for(int x=0; x<spRows.size(); x++) {
+			SpeciesSelect temp = spRows.get(x);
 			temp.setChromSize(maxSize);
-			spPanels.set(x, temp);
+			spRows.set(x, temp);
 		}
 
 		Vector<String> sortedCat = new Vector<String> ();
-		for(int x=0; x<spPanels.size(); x++) {
-			String cat = spPanels.get(x).getCategory();
+		for(int x=0; x<spRows.size(); x++) {
+			String cat = spRows.get(x).getCategory();
 			if(!sortedCat.contains(cat)) 
 				sortedCat.add(cat);
 		}
@@ -199,18 +199,18 @@ public class SpeciesPanel extends JPanel {
 		for(int x=0; x<sortedCat.size(); x++) {
 			String catName = sortedCat.get(x);
 			boolean firstOne = true;
-			iter = spPanels.iterator();
+			iter = spRows.iterator();
 			while(iter.hasNext()) {
-				SpeciesSelect temp = iter.next();
+				SpeciesSelect spObj = iter.next();
 	
-				if(catName.equals(temp.getCategory())) {
-					if(firstOne) {
-						if(sortedCat.size() > 1) add(new JLabel(catName.toUpperCase()));
+				if(catName.equals(spObj.getCategory())) {
+					if (firstOne) {
+						if (sortedCat.size() > 1) add(new JLabel(catName.toUpperCase()));
 						firstOne = false;
 					}
 					JPanel row = Jcomp.createRowPanel();
-					temp.setChromSize(maxSize);
-					row.add(temp);
+					spObj.setChromSize(maxSize);
+					row.add(spObj);
 					
 					add(row);
 					add(Box.createVerticalStrut(1)); 
@@ -221,7 +221,7 @@ public class SpeciesPanel extends JPanel {
 		revalidate();
 	}
 	/**************************************************************/
-	private void createPanelsFromProj() {// CAS575 was reading from db
+	private void createPanelsFromProj() {
 		try {
 			Vector<Mproject> mProjs = qFrame.getProjects(); // Sorted by DisplayName
 			boolean isSelf = qFrame.isSelf();
@@ -242,7 +242,7 @@ public class SpeciesPanel extends JPanel {
 				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
 						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr, proj.getdbAbbrev());
 				
-				spPanels.add(ssp);
+				spRows.add(ssp);
 				spName2spIdx.put(proj.getDisplayName(), proj.getID());
 				spIdx2panel.put(proj.getID(), ssp);
 				if (isSelf) selfName[x] = proj.getDisplayName();
@@ -283,8 +283,8 @@ public class SpeciesPanel extends JPanel {
 		private static final long serialVersionUID = 2963964322257904265L;
 
 		protected SpeciesSelect(SpeciesPanel parent, 
-				String spName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr, String spAbbr) {
-			this.theParent = parent;
+				String spDispName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr, String spAbbr) {
+			this.spPanel = parent;
 			this.spIdx = spIdx;	// projects.idx
 			this.strCategory = strCategory;
 			this.chrIdxStr = chrIdxStr;	
@@ -300,8 +300,9 @@ public class SpeciesPanel extends JPanel {
 					setActiveChg(chkSpActive.isSelected());
 				}
 			});
-			lblSpecies = Jcomp.createLabel(spName);	// projects.name
-			dnameWidth = Math.max(lblSpecies.getWidth(), dnameWidth); 
+			
+			lblDisplayName = Jcomp.createLabel(spDispName);	// projects.displayName
+			dnameWidth = Math.max(lblDisplayName.getWidth(), dnameWidth); 
 			
 			lblChrom =   Jcomp.createLabel("Chr: ");
 			cmbChroms = new  JComboBox <String> ();
@@ -335,7 +336,7 @@ public class SpeciesPanel extends JPanel {
 			refreshPanel();
 		}
 		
-		private void refreshPanel() {
+		private void refreshPanel() { // create row panel
 			removeAll();
 			spRowPanel.removeAll();
 			
@@ -348,11 +349,11 @@ public class SpeciesPanel extends JPanel {
 			setBackground(Color.WHITE);
 			
 			spRowPanel.add(chkSpActive);
-			spRowPanel.add(lblSpecies);
+			spRowPanel.add(lblDisplayName);
 			
-			Dimension d = lblSpecies.getPreferredSize();
+			Dimension d = lblDisplayName.getPreferredSize();
 			d.width = Math.max(d.width, dnameWidth);
-			lblSpecies.setPreferredSize(d); lblSpecies.setMinimumSize(d);
+			lblDisplayName.setPreferredSize(d); lblDisplayName.setMinimumSize(d);
 			
 			spRowPanel.add(Box.createHorizontalStrut(1)); // make sure name does not run into chr
 			spRowPanel.add(lblChrom); spRowPanel.add(cmbChroms);
@@ -364,7 +365,7 @@ public class SpeciesPanel extends JPanel {
 			add(spRowPanel);
 			add(Box.createVerticalStrut(5));
 
-			theParent.refreshAllPanels();
+			spPanel.refreshAllPanels();
 		}
 		
 		protected void setClear() {
@@ -477,7 +478,7 @@ public class SpeciesPanel extends JPanel {
 			return num + "bp";
 		}
 		private String getSpAbbr() { return spAbbr;}
-		private String getSpName() {return lblSpecies.getText();}
+		private String getSpName() {return lblDisplayName.getText();}
 		private String getSelChrNum() {
 			return (String)cmbChroms.getSelectedItem();
 		}
@@ -509,11 +510,11 @@ public class SpeciesPanel extends JPanel {
 			symap.Globals.eprt("no " + chr);
 			return -1;
 		}
-		private String getCategory() { return strCategory; }
-		private String [] getChrIdxList() {return chrIdxList;}
-		private String [] getChrNumList() {return chrNumList;}
-		private String getChrIdxStr()    { return chrIdxStr;}
-		private int getSpIdx() 			{return spIdx;}
+		private String getCategory() 		{return strCategory;}
+		private String [] getChrIdxList() 	{return chrIdxList;}
+		private String [] getChrNumList() 	{return chrNumList;}
+		private String getChrIdxStr()    	{return chrIdxStr;}
+		private int getSpIdx() 				{return spIdx;}
 		
 		private void setChromSize(Dimension d) {
 			cmbChroms.setPreferredSize(d);
@@ -523,7 +524,7 @@ public class SpeciesPanel extends JPanel {
 		private Dimension getChromSize() { return cmbChroms.getPreferredSize(); }
 		
 		private JCheckBox chkSpActive = null;
-		private JLabel lblSpecies = null;
+		private JLabel lblDisplayName = null;
 		private JComboBox <String> cmbChroms = null; 
 		private JLabel lblStart = null, lblStop = null, lblChrom = null;
 		private JTextField txtStart = null, txtStop = null;
@@ -537,14 +538,14 @@ public class SpeciesPanel extends JPanel {
 		private String chrIdxStr;
 		private String spAbbr = ""; 
 		
-		private SpeciesPanel theParent = null;
+		private SpeciesPanel spPanel = null;
 	} // End species row panel
 	
 	private QueryFrame qFrame = null;
 	private QueryPanel qPanel = null;
 	
 	private String [] selfName = {"",""}; // isSelf shared same idx; this is for Summary
-	private Vector<SpeciesSelect> spPanels = null;
+	private Vector <SpeciesSelect> spRows = null;
 	private HashMap <Integer, SpeciesSelect> chrIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();

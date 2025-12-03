@@ -66,14 +66,15 @@ public class HelpBar extends JPanel
 	}
 	public void setHelp(String help, Object obj) {
 		if (help == null || help.equals("")) { 
-			help = helpText; 
+			help = helpText; 			 // default help
 		}
 		else {
-			if (getSize().height < 50) {
+			if (getSize().height < 50) { // Query 2D shows as one line at bottom
 				help = help.replaceAll("\n", "   ");
 				help = help.replaceAll(":    ", ": ");
 				help = help.replaceAll(":   ", ": ");
 				help = help.replaceAll(":  ", ": "); 
+				help = help.replaceAll("    ", "  "); // remove additional extra spacing; CAS578
 			}
 		}
 		helpLabel.setText(help);

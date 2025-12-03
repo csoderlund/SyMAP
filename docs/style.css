@@ -71,6 +71,7 @@ a.ext {font-weight: bold;}
 ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
 ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
 ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+ttlb  {font-family: Serif, monospace; font-size: 16px; font-weight: 600; color: DarkSlateGrey;}
 ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 tt   {font-size:13px}
 pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}

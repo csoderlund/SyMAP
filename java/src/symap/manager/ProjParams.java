@@ -38,22 +38,26 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
 import backend.Constants;
+import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
+import util.Popup;
 import util.FileDir;
 
 /*******************************************
  * Displays the project parameter window and saves them to file
+ * This goes with Mproject.
  */
 public class ProjParams extends JDialog {
 	private static final long serialVersionUID = -8007681805846455592L;
 	static public String lastSeqDir=null; 
-	static protected String catUncat = "Uncategorized"; // and puts this as last if there are no occurrences
+	static protected String catUncat = "Uncategorized"; // puts this as last if there are no occurrences
 	
+	private final int abbrevLen = Globals.abbrevLen;
 	private final int INITIAL_WIDTH = 610, INITIAL_HEIGHT = 660;
 	
-	private final String displayHead = 	"Display";
+	private final String displayHead = 		"Display";
 	private final String loadProjectHead =  "Load project";
 	private final String loadAnnoHead = 	"Load annotation";
 	
@@ -61,7 +65,7 @@ public class ProjParams extends JDialog {
 	private Mproject mProj;
 	private Vector <Mproject> mProjVec;
 	private String [] catArr;
-	private Pattern pat = Pattern.compile("^[a-zA-Z0-9_\\.\\-]+$");	// category and display name
+	private Pattern pat = Pattern.compile("^[a-zA-Z0-9_\\.\\-]+$");	// category, display name, abbrev
 	private String patMsg = "\nEntry can only contain letters, digit, '-', '_', '.'";
 	
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
@@ -73,10 +77,12 @@ public class ProjParams extends JDialog {
 		this.mProjVec = projVec;
 		this.catArr = catArr;
 		
-		theDisplayName =	mProj.getDisplayName();
-		theDBName =  		mProj.getDBName();
-		bIsLoaded = 		isLoaded;
-		bExistAlign = 		existAlign;
+		theDBName =  	mProj.getDBName();
+		savDname = 		mProj.getDisplayName();
+		savAbbrev = 	mProj.getdbAbbrev();
+		
+		bIsLoaded = 	isLoaded;
+		bExistAlign = 	existAlign;
 		
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
 		getContentPane().setBackground(Color.WHITE);
@@ -101,7 +107,8 @@ public class ProjParams extends JDialog {
 	private ProjParams getInstance() { return this; }
 	
 	/*******************************************************
-	 * If any parameters are changed, change also in manager.Project and SyProps
+	 * If any parameters are changed, change also in manager.Mproject
+	 * NOTE: The descriptions, etc are in Mproject
 	 */
 	private void createMainPanel() {
 		int startAnno=0, startLoad=0, i=0;
@@ -127,7 +134,7 @@ public class ProjParams extends JDialog {
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
 		JPanel fieldPanel = Jcomp.createPagePanel();
-		fieldPanel.add(Jcomp.createHtmlLabel(displayHead)); 
+		fieldPanel.add(Jcomp.createHtmlLabel(displayHead, "Parameters that can be changed at any time")); 
 	
 		for(int x=0; x<theFields.length; x++) {
 			fieldPanel.add(Box.createVerticalStrut(5));
@@ -138,13 +145,13 @@ public class ProjParams extends JDialog {
 				fieldPanel.add(Box.createVerticalStrut(5));
 				fieldPanel.add(new JSeparator()); // works on linux but not mac; but the createLabel is better on Mac
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(Jcomp.createHtmlLabel(loadAnnoHead)); // <i><b>
+				fieldPanel.add(Jcomp.createHtmlLabel(loadAnnoHead, "Parameters changed for Load Annotation (or Project)")); // <i><b>
 			}
 			else if (x==startLoad) {
 				fieldPanel.add(Box.createVerticalStrut(5));
 				fieldPanel.add(new JSeparator()); 
 				fieldPanel.add(Box.createVerticalStrut(5));
-				fieldPanel.add(Jcomp.createHtmlLabel(loadProjectHead));
+				fieldPanel.add(Jcomp.createHtmlLabel(loadProjectHead, "Parameters changed for Load Project"));
 			}
 		}
 		
@@ -180,13 +187,21 @@ public class ProjParams extends JDialog {
 			}
 		});
 		
+		JButton btnInfo = Jcomp.createIconButton("/images/info.png", "Quick Help" );
+		btnInfo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)  {
+				popupHelp();
+			}
+		});
+		
 		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param1); 
 		
 		JPanel buttonPanel = Jcomp.createRowPanel();
 		
 		buttonPanel.add(btnSave);		buttonPanel.add(Box.createHorizontalStrut(10));
 		buttonPanel.add(btnCancel);		buttonPanel.add(Box.createHorizontalStrut(20));
-		buttonPanel.add(btnHelp);
+		buttonPanel.add(btnHelp);		buttonPanel.add(Box.createHorizontalStrut(10));
+		buttonPanel.add(btnInfo);
 		
 		buttonPanel.setBackground(Color.WHITE);
 		buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
@@ -260,43 +275,72 @@ public class ProjParams extends JDialog {
 			String val = theFields[x].getValue().trim();
 			String lab = theFields[x].getLabel();
 		
-			if (index == mProj.sCategory) {
-				val = val.trim();				// getValue gets the text or drop-down value
-				Matcher m = pat.matcher(val);
-				if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
-			}
-			else if (index == mProj.sDisplay) {	
+			if (index == mProj.sDisplay) {	
+				if (val.length()>12 && !val.equals(savDname)) {
+					String xmsg = "Display name '" + val + "' is greater than 12 characters.\n" +
+							"This is allowed, but is not recommended as it causes crowded displays.\n" +
+							"\nTip: Use Description for full information about the species.";
+					if (!util.Popup.showContinue("Display name",xmsg)) return false;
+					savDname = val;
+				}
 				if (val.length() == 0) msg = lab + " must have a value.";
 				else {
 					Matcher m = pat.matcher(val);
 					if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
 				}
 				if (msg==null) {
-					for (Mproject mp : mProjVec) {
-						if (mp!=mProj && val.equalsIgnoreCase(mp.getDisplayName())) { 
-							msg = "The display name '" + val + "' has been used. \n";
-							msg += "Directory:   " + mp.getDBName() + "\n";
-							msg += "Description: " + mp.getdbDesc();
+					String dir = mProj.getDBName();
+					for (Mproject mp : mProjVec) {// works if check directory name, which can't change; CAS578
+						if (!mp.getDBName().equalsIgnoreCase(dir) && val.equalsIgnoreCase(mp.getDisplayName())) { 
+							msg = "The display name '" + val + "' has been used by project: \n";
+							String desc = (mp.getdbDesc().length()<50) ? mp.getdbDesc() : mp.getdbDesc().subSequence(0,48) + "...";  
+							msg += String.format("   %-12s: %s\n   %-12s: %s\n   %-12s: %s\n   %-12s: %s\n",
+									"Directory", mp.getDBName(), "Display", mp.getDisplayName(), 
+									"Description", desc, "Abbreviation", mp.getdbAbbrev());
+							msg += "\nDuplicate display names are not allows (these are case-insenitive).";
 							break;
 						}
 					}
 				}
 			}
-			else if (index == mProj.sDesc) {
-				if (!val.isEmpty() && val.contains("/") || val.contains("#") || val.contains("\"")) 
-					msg = "Description cannot contains backslash, quotes or #";
-			}
-			else if (index == mProj.sAbbrev) {/* Cannot check dup Abbrev because if DisplayName is changed, mp!=mProj'; checked in QueryFrame */
-				if (val.length()!=4) {
-					msg = lab + " must be exactly 4 characters. Value '" + val + "' is " + val.length() + ".";
+			else if (index == mProj.sAbbrev) {
+				if (val.length()>abbrevLen) {
+					msg = lab + " must be <= " + abbrevLen + " characters. Value '" + val + "' is " + val.length() + ".";
 				}
 				else {
 					Matcher m = pat.matcher(val);
 					if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
 				}
+				// since this is a warning, do not want to keep checking, so only check if changed
+				if (msg==null && !val.equals(savAbbrev)) {	// works if check directory name, which can't change; CAS578
+					String dir = mProj.getDBName();
+					for (Mproject mp : mProjVec) {  // also checked in QueryFrame 
+						if (!mp.getDBName().equalsIgnoreCase(dir) && val.equalsIgnoreCase(mp.getdbAbbrev())) { 
+							msg = "The abbreviation '" + val + "' has been used by project: \n";
+							msg += String.format("   %-12s: %s\n   %-12s: %s\n   %-12s: %s\n   %-12s: %s\n",
+								"Directory", mp.getDBName(), "Display", mp.getDisplayName(), 
+								"Category", mp.getdbCat(), "Abbreviation", mp.getdbAbbrev());
+							msg += "\nDuplicate abbreviations are allowed, \n"
+								+ "but Query will not work between two projects with the same abbreviation.";
+							util.Popup.showMonoWarning(this, msg);
+							msg=null;
+							break;
+						}
+					}
+					savAbbrev = val; 
+				}
+			}
+			else if (index == mProj.sCategory) {
+				val = val.trim();				// getValue gets the text or drop-down value
+				Matcher m = pat.matcher(val);
+				if (!m.matches()) msg = lab + " '" + val + "' is illegal." + patMsg;
 			}
 			else if (index == mProj.sGrpType) {
 				if (val.length() == 0) msg = lab + " must have a value.";
+			}
+			else if (index == mProj.sDesc) {
+				if (!val.isEmpty() && val.contains("/") || val.contains("#") || val.contains("\"")) 
+					msg = "Description cannot contains backslash, quotes or #";
 			}
 			else if (index == mProj.lMinLen) {
 				msg = checkInt(lab, val);
@@ -304,9 +348,10 @@ public class ProjParams extends JDialog {
 			else if (index == mProj.sANkeyCnt) {
 				msg = checkInt(lab, val);
 			}
+			
 			// only shows the first warning - returns for user to fix, then test again
 			if (msg!=null) { 
-				util.Popup.showWarning(msg);
+				util.Popup.showMonoError(this, msg);
 				return false;
 			}
 		}
@@ -412,9 +457,9 @@ public class ProjParams extends JDialog {
 		try {
 			PrintWriter out = new PrintWriter(pfile);
 			
-			out.println("#");
-			out.println("#  " + theDisplayName + " project parameter file");
+			out.println("#  Directory " + theDBName + " project parameter file");
 			out.println("#  Note: changes MUST be made in SyMAP parameter window");
+			out.println("#");
 			
 			for(int x=0; x<theFields.length; x++) {
 				String val = theFields[x].getValue();
@@ -443,6 +488,20 @@ public class ProjParams extends JDialog {
 		dispose();
 	}
 	
+	private void popupHelp() {
+		String msg = "Display: These parameters can be changed at anytime.\n\n";
+		msg += "Load Project: Use xToSymap to format your files for input into Symap.\n\n"
+				
+				+ "  If your sequences are all chromosomes, and the '>' line starts with 'Chr',\n"
+				+ "  enter that for 'Group prefix'. Otherwise, read the 'Load Project' section\n"
+				+ "  of 'Parameters and Interface' on-line document to determine how to set\n"
+				+ "  the 'Group Prefix' and 'Minimum Length'.\n\n"
+				
+				+"View: Select this link for the Project Manager to check the results of the load.\n"
+				+ "  MUMmer can take a long time to run, so you want to have the input sequences\n"
+				+ "  correct before running it.";
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
+	}
 	/***************************************************************
 	 * Each parameter has a field object
 	 ************************************************************/
@@ -458,7 +517,7 @@ public class ProjParams extends JDialog {
 		private Field(int index, boolean needsReload, boolean needsRealign, boolean b) {
 			this.index = index;
 			String label = mProj.getLab(index);
-			String desc = mProj.getLab(index);
+			String desc = mProj.getDesc(index);	// was getLab CAS578
 			
 			bdoReload = needsReload;
 			bdoRealign = needsRealign;
@@ -682,7 +741,6 @@ public class ProjParams extends JDialog {
 			});
 	        
 	        btnRemove = Jcomp.createButton("Remove", "Remove selected item");
-	        btnRemove.setBackground(Color.WHITE);
 	        btnRemove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					theModel.removeRow(theTable.getSelectedRow());
@@ -796,9 +854,9 @@ public class ProjParams extends JDialog {
 	} // end File class
 	
 	/**************************************************************************/
-
-	private String theDisplayName = "";
+	private String savAbbrev = "", savDname = ""; // this can popup a warning, do not want to keep repeating if not changed
 	private String theDBName = "";
+	
 	private boolean bIsLoaded = false, bExistAlign = false;
 	private boolean bChgGrpPrefix = false;
 	private boolean bWasSave = false;

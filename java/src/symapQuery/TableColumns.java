@@ -41,9 +41,11 @@ public class TableColumns {
 		 "Collinear: N is number genes, # is set (chr.chr.size:#)", 
 		 "Group: N is number genes, # is group (size:#); sort on group #", 		// see ComputeMulti, ComputePgeneF, or Gene#
 		 "Hit#: Number representing the hit", 
-		 "Hit Cov: The largest summed merged subhit lengths of the two species", 
-		 "Hit %Id: Approximate percent identity (exact if one hit)",
-		 "Hit %Sim: Approximate percent similarity (exact if one hit)", 
+		 
+		 "Hit Cov: The largest summed merged subhit lengths of the two species", // Descriptions are in QueryPanel too
+		 "Hit %Id: Approximate percent identity of subhits",					
+		 "Hit %Sim: Approximate percent similarity of subhits", 
+		 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
 		 "Hit St: The strands separated by a '/'",
 		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither."
@@ -64,6 +66,7 @@ public class TableColumns {
 	private static final boolean []    SPECIES_COLUMN_DEF =  
 		{ true, false, false, false, false , false, false, false, false, false};
 	
+	private static int OLAP_COL=1; // changed based on Algo
 	private static String [] SPECIES_COLUMN_DESC = {
 		"Gene#: Sequential. Overlap genes have same number (chr.#.{a-z})", 
 		"Olap: Algo1 percent gene overlap, Algo2 percent exon overlap",
@@ -107,7 +110,7 @@ public class TableColumns {
 	
 	protected static String [] getSpeciesColHead(boolean s)     {if (s) return SSPECIES_COLUMNS;  else return SPECIES_COLUMNS;}
 	protected static Class <?> [] getSpeciesColType(boolean s)  {if (s) return SSPECIES_TYPES; else return SPECIES_TYPES;}
-	protected static String [] getSpeciesColDesc(boolean s) 	 {if (s) return SSPECIES_COLUMN_DESC;  else  return SPECIES_COLUMN_DESC;}
+	protected static String [] getSpeciesColDesc(boolean s) 	{if (s) return SSPECIES_COLUMN_DESC;  else  return SPECIES_COLUMN_DESC;}
 	protected static boolean [] getSpeciesColDefaults(boolean s){if (s) return SSPECIES_COLUMN_DEF; else return SPECIES_COLUMN_DEF;}
 	
 	// XXX If change this, change number in Q.java, as they are the numeric index into ResultSet
@@ -125,7 +128,7 @@ public class TableColumns {
 	// MySQL fields to load; this is for pairs; order must be same as Q numbers
 	protected static TableColumns getFields(boolean isIncludeMinor, boolean isAlgo2) {
 		TableColumns fd = new TableColumns();
-		// type not used, see above       sql.table.field    order#		Description  
+		// type not used, see above       sql.table.field    order#		Descriptions are not used; see COLUMN_DESC
 		fd.addField(String.class, Q.PA, "idx",     Q.AIDX,       "Annotation index");
 		fd.addField(String.class, Q.PA, "grp_idx", Q.AGIDX,      "Annotation chromosome idx");
 		fd.addField(String.class, Q.PA, "start",   Q.ASTART,     "Annotation start");
@@ -157,11 +160,14 @@ public class TableColumns {
 		fd.addField(String.class, Q.B, "blocknum",  Q.BNUM,      "Block Number");
 		fd.addField(String.class, Q.B, "score",     Q.BSCORE,    "Block Score (#Anchors)");
 		
-		if (isAlgo2 && Globals.bQueryOlap==false)
-			fd.addField(Integer.class,Q.PHA, "exlap",Q.AOLAP, "Exon overlap"); 
-		else 
-			fd.addField(Integer.class,Q.PHA, "olap",Q.AOLAP, "Gene overlap");
-		
+		if (isAlgo2 && Globals.bQueryOlap==false) {
+			fd.addField(Integer.class,Q.PHA, "exlap", Q.AOLAP, "Exon overlap"); 
+			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent exon overlap";				// CAS578 make specific
+		}
+		else { 
+			fd.addField(Integer.class,Q.PHA, "olap", Q.AOLAP, "Gene overlap");
+			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent gene overlap";
+		}
 		fd.addField(Integer.class,Q.PH, "annot1_idx",Q.ANNOT1IDX,"Index of 1st anno");  	// Not for display
 		fd.addField(Integer.class,Q.PH, "annot2_idx",Q.ANNOT2IDX,"Index of 2nd anno");  	// matched with PA.idx in DBdata
 		

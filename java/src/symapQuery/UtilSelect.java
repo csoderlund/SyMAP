@@ -105,7 +105,7 @@ public class UtilSelect {
 					return;
 				}
 				coords = rd.loadGroup(grpIdxVec); // assigns hits to grpIdxVec
-				hd.setForQuery(0, false, true);   // block, set, region
+				hd.setForQuery(0, false, false);   // block, set, region; CAS578 make block=F
 			}
 			else {
 				coords = new int [4];
@@ -387,7 +387,7 @@ public class UtilSelect {
 			row1.add(mafft); row1.add(Box.createHorizontalStrut(3));
 			bg.add(mafft);  
 			
-			JCheckBox chkAuto = Jcomp.createCheckBox("Auto", "Use the --auto option, which finds best method", bAuto);
+			JCheckBox chkAuto = Jcomp.createCheckBox("Auto", "Use the MAFFT --auto option, which finds best method", bAuto);
 			chkAuto.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					bAuto  = chkAuto.isSelected();

@@ -33,7 +33,6 @@ import symapQuery.QueryFrame;
 import database.DBconn2;
 import database.Version;
 
-import util.Cancelled;
 import util.ErrorReport;
 import util.Utilities;
 import util.FileDir;
@@ -102,7 +101,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private int totalCPUs=0;
 	
-	private JButton btnAllChrExp, btnSelDotplot, btnAllDotplot, btnAllPairs, btnSelClearPair,
+	private JButton btnAllChrExp, btnSelDotplot, btnAllDotplot, btnSelClearPair,
 		btnSelBlockView, btnSelCircView, btnAllQueryView, btnSelReports, 
 	    btnAddProject = null, btnSelAlign, btnPairParams;
 	
@@ -220,12 +219,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 
 	/** Left Panel  of all projects **************************************************************/
 	private JPanel createProjectPanel() {
-		addProjectPanel = new AddProjectPanel(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				addNewProjectFromUI(addProjectPanel.getName());
-				refreshMenu();
-			}
-		});
 		JPanel panel = new JPanel();
 		panel.setLayout( new BoxLayout ( panel, BoxLayout.Y_AXIS ) );
 		panel.setBorder( BorderFactory.createEmptyBorder(10, 5, 10, 5) );
@@ -302,6 +295,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		btnAddProject.setAlignmentX(Component.CENTER_ALIGNMENT);
 		btnAddProject.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				addProjectPanel = new AddProjectPanel();
 				addProjectPanel.reset();
 				addProjectPanel.setVisible(true);
 			}
@@ -471,12 +465,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				}
 			} );	
 			
-			btnAllPairs = Jcomp.createButtonGray("All Pairs", "Run Align/Clust/Synteny on all pairs"); 
-			btnAllPairs.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					alignAllPairs();
-				}
-			});	
+			// CAS578 removed; gives diff results and not worth it; btnAllPairs = Jcomp.createButtonGray("All Pairs", "Run Align/Clust/Synteny on all pairs"); 
 			btnSelDotplot = Jcomp.createButtonGray("Dot Plot", "Display Dot Plot for selected pair");
 			btnSelDotplot.addActionListener( new ActionListener() {
 				public void actionPerformed(ActionEvent e) { 
@@ -578,7 +567,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			if (!inReadOnlyMode) {
 				mainPanel.add( Box.createRigidArea(new Dimension(0,15)) );	
 				mainPanel.add( Jcomp.createHorizPanel( new Component[] { lbl1,
-					btnAllPairs, btnSelAlign, btnSelClearPair,  btnPairParams}, sp, ex) );  
+					btnSelAlign, btnSelClearPair,  btnPairParams}, sp, ex) );  
 			}
 			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );  
 			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl2, 
@@ -716,9 +705,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mproject[] projects = getSelectedPair();  // null if nothing selected
 		btnPairParams.setEnabled(projects!=null);  
 		
-		int numProj =  pairTable.getRowCount();
-		btnAllPairs.setEnabled(numProj>1 && isAlignAllPairs());
-		
 		int numDone = getNumCompleted(false); 	// !ignore isSelf; 
 		btnAllChrExp.setEnabled(numDone>0);
 		btnAllQueryView.setEnabled(numDone>0); 	// allow for isSelf
@@ -762,20 +748,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelBlockView.setEnabled(false);
 		}
 	}
-	// is there any not done or partial done
-	private boolean isAlignAllPairs() { 
-		for (int row = 0;  row < pairTable.getRowCount();  row++) {
-			for (int col = 0;  col < pairTable.getColumnCount();  col++) {
-				if (col >= (row+1)) continue;
-				
-				String val = (String)pairTable.getValueAt(row, col);
-				if (val==null) return true;
-				if (val.contains(TBL_ADONE)) return true;
-				if (val.contains(TBL_QDONE)) return true;
-			}
-		}
-		return false;
-	}
+	
 	// how many are done; first column is project names
 	private int getNumCompleted(boolean ignSelf) {
 		int count = 0;
@@ -827,7 +800,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		for (File f : root.listFiles()) {
 			if (f.isDirectory() && !f.getName().startsWith(".")) {
 				String dbname = f.getName();
-				if (projNameMap.containsKey(dbname)) continue; // loaded project
+				if (projNameMap.containsKey(dbname)) continue; // loaded project; this is not case-sensitive
 				
 				Mproject mp = new Mproject(dbc2, -1, dbname, ""); 
 				mp.loadParamsFromDisk(f); 
@@ -1476,74 +1449,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
-	/***************************************************
-	 * Align all pairs;
-	 */
-	private void alignAllPairs() { 
-		Cancelled.init();
-		if (pairTable == null) return;
-		
-		Vector <Mpair> todoList = new Vector <Mpair> ();
-		
-		int nRows = pairTable.getRowCount();
-		int nCols = pairTable.getColumnCount();
-		if (nRows == 0 || nCols == 0) return;
-		
-		for (int r = 0; r < nRows; r++) {
-			String strRowProjName = pairTable.getValueAt(r, 0).toString();
-			if (Cancelled.isCancelled()) break;
-
-			for (int c = 1; c <= r+1; c++) {
-				if (Cancelled.isCancelled()) break;
-
-				String strColProjName = pairTable.getValueAt(c-1,0).toString();
-				String entry = 	(pairTable.getValueAt(r,c) == null ? "" : pairTable.getValueAt(r,c).toString().trim());
-				
-				boolean doThis = false;
-				if (entry.equals("-")) continue;
-				else if (entry.equals(TBL_DONE)) doThis = false;
-				else if (entry.equals(TBL_ADONE) || entry.equals(TBL_QDONE)) doThis = true;	
-				else if (entry.equals("")) doThis = true;	
-				
-				if (doThis) {
-					Mproject p1 = projObjMap.get( strRowProjName );
-					Mproject p2 = projObjMap.get( strColProjName );
-					Mpair mp = getMpair(p1.getIdx(), p2.getIdx());
-					
-					Mproject[] ordered = orderProjName(p1,p2);
-					p1 = ordered[0]; p2 = ordered[1];
-					if (p1.getIdx() != p2.getIdx()) {
-						if (alignCheckOrderAgainst(mp)) { 
-							if (mp!=null) todoList.add(mp);
-						}
-						else {
-							System.out.println("Abort All Pairs");
-							return;
-						}
-					}
-				}
-			}	
-		}
-		int maxCPUs = getCPUs();
-		if (maxCPUs==-1) return;
-		if (!alignCheckProjDir()) return;
-		
-		// Confirm
-		String msg = "Align&Synteny for " + todoList.size() + " pairs";
-		msg += "\nCPUs " + maxCPUs + ";  ";						
-		if (Constants.VERBOSE) msg += "Verbose on;  "; else msg += "Verbose off;  ";
-		
-		if (!Popup.showConfirm2("All Pairs", msg)) return; 
-		
-	/*-------- Alignment, Clustering, Synteny -----------------*/
-		System.out.println("\n>>> Start all pairs: processing " + todoList.size() + " project pairs");
-		
-		for (Mpair mp : todoList) { // Open/close new dbc2 for each thread of align; 
-			new DoAlignSynPair().run(this, dbc2, mp, true,  maxCPUs, false); // assume align has not been done
-		}
-		new Version(dbc2).updateReplaceProp();
-		System.out.println("All Pairs complete. ");
-	}
+	
 	/*****************************************************
 	 * Align selected pair
 	 */
@@ -1644,16 +1550,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	
 	/**************************************************************************/
-    private void addNewProjectFromUI(String name) {
-    	if (projNameMap.containsKey(name)) {
-    		Popup.showWarningMessage("Project '" + name + "' exists");
-    		return;
-    	}
-    	String dir = DATA_PATH + Constants.seqType + "/" + name;
-		FileDir.checkCreateDir(dir, true);
-    }
-   
-	/**************************************************************************/
 // *** Begin table customizations ******************************************
 	public void autofitColumns(JTable tbl) {
         TableModel model = tbl.getModel();
@@ -1747,9 +1643,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// *** End table customizations ********************************************
 	
 	/************** Classes *************************************/
+	/** Add a project **/
 	private class AddProjectPanel extends JDialog {
-		public AddProjectPanel(ActionListener addListener) {
-			//Used for Java 1.5... 1.6 uses setModalityType(type)
+		public AddProjectPanel() {
 			setModal(true);
 			setResizable(false);
 			getContentPane().setBackground(Color.WHITE);
@@ -1759,14 +1655,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			pnlMainPanel.setLayout(new BoxLayout(pnlMainPanel, BoxLayout.PAGE_AXIS));
 			pnlMainPanel.setBackground(Color.WHITE);
 			
-			txtName = new JTextField(20);
-			txtName.setAlignmentX(Component.LEFT_ALIGNMENT);
-			txtName.setMaximumSize(txtName.getPreferredSize());
-			txtName.setMinimumSize(txtName.getPreferredSize());
+			projName = new JTextField(15);
+			projName.setAlignmentX(Component.LEFT_ALIGNMENT);
+			projName.setMaximumSize(projName.getPreferredSize());
+			projName.setMinimumSize(projName.getPreferredSize());
 			
 			btnAdd = new JButton("Add");
 			btnAdd.setBackground(Color.WHITE);
-			btnAdd.addActionListener(addListener);
 			btnAdd.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (isAddValid())
@@ -1779,6 +1674,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnCancel.setBackground(Color.WHITE);
 			btnCancel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
+					projName.setText("");
 					dispose();
 				}
 			});
@@ -1795,7 +1691,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 						
 			tempRow.add(new JLabel("Name:"));
 			tempRow.add(Box.createHorizontalStrut(5));
-			tempRow.add(txtName);
+			tempRow.add(projName);
 			
 			tempRow.setMaximumSize(tempRow.getPreferredSize());
 			
@@ -1824,33 +1720,50 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			pack();
 		}
-		
-		public String getName() { return txtName.getText(); }
-		
-		public void reset() { 
-			txtName.setText("");
+	
+		private void reset() { 
+			projName.setText("");
 			btnAdd.setEnabled(true);
 		}
 		
 		private boolean isAddValid() { 
-			String name = txtName.getText().trim();
+			String name = projName.getText().trim();
 			if (name.length()==0) {
-				Popup.showErrorMessage("Must enter a name");
+				Popup.showErrorMsg("Must enter a name");
 				return false;
 			}
 			if (!name.matches("^[\\w]+$")) {
-				Popup.showErrorMessage("Name must be characters, numbers or underscore");
+				Popup.showErrorMsg("Name must be characters, numbers or underscore");
 				return false;
 			}
+			String dir = Constants.seqDataDir + name;
+			if (FileDir.dirExists(dir)) {
+				Popup.showErrorMsg("Directory exists: " + name);
+				return false;
+			}
+			// linux is case-insensitive - so the above check passes for foobar and FooBar
+			for (String dirx : projNameMap.keySet()) {// projNameMap.containsKey() is case-insensitive
+	    		if (name.equalsIgnoreCase(dirx)) {
+	    			Popup.showWarningMessage("Project with directory '" + name + "' exists");
+	    			return false;
+	    		}
+	    	}
+			
+			// Create /data in case it does not exist
 			String strDataPath = DATA_PATH;
 			FileDir.checkCreateDir(strDataPath, true);
 			FileDir.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
 			FileDir.checkCreateDir(Constants.seqRunDir,  true);
 			
+			// CAS578 was adding even if illegal or blank; 
+			// was being done in a listener elsewhere in the code, and a separate method
+			FileDir.checkCreateDir(dir, true);
+			refreshMenu();
+			
 			return true;
 		}
 		private JButton btnAdd = null, btnCancel = null;
-		private JTextField txtName = null;
+		private JTextField projName = null;
 		private JPanel pnlMainPanel = null;
 	}
 

@@ -33,6 +33,7 @@ public class UtilSearch  extends JDialog{
 	private String [] displayedCols;
 	private AnnoData annoObj;
 	private int rowIndex=0;
+	private String [] skipCol = {Q.gEndCol, Q.gStartCol, Q.gLenCol, Q.gStrandCol, Q.hEndCol, Q.hStartCol, Q.hLenCol, Q.gOlap};// CAS578 add
 	
 	protected UtilSearch(TableMainPanel tpd, String [] cols, AnnoData spAnno) {
 		this.tPanel = tpd;
@@ -59,13 +60,26 @@ public class UtilSearch  extends JDialog{
 		
 		ArrayList <String> searchCols = new ArrayList <String> ();
 		for (String col : displayedCols) {
-			if (col.equals(Q.cosetCol) || col.equals(Q.hitCol) || 
-					col.equals(Q.blockCol) || col.equals(Q.grpCol)) searchCols.add(col);
-			else if (col.endsWith(Q.gNCol)) searchCols.add(col.replace("\n"," "));
-			else if (col.contains("\n")) {
-				String [] tok = col.split("\n");
-				if (!speciesSet.contains(tok[0])) continue; // would only fail on "Hit"; Hitx could be spAbbr
+			
+			if (col.equals(Q.cosetCol) || col.equals(Q.hitCol) || col.equals(Q.blockCol) || col.equals(Q.grpCol)) {
+				searchCols.add(col);
+			}
+			else if (col.endsWith(Q.gNCol)) { // gene
 				searchCols.add(col.replace("\n"," "));
+			}
+			else if (col.contains("\n")) { // annotation only
+				String [] tok = col.split("\n");
+				if (!speciesSet.contains(tok[0])) continue; // would only fail on "Hit" columns; Hitx could be spAbbr
+				
+				if (tok.length<2) continue;
+				
+				String n = tok[1]; // only want any annotation fields
+				for (int i=0; i<skipCol.length; i++) {
+					if (skipCol[i].equals(n)) {
+						n=null; break;
+					}
+				}
+				if (n!=null) searchCols.add(col.replace("\n"," "));
 			}
 		}
 		numCols = searchCols.size(); // Display even if numCols=0 so can close with Cancel

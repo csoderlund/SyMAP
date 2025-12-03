@@ -161,7 +161,7 @@ public class SyntenyMain {
 				}
 				String t = Utilities.getDurationString(Utils.getTime()-startTime);
 				
-				grpMsg = " (" + nGrpGrp + " of " + maxGrp + " pairs (" + t + "))  ";
+				grpMsg = " (" + nGrpGrp + " of " + maxGrp + " pairs  " + t + ")";
 				Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); 
 				blockVec.clear();
 			}

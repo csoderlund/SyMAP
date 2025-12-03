@@ -60,7 +60,7 @@ You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
 
 <h3>Summary of recent major releases</h3>
 <table>
-<tr><td><a href="#v572">v5.7.5</a><td>(15-Oct-25)<td>Self-synteny has almost complete support.
+<tr><td><a href="#v575">v5.7.5</a><td>(15-Oct-25)<td>Self-synteny has almost complete support.
 <tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improve synteny algorithm using new <ttx>Strict</ttx> option.
 <tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
 which is aware of the exon-intron structure.
@@ -69,7 +69,44 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
-<a id="v576"></a>
+<a id="v578"></a>
+<h3>Release: v5.7.8 (3-Dec-25)</h3>
+<ttp>Queries</ttp> updates and additions.
+
+<p>
+<ul>
+<li><ttp>Queries</ttp>
+	<ul>
+	<li><font color=green>New filters</font>: On the <ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx> and <ttx>%Olap</ttx> columns.
+	See <a href="Query.html#pair" target="_blank" class="ext">Queries</a>.
+	<li><ttl>Clusters</ttl>:
+		<ul>
+		<li>The group are numbered by size, where group #1 is the largest group.
+		<br>This creates a consistent ordering; it was the case it could be different order depending on how the database was built.
+		<li>The species statistics were useless, so are removed.
+		</ul>
+	<li><ttl>View 2D</ttl> for <ttx>Groups-chr</ttx>: Do not highlight blocks. State in the information box the number of selected
+	hits, which are the group hits.
+	<li><ttl>Instructions</ttl>: The <ttx>Notes</ttx> are clearer.
+	<li><ttl>Singles</ttl>: Bug fix: The <ttl>Annotations</ttl> did not work.
+	<li><ttl>Search</ttl>: Stop including numeric columns in search selection.
+	</ul>
+	<br>
+<li><ttp>Manager</ttp>
+	<ul>
+	<li><ttl>Project Parameters</ttl>:
+		<ul>
+		<li>The <ttx>Abbreviation</ttx> no longer needs to be exactly 4 characters; it can be &lt;=5 characters.
+		<li>Better error checking and messages on duplicate display names and abbreviations.
+		</ul>
+	<li>Removed <ttl>All Pairs</ttl>. Not useful enough to retain; each A&amp;S should be checked after running.
+	<li><ttl>Add Project</ttl>: Linux allows
+	case-sensitive names, which SyMAP does not like; these are no long allowed. Illegal project
+	names were being added regardless, which no longer happens.
+	</ul>
+</ul>
+
+<a id="v577"></a>
 <h3>Release: v5.7.7 (15-Nov-25)</h3>
 Some small changes to collinear set computation and display.
 <br>For an existing SyMAP database, to update collinear sets:

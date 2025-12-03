@@ -49,7 +49,7 @@ public class CollapsiblePanel extends JPanel {
 
 		thePanel = new JPanel();
 		thePanel.setLayout(new BoxLayout(thePanel, BoxLayout.Y_AXIS));
-		thePanel.setBorder ( BorderFactory.createEmptyBorder(5, 20, 10, 20) );
+		thePanel.setBorder ( BorderFactory.createEmptyBorder(0, 20, 0, 20)); // was 5,20,10,20 CAS578 top,bottom were too much space
 		thePanel.setAlignmentX(LEFT_ALIGNMENT);
 		thePanel.setBackground(Color.WHITE);
 		
