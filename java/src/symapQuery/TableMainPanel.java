@@ -651,7 +651,7 @@ public class TableMainPanel extends JPanel {
     	removeAll();
     	repaint();
     	setBackground(Color.WHITE);
-    	loadStatus = new JTextField(40);
+    	loadStatus = new JTextField(60); // CAS579 was 40
     	loadStatus.setBackground(Color.WHITE);
     	loadStatus.setMaximumSize(loadStatus.getPreferredSize());
     	loadStatus.setEditable(false);

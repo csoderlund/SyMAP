@@ -70,6 +70,33 @@ which is aware of the exon-intron structure.
 </table>
 
 <a id="v578"></a>
+<h3>Release: v5.7.9 (18-Dec-25)</h3>
+<ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
+<p>
+<ul>
+<li><ttp>Queries</ttp>:
+<ul>
+<li><ttl>Cluster genes &gt;= N</ttl>:
+<ul>
+<li>The clusters were not complete. Now they may be much larger, in fact, there is now an internal cutoff on size;
+the user will be notified if some are rejected for being too large.
+<li>There is a new option to apply the N to each species instead of number of hits
+(See <a href="Query.html#clhit" target="_blank" class="ext">Queries Cluster</a>.)
+<li>The documentation is clearer about what consists of a cluster.
+</ul>
+<li><ttl>Search</ttl> now does <ttx>Next</ttx> until all values in the table have been found.
+<li><ttl>Report</ttl>: Changed the way the information at the top is formatted.
+<li><ttl>Instructions</ttl> lists information about pseudos now even if there are no
+annotated projects.
+</ul>
+<li>Small changes:
+<ul>
+<li>Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) will not regenerate the summary anymore as it does not change.
+<li>Starting <ttp>symap</ttp> or <ttp>viewSymap</ttp> checks input arguments.
+</ul>
+</ul>
+
+<a id="v578"></a>
 <h3>Release: v5.7.8 (3-Dec-25)</h3>
 <ttp>Queries</ttp> updates and additions.
 

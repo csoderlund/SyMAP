@@ -45,14 +45,32 @@ public class SumFrame extends JDialog implements ActionListener {
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
 	private boolean isSelf=false;		 
 	
-	// Called from DoAlignSynPair; 
+	// Called from DoAlignSynPair to create
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
 		bRedo=true;			// expects the summary to be regenerated if still exists
 		createSummary(false);
 	}
-    // Called from the project manager
+	// do not need to regenerate summary with 'Number Pseudo', just add to end; keep current version as not major update; CAS579
+	public SumFrame(DBconn2 dbc2, Mpair mp, boolean addPseudoOnly) { 
+		this.mp = mp;
+		this.dbc2 = dbc2;
+		
+		try {
+			ResultSet rs = dbc2.executeQuery("select summary from pairs where idx="+ mp.getPairIdx());
+			String sum = (rs.next()) ? rs.getString(1) : null; 
+			if (sum==null) {
+				createSummary(true);
+				return;
+			}
+			if (sum.contains("Number Pseudo")) return;
+			sum += "\n  Number Pseudo";
+			dbc2.executeUpdate("update pairs set summary='" + sum + "' where idx=" + mp.getPairIdx());
+		}
+		catch (Exception e) {ErrorReport.print("Updating summary for pseudo"); }
+	}
+    // Called from the project manager to display
 	public SumFrame(String title, DBconn2 dbc2, Mpair mp, boolean isReadOnly) {
 	super();
 	try {	

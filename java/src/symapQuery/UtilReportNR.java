@@ -35,6 +35,7 @@ import util.Popup;
 /***********************************************
  * Gene Report when there is no reference; 
  * 		most of this (e.g. anno) is duplicated from UtilReport; its easier then zillions of if-then-else
+ * There is no TSV file
  */
 public class UtilReportNR  extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -65,7 +66,7 @@ public class UtilReportNR  extends JDialog {
 					bShowGrp=true;
 
 	private PrintWriter outFH = null;
-	private String title;					  
+	private String title="";					  
 	
 	// Anno Keys:
 	private int nSpecies=0;														  //  createSpecies
@@ -85,12 +86,9 @@ public class UtilReportNR  extends JDialog {
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
-		title="Clustered Genes";
-		
-		title = title + " Report";
+		title = "SyMAP Cluster Gene Report";
 		setTitle(title);
-		title = "SyMAP " + title;
-
+		
 		mainPanel = Jcomp.createPagePanel();
 		createSpecies();
 		createDisplay();
@@ -357,12 +355,17 @@ public class UtilReportNR  extends JDialog {
 	 */
 	private void buildCompute() {
 	try {	
-		cntFullLink=0; // may have been used last time
+		// reused variables
+		cntFullLink=0; 	
+		if (title.endsWith("Report")) title += " " + tPanel.theTableData.getNumRows();
 		
 		HashMap <Integer, Clust> grpMap = new HashMap <Integer, Clust>  ();
 		HashSet <String> gnTagSet = new HashSet <String> ();
+		System.gc();
 		
 		for (int row=0; row<tPanel.theTableData.getNumRows(); row++) {
+			if (row % Q.INC == 0) Globals.rprt("Process " + row + " rows"); // CAS579 add rprts and gc
+			
 			TmpRowData rd = new TmpRowData(tPanel);
 			rd.loadRow(row);		// only numbered pseudos will be in the clusters, as screened in ComputeClust
 			
@@ -397,21 +400,36 @@ public class UtilReportNR  extends JDialog {
 		}
 		if (clustArr.size()==0) return;
 		
+		Globals.rprt("Sort results");
 		Collections.sort(clustArr, new Comparator<Clust> () {
 			public int compare(Clust a, Clust b) {
 				return a.rGrpN - b.rGrpN;
 			}
 		});
-		if (hasKey)  buildXannoMap();		 	   // Annotations from 1st loop
+		if (hasKey)  {
+			Globals.rprt("Add annotations");
+			buildXannoMap();		 	   // Annotations from 1st loop
+		}
 		
+		Globals.rprt("Finish");
+		System.gc();
+		int cnt=0;
 		if (!bLinkRow) {
-			for (Clust grp : clustArr) grp.finish();
+			for (Clust grp : clustArr) {
+				if (++cnt % Q.INC == 0) Globals.rprt("Finish " + cnt);
+				grp.finish();
+			}
 		}
 		else {
-			for (Clust grp : clustArr) new Links(grp);
+			for (Clust grp : clustArr) {
+				if (++cnt % Q.INC == 0) Globals.rprt("Finish link " + cnt);
+				new Links(grp);
+			}
 		}
+		Globals.rclear();
 	} 
-	catch (Exception e) {ErrorReport.print(e, "Build Gene Vec"); }
+	catch (Exception e) {ErrorReport.print(e, "Creating cluster report"); }
+	catch (OutOfMemoryError e) {ErrorReport.print(e, "Out of memory creating cluster report");}
 	}
 
 	
@@ -634,7 +652,7 @@ public class UtilReportNR  extends JDialog {
 	 */
 	private class Clust {
 		private int rGrpN=0, rGrpSz=0; 	
-		private ArrayList <TreeMap <String, Integer>>   spTagMap;    // pos, merged unique tags; pos=species column, entries no row based
+		private ArrayList <TreeMap <String, Integer>> spTagMap;    // pos, merged unique tags; pos=species column, entries no row based
 		private ArrayList <ArrayList <String>> spTagArr;	// pos, not unique tags; pos=species column, entry for each row
 		private HashMap <String, Boolean> tupleMap; // tag:tag, true - can add, false - been added (still need for lookup)
 		private int cntFull=0;
@@ -759,7 +777,7 @@ public class UtilReportNR  extends JDialog {
 				
 				if (!bShowBorder) hBodyStr.append("<tr><td colspan=" + colSpan + "><hr>");
 				if (bShowGrp) {
-					String x = (grpObj.cntFull>0) ? String.format(" (%d)", grpObj.cntFull) : "";
+					String x = (grpObj.cntFull>0 && nSpecies>2) ? String.format(" (%d asr)", grpObj.cntFull) : "";
 					String setsz = String.format("<b>%s%s</b> %s", isGrp, (grpObj.rGrpSz + Q.GROUP + grpObj.rGrpN), x);	
 					hBodyStr.append("<tr><td colspan=" + colSpan + ">" + setsz);
 				}
@@ -790,25 +808,24 @@ public class UtilReportNR  extends JDialog {
 			clearDS(); Globals.rclear();
 			
 			// Finish
-			String htitle = (title);
-			String head = strHeadHTML(htitle);
+			String head = strHeadHTML(); // title, filters, stats, table start
 			String tail= strTailHTML();
 			
-			if (gnNum==0) {
+			if (gnNum==0) { // this may happen, as all included must be in a cluster
 				if (!bPopHtml) {
-					String msg = "No reference genes fit the display options\n" + strTitle("", "\n", gnNum);
+					String msg = "No reference genes fit the Display options\n" + strTitle("", "\n", gnNum);
 					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
-				return head + "<p><big>No reference genes fit the display options</big>" + tail;
+				return head + "No reference genes fit the Display options" + tail;
 			}
 			return head + hColStr + hBodyStr.toString() + tail; // for file or popup
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Build HTML"); return null;}
 		}
-		private String strHeadHTML(String htitle) {
+		private String strHeadHTML() {
 			String head = "<!DOCTYPE html><html>\n<head>\n"
-					+ "<title>" + htitle + "</title>\n" + "<style>\n" + "body {font-family: monospaced;  font-size: 10px; }\n";		
+					+ "<title>" + title + "</title>\n" + "<style>\n" + "body {font-family: monospaced;  font-size: 10px; }\n";		
 			if (bShowBorder) {
 				head += ".ty {border: 1px solid black; border-spacing: 1px; border-collapse: separate; margin-left: auto; margin-right: auto;}\n";
 				head += ".ty td {border: 1px solid black; padding: 5px; border-collapse: separate; white-space: nowrap; }";
@@ -819,8 +836,13 @@ public class UtilReportNR  extends JDialog {
 			}
 			head += "\n</style>\n</head>\n<body>\n" + "<a id='top'></a>\n";
 			
-			head += "<center>" + strTitle("", htmlBr, gnNum); // </center> in tail
-			head += "</head><p><table class='ty'>\n"; 
+			head += "<center>" + strTitle("", htmlBr, gnNum) + "</head>"; // </center> in tail
+			
+			head +=  String.format("%s%s%,d Cluster Hits Groups", htmlBr, htmlBr, gnNum);
+			String note = (bLinkRow && cntFullLink>0 && nSpecies>2) ? String.format("; %,d All species rows (asr)", cntFullLink) : "";
+			head +=  note;
+			
+			head += "<table class='ty'>\n"; 
 			
 			return head;
 		}
@@ -882,11 +904,19 @@ public class UtilReportNR  extends JDialog {
 		private String strTitle(String remark, String br, int gnNum) { // br is "\n" if showing error, else it is <br>
 			String head = remark + title ;
 			br = br + remark;	
-			head += br + "Filter: " + tPanel.theSummary;
-			head += String.format("%s%,d Cluster Hits Groups", br, gnNum);
-			String x = (bLinkRow) ? "; Link rows" : "; Unordered unique";
-			String note = (bLinkRow) ? String.format("; %,d All species rows", cntFullLink) : "";
-			return head + x + note;
+			
+			String sum = tPanel.theSummary;
+			if (sum.length()>40) {
+				int index = sum.indexOf("Cluster");
+				String part1 = sum.substring(0,index);
+				String part2 = sum.substring(index);
+				sum = part1 + br + "    " + part2;
+			}
+			head += br + "Query: " + sum;
+			String x = (bLinkRow) ? "Link rows" : "Unlinked unique";
+			x =   br + "Display: " + x;
+			
+			return head + x;
 		}
 		
 		/* getFileHandle */

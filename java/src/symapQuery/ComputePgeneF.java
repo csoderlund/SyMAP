@@ -440,14 +440,14 @@ public class ComputePgeneF {
     	results[1] = nannot;
 	}
 	private void init() {
-    	incOnly = qPanel.isIncOne();
-    	unAnnotOnly = qPanel.isIncNoGene();
-    	isLinkage = qPanel.isIncTrans();
+    	incOnly = qPanel.isPGIncOne();
+    	unAnnotOnly = qPanel.isPGIncNoGene();
+    	isLinkage = qPanel.isPGincTrans();
     	SpeciesPanel spPanel = qPanel.getSpeciesPanel();
 
     	for (int i = 0; i < spPanel.getNumSpecies(); i++){
-    		boolean incSp = qPanel.isInclude(i);
-    		boolean excSp = qPanel.isExclude(i);
+    		boolean incSp = qPanel.isClInclude(i);
+    		boolean excSp = qPanel.isClExclude(i);
     		
     		TreeSet<Integer> incs = (incSp) ? new TreeSet<Integer>() : null;
     		

@@ -2,6 +2,7 @@ package symapCE;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.HashSet;
 
 import backend.Constants;
 import backend.anchor1.Group;
@@ -20,15 +21,18 @@ public class SyMAPmanager extends ManagerFrame {
 	
 	public static void main(String args[])  {	
 		printVersion(); 
+		
+		if (equalOption(args, "-hhh")) {// for me; put first
+			argPrintHidden(args);
+			System.exit(0);
+		}
 		if (equalOption(args, "-h") || equalOption(args, "-help") || equalOption(args, "--h")) {
-			prtParams(args); // see ManagerFrame for all variable stuff
+			argPrint(args); 			
 			System.exit(0);
 		}
-		if (equalOption(args, "-hh")) {// for me
-			prtHiddenParams(args);
-			System.exit(0);
-		}
-		setParams(args);
+		if (argFail(args)) System.exit(0);	// prints args; CAS579 add
+
+		argSet(args);
 		if (!setArch()) return; // must go after setParams; reads configuration file
 		
 		SyMAPmanager frame = new SyMAPmanager(args);
@@ -36,7 +40,7 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	
 	private SyMAPmanager(String args[]) {
-		super(); // Creates ManagerFrame; 
+		super(); 		// Creates ManagerFrame; 
 	}
 
 	private static void printVersion() {
@@ -47,30 +51,64 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	/******************************************************************
 	 * Command line parameters
+	 * Add to argCheck, argPrint, argSet
 	 */
-	private static void prtParams(String args[]) {
-		// Do not start new parameters with -c or -p; see startsWith below vs equals
+	private static boolean argFail(String args[]) {// return true
+		if (args.length==0) return false;
+		boolean ronly = equalOption(args, "-r");
+		if (args.length==1 && ronly) return false;
+		
+		String [] rArgVec = {"-c", "-sql", "-a", "-go", "-pg", "-ac"};
+		String [] wArgVec = {"-mum", "-wsp", "-p", "-v", };
+		
+		HashSet <String> argSet = new HashSet <String> ();
+		for (String x : rArgVec) argSet.add(x);
+		if (!ronly) for (String x : wArgVec) argSet.add(x);
+		
+		for (int i = 0;  i < args.length;  i++) {
+			String a = args[i];
+			if (equalOption(args, "-r")) continue;
+			
+			if (a.startsWith("-") && !argSet.contains(a)) {
+				System.err.println("*** Illegal argument: " + a);
+				argPrint(args);
+				return true;
+			}
+		}
+		if (ronly && args.length==2 && !args[1].startsWith("-")) { // viewSymap xxx  (-r comes first)
+			System.err.println("*** Illegal argument: " + args[1]);
+			argPrint(args);
+			return true;
+		}
+		if (!ronly && args.length==1 && !args[0].startsWith("-")) {// symap xxx  (check 1st arg)
+			System.err.println("*** Illegal argument: " + args[0]);
+			argPrint(args);
+			return true;
+		}
+		return false;
+	}
+	private static void argPrint(String args[]) {
 		if (equalOption(args, "-r")) System.out.println("Usage:  ./viewSymap [options]");
 		else 						 System.out.println("Usage:  ./symap [options]");
 		
-		System.out.println("  -c string : filename of config file (to use instead of symap.config)");
-		System.out.println("  -sql      : check MySQL for important settings and external programs");
+		System.out.println("  -c string : Filename of config file (to use instead of symap.config)");
+		System.out.println("  -sql      : MySQL: for important settings and external programs");
+		System.out.println("  -p N      : Number of CPUs to use (same as setting CPUs on SyMAPmanager)");
+		System.out.println("  -h        : Show help to terminal and exit");
 		
-		if (!equalOption(args, "-r")) { // viewSymap - treated as read-only
+		if (!equalOption(args, "-r")) { // viewSymap is started with -r arg
 			System.out.println("\nAlign&Synteny:");
-			System.out.println("  -p N      : number of CPUs to use (same as setting CPUs on Manager");
+			System.out.println("  -mum      : MUMmer: Do not remove any mummer files");
+			System.out.println("  -wsp      : Algo2: print MUMmer hits that differ from gene strand");
 			System.out.println("  -v        : A&S verbose output (same as checking Verbose on Manager)");
-			System.out.println("  -mum      : do not remove any mummer files");
-			System.out.println("  -wsp      : for Algo2, print MUMmer hits that differ from gene strand");
-			System.out.println("  -cs  		: Recompute collinear sets for v5.7.7");
 		}
 		System.out.println("\nDisplay:");
 		System.out.println("  -a        : 2D: do not trim alignments");
 		System.out.println("  -go       : Queries: show gene overlap instead of exon for Cluster Algo2");
-		System.out.println("  -pg       : Queries: run old PgeneF algorithm instead of the new Cluster algorithm");
-		System.out.println("  -h        : show help to terminal and exit");
+		System.out.println("  -pg       : Queries: for Cluster, run old PgeneF algorithm instead of the new Cluster algorithm");
+		System.out.println("  -ac       : Queries: for Cluster, retain all clusters regardless of size");
 	}
-	private static void prtHiddenParams(String args[]) {
+	private static void argPrintHidden(String args[]) {
 		System.out.println("Developer only special flags ");
 		System.out.println("  -ii  Extra info on 2d popups, Queries ");
 		System.out.println("  -tt  Trace output, and query zTest files ");
@@ -78,22 +116,23 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -dbd Database - saves special tables to db");
 		System.out.println("  -bt  Synteny trace");
 		System.out.println("  -s   Regenerate summary");
+		System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
 	}
-	private static void setParams(String args[]) { 
+	private static void argSet(String args[]) { 
 		if (args.length ==0) return;
 		
 		if (equalOption(args, "-r")) {// used by viewSymap
 			inReadOnlyMode = true; // no message to terminal
 		}
 		
-		if (startsWithOption(args, "-c")) {
+		if (equalOption(args, "-c")) {
 			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
 			if (Globals.MAIN_PARAMS==null) {
 				System.err.println("-c must be followed by the name of a configuration file");
 				System.exit(-1);
 			}
 		}
-		if (startsWithOption(args, "-p")) { // #CPU;
+		if (equalOption(args, "-p")) { // #CPU;
 			String x = getCommandLineOption(args, "-p"); 
 			try {
 				maxCPU = Integer.parseInt(x);	
@@ -104,20 +143,25 @@ public class SyMAPmanager extends ManagerFrame {
 		
 		if (equalOption(args, "-sql")) {// check MySQL for important settings; 
 			Globals.bMySQL = true; 
-			System.out.println("-sql  check MySQL settings ");
+			System.out.println("-sql MySQL: check settings ");
 		}
-		
+	
 		if (equalOption(args, "-go")) { 
 			Globals.bQueryOlap=true;
-			System.out.println("-go  Show gene overlap instead of exon for Algo2");
+			System.out.println("-go  Queries: show gene overlap instead of exon for Cluster Algo2");
 		}
 		if (equalOption(args, "-pg")) { // CAS563 add
 			Globals.bQueryPgeneF=true;
-			System.out.println("-pg  Run PgeneF algorithm in place of Cluster algorithm");
+			System.out.println("-pg  Queries: for Cluster, run old PgeneF algorithm instead of the new Cluster algorithm");
 		}
+		if (equalOption(args, "-ac")) { // CAS579 add
+			Globals.bQuerySaveLgClust=true;
+			System.out.println("-ac  Queries: retain all clusters regardless of size");
+		}
+		
 		if (equalOption(args, "-a")) { 
 			Globals.bTrim=false;
-			System.out.println("-a  Do not trim 2D alignments");
+			System.out.println("-a  2D: Do not trim alignments");
 		}
 		if (equalOption(args, "-s")) { // not in -h
 			System.out.println("-s  Regenerate summary");
@@ -129,11 +173,11 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-v A&S verbose output");
 		}
 		if (equalOption(args, "-mum")) { 
-			System.out.println("-mum  Do not remove any mummer result files");
+			System.out.println("-mum  MUMmer: Do not remove any mummer result files");
 			Constants.MUM_NO_RM = true;
 		}
 		if (equalOption(args, "-wsp")) {
-			System.out.println("-wsp  Print g2 hits where the hit strands differ from the genes (Algo2)");
+			System.out.println("-wsp  Algo2: print MUMmer hits that differ from gene strand");
 			Constants.WRONG_STRAND_PRT = true;
 		}
 		
@@ -177,12 +221,7 @@ public class SyMAPmanager extends ManagerFrame {
 				return true;
 		return false;
 	}
-	private static boolean startsWithOption(String[] args, String name) {
-		for (int i = 0;  i < args.length;  i++)
-			if (args[i].equals(name)) 
-				return true;
-		return false;
-	}
+	
 	private static String getCommandLineOption(String[] args, String name){
 		for (int i = 0;  i < args.length;  i++){
 			if (args[i].startsWith(name) && !args[i].equals(name)){

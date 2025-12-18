@@ -32,7 +32,8 @@ public class UtilSearch  extends JDialog{
 	private TableMainPanel tPanel;
 	private String [] displayedCols;
 	private AnnoData annoObj;
-	private int rowIndex=0;
+	private int rowIndex=-1, nextCnt=0, lastCol=0, lastSearch=0;
+	private String lastValue="";
 	private String [] skipCol = {Q.gEndCol, Q.gStartCol, Q.gLenCol, Q.gStrandCol, Q.hEndCol, Q.hStartCol, Q.hLenCol, Q.gOlap};// CAS578 add
 	
 	protected UtilSearch(TableMainPanel tpd, String [] cols, AnnoData spAnno) {
@@ -56,8 +57,9 @@ public class UtilSearch  extends JDialog{
 	private void createPanel() {
 	try {
 		JPanel selectPanel = Jcomp.createPagePanel();
-		TreeSet <String> speciesSet = annoObj.getSpeciesAbbrList();
 		
+		// Search columns
+		TreeSet <String> speciesSet = annoObj.getSpeciesAbbrList();
 		ArrayList <String> searchCols = new ArrayList <String> ();
 		for (String col : displayedCols) {
 			
@@ -125,24 +127,32 @@ public class UtilSearch  extends JDialog{
 			
 		// Buttons
 		JPanel row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
-		JButton btnOK = Jcomp.createButton("Search", "Search for string"); 	
+		JButton btnOK = Jcomp.createButton("Next", "Search for next string in table"); 	
     	btnOK.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				setVisible(false);	
+			public void actionPerformed(ActionEvent e) {	
 				doSearch(); 
+				setVisible(false); // have to do this so TableMain gets value
 			}
 		});
     	row.add(Box.createHorizontalStrut(5));
     	row.add(btnOK); 				row.add(Box.createHorizontalStrut(5));
     	btnOK.setEnabled(numCols>0);
     	
-    	JButton btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel align"); 
+    	JButton btnCancel = Jcomp.createButton(Jcomp.close, "Close window"); 
     	btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setVisible(false);
 			}
 		});
     	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(5));
+    	
+    	JButton btnClear = Jcomp.createButton("Restart", "Restarts the search from the first row"); 
+    	btnClear.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				clear();
+			}
+		});
+    	row.add(btnClear); 			row.add(Box.createHorizontalStrut(5));
     	
     	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
@@ -159,27 +169,40 @@ public class UtilSearch  extends JDialog{
 	}
 	catch (Exception e) {ErrorReport.print(e, "Creating search panel");}
 	}
-	/****************************************/
-	private void popupHelp() {
-		String msg = "";
-		msg += "Select column to search.";
-		msg += "\nExact: enter the exact string. "
-			+  "\nLast#: enter the last number of a '.' or '-' delimited string."
-			+  "\n       For Gene#, if the gene has a suffix, it must be in the search string."
-			+  "\nSubstring: only do this for an annotation column (e.g. desc or product)."
-			+  "\nIf found, the table will redisplay on the first row with the string. ";
-		msg += "\n\nSee ? for details.\n";
-		util.Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
+	private void clear() {
+		lastValue = "";
+		rowIndex = lastCol = lastSearch = -1;
+		nextCnt = 0;
 	}
-	
+	private void checkChange() {
+		String val = txtSearch.getText().trim();
+		
+		int radVal=3; 			//radSubstring
+		if (radExact.isSelected()) radVal=1; 
+		else if (radLast.isSelected()) radVal=2; 
+		
+		int colVal = -1;
+		for (int i=0; i<radColArr.length; i++) {
+			if (radColArr[i].isSelected()) {
+				colVal = i;
+				break;
+			}
+		}
+		if (!val.equals(lastValue) || radVal!=lastSearch || colVal!=lastCol) clear();
+		
+		lastValue = val;
+		lastCol = colVal;
+		lastSearch = radVal;
+	}	
 	/***************************************************
 	 **************************************************/
 	private int doSearch() { 
 	try {
+		checkChange();
+		
 		String findStr = txtSearch.getText().trim();
 		if (findStr.equals("")) {setVisible(false); return -1;}
 		
-		rowIndex=-1;
 		int nrows = tPanel.theTable.getRowCount();
 		
 		// find the column name selected in the dialog
@@ -204,25 +227,16 @@ public class UtilSearch  extends JDialog{
 		if (colIndex==-1) {Globals.eprt("No column index"); setVisible(false); return -1;}
 		
 		// Some adjustments of input string based on column
-		boolean isGN = selColName.endsWith(Q.gNCol);
-		if (isGN && radLast.isSelected()) { // adjust findStr if gnCol
-			if (!Utilities.isValidGenenum(findStr)) {
-				JOptionPane.showMessageDialog(null, "Not valid Gene# '" + findStr + "'" + " for column " + selColName,
-						"Warning", JOptionPane.WARNING_MESSAGE);
-				setVisible(false);
-				return -1;
-			}
-			if (findStr.endsWith(".")) findStr = findStr.substring(0, findStr.length()-1); // e.g. 100. -> 100
-			//boolean isSuf = Character.isLetter(findStr.charAt(findStr.length() - 1));
-		}		
-		else if (selColName.equals(Q.hitCol) && findStr.contains(",")) 
+		if (selColName.equals(Q.hitCol) && findStr.contains(",")) 
 			findStr = findStr.replace(",", ""); // for Hit#
-		
-		String sepLast = (selColName.equals(Q.grpCol)) ? Q.GROUP : Q.SDOT; 
+		else if (selColName.endsWith(Q.gNCol) && !radSubstring.isSelected() && !findStr.contains(".")) // for last# or exact
+			findStr += ".";
 		
 		// search each row
-		for (int x=0; x<nrows; x++) {
+		int index= -1;
+		for (int x=rowIndex+1; x<nrows; x++) {// start with last row index; CAS579
 			Object colValObj = tPanel.theTable.getValueAt(x, colIndex);
+			
 			String colVal;
 			if (colValObj instanceof String) colVal = (String) colValObj;
 			else if (colValObj instanceof Integer) 	{ // Hit# only
@@ -233,46 +247,66 @@ public class UtilSearch  extends JDialog{
 			
 			if (colVal.equals(Q.empty)) continue;
 			
-			if (radLast.isSelected()) {
-				String lastColNum = colVal;  // this works as exact for non-Gene#
-				if (!isGN) {
+			if (radLast.isSelected()) { // remove up to '-' or '.' from column value
+				String modColVal = colVal;  			// this works as exact for non-Gene#
+				
+				if (!selColName.endsWith(Q.gNCol)) {
+					String sepLast = (selColName.equals(Q.grpCol)) ? Q.GROUP : Q.SDOT; 
 					String [] tok = colVal.split(sepLast);
-					lastColNum = (tok.length>0) ? tok[tok.length-1] : colVal;
+					modColVal = (tok.length>0) ? tok[tok.length-1] : colVal;
 				}
-				else { // special processing in case of character at end
-					lastColNum = colVal.substring(colVal.indexOf(".")+1); // chr.N.{suf} - remove chr
-					if (lastColNum.endsWith(".")) lastColNum = lastColNum.substring(0, lastColNum.length()-1); 
+				else { 		// special processing in case of character at end
+					modColVal = colVal.substring(colVal.indexOf(".")+1); // chr.N.{suf} - remove chr
 				}
-				if (lastColNum.equals(findStr)) {
-					rowIndex=x;
+				if (modColVal.equals(findStr)) {
+					index=x;
 					break;
 				}
 			}
 			else if (radSubstring.isSelected()) {
 				if (colVal.contains(findStr)) {
-					rowIndex=x;
+					index=x;
 					break;
 				}
 			}
-			else {
+			else { // exact
 				if (colVal.equals(findStr)) {
-					rowIndex=x;
+					index=x;
 					break;
 				}
 			}
  		}
-		if (rowIndex == -1) {
+		if (index == -1 && rowIndex == -1) {
 			String op = "last#";
 			if (radSubstring.isSelected()) op = "substring";
 			else if (radExact.isSelected()) op = "exact";
 			String msg = String.format("No %s value in column  %s  of '%s'", op, selColName,  txtSearch.getText().trim());
 			JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
 		}
+		else if (index == -1) {
+			String msg = String.format("Found all %,d values of '%s'", nextCnt, txtSearch.getText().trim());
+			JOptionPane.showMessageDialog(null, msg, "Done", JOptionPane.PLAIN_MESSAGE);
+		}
+		else {
+			rowIndex = index;
+			nextCnt++;
+		}
 		return rowIndex;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Performing search"); return -1;}
 	}
-	
+	/****************************************/
+	private void popupHelp() {
+		String msg = "";
+		msg += "Select column to search. Enter search string. Select search type:";
+		msg += "\n  Last#: Enter the last number of a '.' or '-' delimited string, e.g. for 10-33, enter '33'."
+			+  "\n         For Gene#, if the gene has a suffix, it must be in the search string, e.g. '1.a'."
+			+ "\n  Exact: Enter the exact string. "
+			+  "\n  Substring: The substring can be anywhere in the column value."
+			+  "\n\nNext: If found, the table will redisplay the next row containing the value. ";
+		msg += "\n\nSee ? for details.\n";
+		util.Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
+	}
 	private int numCols=0;
 	private JRadioButton radExact, radLast, radSubstring;
 	private JTextField txtSearch = null;

@@ -3,12 +3,13 @@ package symapQuery;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Vector;
 import javax.swing.JTextField;
 
 import symap.Globals;
 import util.ErrorReport;
+import util.Popup;
 
 /*************************************************************
  * Cluster genes that share hits 
@@ -16,6 +17,9 @@ import util.ErrorReport;
  */
 public class ComputeClust {  
 	private boolean TRC = Globals.TRACE;
+	private boolean bSaveLgClust = Globals.bQuerySaveLgClust;
+	private int MAX_CL=20000; // stop if clusters get too large
+	
 	// Output structures; row is not removed in DBdata if no hitIdx2Grp entry
 	private HashMap<Integer,Integer> hitIdx2Grp; // hitID to Cluster#
 	private HashMap<Integer,Integer> grpSizes; 	 // group sizes
@@ -24,59 +28,63 @@ public class ComputeClust {
 	private QueryPanel qPanel;
 	private Vector <DBdata> inRows;		// Rows will be removed in DBdata if no hitIdx2Grp entry
 	private JTextField loadStatus;
-	private boolean bHasExc=false, bHasInc=false;
+	private boolean bPerSpecies=true;
 	private int cutoff=0;
 	
 	//From query panel
 	private HashMap <Integer, Species> idxSpMap = new HashMap <Integer, Species> ();  // spIdx, Species
-	private HashMap <Integer, Cluster> gnClMap  = new HashMap <Integer, Cluster> ();  // annotIdx, Cluster; used for Merge
+	private HashMap <Integer, Cluster> geneClMap  = new HashMap <Integer, Cluster> ();  // annotIdx, Cluster; used for Merge
  	private HashMap <Integer, Cluster> hitClMap = new HashMap <Integer, Cluster> ();  // hitIdx, Cluster 
  	private Vector <Cluster> clVec = new Vector <Cluster>();
+ 	
+ 	private HashMap <Integer, String> idxGeneMap = new HashMap <Integer, String> ();
  	
  	private int clNum=0;
  	private boolean bSuccess=true;
  	
 	protected ComputeClust(
 			Vector <DBdata> rowsFromDB, 		
-			QueryPanel lQueryPanel,JTextField progress,
+			QueryPanel queryPanel,JTextField progress,
 			HashMap<Integer,Integer> hitIdx2Grp, HashMap<Integer,Integer> grpSizes) { // output structures
 		
 		this.inRows = rowsFromDB;	
-		this.qPanel = lQueryPanel;
+		this.qPanel = queryPanel;
 		this.loadStatus = progress;
 									  // Output structures:
 		this.hitIdx2Grp = hitIdx2Grp; // identify hits in clusters; only these will be kept as rows with the assigned cluster
 		this.grpSizes = grpSizes;	  // to save grp sizes with each hit to can show sz.cl#
 		
-		computeClusters();
+		try {
+			initFilters();  if (!bSuccess) return;
+			
+			computeClust();	if (!bSuccess) return;
+			
+			filterClust();	if (!bSuccess) return;
+			
+			rmLgClust();	if (!bSuccess) return;
+			
+			makeOutput();
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Compute Cluster"); }
 	}
-	/************************************************************/
-	private void computeClusters() {
-	try {
-		initFilters();  if (!bSuccess) return;
-		
-		computeClust();	if (!bSuccess) return;
-		filterClust();	if (!bSuccess) return;
-		makeOutput();
-	} 
-	catch (Exception e) {ErrorReport.print(e, "Compute Cluster"); }
-	} // end computeGroups
-    
+	
 	/****************************************************************
 	 * If either end is in cluster, add hit
 	 ***************************************************************/
 	private void computeClust() {
 	try {
-		int rowNum=0;
+		int rowNum=0, numMerge=0, numRow=inRows.size();
 		for (DBdata dd : inRows) {
-			if (rowNum++ % Q.INC ==0) { 
-				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // uses Stopped
-				loadStatus.setText("Cluster " + rowNum + " rows...");
+			rowNum++;
+			if (rowNum % Q.INC == 0) { 
+				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} 
+				int i = (int) (((double)rowNum/(double)numRow) * 100.0);
+				loadStatus.setText("Cluster " + i + "% of rows into " + clVec.size() + " (" + numMerge + " merged)...");
 			}
 			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue; // pseudo_genes have annotIdx
 			
-			Cluster clObj0 = gnClMap.containsKey(dd.annotIdx[0]) ?  gnClMap.get(dd.annotIdx[0]) : null;
-			Cluster clObj1 = gnClMap.containsKey(dd.annotIdx[1]) ?  gnClMap.get(dd.annotIdx[1]) : null;
+			Cluster clObj0 = geneClMap.containsKey(dd.annotIdx[0]) ?  geneClMap.get(dd.annotIdx[0]) : null; // idx->geneClMap in addHit
+			Cluster clObj1 = geneClMap.containsKey(dd.annotIdx[1]) ?  geneClMap.get(dd.annotIdx[1]) : null;
 			Cluster clObj=null;
 			
 			if (clObj0!=null && clObj1!=null) {	
@@ -84,7 +92,8 @@ public class ComputeClust {
 				else {
 					clObj0.mergeCluster(clObj1); 	// Merge
 					clObj = clObj0;
-					clObj1 = null;
+					
+					numMerge++;
 				}
 			}
 			else if (clObj0!=null) clObj=clObj0;
@@ -93,42 +102,86 @@ public class ComputeClust {
 				clObj = new Cluster(clNum++);
 				clVec.add(clObj);
 			}
-			clObj.addHitG2(dd); // add hitIdx, Cluster to gnClMap and hitClMap
+			clObj.addHit(dd); // update geneClMap, hitClMap
 		}
-		if (TRC) Globals.tprt("Clusters: " + clNum + "    Genes in Cl: " + gnClMap.size() + "    Hits in Cls: " + hitClMap.size());
+		
+		if (TRC) {
+			String msg = String.format("Clusters: %,4d  Merge : %,4d   Genes: %,5d  Hits%,6d", clNum, numMerge,  geneClMap.size(), hitClMap.size());
+			Globals.prt(msg);
+		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "ParseRowsG2"); bSuccess=false;}
+	catch (Exception e) {ErrorReport.print(e, "Compute Cluster"); bSuccess=false; }
+	catch (OutOfMemoryError e) {ErrorReport.print(e, "Out of memory creating clusters");}
 	}
 	
-	/***********************************************************/
+	/***********************************************************
+	 * Exc: if there is any link to an excluded, it excludes the whole group; 
+	 * this means that gene pairs can occur when %sim, etc set that do not appear otherwise
+	 ***********************************************************/
 	private void filterClust() {  // set filtered cl.clNum to 0
 	try {
-		int cntNfil=0, cntAllInc=0, cntExc=0;
-		for (Cluster cl : clVec) {
-			if (cl.hitMap.size()<cutoff) {					// If a cluster has less than < hits, reject
-				cl.clNum=0; cntNfil++;
-				continue;
+		int nFilter=0;
+		for (Cluster clObj : clVec) {
+			int n = (bPerSpecies) ? clObj.geneSet.size() : clObj.hitMap.size();
+			if (n<cutoff) {
+				clObj.clear(); // clear() sets clObj.clNum=0
 			}
-			if (bHasInc) {									// If a cluster does not have all included species, reject
+			else {
 				for (Species spObj : idxSpMap.values()) {
-					if (spObj.bInc && cl.spCntMap.get(spObj.spIdx)==0) {
-						cl.clNum=0; cntAllInc++;
-						break;
+					int geneSpCnt = clObj.spCntMap.get(spObj.spIdx);
+					
+					if (spObj.bExc) {	
+						if (geneSpCnt>0) {
+							clObj.clear(); 
+							break;			// break out of species loop
+						}
 					}
-				}
+					else if (spObj.bInc) {
+						if (geneSpCnt==0 || (bPerSpecies && geneSpCnt<cutoff)) {
+							if (geneSpCnt<cutoff) {
+								clObj.clear(); 
+								break;			
+							}
+						}
+					}
+				}// end species
 			}
-			if (cl.clNum>0 && bHasExc) {					// If a cluster has excluded species, reject
-				for (Species spObj : idxSpMap.values()) {
-					if (spObj.bExc && cl.spCntMap.get(spObj.spIdx)>0) {
-						cl.clNum=0; cntExc++;
-						break;
-					}
-				}
+			if (clObj.clNum==0) nFilter++;
+		} // end cluster
+		if (TRC) Globals.prt(String.format("Filtered clusters %,d", nFilter));
+	}
+	catch (Exception e) {ErrorReport.print(e, "Filter clusters"); bSuccess=false;}
+	}
+	/**********************************************************
+	 * Remove large clusters after filtering; CAS579 added this because the bug fix caused big clusters
+	 */
+	private void rmLgClust() {
+	try {
+		Vector <Cluster> newClVec = new Vector <Cluster>();
+		if (bSaveLgClust) { // remove dead clusters
+			for (Cluster clObj : clVec) if (clObj.clNum>0) newClVec.add(clObj);
+			clVec = newClVec;
+			return;
+		}
+		
+		int cntRm=0;
+		for (Cluster clObj : clVec) {
+			if (clObj.clNum>0 && clObj.numHit<=MAX_CL)  {
+				newClVec.add(clObj);
+			}
+			else if (clObj.numHit>MAX_CL) {
+				clObj.clear();
+				cntRm++;
 			}
 		}
-		if (TRC) Globals.tprt(String.format("Filter: N %,d   !Inc: %,d   Exc: %,d ", cntNfil, cntAllInc, cntExc));
+		clVec = newClVec;
+		
+		if (cntRm>0) {
+			String msg = String.format("Removed %,d clusters that have >%,d hits.\nSet stricter filters and try again.", cntRm, MAX_CL);
+			Popup.showWarningMessage(msg);
+		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "Filter"); bSuccess=false;}
+	catch (Exception e) {ErrorReport.print(e, "Remove large clusters"); bSuccess=false;}
 	}
 	/***********************************************************
 	 * Populate output structures, renumber
@@ -140,7 +193,8 @@ public class ComputeClust {
 	try {
 		// The output is sorted in DBdata.sortRows, but the grpNum can change based on order of species input.
 		// Hence, sort here first for deterministic numbering. CAS578 add sort
-		for (Cluster clObj : clVec) clObj.numHit = clObj.hitMap.size();
+		loadStatus.setText("Sort " + clVec.size() + " cluster...");
+		
 		try {
 			Collections.sort(clVec, new Comparator<Cluster> () {
 				public int compare(Cluster c1, Cluster c2) {
@@ -157,23 +211,25 @@ public class ComputeClust {
 			} );
 		} catch (Exception e) {} // in case it violates
 			
+		if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} // uses Stopped
+		
 		// new cluster number
+		// The clusters use the hit number, even if the perGene option was used; otherwise, it is confusing to view
 		int nGrpNum=1;
 		for (Cluster clObj : clVec) {
 			if (clObj.clNum==0) continue; 	// clNum=0 filtered; 
 			
 			clObj.clNum = nGrpNum++; 		// reassign new number
 			
-			grpSizes.put(clObj.clNum, clObj.hitMap.size());	// To create rows in DBdata: cl#->size
+			grpSizes.put(clObj.clNum, clObj.hitMap.size());	// For rows in DBdata: cl#->size
 		}	
 		// add cluster to hit
 		for (int hitIdx : hitClMap.keySet()) {
 			Cluster clObj = hitClMap.get(hitIdx);
-			if (clObj.clNum==0) continue;	// Filtered
-			
-			hitIdx2Grp.put(hitIdx, clObj.clNum);	// To create rows in DBdata: hit->Cl#
+			if (clObj.clNum!=0) 	
+				hitIdx2Grp.put(hitIdx, clObj.clNum);	// To create rows in DBdata: hit->Cl#
 		}
-		Globals.tprt(String.format("hitidx2Grp: %,d    grpSizes: %,d", hitIdx2Grp.size(), grpSizes.size()));
+		if (TRC) Globals.prt(String.format("hitidx2Grp: %,d    grpSizes: %,d", hitIdx2Grp.size(), grpSizes.size()));
 	}
     catch (Exception e) {ErrorReport.print(e, "Make output"); bSuccess=false;}
 	}
@@ -183,83 +239,97 @@ public class ComputeClust {
 	private void initFilters() { 
 	try {
     	cutoff 		= qPanel.getClustN();
+    	bPerSpecies = qPanel.isClPerSp();
     	
     	SpeciesPanel spPanel = qPanel.getSpeciesPanel();
 
-    	for (int i = 0; i < spPanel.getNumSpecies(); i++){
+    	for (int pos = 0; pos < spPanel.getNumSpecies(); pos++){
     		Species sObj = new Species();
-    		
-    		sObj.spIdx 	= spPanel.getSpIdx(i);
-    		sObj.spPos  = i;
-    		sObj.bInc 	= qPanel.isInclude(i);
-    		sObj.bExc 	= qPanel.isExclude(i);
-    		if (sObj.bInc) bHasInc=true;	// zero results if 0/1 included
-    		if (sObj.bExc) bHasExc=true;
-    		
+    		sObj.spIdx 	= spPanel.getSpIdx(pos);
+    		sObj.bExc 	= qPanel.isClExclude(pos); // either include/exclude/whatever	
+    		sObj.bInc 	= qPanel.isClInclude(pos);
     		idxSpMap.put(sObj.spIdx, sObj);
     		
-    		for (String idxstr : spPanel.getChrIdxList(i)){
+    		for (String idxstr : spPanel.getChrIdxList(pos)){
     			if(idxstr != null && idxstr.length() > 0) { 
         			int idx = Integer.parseInt(idxstr);
         			sObj.chrIdx.add(idx);
     			}
     		}  
-    	} // end going through chromosomes
+    	} 
 	}
     catch (Exception e) {ErrorReport.print(e, "FilterInit"); bSuccess=false;}
 	}
-	/************************************************************/
-	private void utilMapInc(Map<Integer,Integer> ctr, int key){
-		if (!ctr.containsKey(key)) 	ctr.put(key, 1);
-		else						ctr.put(key, ctr.get(key)+1);
-	}
+	
 	/*****************************************************************/
 	private class Cluster {
 		int clNum = 0;		// assigned while building, then reassigned in makeOutput
-		int [] minStart = {Integer.MAX_VALUE, Integer.MAX_VALUE};
-		int [] maxEnd =   {0,0};
 		String [] chrNum = {"",""};
 		
 		HashMap <Integer, DBdata> hitMap = new HashMap <Integer, DBdata> (); 
 		int numHit = 0;
 		
-		HashMap <Integer, Integer> spCntMap   = new HashMap <Integer, Integer> (); // spIdx, cnt
+		HashMap <Integer, Integer> spCntMap = new HashMap <Integer, Integer> (); // spIdx, count unique genes
+		HashSet <Integer> geneSet = new HashSet <Integer> ();		// all genes; no count dups
  		
 		private Cluster(int num) {
-			clNum=num;
+			clNum = num;
 			for (int idx : idxSpMap.keySet()) spCntMap.put(idx, 0);
 		}
-		private void addHitG2(DBdata dd) {
+		private void addHit(DBdata dd) {
 			hitMap.put(dd.hitIdx, dd);
+			numHit++;
+			
 			for (int x=0; x<2; x++) {
-				if (dd.hstart[x]<minStart[x]) minStart[x] = dd.hstart[x];
-				if (dd.hend[x]>maxEnd[x])     maxEnd[x] = dd.hend[x];
-				
 				if (chrNum[x]=="" || dd.getChrNum(x).compareTo(chrNum[x])<0) 
 					chrNum[x] = dd.getChrNum(x); // use smallest for sort
 				
+				// filters
+				int spkey = dd.spIdx[x];
+				int gnKey = dd.annotIdx[x];
+				if (!geneSet.contains(gnKey)) {	// only count non-dups
+					spCntMap.put(spkey, spCntMap.get(spkey)+1); 
+					geneSet.add(gnKey);
+					
+					if (!idxGeneMap.containsKey(gnKey)) idxGeneMap.put(gnKey, dd.geneTag[x]);
+				}
 				
-				utilMapInc(spCntMap, dd.spIdx[x]);	// filters
 			}
 			// the following may replace another cluster during mergeCluster
-			gnClMap.put(dd.annotIdx[0], this);	
-			gnClMap.put(dd.annotIdx[1], this);	
+			geneClMap.put(dd.annotIdx[0], this);	
+			geneClMap.put(dd.annotIdx[1], this);	
 			hitClMap.put(dd.hitIdx, this);		
 		}  
-		private void mergeCluster(Cluster cObj) {
-			for (DBdata dd : hitMap.values()) addHitG2(dd);
+		private void mergeCluster(Cluster rmObj) {
+			for (DBdata dd : rmObj.hitMap.values()) addHit(dd); // move hits from cObj to this cluster; CAS579 bug wasn't moving
+			clVec.remove(rmObj);
+		}
+		private void clear() {
+			clNum=0;
+			numHit=0;
+			hitMap.clear();
+			spCntMap.clear();
+			geneSet.clear();
 		}
 		public String toString() {
-			String msg= clNum + ". " + hitMap.size() + " Hits: ";
-			for (int x : hitMap.keySet()) msg += x + " ";
-			msg += "\n Species: ";
-			for (int x : spCntMap.keySet()) msg += idxSpMap.get(x).spPos + ":" + spCntMap.get(x) + " "; 
+			String msg = String.format("%4d. #Hits %3d  #Genes %3d  Species: ", clNum, hitMap.size(), geneSet.size());
+			for (int x : spCntMap.keySet()) {
+				Species sp = idxSpMap.get(x);
+				msg +=  sp.getDN() + " " + spCntMap.get(x) + " " + Globals.toTF(sp.bExc) + "   "; 
+			}
+			String x="";
+			for (int idx : geneSet) {x += "  " + idxGeneMap.get(idx);}
+			msg += "\n   " + x;
 			return msg;
 		}
 	}
 	private class Species {	// in idxChrMap
-		int spIdx=0, spPos=0;
-		boolean bInc=true, bExc=false;
+		int spIdx=0;
+		boolean bExc=false, bInc=false;
 		Vector <Integer> chrIdx = new Vector <Integer> ();
+		
+		private String getDN() {
+			return qPanel.speciesPanel.getSpNameFromSpIdx(spIdx);
+		}
 	}
 }

@@ -77,7 +77,7 @@
 		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#pairCol">Pair</a>, <a href="#singleCol">Single</a>, <a href="#save">Auto-save</a>&nbsp;&nbsp;&nbsp;&nbsp;
 		<tr><td><a href="#stat">Statistics</a>
 		<tr><td><a href="#but">Top buttons</a>
-		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msaAlign">MSA</a>, <a href="#view2D">View 2D</a>, <a href="#report">Gene Report</a>...
+		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msaAlign">MSA</a>, <a href="#view2D">View 2D</a>, <a href="#report">Report</a>, <a href="#search">Search</a>,...
 	</table>
 <td  style="white-space: nowrap; vertical-align: text-top;">
 	<table>
@@ -349,7 +349,8 @@ the hit must be on the species chromosome, but the "one" gene can be on either e
 <table class="tx"><tr><td>Enter the lower limit number for one or more text boxes, where they correspond to the column of the same name, i.e.
 <ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx>, <ttx>%Olap</ttx>.
 The first 3 are not relative to any gene.
-For <ttx>%Olap</ttx>, the lower limit will be on each <ttx>%Olap</ttx> gene in a row.
+For <ttx>%Olap</ttx>, the lower limit will be applied to every gene in a row; this should not
+be used if one project is un-annotated.
 </table>
 
 <a id="enter"></a>
@@ -401,7 +402,7 @@ the <ttx>Gene#</ttx> will <i>only</i> be on the selected chromosome.
 <h3>4. Compute Groups</h3>
 <table class="tz"><tr>
 <td><a href="#multi">1. Multi-hit genes</a>
-<td><a href="#clhit">2. Cluster hits</a>
+<td><a href="#clhit">2. Cluster genes</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
@@ -420,7 +421,7 @@ allows the <ttl>View 2D</ttl> <a href="#group">Group</a> option to be used. See
 <li>The <u>target</u> gene refers to the gene with &gt;= N hits to the <u>opposite</u> species.
 <li>The target must be a gene, but it can be to un-annotated hits on the opposite species, regardless if they are numbered pseudos.
 Use the <ttl>Both</ttl> genes filter to exclude them.
-<li>These can be pre-filtered by species chromosome, <ttl>%Olap</ttl>,  etc.
+<li>These can be pre-filtered by species chromosome, <ttl>%Sim</ttl>,  etc.
 <li>See <a href="#rmulti">Multi-hit Gene Report...</a> for a good way to see a condensed view of the results.
 </ul>
 <br>The options are as follows:
@@ -440,14 +441,13 @@ Use the <ttl>Both</ttl> genes filter to exclude them.
 	<td>&nbsp;<td>The &gt;=N hits may be on any set of opposite chromosomes for a given species.
 </table>
 
-
 <table>
 	<tr><td style="vertical-align: text-top;">
 	The table can list the same hit multiple times, because gene X and gene Y may be connected by a hit, and both genes
 	have &gt;=N hits, so the hit in both groups need to be shown.
 	<p>An example is shown on the right, where Hit#881 is in both Atha Group#3 and Brap Group#15.
 	The image below shows the two groups, where the group hits are highlighted in magenta; these were
-produced using the <ttl>View 2D</ttl> option <a href="#group">Group</a> (selecting any hit in the group results in the
+produced using the <ttl>View 2D</ttl> option <a href="#group">Group-chr</a> (selecting any hit in the group results in the
 same 2D display).
 	<td><a href="img/query_multi_results.png">
 	<img src="img/query_multi_results.png" alt="multi-hit results" style="border: 1px solid black; width: 250px"></a>
@@ -460,37 +460,64 @@ same 2D display).
 <!------------ Cluster --------------------->
 <a id="clhit"></a>
 <h4>4.2. <ttl>Cluster genes</ttl></h4>
-
-<ul>
+This algorithm was updated in v5.7.9; the old one did not provide complete results.
+<ol>
 <li>This algorithm finds clusters of overlapping genes. That is, every gene in the cluster aligns to at least one
 other gene in the cluster, and all genes that align to any gene in the cluster are included.
-<li>Each cluster is given a group number, which is shown in the Query Results table (column name <ttx>Group</ttx>).
-<li>These can be pre-filtered by species chromosome, <ttl>%Olap</ttl>,  etc.
-<li>Pseudo (un-annotated) will be included if they are number. Use <ttl>Both</ttl> genes to exclude pseudo;
+<p><li>Each cluster is given a group number, which is shown in the Query Results table (column name <ttx>Group</ttx>).
+<p><li>These can be pre-filtered by species chromosome, <ttl>%Olap</ttl>,  etc. See <b>Note</b> below.
+<p><li>Pseudo (un-annotated) will be included if they are number. Use <ttl>Both</ttl> genes to exclude pseudo;
 use <ttl>One</ttl> gene to only show gene to pseudo.
-<li>See <a href="#rclust">Cluster Report...</a> for a good way to see a condensed view of the results.
+<p><li><u><i>Beware: huge clusters can be created!!!</i></u>
+<ul>
+<li>For large databases, it is wise to first try filters as described in item 3 and 4.
+<li>The algorithm does not save any clusters that have &gt;20,000 hits.
+<li>In order to show all clusters regardless of size, start <ttp>viewSymap -ac</ttp>;
+note, it may run out-of-memory creating the clusters, and the <ttl>Cluster Report</ttl> probably will not finish gracefully.
 </ul>
+<p><li>See <a href="#rclust">Cluster Report...</a> for a good way to see a condensed view of the results. This also
+will show total linked clusters.
+</ol>
 
-<table class="tx"><tr><td>
-	<tr>
-	<td>If there are only two species, the only filter will be <ttl>&gt;=N</ttl>.
-	<br>For more than 2 species, the filters are shown on the right.
-	<td>&nbsp;
+<table class="tx">
+	<tr><td><ttl>Cluster genes &gt; =N</ttl>:
+	<br>The N entered will apply to whichever of the following options is selected:
 	<td><a href="img/query_clust.png">
-	<img src="img/query_clust.png" alt="Cluster3" style="border: 1px solid black; width: 280px"></a>
+	<img src="img/query_clust.png" alt="Cluster3" style="border: 1px solid black; width: 400px"></a>
+</table>
+<table>
+	<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Total hits</ttl><td>The cluster must have at least N hits,
+	and it must contain at least one gene from each included species.
+	<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Genes per species</ttl><td>The cluster must have at least N genes from each included species.
+	A better N may be 2, as the default 4 is a big requirement.
 </table>
 
 <table class="tx">
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>&gt;=N</ttl>
-	<td>List all clusters that have &gt;= N hits.
+<tr><td colspan="2">
+If there is more than two species, the following options will be present:
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Include</ttl>
-	<td> The resulting clusters may have at least one gene from all included species.
+	<td> The clusters are created, and then any cluster without at least one gene from each included species is removed.
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><ttl>Exclude</ttl>
-	<td> The resulting clusters will contain no genes from the excluded species.
+	<td> The clusters are created, and then any cluster with at least one gene from an excluded species is removed.
+<tr><td style="white-space: nowrap; vertical-align: text-top;">Neither
+	<td>If a species is not <ttl>Include</ttl> or <ttl>Exclude</ttl>, it can be in a cluster 0 or more times.
+	However, there must be two included species.
 </table>
 
-<p><u>Alternative algorithm</u>:
-<br><ttl>PgeneF</ttl>: If you start <ttp>viewSymap</ttp> with the "-pg" flag, you will see the
+<br><b>Note:</b> If the data is pre-filtered, e.g. <tt>%Sim</tt>, and if <ttl>Exclude</ttl> is used, this can create <ttx>Groups</ttx> that would not occur without the
+filters, e.g.
+<table class="ty">
+<tr><td colspan=5>Species <tt>sp1</tt>, <tt>sp2</tt>, <tt>sp3</tt> are being queried, and <tt>sp1</tt> is excluded
+<tr><td><tt>Hit1</tt><td style="white-space: nowrap;"><tt>sp1-gene1</tt><td style="white-space: nowrap;"><tt>sp2-gene2</tt><td>&nbsp;<td><tt>%Sim</tt>=40
+<tr><td><tt>Hit2</tt><td>&nbsp;<td style="white-space: nowrap;"><tt>sp2-gene2</tt><td style="white-space: nowrap;"><tt>sp3-gene3</tt><td><tt>%Sim</tt>=80
+<tr><td colspan=4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No <tt>%Sim</tt> filter
+<td><tt>Hit1</tt> and <tt>Hit2</tt> will be in a cluster, which will be removed post-clustering due to the excluded <tt>sp1-gene1</tt>.
+<tr><td colspan=4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Filter <tt>%Sim</tt>&gt;=70
+<td><tt>Hit2</tt> may be in a cluster
+because <tt>Hit1</tt> was pre-filtered on <tt>%Sim</tt>, hence, was not input to the clustering algorithm.
+</table>
+<p><big><u>Alternative algorithm</u></big>:
+<p><ttl>PgeneF</ttl>: If you start <ttp>viewSymap</ttp> with the "-pg" flag, you will see the
 filters from the original PgeneF cluster algorithm.
 &rarr;<i>Note: the PgeneF feature has not been tested for a long time except superficially
 (i.e. making sure it has the same results as the previous release)</i>.
@@ -725,7 +752,7 @@ where the first set is 1-50, the second is 51-192, etc.
 <td><a href="#msaAlign">2. MSA...</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#view2D">3. View 2D</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#export">4. Export...</a>&nbsp;&nbsp;&nbsp;
-<td><a href="#report">5. Gene Report...</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#report">5. Report...</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#search">6. Search...</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
@@ -890,7 +917,7 @@ it may be desirable to exclude it in the output.
 <!------------------------------------------------------------------------->
 <!-------------------------REPORT------------------------------------------------>
 <a id="report"></a>
-<h4>4.5 Gene Report...</h4>
+<h4>4.5 Report...</h4>
 
 <table class="tz"><tr>
 	<td><a href="#rint">Interface</a>
@@ -1000,10 +1027,10 @@ Collinear sets are grouped to show the union of overlapping sets for the referen
 	<p>For example, row 4:
 		<p><table class="ty">
 		<tr><td><i>Gene#</i><td style="white-space: nowrap;"><i>Species Chr</i><td style="white-space: nowrap;"><i>Collinear set</i>
-		<tr><td>59<td style="white-space: nowrap;">A.thal Chr01<td>6.6, 8.104, 8.1
-		<tr><td>5153.a<td style="white-space: nowrap;">B.rapa Chr09<td style="white-space: nowrap;">6.6
-		<tr><td>28<td style="white-space: nowrap;">B.rapa Chr10<td style="white-space: nowrap;">8.104
-		<tr><td>1<td style="white-space: nowrap;">Cabbage Chr05<td style="white-space: nowrap;">8.1
+		<tr><td>59<td style="white-space: nowrap;">A.thal Chr01<td>6.4, 8.1, 8.5
+		<tr><td>5153.a<td style="white-space: nowrap;">B.rapa Chr09<td style="white-space: nowrap;">6.4
+		<tr><td>28<td style="white-space: nowrap;">B.rapa Chr10<td style="white-space: nowrap;">8.1
+		<tr><td>1<td style="white-space: nowrap;">Cabbage Chr05<td style="white-space: nowrap;">8.5
 		</table>
 	<p>The other genes in each collinear set are obvious since they share the same size.setN, e.g. #8.1 is shown in 8 rows.
 
@@ -1024,12 +1051,13 @@ Shows reference genes that align to at least N genes, where N is the number inpu
 	<tr><td><ttb>Show</ttb><td><ttx>Group</ttx><td>Show the group (size-number) above the respective.
 </table>
 <p>The <ttx>Group</ttx> (size-number) is shown above each group.
-This used the <ttx>Gene#</ttx> option so it prefixes the annotations.
+This used the <ttx>Gene#</ttx> option so it prefixes the annotations, and the <ttx>Truncate</ttx> option was
+used on a <ttx>Width</ttx> of 50.
 <p><a href="img/query_report_multi.png"><img src="img/query_report_multi.png" alt="report A.thal ref" style="border: 1px solid black; width: 700px"></a>
 
 <!---- Cluster Group ---->
 <p><a id="rclust"></a>
-<h4>4.5.5 Cluster hit report</h4>
+<h4>4.5.5 Cluster gene report</h4>
 
 <table class="tx">
 <tr><td>
@@ -1051,11 +1079,11 @@ In the two images below, the <ttx>Unlinked unique</ttx> is shown on the left and
 shown on the right.
 Each cluster will have all species since the <ttl>Cluster gene</ttl> query included them all (i.e <ttx>Inc(Hsa,Mus,Pan)</ttx>), but not
 all genes will be linked; the <ttx>Linked rows</ttx> shows the genes that are linked.
-<p><ttx>Unlinked unique</ttx>: Cluster #1 (7-1) shows that there is only one Hsa gene, which has 4 links;
-likewise for the one Mus gene; however, there are 5 Pan genes. If there are only two species shown, then this
+<p><ttx>Unlinked unique</ttx>: Cluster #1 (8-1) shows that there is only one Hsa gene, which has 3 links;
+Mus has 4 genes which all have links; Pan has 2 genes with links. If there are only two species shown, then this
 is an easier way to view the results.
-<p><ttx>Linked rows</ttx>: Every gene listed in a row is linked. The first row of 7-1 is the only one that
-is linked across all species. There are 229 fully linked rows in the 177 clusters; each one has the number
+<p><ttx>Linked rows</ttx>: Every gene listed in a row is linked. The first row of 8-1 is the only one that
+is linked across all species. There are 2 fully linked rows in the 3 clusters; each one has the number
 of fully linked rows in parenthesis next the cluster label. This is the most informative when &gt;2 species
 are included.
 <p>
@@ -1069,22 +1097,28 @@ are included.
 <table class="tx">
 <tr><td>The <ttl>Search...</ttl> produces a popup as shown on the right.
 <p>The columns in the popup
-will vary depending on the columns displayed in the table. This will only show
-the columns that are searchable. Besides the top 4 shown,
+will vary depending on the columns displayed in the table. It will only show
+the columns that are searchable. Besides the top 4 shown (see image on right),
 the species <ttx>Gene#</ttx> and all of the <ttx>Gene Annotation</ttx> columns are searchable.
-<p><ttl>Search</ttl> results in the table positioning to the row with the first occurrence
-of the search string, and the row will be selected.
+<p>
 <table class="ty">
 <tr><td><ttl>Last#</ttl><td>This searches on the last number of a "." or "-" delineated string,
 i.e. <ttx>Block</ttx>, <ttx>Collinear</ttx>, <ttx>Group</ttx> and <ttx>Gene#</ttx>.
-<br>For a <ttx>Gene#</ttx> with a character suffix (e.g. 1.1.a for chr01, gene# 1.a), enter the 1.a.
+<br>For a <ttx>Gene#</ttx> with a character suffix (e.g. 1.1.a for chr01, gene# 1.a), enter the '1.a'.
 <tr><td><ttl>Exact</ttl><td>This searches for the exact string.
 <tr><td><ttl>Substring</ttl><td>This searches for a substring, which is most relevant for
 the <ttx>Gene Annotation</ttx> of 'desc' or 'product'.
 </table>
 <td><a href="img/query_search.png"><img src="img/query_search.png" alt="Query search" style="border: 1px solid black; width: 230px"></a>
 </table>
-
+<ttl>Next</ttl>:
+<ul>
+<li>The table will position to the next row with the occurrence of the search string and the row will be selected.
+<li>If all rows with the search string have been found, a popup window will tell you how many were found.
+<li>The window closes between searches, but select it again and it will start where it left off.
+<li>When any item on the <ttl>Search</ttl> panel changes, the search restarts from the first row.
+</ul>
+<ttl>Restart</ttl>: Clear internal parameters so the next <ttl>Next</ttl> restarts the search from the first row.
 <hr>
 <!--------------------------------------------------------------------------->
 <a id="rtab"></a>

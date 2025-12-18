@@ -549,7 +549,7 @@ public class DBdata implements Cloneable {
     			rowNum++;
     			
     			int grp  = hitIdx2Grp.get(dd.hitIdx);
-    			int sz   = grpSizes.get(grp);
+    			int sz   = grpSizes.containsKey(grp) ? grpSizes.get(grp) : 0; // CAS579 add check
     			dd.setGroup(grp, sz);
     			
     			rowsForDisplay.add(dd);
@@ -560,7 +560,7 @@ public class DBdata implements Cloneable {
 			rows.clear();
 			return rowsForDisplay;
 		}
-		catch (Exception e) {ErrorReport.print(e, "run pgenef"); return null;}
+		catch (Exception e) {ErrorReport.print(e, "Making cluster table"); return null;}
 	}
 	// Create Unique Gene Counts for Stats (see SummaryPanel)
 	private static void makeGeneCnts(HashMap <Integer, Integer> geneCntMap) { // spIdx, num-unique-genes
@@ -1142,7 +1142,7 @@ public class DBdata implements Cloneable {
 	protected int rowNum=0;			// this rowNum is not used in table, but is a placeholder and used in debugging
 	protected String grpStr = Q.empty;	// ComputeClust && ComputeMulti
 	
-	private String [] spName= {Q.empty, Q.empty};	
+	protected String [] spName= {Q.empty, Q.empty};	// ComputeClust uses
 	protected String [] chrNum= {Q.empty, Q.empty};
 	
 	// AnnoStr broken down into keyword values in finish()

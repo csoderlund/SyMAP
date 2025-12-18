@@ -343,7 +343,7 @@ public class DoAlignSynPair extends JFrame {
 		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
 		mp.saveParamsToDB(params);		// re-enter params and update NOW(), then update pair_props
 		
-		new SumFrame(dbc2, mp); // only so it will show the updated version
+		new SumFrame(dbc2, mp, true); // only so it will show the updated version
 		System.out.println("--------------------------------------------------");
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }

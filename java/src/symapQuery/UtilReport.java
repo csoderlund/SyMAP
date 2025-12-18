@@ -33,7 +33,7 @@ import util.Popup;
 import util.Utilities;
 
 /***********************************************
- * Create report of collinear genes or genes matches
+ * Create report of gene, collinear genes or multi-hit gene
  */
 public class UtilReport extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -52,8 +52,8 @@ public class UtilReport extends JDialog {
 								isMulti="#";	// Multi
 	private static final String isLink="=", 	// Gene: linkage with direct neighbor
 							    isLink3="+", 	// Gene: linkage with one over
-							    isNone="---",
-							    htmlSp="&nbsp;", htmlBr="<br>", tsvBr = "| ";			
+							    isNone="---";
+	private static final String htmlSp="&nbsp;", htmlBr="<br>", tsvBr = "| ", tsvRmk = "### ";			
 	private String brLine;	// Between Keyword values and Merge sets: Set in okay: "|" tsv, <br> html
 	
 	// Okay: From input menu: the setting are used as the defaults, except bIs settings
@@ -73,7 +73,7 @@ public class UtilReport extends JDialog {
 					bTruncate=false, 	// All: Truncate description
 					bShowGene=false;	// All: Show gene# before anno
 	
-	private int queryMultiN3=0;		// the cutoff for Multi-hit gene; not all Multi-hit are to genes, report requires N gene pairs
+	private int queryMultiN=0;		// the cutoff for Multi-hit gene; not all Multi-hit are to genes, report requires N gene pairs
 	private int descWidth=40;
 	private boolean hasKey=false;
 
@@ -107,7 +107,7 @@ public class UtilReport extends JDialog {
 	protected UtilReport(TableMainPanel tdp) { // called 1st time for a Table; the report options can change, but not query
 		this.tPanel = tdp;			// rows of the table are read for report
 		
-		queryMultiN3 = tdp.queryPanel.getMultiN();	
+		queryMultiN = tdp.queryPanel.getMultiN();	
 		spPanel = tdp.queryPanel.speciesPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -121,9 +121,9 @@ public class UtilReport extends JDialog {
 		title = "SyMAP " + title;
 
 		mainPanel = Jcomp.createPagePanel();
-		createSpecies();
-		createDisplay();
-		createOutput();
+		createSpeciesPanel();
+		createDisplayPanel();
+		createOutputPanel();		// click OK calls runReport
 		
 		pack();
 		
@@ -134,7 +134,7 @@ public class UtilReport extends JDialog {
 	}
 	
 	// Reference and keywords
-	private void createSpecies() {
+	private void createSpeciesPanel() {
 		int width = 100;
 		JPanel optPanel = Jcomp.createPagePanel();
 		
@@ -156,7 +156,7 @@ public class UtilReport extends JDialog {
 		
 		// width may change if longer species name;
 		for(int x=0; x<nSpecies; x++) {
-			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x), "Chromosome and location for this species"); 
+			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x), "Create report with " + spPanel.getSpName(x) + " as the reference"); 
 			width = Math.max(width, radSpecies[x].getPreferredSize().width);
 			bg.add(radSpecies[x]);
 		}
@@ -195,7 +195,8 @@ public class UtilReport extends JDialog {
 		mainPanel.add(Box.createVerticalStrut(5));
 		mainPanel.add(new JSeparator());
 	}
-	private void createDisplay() {
+	// output options
+	private void createDisplayPanel() {
 		radAllSpRow   = Jcomp.createRadio("Per Row", "Each row must have all species"); 
 		radLinkRow    = Jcomp.createRadio("+Link", "Each row must have all species and at least one link"); 
 		radAllLinkRow = Jcomp.createRadio("All Link", "Each row must have all genes linked (joined by a hit)");
@@ -260,8 +261,8 @@ public class UtilReport extends JDialog {
 		mainPanel.add(Box.createVerticalStrut(5));
 		mainPanel.add(new JSeparator());	
 	}
-	// output and bottom buttons
-	private void createOutput() {
+	// type of output and bottom buttons
+	private void createOutputPanel() {
 		JPanel optPanel = Jcomp.createPagePanel();
 		
 		JPanel row = Jcomp.createRowPanel();
@@ -304,7 +305,7 @@ public class UtilReport extends JDialog {
     	btnOK = Jcomp.createButton("Create", "Create gene pair report");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				runReport();
+				runReportZoutput();
 			}
 		});
 		btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel action");
@@ -355,9 +356,9 @@ public class UtilReport extends JDialog {
 		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}
 	/**************************************************************8
-	 * Shared
+	 * XXX Shared
 	 */
-	private void runReport() {
+	private void runReportZoutput() {
 	/*-------- Settings ---------*/
 		spInputKey = new String [nSpecies];				// List of input keywords per species
 		for (int i=0; i<nSpecies; i++) spInputKey[i]=""; 
@@ -722,12 +723,12 @@ public class UtilReport extends JDialog {
 	 */
 	private void buildXmulti() {
 	try {	
-		HashMap <String, Integer> tagRowMap = new HashMap <String, Integer>  ();
+		HashMap <String, Integer> tagRowMap = new HashMap <String, Integer>  (); // reference genes
 		ArrayList <Gene> newGeneVec = new ArrayList <Gene> ();
 		
 		int ix=0, cntMerged=0;
 		for (Gene gnObj : geneVec) {
-			if (gnObj.cntHits<queryMultiN3) {
+			if (gnObj.cntHits<queryMultiN) {
 				gnObj.cntHits=0;
 				continue; 			// There are gnObj genes from other species N-group; this weeds them out
 			}
@@ -752,7 +753,7 @@ public class UtilReport extends JDialog {
 				}
 			}
 		}
-		else note = String.format("%,d merged rows", cntMerged);
+		if (cntMerged>0) note = String.format("%,d merged rows", cntMerged);
 	
 		tagRowMap.clear();
 		geneVec.clear();
@@ -1175,13 +1176,13 @@ public class UtilReport extends JDialog {
 			
 				clearDS(); Globals.rclear();
 				
-				String head = strTitle("### ", "\n", unNum, gnNum) + "\n";
 				if (cntOut==0) {
-					String msg = "No reference genes fit the display options\n" + head;
+					String msg = strOptions("", "\n") + "\n" + "No reference genes fit the Display options\n";
 					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
-				return head + hColStr + "\n" + hBodyStr.toString();
+				String head = tsvRmk + title +  strOptions(tsvRmk, "\n");
+				return head + "\n" + strStats(tsvRmk, "\n") + hColStr + "\n" + hBodyStr.toString();
 			}
 			catch (Exception e) {ErrorReport.print(e, "Build HTML"); return null;}
 		}
@@ -1286,23 +1287,25 @@ public class UtilReport extends JDialog {
 			
 			clearDS(); Globals.rclear();
 			
-			String htitle = (title + " for " + refSpName);
-			String head = strHeadHTML(htitle);
-			String tail = strTailHTML();
+			String head = htmlHead(); // html, options, stats (unless cntOut==0), table start 
+			String tail = htmlTail(); // end table, html
 			
 			if (cntOut==0) {
-				if (!bPopHtml) {
-					String msg = "No reference genes fit the display options\n" + strTitle("", "\n", gnNum, unNum);
+				if (bPopHtml) return head + "<p>&nbsp;<tr><td>No reference genes fit the Display options" + tail; // html for popup
+				else {
+					String msg = strOptions("", "\n") + "\n\nNo reference genes fit the Display options\n";
 					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
-				return head + "<p><big>No reference genes fit the display options</big>" + tail;
 			}
 			return head + hColStr + hBodyStr.toString() + tail; // for file or popup
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Build HTML"); return null;}
 		}
-		private String strHeadHTML(String htitle) {
+		/* created after the body of table created */
+		private String htmlHead() {
+			String htitle = (title + " for " + refSpName);
+			
 			// border-collapse: collapse does not work in popup; making border-spacing: 0px makes it too think
 			String head = "<!DOCTYPE html><html>\n<head>\n"
 					+ "<title>" + htitle + "</title>\n" + "<style>\n" + "body {font-family: monospaced;  font-size: 10px; }\n";		
@@ -1316,12 +1319,14 @@ public class UtilReport extends JDialog {
 			}
 			head += "\n</style>\n</head>\n<body>\n" + "<a id='top'></a>\n";
 			
-			head += "<center>" + strTitle("", htmlBr, unNum, gnNum); // </center> in tail
-			head += "</head><p><table class='ty'>\n"; 
+			head += "<center><b>" + title + "</b>" + strOptions("", htmlBr) + "</head>";// </center> in tail
 			
+			if (cntOut==0) head += "<table class='ty'>\n";
+			else 		   head += "<p>" + strStats("", "") + "<table class='ty'>\n";
 			return head;
 		}
-		private String strTailHTML() {
+	
+		private String htmlTail() {
 			String tail="</table>";
 			if ((gnNum>100 || unNum>10) && bExHtml) tail += "<p><a href='#top'>Go to top</a>\n";
 			tail += "</center></body></html>\n";
@@ -1414,42 +1419,48 @@ public class UtilReport extends JDialog {
 		catch (Exception e) {ErrorReport.print(e, "Build Anno Columns");}
 		}
 		/**************************************************************
-		 * First lines: title in HTML and remarks in TSV
+		 * First lines: title in HTML and remarks in TSV. Title made in 
+		 * Second line: Query filters; Report settings
 		 * Works for both HTML and TSV by using:  remark = "", "###"  and br = <br>, "\n"
 		 */
-		private String strTitle(String remark, String br, int unNum, int gnNum) {
-			String head = remark + title + " for " + refSpName ;
-			if (!bExTsv) head = "<b>" + head + "</b>";
-			else br = br + remark;				// for TSV, i.e. \n###, HTML says <br>
-			head += br + "Filter: " + tPanel.theSummary;
+		private String strOptions(String remark, String br) {// see comment above
+			String qhead = br + remark + "Query: " + tPanel.theSummary;
+			qhead += br + remark + "Reference: " + refSpName;
 		
-			if (bIsCoSet2)      head += String.format("%s%,d Unions of Collinear Sets", br, unNum);
-			else if (bIsMulti3) head += String.format("%s%,d Rows with Multi-hit Genes", br, gnNum);
-			else                head += String.format("%s%,d Gene Rows", br, gnNum);
-			
 			if (nSpecies>2) {
-				String x="";
+				String rhead="Display: ";
 				if (bIsGene1) { // order is important
-					if (bAllLinkRow1)	  x = "; All species linked";
-					else if (bLinkRow1)	  x = "; All species +link";
-					else if (bAllSpRow13) x = "; All species per row";
-					else 				  x = "; All rows";
-					if (!note.equals("")) x += "; " + note;
+					if (bAllLinkRow1)	  rhead += "All species linked";
+					else if (bLinkRow1)	  rhead += "All species +link";
+					else if (bAllSpRow13) rhead += "All species per row";
+					else 				  rhead += "All rows";
 				}
 				else if (bIsCoSet2) {
-					if (bAllUnion2) x += "; All species per union";
-					else 			x = "; All rows";
-					if (!note.equals("")) x += "; " + note;
+					if (bAllUnion2) rhead += "All species per union";
+					else 			rhead += "All rows";
 				}
 				else if (bIsMulti3) {
-					if (bAllSpRow13) x = "; All species per row";
-					x += "; " + note;
+					if (bAllSpRow13)  rhead += "All species per row";
+					else rhead = "";
 				}
-				head += x;
+				if (!rhead.equals("")) qhead += ";   " + rhead;
 			}
-			return head;
+			return qhead;
 		}
 		
+		/* 
+		 * This goes right before the table to explain it, e.g. Arab: 100 Unique Gene Rows; 10 merged rows 
+		 * Works for both HTML and TSV by using:  remark = "", "###"  and br = "", "\n" */
+		private String strStats(String remark, String br) { 
+			String stats = remark + refSpName + ": ";
+			
+			if (bIsCoSet2)      stats += String.format("%,d Unions of Collinear Sets",  unNum);
+			else if (bIsMulti3) stats += String.format("%,d Unique Gene Rows", gnNum);
+			else                stats += String.format("%,d Unique Gene Rows", gnNum);
+			
+			if (note.equals("")) return stats + br;
+			else 				 return stats + "; " + note + br;
+		}
 		/* getFileHandle */
 		private PrintWriter getFileHandle() {
 	    	String saveDir = Globals.getExport(); 

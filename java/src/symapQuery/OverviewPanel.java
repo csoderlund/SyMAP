@@ -66,8 +66,7 @@ public class OverviewPanel extends JPanel {
 			String self = "Self-synteny: Project ending with 'X' has homologous regions within the same project.";
 			mainPanel.add(Jcomp.createLabel(head + self + tail)); mainPanel.add(Box.createVerticalStrut(w2));
 		}
-		if (cntHasGenes>0) {
-			// Algo
+		if (cntHasGenes>0) { // Algo
 			String algo = qFrame.isAlgo2() ? "<i>Algo2:</i>&nbsp;  " : "<i>Algo1:</i>&nbsp;  "; 
 			algo += "The Olap column is ";
 			if  (qFrame.isAlgo2() && Globals.bQueryOlap==false) 
@@ -76,29 +75,28 @@ public class OverviewPanel extends JPanel {
 				if (Globals.bQueryOlap) algo += "gene overlap; flag -go was used.";
 				else 					algo += "gene overlap; at least one project used Algo1 or has no genes.";
 			}
-			mainPanel.add(Jcomp.createLabel(head + algo + tail)); mainPanel.add(Box.createVerticalStrut(w2));
-			
-			// Pseudo
-			String pseudo = "<i>Pseudo</i>: "; 
-			String pg = " assigned Pseudo Gene# for un-annotated.";
-			if (projVec.size()==2)  pseudo += (cntPseudo==1) ? "Pair has " + pg : "Pair does not have " + pg;	
-			else {
-				if (cntPseudo>0 && cntPseudo!=cntSynteny)  {
-					if (cntPseudo==1) pseudo += cntPseudo + " pair of " + cntSynteny + " has " + pg;
-					else 			  pseudo += cntPseudo + " pairs of " + cntSynteny + " have " + pg;
-				}
-				else if (cntPseudo>0) pseudo += "All pairs have " + pg;
-				else 				  pseudo += "No pairs have " + pg;
-			}
-			mainPanel.add(Jcomp.createLabel(head + pseudo + tail)); mainPanel.add(Box.createVerticalStrut(w2));
+			mainPanel.add(Jcomp.createLabel(head + algo + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 		}
 		else {
 			String gene = (cntHasGenes==0) ?
 					"<i>No genes in any species</i>. The only relevant filters are on chromosomes and blocks."
 				  : "<i>Only one species has genes</i>. Some of the filters will not be relevant.";
-			mainPanel.add(Jcomp.createLabel(head + gene + tail)); 
+			mainPanel.add(Jcomp.createLabel(head + gene + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 		}
-		
+		// Pseudo - can belong to projects w/o genes
+		String pseudo = "<i>Pseudo</i>: "; 
+		String pg = " assigned Pseudo Gene# for un-annotated.";
+		if (projVec.size()==2)  pseudo += (cntPseudo==1) ? "Pair has " + pg : "Pair does not have " + pg;	
+		else {
+			if (cntPseudo>0 && cntPseudo!=cntSynteny)  {
+				if (cntPseudo==1) pseudo += cntPseudo + " pair of " + cntSynteny + " has " + pg;
+				else 			  pseudo += cntPseudo + " pairs of " + cntSynteny + " have " + pg;
+			}
+			else if (cntPseudo>0) pseudo += "All pairs have " + pg;
+			else 				  pseudo += "No pairs have " + pg;
+		}
+		mainPanel.add(Jcomp.createLabel(head + pseudo + tail)); mainPanel.add(Box.createVerticalStrut(w2));
+					
 		// Synteny
 		if (projVec.size()!=2) {
 			int nProjSyn = (projVec.size()*(projVec.size()-1))/2;

@@ -36,10 +36,10 @@ public class TableColumns {
 	
 	private static final String [] GENERAL_COLUMN_DESC = 
 		{"Row number", 
-		 "Block: Synteny block number (chr.chr.#)", 
+		 "Block: chr.chr.Block#", 
 		 "Block Hits: Number of hits in the synteny block",
-		 "Collinear: N is number genes, # is set (chr.chr.size:#)", 
-		 "Group: N is number genes, # is group (size:#); sort on group #", 		// see ComputeMulti, ComputePgeneF, or Gene#
+		 "Collinear: chr.chr.#hits.CollinearSet#", 
+		 "Group: #hits-Group# (#genes- for Cluster N genes)", 		// see ComputeMulti, ComputePgeneF, or Gene#
 		 "Hit#: Number representing the hit", 
 		 
 		 "Hit Cov: The largest summed merged subhit lengths of the two species", // Descriptions are in QueryPanel too
@@ -104,7 +104,7 @@ public class TableColumns {
 	//* Static methods
 	//****************************************************************************
 	protected static String [] getGeneralColHead() 	 {return GENERAL_COLUMNS; }
-	protected static Class <?> [] getGeneralColType() 	 {return GENERAL_TYPES; }
+	protected static Class <?> [] getGeneralColType(){return GENERAL_TYPES; }
 	protected static String [] getGeneralColDesc() 	 {return GENERAL_COLUMN_DESC; }
 	protected static boolean [] getGeneralColDefaults() {return GENERAL_COLUMN_DEF; }
 	

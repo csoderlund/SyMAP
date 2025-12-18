@@ -321,7 +321,7 @@ public class ProjParams extends JDialog {
 								"Directory", mp.getDBName(), "Display", mp.getDisplayName(), 
 								"Category", mp.getdbCat(), "Abbreviation", mp.getdbAbbrev());
 							msg += "\nDuplicate abbreviations are allowed, \n"
-								+ "but Query will not work between two projects with the same abbreviation.";
+								+ "but Queries will not work between two projects with the same abbreviation.";
 							util.Popup.showMonoWarning(this, msg);
 							msg=null;
 							break;
