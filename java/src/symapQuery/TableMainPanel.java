@@ -1053,26 +1053,24 @@ public class TableMainPanel extends JPanel {
     
  	/**********************************************************
  	 * Search visible columns for a string
- 	 * popup of selected valid; ok searches that column and set rowIndex
- 	 * Gene# for each species; All_anno for each species; Block, Collinear, Hit, Group
  	 */
      private void showSearch() {
 		 btnSearch.setEnabled(false);
 			
     	 String [] cols = getSelColsUnordered();
-    	 if (searchPanel==null) searchPanel = new UtilSearch(this, cols, theAnnoKeys);
+    	 if (searchPanel==null) searchPanel = new UtilSearch(this, cols, theAnnoKeys); // set null if any column changes
     	 searchPanel.setVisible(true);	
     
-    	 int rowIndex = searchPanel.getRowIndex(); 
- 	 
-    	 if (rowIndex>=0 && rowIndex<theTable.getRowCount()) {
-     		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
-     	    theTable.scrollRectToVisible(cellRect);
-     	    theTable.setRowSelectionInterval(rowIndex, rowIndex); 
-     	    
-     	    setRowSelected();
-     	 }
 		 btnSearch.setEnabled(true);
+     }
+     protected void showSearch(int rowIndex) { // Search stays open and set next row here; CAS579b
+    	 if (rowIndex>=0 && rowIndex<theTable.getRowCount()) {
+      		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
+      	    theTable.scrollRectToVisible(cellRect);
+      	    theTable.setRowSelectionInterval(rowIndex, rowIndex); 
+      	    
+      	    setRowSelected();
+      	 }
      }
     /***************************************************************
      * XXX Database

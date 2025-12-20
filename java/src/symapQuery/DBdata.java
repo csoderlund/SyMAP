@@ -28,13 +28,14 @@ import util.Utilities;
  * if change column: loadHit, loadHitMerge, makeRow
  */
 public class DBdata implements Cloneable {
-	private static int cntRowNum=1;
+	private static boolean TRC = Globals.TRACE;
+	
 	private static Vector <DBdata> rows = null;
 	protected static String [] spNameList=null; 				// species Names; used in ComputeMulti/Clust
 	private static int [] 	spIdxList=null; 					// species spIdx in same order
-	private static HashMap <Integer, String[]> annoKeys=null;// spIdx, keys in order
-	private static HashMap <Integer, Integer> grpStart=null; // grpIdx, start
-	private static HashMap <Integer, Integer> grpEnd=null;   // grpIdx, end
+	private static HashMap <Integer, String[]> annoKeys=null;	// spIdx, keys in order
+	private static HashMap <Integer, Integer> grpStart=null; 	// grpIdx, start
+	private static HashMap <Integer, Integer> grpEnd=null;   	// grpIdx, end
 	private static HashSet <Integer> geneIdxForOlap = new HashSet <Integer> (); // for isOlapAnno; see qPanel.isMinorOlap
 	private static boolean bSuccess=true;
 	
@@ -42,6 +43,7 @@ public class DBdata implements Cloneable {
 	private static QueryPanel qPanel;
 	private static SpeciesPanel spPanel;
 	private static JTextField loadStatus;
+	
 	private static boolean isSingle=false, isIncludeMinor = true; 
 	private static HashSet <Integer> grpIdxOnly=null;
 	
@@ -54,6 +56,9 @@ public class DBdata implements Cloneable {
 	private static int cntDup=0, cntFilter=0; // Globals.TRACE
 	private static int cntPlus2=0;	// check for possible pre-v547
 	
+	/***********************************************************************
+	 * STATIC loading rows
+	 */
 	protected static Vector <DBdata> loadRowsFromDB(
 			TableMainPanel tblPanel,				// to access bStopped; 
 			ResultSet rs, 							// Result set, ready to be parsed
@@ -61,32 +66,31 @@ public class DBdata implements Cloneable {
 			QueryPanel theQueryPanel,  				// for species information	
 			String [] annoColumns, 					// Species\nkeyword array in order displayed
 			JTextField loadTextField,   			// write progress
+			
 			HashMap <Integer, Integer> geneCntMap, 	// output variable of spIdx annotidx counts
-			HashMap<String, String> sumProjMap)  	// Clust and Multi summary output
+			HashMap<String, String> sumProjMap)  	// output Clust and Multi summary output
 	{
+		clearStatic();
+		rows = new Vector <DBdata> ();
+		
 		tablePanel 	= tblPanel;
 		qPanel 		= theQueryPanel;
-		spPanel 	= qPanel.getSpeciesPanel();
 		loadStatus 	= loadTextField;
+		spPanel     = qPanel.getSpeciesPanel();
+		grpIdxOnly  = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
 		
-		isSingle 		= qPanel.isSingle();
-		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
-		if (qPanel.isGeneNum()) geneNum = qPanel.getGeneNum();
-		if (qPanel.isGeneOlap()) geneOlap = qPanel.getGeneOlap();
-		
-		isSelf			= qPanel.isSelf();
-		cntMinorFail    = 0; // isSelf only
-		
-		clearStatic();
-		
-		rows = new Vector <DBdata> ();
 		makeSpLists(projList);
 		makeAnnoKeys(annoColumns);
 		makeGrpLoc(qPanel.getGrpCoords()); // gStart and gEnd
-		grpIdxOnly = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
 		
+		isSingle 		= qPanel.isSingle();
+		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
+		isSelf			= qPanel.isSelf();
+		geneNum  = (qPanel.isGeneNum())  ? qPanel.getGeneNum()  : null;	// MySQL searches on genenum, but this search on suffix
+		geneOlap = (qPanel.isGeneOlap()) ? qPanel.getGeneOlap() : -1;   // Checked in passRowFilters() 
+	
 		try {
-			rsMakeRows(rs);	if (!bSuccess) return null;		// DBdata will have both halfs (unless single)
+			rsMakeRows(rs);	if (!bSuccess) return null;		// DBdata will have both halves (unless single)
 			filterRows();   if (!bSuccess) return null;
 		
 		// Finish
@@ -98,7 +102,7 @@ public class DBdata implements Cloneable {
 	         		if (!dd.rsSQLloadGene(dbc, isAlgo2)) return rows;
 				}
          	}
-			cntRowNum=0;
+			int cntRowNum=0;
          	for (DBdata dd : rows) {
          		if (!dd.finishRow()) return rows;		// Create block string, chromosome strings and make anno keys 	
          		
@@ -132,19 +136,34 @@ public class DBdata implements Cloneable {
          		String msg=String.format("%s has %d minor hits that could not be shown", x, cntMinorFail);
          		util.Popup.showWarning(msg);
          	}
-         	if (Globals.TRACE) {
-         		if (cntDup>0) System.out.format("%6d Dups\n", cntDup);
+         	if (TRC) {
+         		if (cntDup>0)    System.out.format("%6d Dups\n", cntDup);
          		if (cntFilter>0) System.out.format("%6d Filter\n", cntFilter);
-         		if (cntPlus2>0) System.out.format("%6d hits with two non-best genes\n", cntPlus2);
+         		if (cntPlus2>0)  System.out.format("%6d hits with two non-best genes\n", cntPlus2);
          	}
          	return rows;
      	} 
 		catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
 		return rows;
 	}
+	private static void clearStatic() { // everything is static (rows gets recreated at start)
+		bSuccess = true;
+		if (annoKeys!=null) 	annoKeys.clear();
+		if (grpStart!=null) 	grpStart.clear();
+		if (grpEnd!=null) 		grpEnd.clear();
+		if (spNameList!=null) 	spNameList=null;
+		if (spIdxList!=null) 	spIdxList=null;
+		geneIdxForOlap.clear();
+		geneNum = null;	// BUG fix CAS579 was not clearing from last run
+		geneOlap = 0;
+		cntMinorFail = 0;
+		cntPlus2 = 0;
+		cntDup = 0; cntFilter = 0; // restart TEST_TRACE counts
+	}
 	/***********************************************************************/
 	private static void rsMakeRows(ResultSet rs) {
 	try {
+		int cntRowNum=0;
 		if (isSingle) {
 			while (rs.next()) {
 				DBdata dd = new DBdata();
@@ -191,6 +210,7 @@ public class DBdata implements Cloneable {
      	if (isIncludeMinor) finishAllMinor(); // fill in minor rows
 		
 		rs.close(); 
+		if (TRC) Globals.prt("Load rows " + rows.size());
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
 	}
@@ -202,16 +222,18 @@ public class DBdata implements Cloneable {
 	try {
 		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || geneNum!=null || geneOlap>0
 				|| qPanel.isOlapAnno()); // isOlapAnno -ii
+		if (TRC) Globals.prt(isFilter + " grpStart " + grpStart.size() + " isAnnoTxt " + qPanel.isAnnoTxt() 
+						+ " geneNum " + geneNum + " geneOlap " + geneOlap + " isOlapAnno " + qPanel.isOlapAnno());
 		if (!isFilter) return;
 			
-		cntRowNum=0;
+		int cntRowNum=0;
 		Vector <DBdata> filterRows = new Vector <DBdata> ();
 		for (DBdata dd : rows) {
 			if (dd.passRowFilters()) {
 				filterRows.add(dd);	
 				
 				cntRowNum++;
-				dd.rowNum = cntRowNum;
+				dd.rowNum = cntRowNum;		// renumber
 				if (cntRowNum%Q.INC ==0) {
      				loadStatus.setText("Filtered " + cntRowNum + " rows...");
      				if (tablePanel.bStopped) {bSuccess=false; return;}
@@ -221,7 +243,6 @@ public class DBdata implements Cloneable {
 		}
 		rows.clear();
 		rows = filterRows;
-		// CAS578 removed single code that did nothing but prevent annotation from working
 	}
 	catch (Exception e) {ErrorReport.print(e, "filter rows");}
 	}
@@ -367,17 +388,7 @@ public class DBdata implements Cloneable {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Finish all genes");}
 	}
-	private static void clearStatic() { // everything is static (rows gets recreated at start)
-		bSuccess=true;
-		if (annoKeys!=null) 	annoKeys.clear();
-		if (grpStart!=null) 	grpStart.clear();
-		if (grpEnd!=null) 		grpEnd.clear();
-		if (spNameList!=null) 	spNameList=null;
-		if (spIdxList!=null) 	spIdxList=null;
-		geneIdxForOlap.clear();
-		cntPlus2=0;
-		cntDup=0; cntFilter=0; // restart TEST_TRACE counts
-	}
+	
 	/*****************************************************
 	 * Species columns in order of projects
 	 */
@@ -388,7 +399,7 @@ public class DBdata implements Cloneable {
 			spIdxList = new int [numSp];
 			for (int p=0; p<numSp; p++) {
 				spNameList[p] = projList.get(p).getDisplayName();
-				spIdxList[p] = projList.get(p).getIdx(); // spPanel.getSpIdxFromSpName(spNameList[p]); CAS575 get directly
+				spIdxList[p] = projList.get(p).getIdx(); 
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Make species lits");}
@@ -425,7 +436,7 @@ public class DBdata implements Cloneable {
 						keys[k++] =  annoColumns[i].split(Q.delim)[1];
 				}
 				annoKeys.put(spidx, keys);
-				if (isSelf) break;			// both sides of self use same annoKeys; CAS575
+				if (isSelf) break;			
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "make keyword array");}
@@ -462,8 +473,11 @@ public class DBdata implements Cloneable {
 	try {
 	/* Compute group  */
 		String inputGN = qPanel.getGeneNum();
+		if (inputGN==null || inputGN.equals("")) return;
+		
 		String [] tok = inputGN.split(Q.SDOT);
 		int genenum = Utilities.getInt(tok[0]); 
+		if (genenum == -1) return;
 		
 		HashMap <String, Integer> geneTag = new HashMap <String, Integer>  ();
 		String key;
@@ -549,7 +563,7 @@ public class DBdata implements Cloneable {
     			rowNum++;
     			
     			int grp  = hitIdx2Grp.get(dd.hitIdx);
-    			int sz   = grpSizes.containsKey(grp) ? grpSizes.get(grp) : 0; // CAS579 add check
+    			int sz   = grpSizes.containsKey(grp) ? grpSizes.get(grp) : 0; 
     			dd.setGroup(grp, sz);
     			
     			rowsForDisplay.add(dd);
@@ -906,21 +920,20 @@ public class DBdata implements Cloneable {
 					}
 				}
 			}
-			if (qPanel.isGeneOlap()) { // Not checked in MySQL because will only return one-half, which looks the same as pseudo. CAS578
+			if (geneOlap>0) { // Not checked in MySQL because will only return one-half, which looks the same as pseudo
 				if (!geneTag[0].equals(Q.empty) && golap[0]<geneOlap) return false;
 				if (!geneTag[1].equals(Q.empty) && golap[1]<geneOlap) return false;
 			}
-			// only show if selected chr or no selection
-			boolean bChr0 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[0]));
-			boolean bChr1 = (grpIdxOnly.size()==0 || grpIdxOnly.contains(chrIdx[1]));
-				
+			// CAS579b was checking for select grpIdxOnly (selected chromosome), but they are filter in MySQL query
+			// was causing Gene# to always be only on selected chromosome
+			
 			// when doing anno search as query, returned hits without anno if they overlap
 			// check to make sure anno is on the selected chr-only
 			if (qPanel.isAnnoTxt()) { 
 				String anno = qPanel.getAnnoTxt().toLowerCase();
 				
-				if (bChr0 && annotStr[0].toLowerCase().contains(anno)) return true;
-				if (bChr1 && annotStr[1].toLowerCase().contains(anno)) return true;
+				if (annotStr[0].toLowerCase().contains(anno)) return true;
+				if (annotStr[1].toLowerCase().contains(anno)) return true;
 					
 				return false;
 			}
@@ -931,7 +944,7 @@ public class DBdata implements Cloneable {
 				return b;
 			}
 				
-			if (geneNum!=null) {
+			if (geneNum!=null) { // genenum already checked in mysql; this is for suffix
 				String tag0 = geneTag[0].replace(Q.minor,"").trim();	
 				String tag1 = geneTag[1].replace(Q.minor,"").trim();
 				
@@ -942,8 +955,8 @@ public class DBdata implements Cloneable {
 					tag1 = Utilities.getGenenumIntOnly(tag1);
 				}
 				
-				if (bChr0 && tag0!="-" && tag0.equals(geneNum)) return true;	
-				if (bChr1 && tag1!="-" && tag1.equals(geneNum)) return true;
+				if (tag0!="-" && tag0.equals(geneNum)) return true;	
+				if (tag1!="-" && tag1.equals(geneNum)) return true;
 					
 				return false;
 			}
@@ -988,7 +1001,7 @@ public class DBdata implements Cloneable {
 		int cntCol = TableColumns.getSpColumnCount(isSingle);
 		for (int i=0; i<spIdxList.length; i++) { // add columns, could be from any of the N species
 			int x=-1;
-			if (isSelf) x = i;					 // spIdx are same; CAS575
+			if (isSelf) x = i;					 
 			else if (spIdx[0] == spIdxList[i]) x=0;
 			else if (spIdx[1] == spIdxList[i]) x=1;
 			

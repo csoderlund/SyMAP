@@ -56,6 +56,7 @@ public class QueryPanel extends JPanel {
 	private boolean   isPgeneF = Globals.bQueryPgeneF; 	// viewSymap -pg for old gene cluster; 
 	private String    olapDesc;							// viewSymap -go for gene overlap
 	private boolean   isSelf=false; 	
+	private boolean   bNoGroup=false;					// if none have anno or isSelf, do not do groups
 	
 	// Only one checkbox is allowed to be selected at a time. See setChkEnable. 
 	private int nChkNone=0, nChkSingle=1, nChkBlk=2, nChkCoSet=3, nChkHit=4, nChkGene=5, nChkMulti=6, nChkClust=7;
@@ -64,6 +65,7 @@ public class QueryPanel extends JPanel {
 		qFrame = parentFrame;
 		isSelf = qFrame.isSelf();
 		olapDesc = (qFrame.isAlgo2() && Globals.bQueryOlap==false) ? "Exon" : "Gene";
+		bNoGroup = qFrame.isNoHasAnno() || isSelf;
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -117,7 +119,8 @@ public class QueryPanel extends JPanel {
 	
 	private boolean isBlockNum()	{return chkOnBlkNum.isEnabled() && chkOnBlkNum.isSelected();}
 	private boolean isHitNum()	{return chkOnHitNum.isEnabled() && chkOnHitNum.isSelected();}
-	protected boolean isGeneNum()	{ return chkOnGeneNum.isEnabled() && chkOnGeneNum.isSelected();}	// DBdata filter
+	protected boolean isGeneNum()	{ return chkOnGeneNum.isEnabled() && chkOnGeneNum.isSelected() && 
+											!txtGeneNum.getText().trim().equals("");}	// mysql for num, DBdata filter for suffix 
 	private boolean isCollinearNum(){ return chkOnCoSetNum.isEnabled() && chkOnCoSetNum.isSelected();}
 	
 	protected String getGeneNum() { // DBdata filter; Text already checked
@@ -245,7 +248,8 @@ public class QueryPanel extends JPanel {
 		// these are the only text boxes not checked until computed
 		if (isMultiN())   isValidMulti();   				if (!bValidQuery) return "";
 		if (isClustN())   isValidCluster(); 				if (!bValidQuery) return "";
-		if (isGeneOlap()) isValidHit(txtGeneOlap, "Cov");  	if (!bValidQuery) return "";
+		if (isGeneOlap()) isValidHit(txtGeneOlap, "Olap");  if (!bValidQuery) return "";
+		if (isGroup()) 	  isOneChrChkOnly();				if (!bValidQuery) return "";// CAS579b they do not work
 		
 		// The where clause is fully computed, and the bValidQuery checked at the end in makeSQLclause
 		String whereClause = "\n where " + speciesPanel.getPairIdxWhere(); // PH.pair_idx in (...)
@@ -493,6 +497,19 @@ public class QueryPanel extends JPanel {
 		if (cnt>1) return true;
 		
 		showWarnMsg("Must have at least two included species\n");
+		bValidQuery=false;
+		return false;
+	}
+	private boolean isOneChrChkOnly() { // CAS579b add to disallow
+		int cnt=0;
+		
+		for(int p=0; p<nSpecies; p++) {
+			int index = speciesPanel.getSelChrIdx(p); // returns a PH.grp1_idx; returns -1 if disabled
+			if (index > 0) cnt++;;
+		}
+		if (cnt<=1) return true;
+		
+		showWarnMsg("Only one chromosome may be selected for a Gene# or Group search\n");
 		bValidQuery=false;
 		return false;
 	}
@@ -1010,7 +1027,7 @@ public class QueryPanel extends JPanel {
 		ButtonGroup ag = new ButtonGroup();
 		ag.add(radMultiDiff); ag.add(radMultiTandem); ag.add(radMultiSame); radMultiSame.setEnabled(true);
 		
-		if (!isSelf) {panel.add(mrow); panel.add(Box.createVerticalStrut(5));}
+		if (!bNoGroup) {panel.add(mrow); panel.add(Box.createVerticalStrut(5));}
 		
 	/* Cluster hits */
 		JPanel crow = Jcomp.createRowPanel();
@@ -1075,7 +1092,7 @@ public class QueryPanel extends JPanel {
 				inc.add(radIncIgn); radIncIgn.setSelected(true);
 			}
 		}
-		if (!isSelf) panel.add(crow);  // Vertical box in if statement 
+		if (!bNoGroup) panel.add(crow);  // Vertical box in if statement 
 		
 		// Include/exclude
 		Vector<Mproject> theProjects = qFrame.getProjects();
@@ -1123,7 +1140,7 @@ public class QueryPanel extends JPanel {
 		
 		lblInclude = Jcomp.createLabel("  Include: ");
 		lblExclude = Jcomp.createLabel("  Exclude: ");
-		if (nSpecies>2 && !isSelf) {
+		if (nSpecies>2 && !bNoGroup) {
 			JPanel row = Jcomp.createRowPanel();
 			
 			row.add(lblInclude);
@@ -1142,7 +1159,7 @@ public class QueryPanel extends JPanel {
 		}
 		panel.add(Box.createVerticalStrut(15));
 		
-		if (!isSelf) {
+		if (!bNoGroup) {
 			String tip = "Tips: Use Hit filters for stricter groups.";
 			if (qFrame.cntUsePseudo>0) tip += " To ignore Pseudo, select Annotated 'Both'. ";
 			lblGrpTip = Jcomp.createLabel(tip);  lblGrpTip.setEnabled(false);
@@ -1150,7 +1167,8 @@ public class QueryPanel extends JPanel {
 			panel.setMaximumSize(panel.getPreferredSize());
 		}
 		else {
-			panel.add(Jcomp.createLabel("Not available for self-synteny: Every+, Minor hits, Groups"));
+			if (isSelf) panel.add(Jcomp.createLabel("Not available for self-synteny: Every+, Minor hits, Groups"));
+			else  		panel.add(Jcomp.createLabel("Must have annotation to compute groups"));
 		}
 		return panel;
 	}
@@ -1216,13 +1234,13 @@ public class QueryPanel extends JPanel {
 		chkOnGeneNum.setEnabled(bn || b);  chkOnGeneNum.setSelected(b);   
 		txtGeneNum.setEnabled(b);	
 		
-		b = (nChk==nChkMulti && !isSelf);
+		b = (nChk==nChkMulti && !bNoGroup);
 		chkMultiN.setEnabled(bn || b);  chkMultiN.setSelected(b);  
 		lblMultiN.setEnabled(b);    txtMultiN.setEnabled(b); 
 		lblMultiOpp.setEnabled(b);  chkMultiMinor.setEnabled(b); 
 		radMultiSame.setEnabled(b);  radMultiTandem.setEnabled(b); radMultiDiff.setEnabled(b);
 		
-		b = (nChk==nChkClust && !isSelf);
+		b = (nChk==nChkClust && !bNoGroup);
 		chkClustN.setEnabled(bn || b);  chkClustN.setSelected(b); 
 		lblClustN.setEnabled(b);  txtClustN.setEnabled(b);
 		radClHit.setEnabled(b); radClPerSp.setEnabled(b);

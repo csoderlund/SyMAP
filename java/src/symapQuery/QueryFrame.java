@@ -358,11 +358,18 @@ public class QueryFrame extends JFrame {
 	protected Mpair getMpair(int idx1, int idx2) { // used to get pairIdx instead of reading from DB; CAS575
 		return mFrame.getMpair(idx1, idx2);
 	}
-	protected boolean isAnno() { // not being used, but could be to disable gene queries
+	protected boolean isOneHasAnno() { // not being used, but could be to disable gene queries
 		for (Mproject mp : mProjs) {
 			if (!mp.hasGenes()) return false;
 		}
 		return true;
+	}
+	protected boolean isNoHasAnno() { 
+		int cnt=0;
+		for (Mproject mp : mProjs) {
+			if (mp.hasGenes()) cnt++;
+		}
+		return (cnt==0);
 	}
 	/**********************************************************/
 	private DBconn2 tdbc2 = null;

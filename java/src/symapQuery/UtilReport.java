@@ -412,13 +412,8 @@ public class UtilReport extends JDialog {
 				
 				buildCompute();
 				
-				if (geneVec.size()==0) {
-					String msg = "No rows with both genes for reference " + refSpName;
-					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
-				}
-				else {
-					new Zoutput().runReport();
-				}
+				new Zoutput().runReport();
+				//if (geneVec.size()==0) { was popup message, but leave to output CAS579b
 				
 				btnOK.setEnabled(true); btnCancel.setEnabled(true); 
 				tPanel.setBtnReport(true);
@@ -1177,7 +1172,9 @@ public class UtilReport extends JDialog {
 				clearDS(); Globals.rclear();
 				
 				if (cntOut==0) {
-					String msg = strOptions("", "\n") + "\n" + "No reference genes fit the Display options\n";
+					String opt = strOptions("", "\n");
+					if (!opt.equals("")) opt += "\n";
+					String msg = opt + "No reference genes fit the Display options\n";
 					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
 					return null;
 				}
@@ -1291,9 +1288,11 @@ public class UtilReport extends JDialog {
 			String tail = htmlTail(); // end table, html
 			
 			if (cntOut==0) {
-				if (bPopHtml) return head + "<p>&nbsp;<tr><td>No reference genes fit the Display options" + tail; // html for popup
+				if (bPopHtml) return head + "<tr><td>No reference genes fit the Display options" + tail; // html for popup
 				else {
-					String msg = strOptions("", "\n") + "\n\nNo reference genes fit the Display options\n";
+					String opt = strOptions("", "\n");
+					if (!opt.equals("")) opt += "\n";
+					String msg = opt + "\nNo reference genes fit the Display options\n";
 					JOptionPane.showMessageDialog(null, msg, "No results", JOptionPane.WARNING_MESSAGE);
 					return null;
 				}

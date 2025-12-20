@@ -55,8 +55,8 @@
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
-For existing databases, there are no database or build changes since <a href="#v575">v5.7.5</a> for self-synteny and  <a href="#v560">v5.6.0</a> for all other inputs.
-You must have Java v17.0.11 or later, starting with SyMAP v5.5.0.
+For existing databases, there are no database or build changes since <a href="#v575">v5.7.5</a> for self-synteny.
+You must have Java v17.0.11 or later.
 
 <h3>Summary of recent major releases</h3>
 <table>
@@ -69,9 +69,24 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
-<a id="v578"></a>
-<h3>Release: v5.7.9 (18-Dec-25)</h3>
-<ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
+<a id="v579"></a>
+<h3>Release: v5.7.9b (20-Dec-25)</h3>
+<ttp>Queries</ttp>: Bug fixes. Improved <ttl>Search</ttl>.
+<p>
+<ul>
+<li><ttp>Queries</ttp>
+<ul>
+<li><b>Bug fix:</b> If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.
+<p><li>Minor bug fixes: (1) If <ttx>Gene#</ttx> was set and a chromosome selected, it was not doing what the
+documentation said. (2) <ttx>Gene#</ttx>, <ttx>Multi</ttx> and <ttx>Cluster</ttx> work right with one chromosome selected,
+but not two; selecting more than one is not allowed now.
+<p><li>Update <ttl>Search</ttl>: states how many occurrences exist in the column and does not close between searches.
+(See <a href="Query.html#search" target="_blank" class="ext">Queries Search</a>.)
+</ul>
+</ul>
+
+<b>Release: v5.7.9 (18-Dec-25)</b>
+<p><ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
 <p>
 <ul>
 <li><ttp>Queries</ttp>:
