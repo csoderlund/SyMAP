@@ -71,6 +71,10 @@ public class DoAlignSynPair extends JFrame {
 			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
+		if (Constants.NUMHITS_ONLY) {
+			numHitsOnly(diaLog, mProj1, mProj2);
+			return;
+		}
 		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
 		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
@@ -302,7 +306,29 @@ public class DoAlignSynPair extends JFrame {
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}
 		return null;
 	}
-	/**********************************************************************/
+	/*** Add Pseudo - parameters pull-down - permanent ***/ 
+	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	try {
+		mLog.msg("Only add pseudo-genes");
+		
+		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + mProj1.getIdx() + "' AND proj2_idx='" + mProj2.getIdx() +"'";
+		int mPairIdx = dbc2.getIdx(st); 
+		if (mPairIdx<=0) {
+			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
+			dbc2.close(); return;
+		}
+		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
+		anchors.addPseudoFromFlag();
+			
+		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
+		mp.saveParamsToDB(params);		// re-enter params and update NOW(), then update pair_props
+		
+		new SumFrame(dbc2, mp, "Number pseudo"); // only so it will show the updated version
+		System.out.println("--------------------------------------------------");
+	}
+	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
+	}
+	/** Collinear only: -cs command line, visible when recent changed **********************/
 	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only run collinear set algorithm");
@@ -326,24 +352,18 @@ public class DoAlignSynPair extends JFrame {
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
-	/*** Add Pseudo  ***/ 
-	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	
+	/*** Update NumHits: -nh command line, visible when recent change ***/ 
+	private void numHitsOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
-		mLog.msg("Only add pseudo-genes");
-		
-		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + mProj1.getIdx() + "' AND proj2_idx='" + mProj2.getIdx() +"'";
-		int mPairIdx = dbc2.getIdx(st); 
-		if (mPairIdx<=0) {
-			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
+		mLog.msg("Compute NumHits Only...");
+		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
+			mLog.msg("Both projects must have genes to have numHits");
 			dbc2.close(); return;
 		}
-		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp );
-		anchors.addPseudoFromFlag();
-			
-		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
-		mp.saveParamsToDB(params);		// re-enter params and update NOW(), then update pair_props
-		
-		new SumFrame(dbc2, mp, true); // only so it will show the updated version
+		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
+		anchors.saveAnnoHitCnt(true);
+		new SumFrame(dbc2, mp, "Recompute numHits"); // only so it will show the updated version
 		System.out.println("--------------------------------------------------");
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }

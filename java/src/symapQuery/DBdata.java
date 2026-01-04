@@ -30,36 +30,37 @@ import util.Utilities;
 public class DBdata implements Cloneable {
 	private static boolean TRC = Globals.TRACE;
 	
-	private static Vector <DBdata> rows = null;
-	protected static String [] spNameList=null; 				// species Names; used in ComputeMulti/Clust
-	private static int [] 	spIdxList=null; 					// species spIdx in same order
-	private static HashMap <Integer, String[]> annoKeys=null;	// spIdx, keys in order
-	private static HashMap <Integer, Integer> grpStart=null; 	// grpIdx, start
-	private static HashMap <Integer, Integer> grpEnd=null;   	// grpIdx, end
-	private static HashSet <Integer> geneIdxForOlap = new HashSet <Integer> (); // for isOlapAnno; see qPanel.isMinorOlap
-	private static boolean bSuccess=true;
+	private static Vector <DBdata> rows = null; // Output from rowsLoadFromDB
 	
 	private static TableMainPanel tablePanel;
 	private static QueryPanel qPanel;
 	private static SpeciesPanel spPanel;
 	private static JTextField loadStatus;
 	
-	private static boolean isSingle=false, isIncludeMinor = true; 
-	private static HashSet <Integer> grpIdxOnly=null;
+	// SpStructs
+	protected static String [] spNameList=null; 				// species Names; used in ComputeMulti/Clust
+	private static int [] 	spIdxList=null; 					// species spIdx in same order
+	private static HashMap <Integer, String[]> annoKeys=null;	// spIdx, keys in order
+	private static HashMap <Integer, Integer> grpStart=null; 	// grpIdx, start
+	private static HashMap <Integer, Integer> grpEnd=null;   	// grpIdx, end
+	private static HashSet <Integer> geneIdxForOlap = new HashSet <Integer> (); // for isOlapAnno; see qPanel.isMinorOlap
 	
 	private static boolean isSelf=false; 
 	private static int cntMinorFail=0;	 // self-synteny cannot do minors
-	
+	private static boolean isSingle=false, isIncMinor = true, isAnno = false; 
+	private static HashSet <Integer> grpIdxForAnno;
 	private static String geneNum=null;
 	private static int geneOlap=0;
-									
+	
+	private static boolean bSuccess=true;
+	
 	private static int cntDup=0, cntFilter=0; // Globals.TRACE
 	private static int cntPlus2=0;	// check for possible pre-v547
 	
 	/***********************************************************************
 	 * STATIC loading rows
 	 */
-	protected static Vector <DBdata> loadRowsFromDB(
+	protected static Vector <DBdata> rowsLoadFromDB(
 			TableMainPanel tblPanel,				// to access bStopped; 
 			ResultSet rs, 							// Result set, ready to be parsed
 			Vector<Mproject> projList,				// species in order displayed
@@ -77,63 +78,31 @@ public class DBdata implements Cloneable {
 		qPanel 		= theQueryPanel;
 		loadStatus 	= loadTextField;
 		spPanel     = qPanel.getSpeciesPanel();
-		grpIdxOnly  = qPanel.getGrp();      // Chr is filtered, but may want one gene, anno, multi to just be on the selected
-		
-		makeSpLists(projList);
-		makeAnnoKeys(annoColumns);
-		makeGrpLoc(qPanel.getGrpCoords()); // gStart and gEnd
-		
-		isSingle 		= qPanel.isSingle();
-		isIncludeMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
-		isSelf			= qPanel.isSelf();
-		geneNum  = (qPanel.isGeneNum())  ? qPanel.getGeneNum()  : null;	// MySQL searches on genenum, but this search on suffix
-		geneOlap = (qPanel.isGeneOlap()) ? qPanel.getGeneOlap() : -1;   // Checked in passRowFilters() 
 	
-		try {
-			rsMakeRows(rs);	if (!bSuccess) return null;		// DBdata will have both halves (unless single)
-			filterRows();   if (!bSuccess) return null;
+		isSelf		= qPanel.isSelf();
+		isSingle 	= qPanel.isSingle();
+		isIncMinor 	= qPanel.isIncludeMinor(); // See loadHit; loadMergeHit
 		
-		// Finish
-			if (geneNum!=null) { // Fill in other side from DB				
-				DBconn2 dbc = qPanel.getDBC(); 
-				boolean isAlgo2 = qPanel.isAlgo2();
-				
-				for (DBdata dd : rows) {
-	         		if (!dd.rsSQLloadGene(dbc, isAlgo2)) return rows;
-				}
-         	}
-			int cntRowNum=0;
-         	for (DBdata dd : rows) {
-         		if (!dd.finishRow()) return rows;		// Create block string, chromosome strings and make anno keys 	
-         		
-         		cntRowNum++;
-				if (cntRowNum%1000 ==0)  {
-     				loadStatus.setText("Finished " + cntRowNum + " rows...");
-     				if (tablePanel.bStopped) return null;
-				}
-         	}
-         	if (tablePanel.bStopped) return null;
-         	
-         	if (geneNum!=null) { 
-         		runGeneNum(rows);
-         	}
-         	else if (qPanel.isMultiN()) { // Multi - may remove rows and renumber
-         		loadStatus.setText("Compute multi-hit genes...");
-         		rows = runMultiGene(rows, sumProjMap);
-         	}
-         	else if (qPanel.isClustN()) { // Clust - may remove rows and renumber
-         		loadStatus.setText("Compute Clust and filter...");
-         		rows = runClustHits(rows, sumProjMap);
-         	}
-         	if (tablePanel.bStopped) return null;
-         	
+		geneNum  = (qPanel.isGeneNum())  ? qPanel.getGeneNum()  : null;	// MySQL searches on genenum, but this search on suffix
+		geneOlap = (qPanel.isGeneOlap()) ? qPanel.getGeneOlap() : -1;   // Checked in passFilterPair() 
+		
+		isAnno		  = qPanel.isAnnoStr();
+		grpIdxForAnno = (isAnno) ? spPanel.getGrpIdxSet() : null; // will be null if all are valid
+		
+		initSpStructs(projList, annoColumns, qPanel.getGrpCoords());
+		
+		try {
+			rowsMake(rs);			if (!bSuccess) return null;	 // DBdata will have both halves (unless single, gene, anno)
+			rowsFilter();   		if (!bSuccess) return null;
+			rowsFinish(sumProjMap);	if (!bSuccess) return null;
+		 	
          	sortRows(); 				
-         	makeGeneCnts(geneCntMap); 
+         	makeSumCnts(geneCntMap); 
         	
          	if (qPanel.isIncludeMinor() && cntMinorFail>0) { // Gene# or Hit#
          		String gene = qPanel.getGeneNum();
          		String x = (gene!=null) ? gene : "Hit";
-         		String msg=String.format("%s has %d minor hits that could not be shown", x, cntMinorFail);
+         		String msg=String.format("Gene# %s has %d minor hits\non self-chromosome\nthat could not be shown", x, cntMinorFail);
          		util.Popup.showWarning(msg);
          	}
          	if (TRC) {
@@ -153,15 +122,18 @@ public class DBdata implements Cloneable {
 		if (grpEnd!=null) 		grpEnd.clear();
 		if (spNameList!=null) 	spNameList=null;
 		if (spIdxList!=null) 	spIdxList=null;
+		
 		geneIdxForOlap.clear();
-		geneNum = null;	// BUG fix CAS579 was not clearing from last run
+		geneNum = null;				// BUG fix CAS579b was not clearing from last run
 		geneOlap = 0;
 		cntMinorFail = 0;
 		cntPlus2 = 0;
 		cntDup = 0; cntFilter = 0; // restart TEST_TRACE counts
 	}
-	/***********************************************************************/
-	private static void rsMakeRows(ResultSet rs) {
+	/***********************************************************************
+	 * 1. Load and Merge 2nd side from ResultSet
+	 *****************************************************************/
+	private static void rowsMake(ResultSet rs) {
 	try {
 		int cntRowNum=0;
 		if (isSingle) {
@@ -184,7 +156,7 @@ public class DBdata implements Cloneable {
      	while (rs.next()) {
      		int hitIdx = rs.getInt(Q.HITIDX);
      		String key = hitIdx+"";
-     		if (isIncludeMinor) {				
+     		if (isIncMinor) {				
      			int a1=rs.getInt(Q.ANNOT1IDX), a2=rs.getInt(Q.ANNOT2IDX), a=rs.getInt(Q.AIDX);
      			boolean b = (a1!=a && a2!=a);
      			if (b) key = hitIdx + ":" + a; // don't let it match with anything else; 
@@ -204,34 +176,91 @@ public class DBdata implements Cloneable {
      		}
      		else  {							// merge further occurrences of hit
      			DBdata dd = hitRowMap.get(key);
-     			dd.rsLoadHitMerge(rs);
+     			dd.rsMergeHit(rs);
      		}
      	}
-     	if (isIncludeMinor) finishAllMinor(); // fill in minor rows
+     	if (isIncMinor) rowsMakeMinor(); // fill in minor rows
 		
 		rs.close(); 
 		if (TRC) Globals.prt("Load rows " + rows.size());
 	}
-	catch (Exception e) {ErrorReport.print(e, "Reading rows from db");}
+	catch (Exception e) {ErrorReport.print(e, "Reading rows from db"); bSuccess=false;}
 	}
-	/************************************************************
-	 * Rows have been merged, but not finished
-	 * Singles use 
+	/********************************************************
+	 * Transfer gene information for Minor records: Example:
+	 * Best   gene X  gene Y   both annotated when two records, X & Y
+	 * Other  gene Z  gene Y   only Z annotated because no corresponding record for Y, so get from Best
+	 * The other annotIdx=-1 and geneTag='.' as defaults
+	 * 
+	 * PH.idx PH.annot1_idx  PH.annot2_idx	PA.idx	Gennum
+	 * 98  		7670, 			82902   	7670     1358.     1 New Row
+     * 98  		7670, 			82902  		82902     664.     2 Enter second
+     * 98 		7670, 			82902  		82904     665.  ***2 New row, add second
 	 */
-	private static void filterRows() {
+	private static void rowsMakeMinor() {
+		try {
+			// Find full rows
+			HashMap <Integer, DBdata> tagMap0 = new HashMap <Integer, DBdata> ();
+			HashMap <Integer, DBdata> tagMap1 = new HashMap <Integer, DBdata> ();
+			for (DBdata dObj : rows) {
+				if (!dObj.geneTag[0].equals(Q.empty) && !dObj.geneTag[1].equals(Q.empty)) {
+					tagMap0.put(dObj.annotIdx[0], dObj);
+					tagMap1.put(dObj.annotIdx[1], dObj);
+				}
+			}
+	
+			// assign 	
+			for (DBdata dd : rows) { 
+				DBdata ddCp=null;
+				int x=0;
+				if (dd.annotIdx[0]>0 && dd.geneTag[0].equals(Q.empty)) {
+					if (tagMap0.containsKey(dd.annotIdx[0])) {
+						ddCp = tagMap0.get(dd.annotIdx[0]);
+						x=0;
+					}
+				}
+				else if (dd.annotIdx[1]>0 && dd.geneTag[1].equals(Q.empty)) {
+					if (tagMap1.containsKey(dd.annotIdx[1])) {
+						ddCp = tagMap1.get(dd.annotIdx[1]);
+						x=1;
+					}
+				}
+				if (ddCp==null) continue;
+			
+				dd.geneTag[x]	=	ddCp.geneTag[x];
+				dd.gstart[x] 	= 	ddCp.gstart[x];		
+				dd.gend[x] 		=	ddCp.gend[x];
+				dd.glen[x] 		= 	ddCp.glen[x];
+				dd.gstrand[x] 	= 	ddCp.gstrand[x];
+				dd.golap[x] 	= 	ddCp.golap[x];
+				dd.annotStr[x] 	=	ddCp.annotStr[x];
+				
+				TreeSet <Integer> cpAnnoSet = (x==0) ? ddCp.geneSet0 : ddCp.geneSet1;
+				for (int an : cpAnnoSet) dd.geneSet0.add(an); // already checked for pseudo
+				
+				if (qPanel.isOlapAnno_ii()) { //-ii minor/overlap; This got removed at some point, CAS579c
+         			if (!geneIdxForOlap.contains(dd.annotIdx[x])) geneIdxForOlap.add(dd.annotIdx[x]); 
+				}
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "Finish all genes");}
+	}
+	
+	/************************************************************
+	 * 2. Rows have been merged, but not finished
+	 */
+	private static void rowsFilter() {
 	try {
-		boolean isFilter = (grpStart.size()>0  || qPanel.isAnnoTxt() || geneNum!=null || geneOlap>0
-				|| qPanel.isOlapAnno()); // isOlapAnno -ii
-		if (TRC) Globals.prt(isFilter + " grpStart " + grpStart.size() + " isAnnoTxt " + qPanel.isAnnoTxt() 
-						+ " geneNum " + geneNum + " geneOlap " + geneOlap + " isOlapAnno " + qPanel.isOlapAnno());
+		boolean isFilter = (grpStart.size()>0  || geneNum!=null || geneOlap>0 || isAnno
+				|| qPanel.isOlapAnno_ii()); // isOlapAnno -ii
 		if (!isFilter) return;
 			
 		int cntRowNum=0;
 		Vector <DBdata> filterRows = new Vector <DBdata> ();
 		for (DBdata dd : rows) {
-			if (dd.passRowFilters()) {
+			boolean pass = (isSingle) ? dd.passFilterSingle() : dd.passFilterPair();
+			if (pass) {
 				filterRows.add(dd);	
-				
 				cntRowNum++;
 				dd.rowNum = cntRowNum;		// renumber
 				if (cntRowNum%Q.INC ==0) {
@@ -244,8 +273,52 @@ public class DBdata implements Cloneable {
 		rows.clear();
 		rows = filterRows;
 	}
-	catch (Exception e) {ErrorReport.print(e, "filter rows");}
+	catch (Exception e) {ErrorReport.print(e, "filter rows"); bSuccess=false;}
 	}
+	/**************************************************************
+	 * 3. Finish rows
+	 */
+	private static void rowsFinish(HashMap<String, String> sumProjMap) {
+	try {
+		// Fill in other side from DB for geneNum
+		if (geneNum!=null) { 			
+			DBconn2 dbc = qPanel.getDBC(); 
+			boolean isAlgo2 = qPanel.isAlgo2();
+	
+			for (DBdata dd : rows) {
+         		if (!dd.loadGeneFromDB(dbc, isAlgo2)) {bSuccess=false; return;}
+			}
+     	}
+		// Create block string, chromosome strings and make anno keys 	
+		int cntRowNum=0;
+     	for (DBdata dd : rows) {
+     		if (!dd.finishRow()) {bSuccess=false; return;}		
+     		
+     		cntRowNum++;
+			if (cntRowNum%1000 ==0)  {
+ 				loadStatus.setText("Finished " + cntRowNum + " rows...");
+ 				if (tablePanel.bStopped) {bSuccess=false; return;}
+			}
+     	}
+     	if (tablePanel.bStopped) {bSuccess=false; return;}
+     	
+     	// Special processing
+     	if (geneNum!=null) { 
+     		runGeneNum(rows);
+     	}
+     	else if (qPanel.isMultiN()) { // Multi - may remove rows and renumber
+     		loadStatus.setText("Compute multi-hit genes...");
+     		rows = runMultiGene(rows, sumProjMap);
+     	}
+     	else if (qPanel.isClustN()) { // Clust - may remove rows and renumber
+     		loadStatus.setText("Compute Clust and filter...");
+     		rows = runClustHits(rows, sumProjMap);
+     	}
+     	if (tablePanel.bStopped) {bSuccess=false; return;}
+	}
+	catch (Exception e) {ErrorReport.print(e, "finish rows"); bSuccess=false;}
+	}
+	
 	/***********************************************************************
 	 * Initial sort and numbering of rows; should be like TableData.compare
 	 * Multi is sorted in ComputeMulti
@@ -330,88 +403,25 @@ public class DBdata implements Cloneable {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Sort rows");}
 	}
-	/********************************************************
-	 * Transfer gene information for Minor records: Example:
-	 * Best   gene X  gene Y   both annotated when two records, X & Y
-	 * Other  gene Z  gene Y   only Z annotated because no corresponding record for Y, so get from Best
-	 * The other annotIdx=-1 and geneTag='.' as defaults
-	 * 
-	 * PH.idx PH.annot1_idx  PH.annot2_idx	PA.idx	Gennum
-	 * 98  		7670, 			82902   	7670     1358.     1 New Row
-     * 98  		7670, 			82902  		82902     664.     2 Enter second
-     * 98 		7670, 			82902  		82904     665.  ***2 New row, add second
-	 */
-	private static void finishAllMinor() {
-		try {
-			// Find full rows
-			HashMap <Integer, DBdata> tagMap0 = new HashMap <Integer, DBdata> ();
-			HashMap <Integer, DBdata> tagMap1 = new HashMap <Integer, DBdata> ();
-			for (DBdata dObj : rows) {
-				if (dObj.geneTag[0].endsWith(Q.pseudo) || dObj.geneTag[1].endsWith(Q.pseudo)) {
-					
-				}
-				if (!dObj.geneTag[0].equals(Q.empty) && !dObj.geneTag[1].equals(Q.empty)) {
-					tagMap0.put(dObj.annotIdx[0], dObj);
-					tagMap1.put(dObj.annotIdx[1], dObj);
-				}
-			}
-	
-			// assign 	
-			for (DBdata dd : rows) { 
-				DBdata ddCp=null;
-				int x=0;
-				if (dd.annotIdx[0]>0 && dd.geneTag[0].equals(Q.empty)) {
-					if (tagMap0.containsKey(dd.annotIdx[0])) {
-						ddCp = tagMap0.get(dd.annotIdx[0]);
-						x=0;
-					}
-				}
-				else if (dd.annotIdx[1]>0 && dd.geneTag[1].equals(Q.empty)) {
-					if (tagMap1.containsKey(dd.annotIdx[1])) {
-						ddCp = tagMap1.get(dd.annotIdx[1]);
-						x=1;
-					}
-				}
-				if (ddCp==null) continue;
-			
-				dd.geneTag[x]	=	ddCp.geneTag[x];
-				dd.gstart[x] 	= 	ddCp.gstart[x];		
-				dd.gend[x] 		=	ddCp.gend[x];
-				dd.glen[x] 		= 	ddCp.glen[x];
-				dd.gstrand[x] 	= 	ddCp.gstrand[x];
-				dd.golap[x] 	= 	ddCp.golap[x];
-				dd.annotStr[x] 	=	ddCp.annotStr[x];
-				
-				TreeSet <Integer> cpAnnoSet = (x==0) ? ddCp.geneSet0 : ddCp.geneSet1;
-				for (int an : cpAnnoSet) dd.geneSet0.add(an); // already checked for pseudo
-			}
-		}
-		catch (Exception e) {ErrorReport.print(e, "Finish all genes");}
-	}
-	
+
 	/*****************************************************
-	 * Species columns in order of projects
+	 * 1. spNameList, spIdxList: projList - Create species columns in order of projects 
+	 * 2. annoKeys: annoColumns - contains spIdx::keyword entries for all projects. Passed in from TableMainPanel.
+	 * 3. grpStart, grpEnd: grpCoords - Set up coordinates from the interface for filter
 	 */
-	private static void makeSpLists(Vector <Mproject> projList) {
+	private static void initSpStructs(Vector <Mproject> projList, String [] annoColumns, HashMap <Integer, String> grpCoords) {
 		try {
 			int numSp = projList.size();
+			
+			// 1. Species columns in order of projects
 			spNameList = new String [numSp];
 			spIdxList = new int [numSp];
 			for (int p=0; p<numSp; p++) {
 				spNameList[p] = projList.get(p).getDisplayName();
 				spIdxList[p] = projList.get(p).getIdx(); 
 			}
-		}
-		catch (Exception e) {ErrorReport.print(e, "Make species lits");}
-	}
-	
-	/********************************************
-	 * annoColumns is created in TableDataPanel.loadProjectAnnotations()
-	 * The annoColumns array contains spIdx::keyword entries for all projects.
-	 * The keywords should be in order the way they are to be displayed
-	 */
-	private static void makeAnnoKeys(String [] annoColumns) {
-		try {	
+			
+			// 2. The keywords should be in order the way they are to be displayed
 			annoKeys = new HashMap <Integer, String[]>  ();
 			
 			// count number of keys per species
@@ -420,35 +430,29 @@ public class DBdata implements Cloneable {
 				String sp = annoColumns[i].split(Q.delim)[0];			
 				if (cntSpKeys.containsKey(sp)) 	cntSpKeys.put(sp, cntSpKeys.get(sp)+1);
 				else 							cntSpKeys.put(sp, 1);
-			}
+			}	
 			
-			// Make array of keywords for each species
+			// Make array of keywords for each species; used in formatRowForTbl
 			HashMap <String, Integer> spName2spIdx = spPanel.getSpName2spIdx();
 			for (String spName : cntSpKeys.keySet()) {
 				int spidx = spName2spIdx.get(spName);
-				
+
 				int cnt = cntSpKeys.get(spName);
 				String [] keys = new String [cnt];
 				
 				for (int i=0, k=0; i<annoColumns.length; i++) {
 					String sp = annoColumns[i].split(Q.delim)[0];
-					if (sp.equals(spName)) 
+					if (sp.equals(spName)) {
 						keys[k++] =  annoColumns[i].split(Q.delim)[1];
+					}
 				}
 				annoKeys.put(spidx, keys);
 				if (isSelf) break;			
 			}
-		}
-		catch (Exception e) {ErrorReport.print(e, "make keyword array");}
-	}
-	/**********************************************************
-	 * Set up coordinates from the interface for filter
-	 * grpCoords.put(index, start + Q.delim2 + stop); created in QueryPanel
-	 */
-	static private void makeGrpLoc(HashMap <Integer, String> grpCoords) {
-		try {
+			
+			// 3. grpCoords.put(index, start + Q.delim2 + stop); created in QueryPanel
 			grpStart = new HashMap <Integer, Integer> ();
-			grpEnd = new HashMap <Integer, Integer> ();
+			grpEnd   = new HashMap <Integer, Integer> ();
 			if (grpCoords.size()==0) return;
 		
 			for (int gidx : grpCoords.keySet()) {
@@ -464,7 +468,7 @@ public class DBdata implements Cloneable {
 				grpEnd.put(gidx, e);
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "make location list");}
+		catch (Exception e) {ErrorReport.print(e, "Make species lits");}
 	}
 	/*************************************************
 	 * Add other geneTag of query; put results from Gene# in groups; 
@@ -472,10 +476,7 @@ public class DBdata implements Cloneable {
 	private static void runGeneNum(Vector <DBdata> rows) {
 	try {
 	/* Compute group  */
-		String inputGN = qPanel.getGeneNum();
-		if (inputGN==null || inputGN.equals("")) return;
-		
-		String [] tok = inputGN.split(Q.SDOT);
+		String [] tok = geneNum.split(Q.SDOT);
 		int genenum = Utilities.getInt(tok[0]); 
 		if (genenum == -1) return;
 		
@@ -533,7 +534,8 @@ public class DBdata implements Cloneable {
 	
 	// ComputeMulti; compute does the rows, Clust and PgFSize
 	private static Vector <DBdata> runMultiGene(Vector <DBdata> rows, HashMap<String, String> projMap) {
-		ComputeMulti mobj = new ComputeMulti(rows, qPanel, loadStatus, grpIdxOnly, spIdxList, projMap);
+		HashSet<Integer> selGrp = spPanel.getSelectGrpIdxSet();
+		ComputeMulti mobj = new ComputeMulti(rows, qPanel, loadStatus, selGrp, spIdxList, projMap);
 		return mobj.compute();	
 	}
 	
@@ -577,7 +579,7 @@ public class DBdata implements Cloneable {
 		catch (Exception e) {ErrorReport.print(e, "Making cluster table"); return null;}
 	}
 	// Create Unique Gene Counts for Stats (see SummaryPanel)
-	private static void makeGeneCnts(HashMap <Integer, Integer> geneCntMap) { // spIdx, num-unique-genes
+	private static void makeSumCnts(HashMap <Integer, Integer> geneCntMap) { // spIdx, num-unique-genes
 		try {
          	if (isSelf) { // 2 species only
          		HashSet <Integer> anno1 = new HashSet <Integer> ();
@@ -687,7 +689,7 @@ public class DBdata implements Cloneable {
 				}
 			}
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { // All annot_idx,hit_idx loaded; make sure best
-				if (!isIncludeMinor) return;  // is Minor, but not being shown, okay to fill in first part; comes from pseudo_hits
+				if (!isIncMinor) return;  // is Minor, but not being shown, okay to fill in first part; comes from pseudo_hits
 					
 				annotIdx[x] = annoIdx;		  // this is a new row; see key 
 				htype = "--";								
@@ -714,7 +716,7 @@ public class DBdata implements Cloneable {
 	 * If there is no anno for one side of the hit, there will be no merged record
 	 * called from rsMakeRows
 	 */
-	private void rsLoadHitMerge(ResultSet rs) {
+	private void rsMergeHit(ResultSet rs) {
 		try {
 			int annoGrpIdx = rs.getInt(Q.AGIDX); 	// will not be zero because no record if anno not on other side
 			int annoIdx = rs.getInt(Q.AIDX); // PA.idx
@@ -731,16 +733,16 @@ public class DBdata implements Cloneable {
 			}
 		
 			if (annoIdx!=annotIdx[0] && annoIdx!=annotIdx[1]) { // PH.annot1_idx and PH.annot2_idx
-				if (!isIncludeMinor) return; // is Minor, but not being included; ignore
+				if (!isIncMinor) return; // is Minor, but not being included; ignore
 				
 				annotIdx[x] = annoIdx;	 	 // should not happen because of key
 				tag = tag + Q.minor+Q.minor; // hit overlaps at least two genes on both sides
 				cntPlus2++;		
 				
 				int y = (x==0) ? 1 : 0;
-				String chry = (chrIdx[y]>0) ? spPanel.getChrNameFromChrIdx(chrIdx[y]) : "?";
-				Globals.prt(spPanel.getChrNameFromChrIdx(chrIdx[x]) + "." + tag 
-						+ " merge " + spPanel.getChrNameFromChrIdx(chrIdx[x]) + "." + geneTag[x] + chry + "." + geneTag[y] );
+				String chry = (chrIdx[y]>0) ? spPanel.getChrNumFromChrIdx(chrIdx[y]) : "?";
+				Globals.prt(spPanel.getChrNumFromChrIdx(chrIdx[x]) + "." + tag 
+						+ " merge " + spPanel.getChrNumFromChrIdx(chrIdx[x]) + "." + geneTag[x] + chry + "." + geneTag[y] );
 			}
 			
 			gstart[x] =		rs.getInt(Q.ASTART);	
@@ -785,10 +787,10 @@ public class DBdata implements Cloneable {
 	}
 	/*****************************************************
 	 * Get other side of hit.  					
-	 * In QueryPanel, search for actual genenum; that only returns one half of hit 
+	 * In QueryPanel, search for actual genenum or annotation string; that only returns one half of hit 
 	 *		but is fast and allows the de-activation of a species
 	 ***********************************************************************/
-	private boolean rsSQLloadGene(DBconn2 dbc, boolean isAlgo2) {
+	private boolean loadGeneFromDB(DBconn2 dbc, boolean isAlgo2) {
 	try {
 		int idx=-1;
 		
@@ -826,59 +828,63 @@ public class DBdata implements Cloneable {
 	private boolean finishRow() {
 	try {
 		int n = (isSingle) ? 1 : 2;
+		
 		for (int x=0; x<n; x++) {
-			chrNum[x] =  spPanel.getChrNameFromChrIdx(chrIdx[x]); 
+			chrNum[x] =  spPanel.getChrNumFromChrIdx(chrIdx[x]); 
 			spName[x] =  spPanel.getSpNameFromChrIdx(chrIdx[x]);
 			if (isSingle) spIdx[x] = spPanel.getSpIdxFromChrIdx(chrIdx[x]); 
 			
-			String chr = (chrNum[x].startsWith("0") && chrNum[x].length()>1) ? chrNum[x].substring(1) : chrNum[x];
+			String chr = (chrNum[x].startsWith("0") && chrNum[x].length()>1) ? // remove leading 0's
+					     chrNum[x].substring(1) : chrNum[x];
+			
 			if (!geneTag[x].equals(Q.empty)) geneTag[x] = chr + "." + geneTag[x];  
 			else 							 geneTag[x] = chr + "." + Q.pseudo; // indicates hit but no gene; parsed in TmpRowData/UtilReport
 			
-			if (blockNum>0) blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); 
+			if (blockNum>0) {
+				blockStr = Utilities.blockStr(chrNum[0], chrNum[1], blockNum); 
+			}
 			if (runSize>0)  {
 				collinearStr = Utilities.blockStr(chrNum[0], chrNum[1], runSize); 
 				if (runNum>0)  collinearStr += Q.COSET + runNum; 					  
 			}
 			
 			/******* Anno Keys ******************/
-			if (!annoKeys.containsKey(spIdx[x])) continue; // If this is index 0, then still need 1
-			
-			String [] keyList = annoKeys.get(spIdx[x]);
-			int cnt= keyList.length;
-			
-			String [] valList = new String [cnt]; // if n keys, then n values
-			for (int i=0; i<cnt; i++) valList[i]="";
-	
-			if (annotStr[x].equals("")) { 
-				for (int i=0; i<cnt; i++) valList[i]="";
+			if (!annoKeys.containsKey(spIdx[x])) { // spIdx, keys in order
+				continue; // not annotated
 			}
-			else {
-				String[] fieldList = annotStr[x].split(";");
-				for (String field : fieldList)
-				{
-					String[] words = field.trim().split("[\\s,=]",2);
+			String [] keyList = annoKeys.get(spIdx[x]);
+			int cntKey = keyList.length;
+			
+			String [] valList = new String [cntKey]; // if n keys, then n values
+			for (int i=0; i<cntKey; i++) valList[i] = Q.NOANNOVAL;    // CAS579c (see Release Weird bug fix) 
+	
+			if (!annotStr[x].equals("")) { 
+				String[] annoList = annotStr[x].split(";"); // key1=val1;key2=val2....
+				
+				for (String tuple : annoList) { 
+					String [] words = tuple.trim().split("[\\s,=]",2);
 					if (words.length == 1) continue;
 					
 					String key = words[0].trim();
 					if (key.endsWith("="))	key = key.substring(0,key.length() - 1);
+					if (key.equals("")) continue;
 					
 					String val = words[1].trim();
 					if (val.startsWith("=")) val = val.substring(1);
+					if (val.trim().equals("")) val = Q.NOANNOVAL; // key={empty}
 					
-					if (key.equals("") || val.equals("")) continue;
-					
-					for (int k=0; k<cnt; k++) {
+					for (int k=0; k<cntKey; k++) {
 						if (keyList[k].equals(key)) {
-							valList[k] = valList[k].equals("") ? val : (valList[k] + ";" + val);
+							valList[k] = valList[k].equals(Q.NOANNOVAL) 
+									? val : (valList[k] + ";" + val); // repeated keywords
 							break;
 						}
 					}
 				}
-				if (keyList[cnt-1].equals(Q.All_Anno))
-								valList[cnt-1] = annotStr[x];
+				if (keyList[cntKey-1].equals(Q.All_Anno))				
+					valList[cntKey-1] = annotStr[x];
 			}
-			annoVals.put(x, valList);
+			annoVals.put(x, valList); // annoVals is local to the row, it can have a 0 and 1 entry; see formatRowForTbl
 		}	
 		return true;
 		
@@ -886,26 +892,11 @@ public class DBdata implements Cloneable {
 	}
 	
 	/*********************************************************
-	 * The locations and hit gene filters are done here instead of MySQL where statement
+	 * Row Filters: The locations and hit gene filters are done here instead of MySQL where statement
 	 * This has to be performed after all hits are read for the isOneAnno and isOlapAnno
 	 */
-	private boolean passRowFilters() {
+	private boolean passFilterPair() {
 		try {
-			if (isSingle) { // anno check is in query; see below why it needs to be done here for !isSingle
-				if (grpStart.size()==0) return true;
-				
-				for (int gidx : grpStart.keySet()) { // only one selected
-					int sf = grpStart.get(gidx);   	 // 0 if not set or set to 0
-					int ef = grpEnd.get(gidx); 	
-					
-					if (chrIdx[0]==gidx) {
-						if (sf > 0 && gstart[0] < sf) return false;  // note gene start (not hit as used below)
-						if (ef > 0 && gend[0]   > ef) return false;
-						return true;
-					}
-				}
-				return false; 
-			}
 			// GeneNum: Chr is the only other filter, which happened in SQL; but need to make sure geneNum on correct chr
 			if (grpStart.size()>0) { // put here so work for the rest of filters
 				for (int gidx : grpStart.keySet()) {
@@ -921,29 +912,19 @@ public class DBdata implements Cloneable {
 				}
 			}
 			if (geneOlap>0) { // Not checked in MySQL because will only return one-half, which looks the same as pseudo
-				if (!geneTag[0].equals(Q.empty) && golap[0]<geneOlap) return false;
-				if (!geneTag[1].equals(Q.empty) && golap[1]<geneOlap) return false;
+				if (qPanel.isGeneOlapOr()) { // CAS579c was checking that it is a gene, where pseudos should be removed to
+					if (golap[0]<geneOlap && golap[1]<geneOlap) return false;
+				}
+				else {
+					if (golap[0]<geneOlap || golap[1]<geneOlap) return false;
+				}
 			}
 			// CAS579b was checking for select grpIdxOnly (selected chromosome), but they are filter in MySQL query
-			// was causing Gene# to always be only on selected chromosome
 			
 			// when doing anno search as query, returned hits without anno if they overlap
-			// check to make sure anno is on the selected chr-only
-			if (qPanel.isAnnoTxt()) { 
-				String anno = qPanel.getAnnoTxt().toLowerCase();
-				
-				if (annotStr[0].toLowerCase().contains(anno)) return true;
-				if (annotStr[1].toLowerCase().contains(anno)) return true;
-					
-				return false;
-			}
-						
-			if (qPanel.isOlapAnno()) { // for -ii
-				boolean b = geneIdxForOlap.contains(annotIdx[0]) || geneIdxForOlap.contains(annotIdx[1]);
-				if (qPanel.isMinorOlap) return  b && (geneTag[0].endsWith(Q.minor) || geneTag[1].endsWith(Q.minor));
-				return b;
-			}
-				
+			if (isAnno) return passFilterAnno();
+			
+			// cannot have Anno and geneNum
 			if (geneNum!=null) { // genenum already checked in mysql; this is for suffix
 				String tag0 = geneTag[0].replace(Q.minor,"").trim();	
 				String tag1 = geneTag[1].replace(Q.minor,"").trim();
@@ -960,11 +941,51 @@ public class DBdata implements Cloneable {
 					
 				return false;
 			}
+			
+			if (qPanel.isOlapAnno_ii()) { // for -ii
+				boolean b = geneIdxForOlap.contains(annotIdx[0]) || geneIdxForOlap.contains(annotIdx[1]);
+				if (qPanel.isMinorOlap) // otherwise, overlapping
+					return  b && (geneTag[0].endsWith(Q.minor) || geneTag[1].endsWith(Q.minor));
+				return b;
+			}
 			return true;
 			
 		} catch (Exception e) {ErrorReport.print(e, "Reading rows"); return false;}
 	}
-	
+	// Specific to singles
+	private boolean passFilterSingle() {
+		try {
+			if (isAnno && !passFilterAnno()) return false; // if passes, still need to check start/end
+			
+			if (grpStart.size()==0) return true;
+			
+			for (int gidx : grpStart.keySet()) { // only one selected
+				int sf = grpStart.get(gidx);   	 // 0 if not set or set to 0
+				int ef = grpEnd.get(gidx); 	
+				
+				if (chrIdx[0]==gidx) {
+					if (sf > 0 && gstart[0] < sf) return false;  // note gene start (not hit as used below)
+					if (ef > 0 && gend[0]   > ef) return false;
+					return true;
+				}
+			}
+			return true;
+			
+		} catch (Exception e) {ErrorReport.print(e, "Reading rows"); return false;}
+	}
+	// check isAnno before calling (when doing anno search as query, returned hits without anno if they overlap)
+    private boolean passFilterAnno() {
+		String anno = qPanel.getAnnoTxt().toLowerCase();
+		boolean b0=true, b1=true;
+		if (grpIdxForAnno!=null) { // null means all chromosomes, otherwise, hashSet of valid
+			b0 = grpIdxForAnno.contains(chrIdx[0]);
+			b1 = grpIdxForAnno.contains(chrIdx[1]);
+		}
+		if (b0 && annotStr[0].toLowerCase().contains(anno)) return true;
+		if (b1 && annotStr[1].toLowerCase().contains(anno)) return true;
+			
+		return false;
+    }
 	/*********************************************************
 	 * Called if ComputeClust or runGeneGroups
 	 */
@@ -974,7 +995,7 @@ public class DBdata implements Cloneable {
 	}
 	
 	/*************************************************
-	 * TableData.addRowsWithProgress: returns row formated for table.
+	 * XXX TableData.addRowsWithProgress: returns row formated for table.
 	 */
 	protected Vector <Object> formatRowForTbl() {
 	try {
@@ -1043,8 +1064,9 @@ public class DBdata implements Cloneable {
 						row.add(v);
 					}
 				}
+				// otherwise no anno, no space holders
 			}
-			else {
+			else { // there are more than 2 species, so this fills in the anno columns as blank
 				if (annoKeys.containsKey(spIdxList[i])) { // fill in columns as empty from Keys (not Vals)
 					String [] vals = annoKeys.get(spIdxList[i]);
 					if (vals!=null)

@@ -89,7 +89,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// See initProjects
 	private Vector<Mproject>           projVec    = new Vector <Mproject> (); // projects on db and disk (!viewSymap)
 	private HashMap <String, Mproject> projObjMap = new HashMap <String, Mproject> (); // displayName, same set as projVec
-	private HashMap <String, String>  projNameMap = new HashMap <String, String> ();   // DBname to displayName
+	private HashMap <String, String>   projNameMap = new HashMap <String, String> ();   // DBname to displayName
 	
 	protected Vector<Mproject> selectedProjVec = new Vector<Mproject>();
 	
@@ -728,9 +728,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					else if (mp.bPseudo) btnSelAlign.setText(pseudoOnly);
 					
 					if (Constants.CoSET_ONLY) btnSelAlign.setText("Collinear");
+					if (Constants.NUMHITS_ONLY) btnSelAlign.setText("NumHits");
 				}
 			}	
-			else btnSelAlign.setText("Selected Pair");	
+			else {
+				Constants.CoSET_ONLY = Constants.NUMHITS_ONLY = false; 
+				btnSelAlign.setText("Selected Pair");	
+			}
 			
 			btnSelAlign.setEnabled(true);
 			btnSelClearPair.setEnabled(allDone || partDone);
@@ -1080,7 +1084,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			boolean isSelf = (selectedProjVec.size()==1 && pVec.size()==1);// self synteny
 			if (isSelf) pVec.add(pVec.get(0));					// this makes the following loop work for counts
 			
-			boolean useAlgo2=true; // used for new "EveryPlus"
+			boolean useAlgo2=true; // used for Exon/Gene Olap column
 			int cntUsePseudo=0;    // Instructions; 
 			int hasSynteny=0;
 			Vector <Mproject> synVec = new Vector <Mproject> (); // should end up the same as pVec
@@ -1106,12 +1110,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				
 				String ab = p.getdbAbbrev();
 				String lch = ab.substring(ab.length()-1);
-				String nch = lch.equals("X") ? "Z" : "X";
+				String nch = lch.equals(Globals.SS_X) ? Globals.SS_Z : Globals.SS_X;
 				ab = ab.substring(0, ab.length()-1) + nch; // replace last character
-				cp.setIsSelf(p.getDisplayName() + nch, ab);
+				cp.setIsSelf(p.getDisplayName() + Globals.SS_X, ab); // may be XX
 				
 				synVec.add(cp);					
 			}
+			sortProjDisplay(synVec); // loses order; causes Columns to be wrong if one is not annotated; CAS579c 
+			
 			QueryFrame qFrame = new QueryFrame(getInstance(), frameTitle, dbc2, 
 					synVec, useAlgo2, cntUsePseudo, hasSynteny, isSelf);
 			qFrame.build();
@@ -1488,12 +1494,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		boolean bAlignDone = isAlignDone(selProjs);
 		
 		String msg;
-		if (mp.bSynOnly)     msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
-		else if (bAlignDone) {
-			if (Constants.CoSET_ONLY) msg = "Collinear Only\n"; // For v5.7.7, flag -cs; CAS577
-			else 					  msg = "Clust&Synteny"+ "\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
+		if (mp.bSynOnly) msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
+		else if (bAlignDone) {				 // must check command line only if all done
+			if (Constants.CoSET_ONLY)        msg = "Collinear Only\n"; // For v5.7.7, flag -cs; CAS577
+			else if (Constants.NUMHITS_ONLY) msg = "NumHits Only\n";   // For v5.7.9c,flag -nh; CAS579c
+			else 					         msg = "Clust&Synteny"+ "\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
 		}
-		else     			 msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
+		else msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
 		
 		if (!bAlignDone) msg += "CPUs " + nCPU + ";  ";						
 		

@@ -118,8 +118,8 @@ public class UtilSearch  extends JDialog{
 		JPanel row1 = Jcomp.createRowPanel();
 		ButtonGroup sg = new ButtonGroup();
 		radLast = 		Jcomp.createRadio("Last#", "Search for last number after '.' or '-'");
-		radExact = 		Jcomp.createRadio("Exact", "Search for exact string");
-		radSubstring = 	Jcomp.createRadio("Substring", "Search for substring");
+		radExact = 		Jcomp.createRadio("Exact", "Search for exact string (case-insensitive)");
+		radSubstring = 	Jcomp.createRadio("Substring", "Search for substring (case-insensitive)");
 		radLast.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {restart();}});
 		radExact.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {restart();}});
 		radSubstring.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) {restart();}});
@@ -262,7 +262,7 @@ public class UtilSearch  extends JDialog{
 			String op = "Last#";
 			if (isExact) op = "Exact";
 			else if (isSubstring) op = "Substring";
-			String msg = String.format("No %s value in column %s of '%s'", op, curCol,  txtSearch.getText().trim());
+			String msg = String.format("No %s value of '%s' in %s", op,  txtSearch.getText().trim(), curCol);
 			setStatus(msg);
 			return;
 		}
@@ -290,7 +290,7 @@ public class UtilSearch  extends JDialog{
 	 */
 	private int getRowIndex(int nrows,  String findStr) {
 		int index= -1;
-		
+	
 		for (int x=rowIndex+1; x<nrows; x++) {// start with last row index; CAS579
 			// get column value
 			Object colValObj = tPanel.theTable.getValueAt(x, colIndex);
@@ -321,16 +321,20 @@ public class UtilSearch  extends JDialog{
 					break;
 				}
 			}
-			else if (isExact) {
-				if (colVal.equals(findStr)) {
-					index=x;
-					break;
+			else { // CAS579c make case-insensitive
+				colVal  = colVal.toLowerCase();
+				findStr = findStr.toLowerCase();
+				if (isExact) {
+					if (colVal.equals(findStr)) {
+						index=x;
+						break;
+					}
 				}
-			}
-			else {
-				if (colVal.contains(findStr)) {
-					index=x;
-					break;
+				else {		// Substring
+					if (colVal.contains(findStr)) {
+						index=x;
+						break;
+					}
 				}
 			}
  		}

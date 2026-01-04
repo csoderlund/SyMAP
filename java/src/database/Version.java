@@ -24,21 +24,24 @@ public class Version {
 	public Version(DBconn2 dbc2) {
 		this.dbc2 = dbc2;
 	}
-	public void check() { // made separate for initial call; CAS575
+	public void check() { 
 		checkForSchemaUpdate();
 		checkForContentUpdate();
 		
 		if (dbdebug) 	updateDEBUG();
 		else 			removeDEBUG();
 	}
-    public boolean isVerLt(int pairIdx, int vnum) {// add; CAS575
+    public boolean isVerLt(int pairIdx, int vnum) {
     try {
     	String v = dbc2.executeString("select syVer from pairs where idx=" + pairIdx);
     	String vx = v.substring(1).replace(".", "");
     	int n = util.Utilities.getInt(vx);
     	if (n == -1) {			// possible ending char
-    		vx = vx.substring(0, v.length()-1);
-    		n = util.Utilities.getInt(v);
+    		if (vx.length()>2) {
+    			vx = vx.substring(0, vx.length()-1); // was using v instead of vx; CAS579c
+    			n = util.Utilities.getInt(vx);
+    		}
+    		else Globals.prt("Incorrect version: " + v);
     	}
     	if (n<vnum) Globals.tprt("PairIdx=" + pairIdx + " was built with " + v + " (" + n + "<" + vnum + ") ");
     	return n<vnum;

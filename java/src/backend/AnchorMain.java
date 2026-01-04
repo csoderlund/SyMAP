@@ -136,7 +136,7 @@ public class AnchorMain {
 					hitcnt++;
 				}
 				rs.close();
-				Globals.rprt(grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt);
+				Globals.rprt("Hits for " +  grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt);
 				
 			// save	
 				PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set hitnum=? where idx=?");
@@ -165,17 +165,21 @@ public class AnchorMain {
 	 * Count number of hits per gene; these include all pairwise projects
 	 * This includes isSelf, but self hits get counted for both sides of the diagonal
 	 */
-	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB
-		if (bPrt) Globals.rprt("Compute and save gene numHits"); 
+	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB; also called for command line -nh
+		if (bPrt) Globals.rprt("Compute and save gene numHits..."); 
 		
 		TreeMap <Integer, String> idxList1 = mp.mProj1.getGrpIdxMap();
 		TreeMap <Integer, String> idxList2 = mp.mProj2.getGrpIdxMap();
 		
-		for (int idx : idxList1.keySet()) if (!saveAnnotHitCnt(idx, idxList1.get(idx))) return;
-		for (int idx : idxList2.keySet()) if (!saveAnnotHitCnt(idx, idxList2.get(idx))) return;
+		for (int idx : idxList1.keySet()) 
+			if (!saveAnnotHitCnt(idx, idxList1.get(idx))) return;
+		for (int idx : idxList2.keySet()) 
+			if (!saveAnnotHitCnt(idx, idxList2.get(idx))) return;
 		
 		Globals.rclear();
 	}
+	// This counts all hits in the database for a give grpIdx, so it is across pairs.
+	// This does not distinguish above and below diagonal for self-synteny; that will require pairIdx.
 	public boolean saveAnnotHitCnt(int grpIdx, String grpName) { // public for Mproject.removeProjectFromDB
 		try {
 			dbc2.executeUpdate("update pseudo_annot set numhits=0 "
@@ -183,6 +187,9 @@ public class AnchorMain {
 			ResultSet rs = dbc2.executeQuery("select count(*) from pseudo_annot where grp_idx=" + grpIdx);
 			int cnt = (rs.next()) ? rs.getInt(1) : 0;
 			if (cnt==0) return true; 							// this is not a failure 
+			
+			// CAS579c changed 4/14/25; no Version update for it. 
+			dbc2.tableCheckModifyColumn("pseudo_annot", "numhits", "INTEGER unsigned default 0"); 
 			
 			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
 			
@@ -202,7 +209,7 @@ public class AnchorMain {
 			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
 			for (int idx : geneCntMap.keySet()) {
 				int num = geneCntMap.get(idx);
-				if (num>255) num=255; // tinyint unsigned max is 255
+				// if (num>255) num=255; // tinyint unsigned max is 255; CAS579c is Integer now
 				ps.setInt(1, num);
 				ps.setInt(2, idx);
 				ps.addBatch();
@@ -375,16 +382,18 @@ public class AnchorMain {
 			}
 			rs.close();
 			
-			String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
-			String chr = (i==0) ? mProj1.getGrpFullNameFromIdx(grpIdx) : mProj2.getGrpFullNameFromIdx(grpIdx);
-			String msg = String.format("Pseudo %-20s   Genes %,6d   Start %,6d ", (dn+" "+chr), genes, geneStart); 
-			Globals.rprt(String.format("%,5d %s", hitGeneMap.size(),msg));
-			
+			if (Globals.TRACE) { // CAS579c was rprt, which was immediately written over leaving trailing stuff
+				String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
+				String chr = (i==0) ? mProj1.getGrpFullNameFromIdx(grpIdx) : mProj2.getGrpFullNameFromIdx(grpIdx);
+				String msg = String.format("Pseudo %-20s   Genes %,6d   Start %,6d ", (dn+" "+chr), genes, geneStart); 
+				Globals.prt(String.format("%,5d %s", hitGeneMap.size(),msg));
+			}
 			if (hitGeneMap.size()==0) return true;
 			
 			cntPseudo[i] += hitGeneMap.size();
 			
 		// pseudo_annot
+			Globals.rclear();
 			String name= "ID=pseudo-" + mProj1.getDBName() +"-"+mProj2.getDBName() + 
 					";" + annoKey[i] + "=Not annotated; ";
 			

@@ -8,6 +8,7 @@ import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Utilities;
@@ -124,11 +125,11 @@ public class SummaryPanel  extends JPanel {
 				
 				if (dd.hasBlock()) {
 					block++;
-					counterInc(blockCnt, dd.blockStr, 1);		 // CAS575 was just using block#, which is repeated across 
+					counterInc(blockCnt, dd.blockStr, 1);		 
 				}
 				if (dd.hasCollinear()) {
 					collinear++;
-					counterInc(collinearCnt, dd.collinearStr, 1); // CAS575 was just using collinear set#, which is repeated across 
+					counterInc(collinearCnt, dd.collinearStr, 1); 
 				}
 				if (dd.hasGroup()) { 
 					String [] tok = dd.grpStr.split(Q.GROUP);
@@ -139,7 +140,7 @@ public class SummaryPanel  extends JPanel {
 		// Add 1st line of summary
 			String label = String.format("Block (Hits): %,d (%,d)   Annotated: Both %,d  One %,d  None %,d", 
 					 blockCnt.size(), block, both, either, none); 				
-			if (minor>0)	 label += String.format("  Minor %,d", minor); 		// only >0 if Every+
+			if (minor>0)	 label += String.format("  Minor %,d", minor); 		// only >0 if Every+ or Gene#
 			if (maxGrp>0)    label += String.format("   Groups: #%,d", maxGrp); // runs off page if not before collinear, which then runs off page..
 			if (collinear>0) label += String.format("   Collinear (Hits): %,d (%,d)", collinearCnt.size(), collinear);
 			
@@ -149,36 +150,39 @@ public class SummaryPanel  extends JPanel {
 			
 		// 2nd lines with Project gene counts
 			// format:
-			int w=5, h=0, a=0, g=0; // find width
-			for (int spIdx : order ) {
-				String pName = spPanel.getSpNameFromSpIdx(spIdx);
+			int w=5, h=0, a=0, g=0, x=0; // find width
+			for (int spIdx : order) {
+				String pName;
+				if (!isSelf) pName = spPanel.getSpNameFromSpIdx(spIdx);
+				else         pName = spPanel.getSelfName(x++);
+				
 				w = Math.max(w, pName.length());
 				
 				if (order.size()>2) {// hits is all the same unless more than 2 species
-					int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
+					int nHit =  proj2hits.containsKey(spIdx) ? proj2hits.get(spIdx) : 0;
 					h = Math.max(h, String.format("%,d", nHit).length());
 				}
-				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
+				int nAnno = proj2annot.containsKey(spIdx) ? proj2annot.get(spIdx) : 0;
 				a = Math.max(a, String.format("%,d", nAnno).length());
 				
-				int nUnq =       geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0;
+				int nUnq = geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0;
 				g = Math.max(g, String.format("%,d", nUnq).length());
 				
-				if (isSelf) break;
+				// CAS579c format wrong; if (isSelf) break;
 			}
 			String nf;
 			if (h==0) nf = "%-" + w + "s   Annotated: %," + a + "d   Genes: %," + g + "d";
 			else 	  nf = "%-" + w + "s   Hits: %," + h + "d   Annotated: %," + a + "d   Genes: %," + g + "d";
 			
 			// Loop through species
-			int x=0;
+			x=0;
 			for (int spIdx : order ) {
 				String pName;
 				if (!isSelf) pName = spPanel.getSpNameFromSpIdx(spIdx);
 				else         pName = spPanel.getSelfName(x++);
 				
-				int nHit =  proj2hits.containsKey(spIdx)    ? proj2hits.get(spIdx)    : 0;
-				int nAnno = proj2annot.containsKey(spIdx)   ? proj2annot.get(spIdx)   : 0;
+				int nHit =  proj2hits.containsKey(spIdx)  ? proj2hits.get(spIdx)  : 0;
+				int nAnno = proj2annot.containsKey(spIdx) ? proj2annot.get(spIdx) : 0;
 				int nUnq =  geneCntMap.containsKey(spIdx) ? geneCntMap.get(spIdx) : 0; 	// isSelf will have spIdx
 				
 				if (h==0) label = String.format(nf, pName,  nAnno, nUnq);
@@ -196,31 +200,31 @@ public class SummaryPanel  extends JPanel {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Create hit summary");}
 	}
-	private void createSingle(HashMap<String, String> chrStrMap) {
+	private void createSingle(HashMap<String, String> chrStrMap) { // CAS579c simplify
 		try {
-			HashMap <Integer, Integer> proj2orphs = new HashMap <Integer, Integer> ();
-			
-		/* find number of orphans */
-			for (DBdata dd : rowsFromDB) {
-				int spIdx = dd.getSpIdx(0);
-				counterInc(proj2orphs, spIdx, 1);
+			String dname="", chrStr="";
+			for (String x : chrStrMap.keySet()) {
+				if (!x.endsWith(Globals.SS_X)) {
+					dname = x;
+					chrStr = chrStrMap.get(x);
+					break;
+				}
 			}
-		/* create summary */
-			statsPanel.add(Box.createVerticalStrut(5));
+			if (dname.equals("")) {// probably ends with SS_Z
+				for (String x : chrStrMap.keySet()) {
+					dname = x;
+					chrStr = chrStrMap.get(x);
+					break;
+				}
+			}
+			int cnt=rowsFromDB.size();
+					
 			String type = (qPanel.isSingleOrphan()) ? "Orphans" : "Genes"; 
+			String label = String.format("%-13s    %s: %,d     Chr: %s",dname, type, cnt, chrStr);
+			JLabel theLabel = Jcomp.createMonoLabel(label, 12);
 			
-			for (int spIdx : proj2orphs.keySet() )
-			{
-				String pname = spPanel.getSpNameFromSpIdx(spIdx);
-				int o = proj2orphs.get(spIdx);
-				String chrStr = chrStrMap.containsKey(pname) ? chrStrMap.get(pname) : "Unk";
-				
-				statsPanel.add(Box.createVerticalStrut(2));
-				String label = String.format("%-13s    %s: %,7d     Chr: %s",pname, type, o, chrStr);
-				
-				JLabel theLabel = Jcomp.createMonoLabel(label, 12);
-				statsPanel.add(theLabel);
-			}
+			statsPanel.add(Box.createVerticalStrut(4));
+			statsPanel.add(theLabel);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Create orphan summary");}
 	}

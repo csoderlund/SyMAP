@@ -7,6 +7,7 @@ import symap.Globals;
  */
 public class Q {
 	static final int INC=5000;
+	static final String NOANNOVAL = "---";	 // A keyword for the species does not have a value
 	static final String GROUP = "-", COSET = "."; 
 	static final String DOT = Globals.DOT,    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
 			            SDOT = Globals.SDOT; // this is for split
@@ -39,7 +40,7 @@ public class Q {
 	static final String hEndCol =	 "Hend";
 	static final String hLenCol = 	 "Hlen";
 	static final String gHitNumCol = "NumHits"; 
-	static final String gOlap = 	 "%Olap";   
+	static final String gOlap = 	 "%Olap";
 	
 	static final String All_Anno =  "All_Anno";
 	

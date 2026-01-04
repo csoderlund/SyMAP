@@ -56,7 +56,6 @@
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
 	<!---- START BODY -->
 For existing databases, there are no database or build changes since <a href="#v575">v5.7.5</a> for self-synteny.
-You must have Java v17.0.11 or later.
 
 <h3>Summary of recent major releases</h3>
 <table>
@@ -70,45 +69,68 @@ which is aware of the exon-intron structure.
 </table>
 
 <a id="v579"></a>
-<h3>Release: v5.7.9b (20-Dec-25)</h3>
-<ttp>Queries</ttp>: Bug fixes. Improved <ttl>Search</ttl>.
+<h3>Release: v5.7.9</h3>
+<p><ttp>Queries</ttp>:  New features, improvements and bug fixes.
+<p><i>Release v5.7.9c (4-Jan-26)</i>
 <p>
 <ul>
-<li><ttp>Queries</ttp>
+<li><ttp>Queries</ttp>: Small changes
 <ul>
-<li><b>Bug fix:</b> If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.
-<p><li>Minor bug fixes: (1) If <ttx>Gene#</ttx> was set and a chromosome selected, it was not doing what the
+<li>If all projects are un-annotated, filters are not shown if they require gene annotation.
+<br>Ditto for project pairs without <ttx>Numbered Pseudo</ttx>.
+<li>Renamed <ttl>Instructions</ttl> to <ttl>Overview</ttl> and added some info
+(see <a href="Query.html#instruct">Overview</a>).
+<li><ttx>Annotation Description</ttx> now has a check mark, and the species disables works for it.
+<br>Minors are now always included except for self-synteny self-chromosomes.
+<li><ttx>%Olap</ttx> was not being checked for unannotated hits; now there is a <ttx>Both</ttx> or <ttx>Either</ttx> choice.
+<li>Annotation: if there is no value for a species keyword, the table shows "---" instead of ".".
+<li><ttl>Search</ttl>: made case-insensitive. <ttl>Report</ttl>: Disable un-annotated species from showing annotation.
+<li>Bug fixes:
+<ul>
+<li><small>Location search for 2 species: Broke in release 5.7.5 - locations were ignored.
+When querying 2 species, selecting specific chromosome did not always work.
+From/To were being used, even if disabled.</small>
+<li><small>The <ttx>Anno</ttx> columns were wrong if all the following were true:
+Not all selected projects had synteny, a few were annotated but at least one was not, the unannotated was
+not at the end of species list.</small>
+<li><small>Starting up Queries would print an error to the terminal, but it still worked.</small>
+</ul>
+<li>Changed a lot of little things to make the interface as clear as possible.
+</ul>
+<li><ttx>NumHits</ttx> column can now be &gt;255. Execute <tt>symap -nh</tt> to update.
+</ul>
+<i>Release v5.7.9b (20-Dec-25)</i>
+<p>
+<ul>
+<li><ttp>Queries</ttp> Bug fixes and search improvements.
+<ul>
+<li>Update <ttl>Search</ttl>: states how many occurrences exist in the column and does not close between searches.
+(See <a href="Query.html#search" target="_blank" class="ext">Queries Search</a>.)
+<li>Bug fix: If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.
+<li>Minor bug fixes: (1) If <ttx>Gene#</ttx> was set and a chromosome selected, it was not doing what the
 documentation said. (2) <ttx>Gene#</ttx>, <ttx>Multi</ttx> and <ttx>Cluster</ttx> work right with one chromosome selected,
 but not two; selecting more than one is not allowed now.
-<p><li>Update <ttl>Search</ttl>: states how many occurrences exist in the column and does not close between searches.
-(See <a href="Query.html#search" target="_blank" class="ext">Queries Search</a>.)
 </ul>
 </ul>
 
-<b>Release: v5.7.9 (18-Dec-25)</b>
-<p><ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
+<i>Release v5.7.9 (18-Dec-25)</i>
 <p>
 <ul>
-<li><ttp>Queries</ttp>:
+<li><ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
 <ul>
 <li><ttl>Cluster genes &gt;= N</ttl>:
 <ul>
-<li>The clusters were not complete. Now they may be much larger, in fact, there is now an internal cutoff on size;
+<li>There is a new option to apply the N to each species instead of number of hits.
+<li>Bug fix: The clusters were not complete. Now they may be much larger. There is now an internal cutoff on size;
 the user will be notified if some are rejected for being too large.
-<li>There is a new option to apply the N to each species instead of number of hits
-(See <a href="Query.html#clhit" target="_blank" class="ext">Queries Cluster</a>.)
-<li>The documentation is clearer about what consists of a cluster.
 </ul>
 <li><ttl>Search</ttl> now does <ttx>Next</ttx> until all values in the table have been found.
 <li><ttl>Report</ttl>: Changed the way the information at the top is formatted.
-<li><ttl>Instructions</ttl> lists information about pseudos now even if there are no
-annotated projects.
+<li><ttl>Instructions</ttl> lists information about pseudos for un-annotated projects.
 </ul>
 <li>Small changes:
-<ul>
-<li>Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) will not regenerate the summary anymore as it does not change.
-<li>Starting <ttp>symap</ttp> or <ttp>viewSymap</ttp> checks input arguments.
-</ul>
+Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) will not regenerate the summary anymore as it does not change.
+Starting <ttp>symap</ttp> or <ttp>viewSymap</ttp> checks input arguments.
 </ul>
 
 <a id="v578"></a>

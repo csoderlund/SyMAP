@@ -122,10 +122,10 @@ public class TmpRowData {
 				util.Popup.showWarningMessage("The abbrev_names are the same, cannot continue...");
 				return false;
 			}
-			spName[0] = tPanel.queryFrame.getDisplayFromAbbrev(spAbbr[0]);
-			spName[1] = tPanel.queryFrame.getDisplayFromAbbrev(spAbbr[1]);
+			spName[0] = tPanel.qFrame.getDisplayFromAbbrev(spAbbr[0]);
+			spName[1] = tPanel.qFrame.getDisplayFromAbbrev(spAbbr[1]);
 			
-			SpeciesPanel spPanel = tPanel.queryPanel.getSpeciesPanel();
+			SpeciesPanel spPanel = tPanel.qPanel.getSpeciesPanel();
 			for (isp=0; isp<2; isp++) {
 				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
 				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);

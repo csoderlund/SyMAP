@@ -45,7 +45,7 @@ public class UtilExport extends JDialog {
 		this.tPanel = tdp;
 		this.title = title;
 		
-		Vector<Mproject> projVec = tdp.queryFrame.getProjects();
+		Vector<Mproject> projVec = tdp.qFrame.getProjects();
 		for (Mproject mp : projVec) projs += mp.getDisplayName() + " (" + mp.getdbAbbrev() + "); ";
 		projs = projs.substring(0, projs.length()-2);
 		
@@ -278,7 +278,7 @@ public class UtilExport extends JDialog {
 				TmpRowData rd = new TmpRowData(tPanel);
 				tPanel.setPanelEnabled(false);
 				
-				DBconn2 dbc = tPanel.queryPanel.getDBC(); 
+				DBconn2 dbc = tPanel.qPanel.getDBC(); 
 				AlignPool aPool = new AlignPool(dbc);
 				
 				boolean reset = false;
@@ -343,7 +343,7 @@ public class UtilExport extends JDialog {
 		
 		JFileChooser chooser = new JFileChooser(saveDir);
 		chooser.setSelectedFile(new File(fname));
-		if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+		if(chooser.showSaveDialog(tPanel.qFrame) != JFileChooser.APPROVE_OPTION) return null;
 		if(chooser.getSelectedFile() == null) return null;
 		
 		String saveFileName = chooser.getSelectedFile().getAbsolutePath();

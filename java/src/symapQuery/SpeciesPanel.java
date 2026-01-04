@@ -6,10 +6,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -29,165 +29,106 @@ import util.Popup;
  * For QueryPanel: 
  *  Load DB data and creates SpeciesSelect panel for each species
  *  Do not read DB; isSelf projIdx is not real.
+ *  CAS579c removed dead code, rearranged, renamed
  */
 public class SpeciesPanel extends JPanel {
 	private static final long serialVersionUID = -6558974015998509926L;
-	private static final int REFERENCE_SELECT_WIDTH = 60;
-
-	protected static int locOnly=1, locChr=2;
-	private boolean isNoLoc=false;
 	private int dnameWidth = 85; // good fit for display name of 12 characters  
+	
+	protected static int locOnly=1, locChr=2; // setEnable Loc, setEnable loc&Chr
+	private boolean isNoLoc=false;			  // do not enable Loc, even if chr selected
 	
 	protected SpeciesPanel(QueryFrame qFrame, QueryPanel qPanel) {
 		this.qFrame = qFrame;
 		this.qPanel = qPanel;
 		
-		spRows = new Vector<SpeciesSelect> (); // Sorted by DisplayName
+		spRows = new Vector<SpeciesRow> (); // Will be sorted by DisplayName
 		setBackground(Color.WHITE);
 		
-		createPanelsFromProj(); 
+		createSpRows(); 
 		
-		refreshAllPanels();
+		createSpPanel();
 	}
-	protected void setClear() {
-		for (SpeciesSelect p : spRows) p.setClear();
-		isNoLoc = false; 
-	}
-	protected void setChkEnable(boolean isChk, int type, boolean isSelf) { // QueryPanel
-		isNoLoc = isChk;
-		for (SpeciesSelect p : spRows) {
-			if (type==locOnly) 	p.setLocDisable(isChk);   // Block, Collinear, or Hit check
-			else 				p.setGeneActive(isChk);   // Gene or Single check changes
-		}
-		if (isSelf && type==locChr && isChk) {
-			if (isChk) {
-				spRows.get(1).chkSpActive.setSelected(false); // force the 1st to be used
-				spRows.get(1).chkSpActive.setEnabled(false);  // and do not let it change
+	/**************************************************************
+	 * Creates the Species Row objects and pairWhere 
+	 ********************************************************/
+	private void createSpRows() {
+		try {
+			Vector<Mproject> mProjs = qFrame.getProjects(); // Sorted by DisplayName
+			boolean isSelf = qFrame.isSelf();
+			
+			int [] spidx = new int [mProjs.size()];
+			int x=0;
+			
+			// Create Rows that will be in the spPanel
+			for (Mproject proj : mProjs) {
+				// Split the grpMap into two strings
+				String chrNumStr="", chrIdxStr="";
+				TreeMap <Integer, String> idChrMap = proj.getGrpIdxMap(); 
+				
+				for (int idx : idChrMap.keySet()) {
+					if (!chrNumStr.equals("")) {chrNumStr += ","; chrIdxStr += ",";}
+					
+					chrNumStr += proj.getGrpNameFromIdx(idx);
+					chrIdxStr += idx;
+				}
+				// Create row object and enter in the original order
+				SpeciesRow ssp = new SpeciesRow(proj.getDisplayName(),
+						proj.getIdx(), proj.getdbCat(), chrNumStr, chrIdxStr, proj.getdbAbbrev(), proj.hasGenes());
+				spRows.add(ssp);
+				
+				spName2spIdx.put(proj.getDisplayName(), proj.getID());
+				spIdx2spRow.put(proj.getID(), ssp);
+				if (isSelf) selfName[x] = proj.getDisplayName();
+				spidx[x++] = proj.getIdx();
+				
+				String [] chrIdxList = ssp.getChrIdxList();
+				for (String idx : chrIdxList) chrIdx2spRow.put(Integer.parseInt(idx), ssp);
 			}
-			else spRows.get(1).chkSpActive.setSelected(true);  // put back in default state
-		}
-	}
-	
-	protected int getNumSpecies() 			{return spRows.size();}
-	
-	// i is the index into the array, which is sorted by DisplayName
-	protected int getSpIdx(int i)			{return spRows.get(i).getSpIdx();}
-	protected String getSpName(int i) 		{return spRows.get(i).getSpName();}
-	protected String getSpAbbr(int i)		{return spRows.get(i).getSpAbbr();}
-	protected String getSelfName(int i)		{return selfName[i];}
-	
-	protected HashMap <String, Integer>  getSpName2spIdx() {return spName2spIdx;}
-	
-	protected String getSpNameFromSpIdx(int x) {	
-		SpeciesSelect p = spIdx2panel.get(x);
-		return p.getSpName();
-	}
-	protected int getSpIdxFromSpName(String name) {
-		if (spName2spIdx.containsKey(name))
-			 return spName2spIdx.get(name);
-		else return -1;
-	}
-	protected int getSpIdxFromChrIdx(int x) {	
-		SpeciesSelect p = chrIdx2panel.get(x);
-		return p.getSpIdx();
-	}
-	protected String getSpNameFromChrIdx(int x) {	
-		SpeciesSelect p = chrIdx2panel.get(x);
-		return p.getSpName();
-	}
-	protected String getChrNameFromChrIdx(int x) {
-		SpeciesSelect p = chrIdx2panel.get(x);
-		
-		String [] num = p.getChrNumList();
-		String [] idx = p.getChrIdxList();
-		String xx = String.valueOf(x);
-		for (int i=0; i<num.length; i++) {
-			if (idx[i].equals(xx)) return num[i];
-		}
-		return "0";
-	}
-	protected int getChrIdxFromChrNumSpIdx(String chrNum, int spIdx) {
-		for (SpeciesSelect sp : spRows) {
-			if (spIdx== sp.spIdx) {
-				for (int i=0; i<sp.chrNumList.length; i++) {
-					if (sp.chrNumList[i].equals(chrNum)) {
-						return Integer.parseInt(sp.chrIdxList[i]);
+			
+			// Create pairWhere from all pair indices - used in all queries but Orphan
+			// the order can be spidx[i]<spidx[j] or spidx[i]>spidx[j]
+			String idList="";
+			for (int i=0; i<spidx.length-1; i++) {
+				for (int j=i+1; j<spidx.length; j++) {	
+					int spidx2 = (isSelf) ? spidx[i] : spidx[j];
+					Mpair mp = qFrame.getMpair(spidx[i], spidx2);
+					if (mp==null) {
+						Popup.showErrorMessage("No pair for IDX=" + spidx[i] + " " + spidx[j]);
+						return;
+					}
+					int idx = mp.getPairIdx();
+					if (idx>0) {
+						if (idList.equals("")) idList = idx+"";
+						else                   idList += "," + idx;
 					}
 				}
 			}
-		}
-		return 0;
+			if (idList.equals("")) Popup.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
+			else if (!idList.contains(",")) pairWhere = "PH.pair_idx=" + idList + " ";
+			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
+		} 
+		catch(Exception e) {ErrorReport.print(e, "Species panel");}
 	}
-	protected boolean isAtLeastOneSpChecked() {
-		for (SpeciesSelect sp : spRows) if (sp.isSpEnabled()) return true;
-		return false;
-	}
-	protected boolean isSpEnabled(int p) 		{return spRows.get(p).isSpEnabled();} 
-	protected String [] getChrIdxList(int p) 	{return spRows.get(p).getChrIdxList();}
-	protected String getChrIdxStr(int p) 		{return spRows.get(p).getChrIdxStr();}
-	protected String [] getChrNumList(int p) 	{return spRows.get(p).getChrNumList();}
-	
-	protected int getSelChrIdx(int p)			{return spRows.get(p).getSelChrIdx();}
-	protected String getSelChrNum(int p) 		{return spRows.get(p).getSelChrNum();}
-	protected String getChrStart(int p) 		{return spRows.get(p).getStartFullNum();}
-	protected String getChrStop(int p) 			{return spRows.get(p).getStopFullNum();}
-	protected String getPairIdxWhere() 			{ return pairWhere;}
-	
-	protected String getAllChrIdxForGene() { 
-		String sql=null;
-		for (int p=0; p<spRows.size(); p++) {
-			String list = spRows.get(p).getAllChrIdxForSingle();
-			if (list!=null) {
-				if (sql==null) sql  = list;
-				else           sql += "," + list;
-			}
-		}
-		return sql;
-	} 
-	// For summary
-	protected String getStartkb(int panel) 	{return spRows.get(panel).getStartkb();}
-	protected String getStopkb(int panel) 	{return spRows.get(panel).getStopkb();}
-	
-	private void refreshAllPanels() {
+	/************************************************************
+	 * Creates the Species panel
+	 ******************************************************/
+	private void createSpPanel() {
 		if(spRows == null || spRows.size() == 0) return;
-		removeAll();
 		
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		add(Box.createVerticalStrut(5));
-		
-		JPanel labelPanel = Jcomp.createRowPanel();
-		JPanel includePanel = Jcomp.createRowPanel();
-		JPanel excludePanel = Jcomp.createRowPanel();
-			
-		Dimension dim = includePanel.getPreferredSize();
-		dim.width = REFERENCE_SELECT_WIDTH;
-		includePanel.setMinimumSize(dim); includePanel.setMaximumSize(dim);
-		
-		dim = excludePanel.getPreferredSize();
-		dim.width = REFERENCE_SELECT_WIDTH;
-		excludePanel.setMinimumSize(dim); excludePanel.setMaximumSize(dim);
-		
-		labelPanel.add(includePanel);	labelPanel.add(Box.createHorizontalStrut(5));
-		labelPanel.add(excludePanel);
-		labelPanel.setMaximumSize(labelPanel.getPreferredSize());
-		
-		add(labelPanel);
-		
+		/* remove labelPanel, includePanel, excludePanel which do nothing; CAS579c */
+	
 		// Adjust the chromosome select controls
-		Iterator<SpeciesSelect> iter = spRows.iterator();
 		Dimension maxSize = new Dimension(0,0);
-		while(iter.hasNext()) {
-			Dimension tempD = iter.next().getChromSize();
-			if(tempD.width > maxSize.width)
-				maxSize = tempD;
+		for (SpeciesRow sp : spRows) {
+			Dimension tempD = sp.getChromSize();
+			if (tempD.width > maxSize.width) maxSize = tempD;
 		}
-
-		for(int x=0; x<spRows.size(); x++) {
-			SpeciesSelect temp = spRows.get(x);
-			temp.setChromSize(maxSize);
-			spRows.set(x, temp);
-		}
-
+		for (SpeciesRow sp : spRows) sp.setChromSize(maxSize);
+		
+		// Categories
 		Vector<String> sortedCat = new Vector<String> ();
 		for(int x=0; x<spRows.size(); x++) {
 			String cat = spRows.get(x).getCategory();
@@ -199,10 +140,7 @@ public class SpeciesPanel extends JPanel {
 		for(int x=0; x<sortedCat.size(); x++) {
 			String catName = sortedCat.get(x);
 			boolean firstOne = true;
-			iter = spRows.iterator();
-			while(iter.hasNext()) {
-				SpeciesSelect spObj = iter.next();
-	
+			for (SpeciesRow spObj : spRows) {
 				if(catName.equals(spObj.getCategory())) {
 					if (firstOne) {
 						if (sortedCat.size() > 1) add(new JLabel(catName.toUpperCase()));
@@ -220,84 +158,174 @@ public class SpeciesPanel extends JPanel {
 		setAlignmentX(Component.LEFT_ALIGNMENT);
 		revalidate();
 	}
-	/**************************************************************/
-	private void createPanelsFromProj() {
-		try {
-			Vector<Mproject> mProjs = qFrame.getProjects(); // Sorted by DisplayName
-			boolean isSelf = qFrame.isSelf();
-			
-			int [] spidx = new int [mProjs.size()];
-			int x=0;
-			
-			for (Mproject proj : mProjs) {
-				String chrNumStr="", chrIdxStr="";
-				TreeMap <Integer, String> idChrMap = proj.getGrpIdxMap(); 
-				
-				for (int idx : idChrMap.keySet()) {
-					if (!chrNumStr.equals("")) {chrNumStr += ",";chrIdxStr += ",";}
-					
-					chrNumStr += proj.getGrpNameFromIdx(idx);
-					chrIdxStr += idx;
-				}
-				SpeciesSelect ssp = new SpeciesSelect(this, proj.getDisplayName(),
-						proj.getID(), proj.getdbCat(), chrNumStr, chrIdxStr, proj.getdbAbbrev());
-				
-				spRows.add(ssp);
-				spName2spIdx.put(proj.getDisplayName(), proj.getID());
-				spIdx2panel.put(proj.getID(), ssp);
-				if (isSelf) selfName[x] = proj.getDisplayName();
-				spidx[x++] = proj.getID();
-				
-				String [] chrIdxList = ssp.getChrIdxList();
-				for (String idx : chrIdxList) chrIdx2panel.put(Integer.parseInt(idx), ssp);
-			}
-			
-			// Get pair indices - this isn't used in the panels, but is used to all queries but Orphan
-			// the order can be spidx[i]<spidx[j] or spidx[i]>spidx[j]
-			String idList="";
-			for (int i=0; i<spidx.length-1; i++) {
-				for (int j=i+1; j<spidx.length; j++) {	
-					int spidx2 = (isSelf) ? spidx[i] : spidx[j];
-					Mpair mp = qFrame.getMpair(spidx[i], spidx2);
-					if (mp==null) {
-						Popup.showErrorMessage("No pair for IDX=" + spidx[i] + " " + spidx[j]);
-						return;
-					}
-					int idx = mp.getPairIdx();
-					if (idList.equals("")) idList = idx+"";
-					else idList += "," + idx;
-				}
-			}
-			
-			if (idList.equals("")) Popup.showErrorMessage("No synteny pairs. Attempts to Run Query will fail.");
-			else if (!idList.contains(",")) pairWhere = "PH.pair_idx=" + idList + " ";
-			else 							pairWhere = "PH.pair_idx IN (" + idList + ") ";
-		} 
-		catch(Exception e) {ErrorReport.print(e, "Species panel");}
+	
+	/****************************************************************
+	 *******************************************************/
+	protected int getNumSpecies() 		{return spRows.size();}
+	
+	protected String getPairIdxWhere() 	{return pairWhere;} // made in createRowsFromProj
+	
+	protected HashMap <String, Integer>  getSpName2spIdx() {return spName2spIdx;} // DBdata make keys
+	
+	// QueryPanel: clear
+	protected void setClear() {
+		for (SpeciesRow p : spRows) p.setClear();
+		isNoLoc = false; 
 	}
+	/***************************************************************
+	 * XXX QueryPanel: when a check box has changed, this is called to activate/deactivate species
+	 * locOnly: Exact: Block, Collinear, or Hit check: no ChkBox, Chr, no Loc
+	 * locChr:  Gene, Anno and Single                     ChkBox, Chr, no Loc
+	 * see two SpeciesRow ActionListener
+	 */
+	protected void setChkEnable(boolean isChk, int type, boolean isSelf) { // QueryPanel
+		isNoLoc = isChk;			// even is chr changes, do not enable loc
 		
+		for (SpeciesRow p : spRows) {
+			if (type==locOnly) 	p.setLocEnable(isChk);     
+			else 				p.setLocChrEnable(isChk);  
+		}
+		if (isSelf && type==locChr && isChk) {
+			SpeciesRow p = spRows.get(1);
+			p.chkSpActive.setSelected(false); // do not let it change
+			p.chkSpActive.setEnabled(false); 
+			p.lblChrom.setEnabled(false);  p.cmbChroms.setEnabled(false);
+		}
+	}
+	/********** Selections ********************/
+	// Return all valid chromosomes (if all, then null)
+	protected HashSet <Integer> getGrpIdxSet() {// used in DBdata to filter out non-valid chromosomes
+		HashSet <Integer> grpSet = new HashSet <Integer> ();
+		for (SpeciesRow sp : spRows) {
+			HashSet <Integer> rowSet = sp.getGrpIdx();	// checks for SpIgnore
+			for (int i : rowSet) grpSet.add(i);
+		}
+		if (grpSet.size()==0) return null;
+		return grpSet; 
+	}
+	protected String getGrpIdxStr() { // same as above, but return list
+		String list=null;
+		for (SpeciesRow sp : spRows) {
+			HashSet <Integer> rowSet = sp.getGrpIdx();
+			for (int i : rowSet) {
+				if (list==null) list = i+"";
+				else list += ","+i;
+			}
+		}
+		return list;
+	}
+	// Return all selected chromosomes 
+	protected HashSet<Integer> getSelectGrpIdxSet() {// runMultiGene
+		HashSet <Integer> idxSet = new HashSet <Integer> ();
+		for (SpeciesRow sp : spRows) {
+			int index = sp.getSelChrIdx();  //ignore is checked in SpeciesRow
+			if(index > 0) idxSet.add(index);
+		}
+		return idxSet;
+	}
+	protected boolean hasSpSelectChr() { // has a selected chromosome
+		for (SpeciesRow sp : spRows) {
+			int index = sp.getSelChrIdx();
+			if (index>0) return true;
+		}
+		return false;
+	}
+	protected boolean hasSpAllIgnoreRows() { // if fail, all rows are Ignore
+		for (SpeciesRow sp : spRows) 
+			if (!sp.isSpIgnore()) return true;
+		return false;
+	}
+	protected boolean hasSpIgnoreRow() {// if fail, no row is disabled
+		for (SpeciesRow sp : spRows) 
+			if (sp.isSpIgnore()) return true;
+		return false;
+	}
+	
+	/***** Specific for a species row *****/
+	protected int getSpIdxFromSpName(String name) {
+		if (spName2spIdx.containsKey(name))
+			 return spName2spIdx.get(name);
+		else return -1;
+	}
+	protected String getSpNameFromSpIdx(int x) {	
+		SpeciesRow p = spIdx2spRow.get(x);
+		return p.getSpName();
+	}
+	protected int getSpIdxFromChrIdx(int x) {	
+		SpeciesRow p = chrIdx2spRow.get(x);
+		return p.getSpIdx();
+	}
+	protected String getSpNameFromChrIdx(int x) {	
+		SpeciesRow p = chrIdx2spRow.get(x);
+		return p.getSpName();
+	}
+	protected String getChrNumFromChrIdx(int x) {
+		SpeciesRow p = chrIdx2spRow.get(x);
+		
+		String [] num = p.getChrNumList();
+		String [] idx = p.getChrIdxList();
+		String xx = String.valueOf(x);
+		
+		for (int i=0; i<num.length; i++) {
+			if (idx[i].equals(xx)) return num[i];
+		}
+		return "0";
+	}
+	protected int getChrIdxFromChrNumSpIdx(String chrNum, int spIdx) {
+		for (SpeciesRow sp : spRows) {
+			if (spIdx == sp.spIdx) {
+				for (int i=0; i<sp.chrNumList.length; i++) {
+					if (sp.chrNumList[i].equals(chrNum)) {
+						return Integer.parseInt(sp.chrIdxList[i]);
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	
+	// p is the index into the array, which is sorted by DisplayName
+	protected String getSelfName(int p)		{return selfName[p];}
+	
+	protected boolean isSpIgnore(int p) 	{return spRows.get(p).isSpIgnore();} 
+	protected int    getSpIdx(int p)		{return spRows.get(p).getSpIdx();}
+	protected String getSpName(int p) 		{return spRows.get(p).getSpName();}
+	protected String getSpAbbr(int p)		{return spRows.get(p).getSpAbbr();}
+		
+	protected String [] getChrIdxList(int p){return spRows.get(p).getChrIdxList();}
+	protected int getSelChrIdx(int p)		{return spRows.get(p).getSelChrIdx();}
+	protected String getSelChrNum(int p) 	{return spRows.get(p).getSelChrNum();}
+	
+	protected String getChrStart(int p) 	{return spRows.get(p).getStartFullNum();}
+	protected String getChrStop(int p) 		{return spRows.get(p).getStopFullNum();}
+	protected boolean bHasGenes(int p)		{return spRows.get(p).hasGenes;}
+	
+	// For summary
+	protected String getStartkb(int panel) 	{return spRows.get(panel).getStartkb();}
+	protected String getStopkb(int panel) 	{return spRows.get(panel).getStopkb();}
+	
 	/**************************************************************
 	 * XXX Row panel per species
 	 */
-	private class SpeciesSelect extends JPanel {
+	private class SpeciesRow extends JPanel {
 		private static final long serialVersionUID = 2963964322257904265L;
 
-		protected SpeciesSelect(SpeciesPanel parent, 
-				String spDispName, int spIdx, String strCategory, String chrNumStr, String chrIdxStr, String spAbbr) {
-			this.spPanel = parent;
-			this.spIdx = spIdx;	// projects.idx
+		protected SpeciesRow(String spDispName, int spIdx, String strCategory, 
+				String chrNumStr, String chrIdxStr, String spAbbr, boolean hasGenes) {
+			this.spIdx = spIdx;					// projects.idx
 			this.strCategory = strCategory;
-			this.chrIdxStr = chrIdxStr;	
-			this.spAbbr = spAbbr; // for UtilReport
+			this.spAbbr = spAbbr; 				// for UtilReport
+			this.hasGenes = hasGenes;				// for UtilReport; CAS579c
 			
-			chrIdxList = chrIdxStr.split(",");	// xgroups.idx for 
-			chrNumList = chrNumStr.split(",");
+			chrIdxList = chrIdxStr.split(",");	// xgroups.idx 
+			chrNumList = chrNumStr.split(",");	// xgroups.name
 			
-			spRowPanel = new JPanel(); // finished on refresh
-			chkSpActive = Jcomp.createCheckBox("", "For Single and Gene search, only search checked species", true);
+			chkSpActive = Jcomp.createCheckBox("", "For Annotation, Single, Gene#: only search checked species", true);
 			chkSpActive.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					setActiveChg(chkSpActive.isSelected());
+					boolean b = chkSpActive.isSelected();
+					lblChrom.setEnabled(b);  
+					cmbChroms.setEnabled(b);
 				}
 			});
 			
@@ -332,22 +360,8 @@ public class SpeciesPanel extends JPanel {
 			cmbScale.addItem("bp"); cmbScale.addItem("kb"); cmbScale.addItem("mb");
 			cmbScale.setSelectedIndex(1);
 			cmbScale.setEnabled(false);
-			
-			refreshPanel();
-		}
 		
-		private void refreshPanel() { // create row panel
-			removeAll();
-			spRowPanel.removeAll();
-			
-			spRowPanel.setLayout(new BoxLayout(spRowPanel, BoxLayout.LINE_AXIS));
-			spRowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-			spRowPanel.setBackground(Color.WHITE);
-			
-			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-			setAlignmentX(Component.LEFT_ALIGNMENT);
-			setBackground(Color.WHITE);
-			
+			spRowPanel = Jcomp.createRowPanel(); 
 			spRowPanel.add(chkSpActive);
 			spRowPanel.add(lblDisplayName);
 			
@@ -362,10 +376,12 @@ public class SpeciesPanel extends JPanel {
 			spRowPanel.add(lblStart); spRowPanel.add(txtStart);
 			spRowPanel.add(lblStop);  spRowPanel.add(txtStop); spRowPanel.add(cmbScale);
 			
+			setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+			setAlignmentX(Component.LEFT_ALIGNMENT);
+			setBackground(Color.WHITE);
+			
 			add(spRowPanel);
 			add(Box.createVerticalStrut(5));
-
-			spPanel.refreshAllPanels();
 		}
 		
 		protected void setClear() {
@@ -377,9 +393,14 @@ public class SpeciesPanel extends JPanel {
 			
 			chkSpActive.setSelected(true); chkSpActive.setEnabled(false);
 		}
-		
+		// Called when another filter using this is checked or unchecked
+		private boolean isSpIgnore()  {
+			return chkSpActive.isEnabled() && !chkSpActive.isSelected();
+		}
+				
 		// Called when block, hit, collinear checked or unchecked
-		private void setLocDisable(boolean isTurnOff) {
+		private void setLocEnable(boolean isTurnOff) {
+			lblChrom.setEnabled(true);  cmbChroms.setEnabled(true);
 			if (isTurnOff) {
 				lblStart.setEnabled(false); lblStop.setEnabled(false);
 				txtStart.setEnabled(false); txtStop.setEnabled(false); cmbScale.setEnabled(false);
@@ -391,24 +412,23 @@ public class SpeciesPanel extends JPanel {
 				txtStart.setEnabled(isChr); txtStop.setEnabled(isChr); cmbScale.setEnabled(isChr);	
 			}
 		}
-		// Called when gene or single checked or unchecked
-		private void setGeneActive(boolean isGeneChk) {
-			chkSpActive.setSelected(true);
-			chkSpActive.setEnabled(isGeneChk); 
-			
-			setLocDisable(isGeneChk); // TurnOff if checked, else turn on
-			
-			lblChrom.setEnabled(true);  cmbChroms.setEnabled(true);
-		}
-		// Called when active is checked or unchecked; leave locs
-		private void setActiveChg(boolean isActChk) {
-			lblChrom.setEnabled(isActChk);  cmbChroms.setEnabled(isActChk);
-		}
-				
-		private String getStartFullNum() { 
+		private void setLocChrEnable(boolean isChk) {// CAS579c this keep rechecking box with chkSpActive.setSelected(true);
+			setLocEnable(isChk);
+			if (isChk) {
+				chkSpActive.setEnabled(true); 
+				if (!chkSpActive.isSelected()) { // must be checked for these to be enabled
+					lblChrom.setEnabled(false);  cmbChroms.setEnabled(false);
+				}
+			}
+			else {
+				chkSpActive.setEnabled(false); 
+			}
+		}	
+		private String getStartFullNum() { // return null (error), 0 (none), number
+			if (!txtStart.isEnabled()) return "0"; // CAS579c
 			String text = txtStart.getText().trim();
 			if (text.contains(",")) text = text.replace(",",""); // allow commas in input
-			if (text.contentEquals("")) return "";
+			if (text.equals("") || text.equals("0")) return "0";
 			
 			try {
 				int temp = Integer.parseInt(text); 
@@ -418,37 +438,34 @@ public class SpeciesPanel extends JPanel {
 				}
 				if (temp == 0) return "0";
 				return temp + getScaleDigits();
-			} catch(NumberFormatException e) {
+			} 
+			catch(NumberFormatException e) {
 				qPanel.showWarnMsg("Invalid From (start) coordinate '" + text + "'");
 				return null;
 			}
 		}
-		
-		private String getStopFullNum() {
+		private String getStopFullNum() {// return null (error), 0 (none), number
+			if (!txtStop.isEnabled()) return "0"; // CAS579c
 			String etext = txtStop.getText().trim();
 			if (etext.contains(",")) etext = etext.replace(",",""); // allow commas in input
-			if (etext.contentEquals("")) return "";
-			if (etext.contentEquals("0") || etext.contentEquals("-")) {
-				txtStop.setText("");
-				return "";
-			}
-				
+			if (etext.equals("") || etext.equals("0")) return "0";
+			
 			try {
 				int end = Integer.parseInt(etext);
 				if (end <= 0) {
 					qPanel.showWarnMsg("Invalid To (end) coordinate '" + etext + "'");
 					return null;
 				}
-				
-				String stext = txtStart.getText().trim(); // start is checked earlier
-				if (!stext.contentEquals("")) {
+				if (end == 0) return "0";
+			
+				String stext = getStartFullNum(); // check not >= end
+				if (!stext.equals("0")) {
 					int start = Integer.parseInt(stext);
 					if (start>=end) {
 						qPanel.showWarnMsg("Invalid From (start) '" + stext + "' > To (end) '" + etext + "'");
 						return null;
 					}
 				}
-				
 				return end + getScaleDigits();
 			} 
 			catch(NumberFormatException e) {
@@ -464,42 +481,27 @@ public class SpeciesPanel extends JPanel {
 		
 		// for filter summary string
 		private String getStartkb() {
+			if (!txtStart.isEnabled()) return ""; // CAS579c
 			String num = txtStart.getText().trim();
-			if (num.equals("")) return num;
+			if (num.equals("") || num.equals("0")) return "";
 			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
 			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
 			return num + "bp";
 		}
 		private String getStopkb() {
+			if (!txtStop.isEnabled()) return ""; // CAS579c
 			String num = txtStop.getText().trim();
-			if (num.equals("")) return num;
+			if (num.equals("") || num.equals("0")) return "";
 			if(cmbScale.getSelectedIndex() == 1) return num + "kb";
 			if(cmbScale.getSelectedIndex() == 2) return num + "mb";
 			return num + "bp";
 		}
-		private String getSpAbbr() { return spAbbr;}
-		private String getSpName() {return lblDisplayName.getText();}
-		private String getSelChrNum() {
-			return (String)cmbChroms.getSelectedItem();
-		}
-		private String getAllChrIdxForSingle() {
-			if (!cmbChroms.isEnabled()) return null;
-			
-			int idx  = getSelChrIdx();
-			if (idx!=-1) return idx+"";
-			
-			String list=null;
-			for (int i=0; i<chrNumList.length; i++) {
-				if (list==null) list  = chrIdxList[i];
-				else            list += "," + chrIdxList[i];
-			}
-			return list;
-		}
-	
-		private boolean isSpEnabled() {return chkSpActive.isSelected();} // doesn't matter if disabled
+		private String getSpAbbr() 	  {return spAbbr;}
+		private String getSpName() 	  {return lblDisplayName.getText();}
+		private String getSelChrNum() {return (String)cmbChroms.getSelectedItem();}
 		
-		private int getSelChrIdx() {
-			if (!isSpEnabled()) return -1; 
+		private int getSelChrIdx() { // Selected chromosome idx
+			if (isSpIgnore()) return -1; 
 			
 			String chr = (String)cmbChroms.getSelectedItem();
 			if (chr.equals("All")) return -1;
@@ -510,10 +512,25 @@ public class SpeciesPanel extends JPanel {
 			symap.Globals.eprt("no " + chr);
 			return -1;
 		}
+		private HashSet <Integer> getGrpIdx() { // All chromosomes that will be queried
+			HashSet <Integer> grpIdx = new HashSet <Integer> ();
+			
+			if (!cmbChroms.isEnabled()) return grpIdx; // none can be selected
+			if (isSpIgnore()) return grpIdx;
+			
+			int idx = getSelChrIdx();
+			if (idx!=-1) {							   // only one can be selected
+				grpIdx.add(idx);
+				return grpIdx;				
+			}
+			for (int i=0; i<chrNumList.length; i++) { // get all
+				grpIdx.add(Integer.parseInt(chrIdxList[i]));
+			}
+			return grpIdx;
+		}
 		private String getCategory() 		{return strCategory;}
 		private String [] getChrIdxList() 	{return chrIdxList;}
 		private String [] getChrNumList() 	{return chrNumList;}
-		private String getChrIdxStr()    	{return chrIdxStr;}
 		private int getSpIdx() 				{return spIdx;}
 		
 		private void setChromSize(Dimension d) {
@@ -523,31 +540,31 @@ public class SpeciesPanel extends JPanel {
 		}
 		private Dimension getChromSize() { return cmbChroms.getPreferredSize(); }
 		
-		private JCheckBox chkSpActive = null;
+		/***************************************************/
+		private JPanel spRowPanel = null;
+		
+		private JCheckBox chkSpActive = null; // if enabled, then selectable
 		private JLabel lblDisplayName = null;
 		private JComboBox <String> cmbChroms = null; 
 		private JLabel lblStart = null, lblStop = null, lblChrom = null;
 		private JTextField txtStart = null, txtStop = null;
-		private JComboBox <String >cmbScale = null; 
-		private JPanel spRowPanel = null;
+		private JComboBox <String> cmbScale = null; 
 		
 		private int spIdx=0;
 		private String strCategory = "";
 		private String [] chrIdxList;
 		private String [] chrNumList;
-		private String chrIdxStr;
-		private String spAbbr = ""; 
-		
-		private SpeciesPanel spPanel = null;
+		private String spAbbr = ""; 	
+		private boolean hasGenes=true;
 	} // End species row panel
-	
+	/***************************************************/
 	private QueryFrame qFrame = null;
 	private QueryPanel qPanel = null;
 	
 	private String [] selfName = {"",""}; // isSelf shared same idx; this is for Summary
-	private Vector <SpeciesSelect> spRows = null;
-	private HashMap <Integer, SpeciesSelect> chrIdx2panel = new HashMap <Integer, SpeciesSelect> ();
-	private HashMap <Integer, SpeciesSelect> spIdx2panel = new HashMap <Integer, SpeciesSelect> ();
+	private Vector <SpeciesRow> spRows = null;
+	private HashMap <Integer, SpeciesRow> chrIdx2spRow = new HashMap <Integer, SpeciesRow> ();
+	private HashMap <Integer, SpeciesRow> spIdx2spRow = new HashMap <Integer, SpeciesRow> ();
 	private HashMap <String, Integer> spName2spIdx = new HashMap <String, Integer> ();
 	private String pairWhere="";
 } 

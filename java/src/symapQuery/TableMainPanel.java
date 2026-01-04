@@ -44,6 +44,7 @@ import database.DBconn2;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
+import util.Popup;
 import symap.Globals;
 
 /**************************************************
@@ -63,19 +64,21 @@ public class TableMainPanel extends JPanel {
 	// called by QueryFrame
 	protected TableMainPanel(QueryFrame parentFrame, String tabName,  boolean [] selCols,
 			String query, String sum, boolean isSingle) {
-		this.queryFrame = parentFrame;
+		this.qFrame = parentFrame;
 		this.theTabName 	= tabName;
 		
-		queryPanel 			= queryFrame.getQueryPanel();
+		qPanel 				= qFrame.getQueryPanel();
+		this.isAllNoAnno	= qFrame.isAllNoAnno();
+		this.isNoPseudo		= qFrame.cntUsePseudo==0;
 		this.isSingle		= isSingle;
 		this.theQuery 		= query;
 		this.theSummary 	= sum;
-		this.isBlock		= queryPanel.isBlock();
-		this.isCollinear	= queryPanel.isCollinear();
-		this.isMultiN		= queryPanel.isMultiN();
-		this.isClustN		= queryPanel.isClustN();
-		this.isGroup		= queryPanel.isGroup();
-		this.isSelf			= queryPanel.isSelf();
+		this.isBlock		= qPanel.isBlock() || qPanel.isBlockNum();
+		this.isCollinear	= qPanel.isCollinear() || qPanel.isCollinearNum();
+		this.isMultiN		= qPanel.isMultiN();
+		this.isClustN		= qPanel.isClustN();
+		this.isGroup		= qPanel.isGroup();
+		this.isSelf			= qPanel.isSelf();
 		
 		String ab=""; for (int i=0; i<Globals.abbrevLen; i++) ab+=i+"";
 		abbrWidth = new JLabel(ab).getPreferredSize().width;
@@ -108,7 +111,7 @@ public class TableMainPanel extends JPanel {
         createLoadStatus();
         
         bStopped = bDone = false;
-        theAnnoKeys = AnnoData.loadProjAnnoKeywords(queryFrame);
+        theAnnoKeys = AnnoData.loadProjAnnoKeywords(qFrame);
         
 		buildThread = new Thread(new Runnable() {
 			public void run() {
@@ -147,17 +150,17 @@ public class TableMainPanel extends JPanel {
  		resultVal[0] = newTab; 						// left of result table panel
  		resultVal[1] = theSummary;					// right of result table panel with query filters
  		
-		queryFrame.updateTabText(oldTab, newTab, resultVal);
+		qFrame.updateTabText(oldTab, newTab, resultVal);
 		
-		queryFrame.getQueryPanel().setQueryButton(true);
+		qFrame.getQueryPanel().setQueryButton(true);
 	}
 	/** Called when User clicks Stop; **/
 	private void buildStop() { // 
 			if (buildThread==null || bDone) return;
 		
-			queryPanel.setQueryButton(true);
+			qPanel.setQueryButton(true);
 			
-			queryFrame.removeResult(this); 		// remove from left side
+			qFrame.removeResult(this); 		// remove from left side
 	
 			loadStatus.setText(Q.stop); // looks for this word in ComputeClust/Multi
 			bStopped=true;				// others check this variable; set before interrupt
@@ -185,8 +188,8 @@ public class TableMainPanel extends JPanel {
         	HashMap <String, String> projMap = new HashMap  <String, String> (); // ComputePgeneF & ComputeMulti
         		
         	String [] annoColumns = theAnnoKeys.getColumns(false); // T Abbrev, F display
-         	Vector  <DBdata> rowsFromDB =  DBdata.loadRowsFromDB(getInstance(), rs, queryFrame.getProjects(),
-         			queryFrame.getQueryPanel(), annoColumns, loadStatus,
+         	Vector  <DBdata> rowsFromDB =  DBdata.rowsLoadFromDB(getInstance(), rs, qFrame.getProjects(),
+         			qFrame.getQueryPanel(), annoColumns, loadStatus,
          			geneCntMap, projMap); 				// Inputs for Summary
          
          	bDone=true; 								// make sure the timing does not let them Stop now (unless too late)
@@ -195,14 +198,14 @@ public class TableMainPanel extends JPanel {
          	
         	theTableData.addRowsWithProgress(rowsFromDB, loadStatus);
         	
-            SummaryPanel sp = new SummaryPanel(rowsFromDB, queryPanel, projMap, geneCntMap);
+            SummaryPanel sp = new SummaryPanel(rowsFromDB, qPanel, projMap, geneCntMap);
             statsPanel = sp.getPanel();
             
             rowsFromDB.clear(); // NOTE: IF want to use later, then the Stats need to be removed from DBdata
         }
         if (bStopped) return;
         
-        theTableData.setColumnHeaders(queryFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
+        theTableData.setColumnHeaders(qFrame.getAbbrevNames(), theAnnoKeys.getColumns(true /*abbrev*/), isSingle);
         theTableData.finalizeX();
 
         String [] columns = getSelColsUnordered(); 
@@ -294,45 +297,51 @@ public class TableMainPanel extends JPanel {
 	 	 
  	    // View 2D
  	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(2)); // Needs box on Linux
-	    btnShowSynteny = Jcomp.createButton("View 2D", "View in 2D display"); 
-	    btnShowSynteny.addActionListener(new ActionListener() {
+	    btnShow2D = Jcomp.createButton("View 2D", "View in 2D display"); 
+	    btnShow2D.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				showSynteny();		
+				showView2D();		
 			}
 		}); 
-	    topRow.add(btnShowSynteny);				topRow.add(Box.createHorizontalStrut(1));
-	    lblSynAs = Jcomp.createLabel("as", "Drop-box defines coordinates shown", false);
-	    topRow.add(lblSynAs);	topRow.add(Box.createHorizontalStrut(1));
-	    cmbSynOpts = new JComboBox <String> ();  cmbSynOpts.setBackground(Color.WHITE);
-	    cmbSynOpts.addItem("Region");  		// showREGION=0
-	    cmbSynOpts.addItem("Collinear");	// showSET=1
-	    cmbSynOpts.addItem("Block");		// showBLOCK=2
-	    cmbSynOpts.addItem("Group-chr");    // showGRP=3
-	    topRow.add(cmbSynOpts);					topRow.add(Box.createHorizontalStrut(1));
-	    /*CAS577 removed addActionListener  and added following defaults*/
-	    if (isCollinear)  cmbSynOpts.setSelectedIndex(showSET);
-	    else if (isGroup) cmbSynOpts.setSelectedIndex(showGRP);
-	    else if (isBlock) cmbSynOpts.setSelectedIndex(showBLOCK);
-	    else              cmbSynOpts.setSelectedIndex(showREGION);
+	    lbl2Das = Jcomp.createLabel("as", "Drop-box defines coordinates shown", false);
+	   
+	    cmb2Dopts = new JComboBox <String> ();  cmb2Dopts.setBackground(Color.WHITE);
+	    cmb2Dopts.addItem("Region");  	   // showREGION=0
+	    cmb2Dopts.addItem("Collinear");	   // showSET=1
+	    cmb2Dopts.addItem("Block");		   // showBLOCK=2
+	    cmb2Dopts.addItem("Group-chr");    // showGRP=3
+	    cmb2Dopts.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) { // CAS579c add
+				boolean b = (cmb2Dopts.getSelectedIndex()==showREGION);
+				txt2Dregion.setEnabled(b); lbl2Dkb.setEnabled(b);
+			}
+		}); 
+	    txt2Dregion = Jcomp.createTextField((Globals.MAX_2D_DISPLAY/1000)+"","Distance on both sides of selected hit", 3);
+	    lbl2Dkb = Jcomp.createLabel("kb", "Number * 1000", false);
+	  
+	    chk2Dhigh = Jcomp.createCheckBox("High", "If checked, highlight hit on 2D", true);
+	    chk2Dgene = Jcomp.createCheckBox("Gene#", "If checked, show Gene#, else show Annotation", true);
+	   
+	    topRow.add(btnShow2D);	topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(lbl2Das);	topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(cmb2Dopts);	topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(txt2Dregion);topRow.add(Box.createHorizontalStrut(1));
+	    topRow.add(lbl2Dkb); 	topRow.add(Box.createHorizontalStrut(2));    
+	    topRow.add(chk2Dhigh); 	topRow.add(Box.createHorizontalStrut(1));
+	    if (!(isAllNoAnno && isNoPseudo)) {topRow.add(chk2Dgene); topRow.add(Box.createHorizontalStrut(3));}
 	    
-		txtSynRegion = Jcomp.createTextField((Globals.MAX_2D_DISPLAY/1000)+"","Distance on both sides of selected hit", 2);
-	    topRow.add(txtSynRegion); topRow.add(Box.createHorizontalStrut(1));
-	    lblSynKb = Jcomp.createLabel("kb", "Number * 1000", false);
-	    topRow.add(lblSynKb); 	topRow.add(Box.createHorizontalStrut(2));
-	    
-	    chkSynHigh = Jcomp.createCheckBox("High", "If checked, highlight hit on 2D", true);
-	    topRow.add(chkSynHigh); 				topRow.add(Box.createHorizontalStrut(1));
-	    
-	    chkSynGn = Jcomp.createCheckBox("Gene#", "If checked, show Gene#, else show Annotation", true);
-	    topRow.add(chkSynGn); 				topRow.add(Box.createHorizontalStrut(3));
-	    
+	    // set opt based on query
+	    if (isCollinear)  cmb2Dopts.setSelectedIndex(showSET);
+	    else if (isGroup && !isSelf) cmb2Dopts.setSelectedIndex(showGRP); // CAS579c does not work for Groups
+	    else if (isBlock) cmb2Dopts.setSelectedIndex(showBLOCK);
+	    else              cmb2Dopts.setSelectedIndex(showREGION);
+	   
 	    // false until something is selected; see setRowSelected
-	    btnShowRow.setEnabled(false); btnShowMSA.setEnabled(false); btnShowSynteny.setEnabled(false);
-	    cmbSynOpts.setEnabled(false); txtSynRegion.setEnabled(false); chkSynHigh.setEnabled(false); chkSynGn.setEnabled(false);
-	    
-	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(15));
+	    btnShowRow.setEnabled(false); btnShowMSA.setEnabled(false); btnShow2D.setEnabled(false);
+	    cmb2Dopts.setEnabled(false); txt2Dregion.setEnabled(false); chk2Dhigh.setEnabled(false); chk2Dgene.setEnabled(false);
 	    
 	    // Help
+	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(15));
 	    btnHelp = Jhtml.createHelpIconQuery(Jhtml.result); 
 		topRow.add(btnHelp);
 	    
@@ -375,11 +384,18 @@ public class TableMainPanel extends JPanel {
 				showSearch();
 			}
 		}); 
-	    
+	    JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help" );
+		btnInfo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e)  {
+				popupHelp();
+			}
+		});
 	    botRow.add(btnExport);		botRow.add(Box.createHorizontalStrut(5));
 	    botRow.add(btnUnSelectAll);	botRow.add(Box.createHorizontalStrut(70));
-	    botRow.add(btnReport);		botRow.add(Box.createHorizontalStrut(8));
-	    botRow.add(btnSearch);
+	    if (!(isAllNoAnno && isNoPseudo)) {botRow.add(btnReport); botRow.add(Box.createHorizontalStrut(8));}
+	    botRow.add(btnSearch);		botRow.add(Box.createHorizontalStrut(20));
+	    botRow.add(Box.createHorizontalGlue());
+	    botRow.add(btnInfo);	
 	    
 		buttonPanel.add(topRow);
 		buttonPanel.add(Box.createVerticalStrut(10));
@@ -453,7 +469,7 @@ public class TableMainPanel extends JPanel {
     private JPanel createSpLocSelectPanel() {
     	JPanel page = Jcomp.createPagePanel();
     	
-    	String [] species = queryFrame.getAbbrevNames();
+    	String [] species = qFrame.getAbbrevNames();
     	String [] colHeads = TableColumns.getSpeciesColHead(isSingle);
 		
 		String [] colDesc= TableColumns.getSpeciesColDesc(isSingle);
@@ -494,7 +510,14 @@ public class TableMainPanel extends JPanel {
     	
     	chkAnnoFields = new Vector<Vector<JCheckBox>> ();
     	
-    	int [] spPos = theAnnoKeys.getSpPosList(); // CAS575 changed from speciesIdx to pos for self-synteny
+    	int [] spPos = theAnnoKeys.getSpPosList(); 
+    	
+    	if (spPos.length==0) { // When no project has annotation; CAS579c
+    		retVal.add(Jcomp.createLabel("No annotation columns"));
+    		retVal.setBorder(BorderFactory.createTitledBorder("Gene Annotation"));
+        	retVal.setMaximumSize(retVal.getPreferredSize());
+    		return retVal;
+    	}
     	
     	// Check selected
     	for(int x=0; x<spPos.length; x++) {
@@ -514,7 +537,6 @@ public class TableMainPanel extends JPanel {
     	}
     	
     	JPanel colPanel = Jcomp.createPagePanel();
-    	
     	Iterator<Vector<JCheckBox>> spIter = chkAnnoFields.iterator();
     	int pos = 0;
     	while (spIter.hasNext()) {
@@ -771,7 +793,7 @@ public class TableMainPanel extends JPanel {
 			if(chkGeneralFields[x].isSelected())
 				retVal.add(chkGeneralFields[x].getText());
 		}
-		String [] species = queryFrame.getAbbrevNames(); 
+		String [] species = qFrame.getAbbrevNames(); 
 		for(int x=0; x<species.length; x++) {
 			for(int y=0; y<chkSpeciesFields[x].length; y++) {
 				if(chkSpeciesFields[x][y].isSelected()) {
@@ -858,10 +880,10 @@ public class TableMainPanel extends JPanel {
     	if (isSingle) enable=false; // CAS576 were becoming active after run
     	
     	if (!bMSArun) btnShowMSA.setEnabled(enable);
-    	txtSynRegion.setEnabled(enable);
-    	btnShowSynteny.setEnabled(enable);
-    	cmbSynOpts.setEnabled(enable);
-    	chkSynHigh.setEnabled(enable); chkSynGn.setEnabled(enable);
+    	txt2Dregion.setEnabled(enable);
+    	btnShow2D.setEnabled(enable);
+    	cmb2Dopts.setEnabled(enable);
+    	chk2Dhigh.setEnabled(enable); chk2Dgene.setEnabled(enable);
     	btnReport.setEnabled(enable);
     	
     	setRowSelected(); 
@@ -874,13 +896,14 @@ public class TableMainPanel extends JPanel {
 		
     	if (isSingle) return;
 		
-		btnShowSynteny.setEnabled(b1);
-    	cmbSynOpts.setEnabled(b1);	 lblSynAs.setEnabled(b1);
-    	txtSynRegion.setEnabled(b1); lblSynKb.setEnabled(b1);
-    	chkSynHigh.setEnabled(b1);	 chkSynGn.setEnabled(b1);
-		if (b1) { // cannot easily disable items
-			if (cmbSynOpts.getSelectedIndex()!=showREGION) txtSynRegion.setEnabled(false);
-		}
+		btnShow2D.setEnabled(b1);
+    	cmb2Dopts.setEnabled(b1);	lbl2Das.setEnabled(b1);
+    	txt2Dregion.setEnabled(b1); lbl2Dkb.setEnabled(b1);
+    	chk2Dhigh.setEnabled(b1);	chk2Dgene.setEnabled(b1);
+    	
+    	boolean b = (cmb2Dopts.getSelectedIndex()==showREGION);
+		txt2Dregion.setEnabled(b); lbl2Dkb.setEnabled(b);
+		
     	boolean bn = (theTable.getSelectedRowCount() >= 1)  ? true : false;
     	if (!bMSArun) btnShowMSA.setEnabled(bn);
     	
@@ -891,11 +914,10 @@ public class TableMainPanel extends JPanel {
     	if (!b2) return;
     	if (getSharedRef(true)==null) return;
     	
-    	btnShowSynteny.setEnabled(b2);
-    	cmbSynOpts.setEnabled(b2);	lblSynAs.setEnabled(b2);
-    	txtSynRegion.setEnabled(b2);lblSynKb.setEnabled(b2);
-    	chkSynHigh.setEnabled(b2);  chkSynGn.setEnabled(b2);
-    	if (cmbSynOpts.getSelectedIndex()!=showREGION) txtSynRegion.setEnabled(false);
+    	btnShow2D.setEnabled(b2);
+    	cmb2Dopts.setEnabled(b2);	lbl2Das.setEnabled(b2);
+    	txt2Dregion.setEnabled(b2); lbl2Dkb.setEnabled(b2);
+    	chk2Dhigh.setEnabled(b2);   chk2Dgene.setEnabled(b2);
     }
    
     /****************************************
@@ -932,7 +954,7 @@ public class TableMainPanel extends JPanel {
     /**************************************************************
      * Show 2D 
      */
-    private void showSynteny() {
+    private void showView2D() {
 		try{
 			hitNum1 = hitNum2 = 0;
 			grpIdxVec.clear();// for the get statements
@@ -942,16 +964,16 @@ public class TableMainPanel extends JPanel {
 			int numRows = theTable.getSelectedRowCount();
 			if (numRows==0 || numRows>2) return;
 			
-			btnShowSynteny.setEnabled(false);		
+			btnShow2D.setEnabled(false);		
 			
-			int selIndex = cmbSynOpts.getSelectedIndex();
-			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txtSynRegion.getText()) * 1000 : 500;  
+			int selIndex = cmb2Dopts.getSelectedIndex();
+			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txt2Dregion.getText()) * 1000 : 500;  
 			
 			UtilSelect uObj = new UtilSelect(this);
-			boolean bGene = chkSynGn.isSelected();
+			boolean bGene = chk2Dgene.isSelected();
 			uObj.synteny2D(numRows, selIndex,  pad, bGene, isSelf, grpIdxVec); // hitNum1, hitNum2 get set
 			
-			btnShowSynteny.setEnabled(true);
+			btnShow2D.setEnabled(true);
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Create 2D Synteny");}
     }
@@ -992,7 +1014,7 @@ public class TableMainPanel extends JPanel {
     }
     /* For highlighting View2D hit */
      public boolean isHitSelected(int idx, boolean bHit1) {
-    	 if (!chkSynHigh.isSelected()) return false;
+    	 if (!chk2Dhigh.isSelected()) return false;
  
     	 if (grpIdxVec.contains(idx)) return true;	// highlight all group;  
    	 
@@ -1006,7 +1028,7 @@ public class TableMainPanel extends JPanel {
       *  calls setPanelEnabled(false) before comp and setPanelEnabled(true) after; FASTA is threaded
       *********************************************************************/
      private void showExport() { 
-		final UtilExport ex = new UtilExport(this, queryFrame.title ); // add title for 1st line of export
+		final UtilExport ex = new UtilExport(this, qFrame.title ); // add title for 1st line of export
 		ex.setVisible(true);
 		final int mode = ex.getSelection();
 		
@@ -1024,7 +1046,7 @@ public class TableMainPanel extends JPanel {
      private void showReport() {
  	    if (isSingle) return;
  	    
-     	if (isClustN) {							
+     	if (isClustN) {	
      		if (reportNoRefPanel==null) reportNoRefPanel = new UtilReportNR(getInstance()); 
  	    	reportNoRefPanel.setVisible(true); 
      	}
@@ -1077,7 +1099,7 @@ public class TableMainPanel extends JPanel {
      */
 	private ResultSet loadDataFromDatabase(String theQuery) {
         try {
-        	DBconn2 dbc2 = queryFrame.getDBC();
+        	DBconn2 dbc2 = qFrame.getDBC();
         	
         	if (bStopped) return null; 
         	loadStatus.setText("Performing database search....");
@@ -1175,8 +1197,8 @@ public class TableMainPanel extends JPanel {
     	theTableData.sortByColumn(index, !theTableData.isAscending(index));
 	}
    
-    protected String getTabName() { return theTabName; } 
-    
+    protected String getTabName(){return theTabName; } 
+    protected int getNSpecies()  {return qPanel.nSpecies;}
 	protected boolean isSingle() {return isSingle;}
  	protected boolean [] getColumnSelections() {
 		try {
@@ -1275,11 +1297,27 @@ public class TableMainPanel extends JPanel {
     	    return this;
     	}
     }
+    private void popupHelp() {
+		String msg = "Suffix * is minor gene. \n"
+				   + "  i.e. a hit overlaps it, but the hit is assigned to another gene.\n\n"; 
+				
+		msg +=  	 "Suffix ~ is un-annotated pseudo gene.\n"
+				   + "  Numbered Pseudo: Is preceeded by a number.\n" 
+				   + "    It can be searched for in Search..., and used in Report...\n"
+				   + "  Columns:\n"
+				   + "    Not numbered: %Olap, Gstart, Gend, Glen and Gst are blank.\n"
+				   + "    Numbered:     Gstart=Hstart, Gend=Hend, Glen=Hlen.\n\n";
+		
+		msg +=       "In the Select Columns panel, hover the mouse over a column name for a description.\n"
+				   + "  Columns can be moved be dragging the header, and sorted by clicking the header.\n\n";			  
+				   
+		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
+	}
     /**************************************************************
      * Private variable
      */
-    protected QueryFrame queryFrame = null;
-	protected QueryPanel queryPanel = null;
+    protected QueryFrame qFrame = null;
+	protected QueryPanel qPanel = null;
 	
 	private UtilReport reportRefPanel = null;
 	private UtilReportNR reportNoRefPanel = null;
@@ -1291,12 +1329,12 @@ public class TableMainPanel extends JPanel {
     private JTextField rowCount = null; 
     private JTextField loadStatus = null;
     
-    private JLabel lblSynAs=null, lblSynKb=null;
-    private JTextField txtSynRegion = null;
-    private JCheckBox chkSynHigh = null,  chkSynGn = null;
-    private JButton btnShowSynteny = null, btnShowMSA = null, btnShowRow = null; 
+    private JLabel lbl2Das=null, lbl2Dkb=null;
+    private JTextField txt2Dregion = null;
+    private JCheckBox chk2Dhigh = null,  chk2Dgene = null;
+    private JButton btnShow2D = null, btnShowMSA = null, btnShowRow = null; 
     private JButton btnUnSelectAll = null, btnExport = null, btnReport = null, btnSearch = null;
-    private JComboBox <String> cmbSynOpts = null;
+    private JComboBox <String> cmb2Dopts = null;
     
     private ListSelectionListener selListener = null;
     private Thread buildThread = null;
@@ -1330,7 +1368,7 @@ public class TableMainPanel extends JPanel {
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
 	protected boolean isBlock=false, isGroup=false;			// set 2d pull-down based on query; CAS577
-	protected boolean isSelf=false; 
+	protected boolean isSelf=false, isAllNoAnno=true, isNoPseudo=false; 
 	
 	// for Stop 
 	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.

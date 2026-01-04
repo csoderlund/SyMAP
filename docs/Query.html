@@ -13,7 +13,7 @@
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
 <p class=sidetit>&nbsp;&nbsp;Queries</p>
 <p>
-<a href="#instruct">&gt;Instructions</a>
+<a href="#instruct">&gt;Overview</a>
 <a href="#query">&gt;Query Setup</a>
 <a href="#result">Result Panel</a>
 <a href="#col">&nbsp;&nbsp;&nbsp;Columns</a>
@@ -57,7 +57,7 @@
 <tr>
 <td style="white-space: nowrap; vertical-align: text-top;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td style="white-space: nowrap; vertical-align: text-top;">
-	<a href="#instruct"><u><small>&gt;</small> Instructions</u></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="#instruct"><u><small>&gt;</small> Overview</u></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td style="white-space: nowrap; vertical-align: text-top;">
 	<table>
 		<tr><td><a href="#query"><u><small>&gt;</small> Query Setup</u></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -83,8 +83,8 @@
 	<table>
 	<tr><td><a href="#rtab"><u><small>&gt;</small> Results</u></a>
 	<tr><td>&nbsp;
-	<tr><td>&nbsp;
-	<tr><td><ttl>Extra topic:</ttl>
+	<tr><td><ttl>Extra topics:</ttl>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="UserGuide.html#self" target="_blank" class="ext">Self-synteny</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="Details.html#q3" class="ext" target="_blank">3-chr queries</a>
 	</table>
 </table>
@@ -92,24 +92,27 @@
 See <a href="./UserGuide.html#term" class="ext" target="_blank">Terminology</a> in the User Guide.
 <!------------------------------------------------------------------------------>
 <hr>
-<a id="instruct"></a>
-<h2><small>&gt;</small> Instructions</h2>
 To open the query interface, first select two or more projects in the
-<a href="UserGuide.html#mgr" class="ext" target="_blank">Project Manager</a>.
-Then select the <ttb>Queries</ttb> button at the lower right to open the queries interface.
+<a href="UserGuide.html#mgr" class="ext" target="_blank">Project Manager</a> panel.
+<br>Then select the <ttb>Queries</ttb> button at the lower right of the <ttp>Project Manager</ttp> to open the
+queries interface.
+<br>The initial view is illustrated on the lower right. Note: the words <i>Project</i> and <i>Species</i> are
+used interchangeably.
 
+<a id="instruct"></a>
+<h2><small>&gt;</small> Overview</h2>
+<p>The <ttl>Overview</ttl> panel lists the projects (i.e. sequenced species) which were selected for querying.
 <table>
-<tr><td>
-The <ttl>Instructions</ttl> window (on right) lists the projects which were selected for querying.
-<p><b><i>Notes</i></b>:
-<br><i>Algo2</i>: The <ttx>Olap</ttx> column can take on two different meanings;
+<tr><td><b><i>Notes</i></b>:
+<p><i>Algo2</i>: The <ttx>Olap</ttx> column can take on two different meanings;
 see <a href="#geneCol">Gene info</a>.
-<br><i>Pseudo</i>: The <ttx>Gene#</ttx> can be displayed differently; see <a href="#pseudo">below</a>.
-
-<p>Open the <ttl>Query Setup</ttl> window by clicking on its tab in the left panel.
+<p><i>Pseudo</i>: The <ttx>Gene#</ttx> can be displayed differently; see <a href="#pseudo">below</a>.
+<br>The <ttx>(2:...)</ttx> list the pairs that do <i>not</i> have numbered pseudo.
+<p><i>Synteny</i>: This line only exists if not all pairs have synteny computed.
+<br>The <ttx>(1:...)</ttx> list the pairs that do <i>not</i> have synteny.
 <td><a href="img/query_oview.png"><img src="img/query_oview.png" alt="query_oview" style="border: 1px solid black; width: 500px"></a>
 </table>
-
+<p>Open the <ttl>Query Setup</ttl> window by clicking on its tab in the left panel.
 <!-------------------QUERY SETUP --------------------------------------------------->
 <a id="query"></a>
 <h2><small>&gt;</small> Query Setup</h2>
@@ -123,7 +126,6 @@ see <a href="#geneCol">Gene info</a>.
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 <p>
-
 <a id="rules"></a>
 <h3>Rules</h3>
 <table class="tz" style="width:80%"><tr>
@@ -135,21 +137,31 @@ see <a href="#geneCol">Gene info</a>.
 </table>
 <p>
 <b>Setup</b>
+<p>
 <table>
-<tr><td style="vertical-align: text-top;">
+<tr><td>
 Set the desired filters and then select <ttb>Run Query</ttb> to execute it.
 When the search is complete, the <a href="#result">table result panel</a> will be displayed.
-
-<p>1. Most filters can be used in conjunction with other
-	filters; options will be disabled if they cannot be used with a selected filter.
-<p>2. <ttl>Single</ttl> queries returns rows without a hit, and only list genes from one project.
-<p>3. <ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
+<p>&rarr;<ttl>Single</ttl> queries returns rows without a hit,
+and each table rows lists one gene from one project.
+<p>&rarr;<ttl>Pair hits</ttl> queries return a row per <i>hit pair</i>, i.e.
 	aligned region between two chromosomes from two projects.
-
+<p>&rarr;The <ttl>Annotation Description</ttl> and <ttl>Group</ttl> queries can take a long time on big
+databases; it helps to reduce the output/time by setting <ttl>%Sim</ttl> and/or <ttl>%Olap</ttl>.
 <td><a href="img/query_query.png"><img src="img/query_query.png" alt="query_query" style="border: 1px solid black; width: 550px"></a>
 </table>
+<p>&rarr;Most filters can be used in conjunction with other filters. If a combination will produce 0 results:
+<ul><li>Options with check boxes will disabled filters that cannot be used.
+<li>On <ttp>Run Query</ttp>, there will be a popup message stating the filter combination will not work,
+	and the query is aborted.
+</ul>
+<p>&rarr;If one or more of the input projects are not annotated, or there are not numbered pseudos:
+<ul>
+<li>Some filters will not be relevant; these will <i>not</i> be shown.
+<li>However, for some of the options like <ttl>Search...</ttl>, these conditions are not checked.
+</ul>
 
-<b>Hit#</b>
+<p><b>Hit#</b>
 <table style="width:80%">
 <tr><td>All <ttx>Hit#</ttx> are uniquely numbered for a chromosome pair,
 	e.g. there will be a <ttx>Hit# 2</ttx> on all chromosome pairs that have hits.
@@ -215,17 +227,24 @@ It cannot stop the database search, but once the search is done, it stops all su
 
 <a id="gen"></a>
 <h3>1. General</h3>
+<a href="img/query_gen.png">
+<img src="img/query_gen.png" alt="General" style="border: 1px solid black; width: 550px"></a>
 
-<table>
-<tr>
-<td><ttl>Annotation Description</ttl>
-<br>Enter a substring: the entire <ttl>All_Anno</ttl> attributes column (see <a href=#geneCol>Columns</a>) will be searched
+<p><ttl>Annotation Description</ttl>
+
+<ul>
+<li>Enter a substring: the entire <ttx>All_Anno</ttx> attributes column (see <a href="#geneCol">Columns</a>) will be searched
 for the substring.
-Hits will be shown that have at least one gene, of two possible, with the annotation.
-
-<td><a href="img/query_gen.png">
-<img src="img/query_gen.png" alt="General" style="border: 1px solid black; width: 400px"></a>
-</table>
+<p>
+<li>By default, either end of the hit can have the annotation.
+<br>For example, in the above search where <ttx>A.thal Chr01</ttx> is selected, one side of all hits shown will be
+to <ttx>A.thal Chr01</ttx>, but either side can be annotated with 'zinc finger'.
+<p>
+<li><u>Unselect species</u> When the <ttl>Annotation Description</ttl> is checked, the check boxes beside all species names are activated;
+uncheck a species check box to not include its <ttx>All_Anno</ttx> in the search.
+<p>
+<li>If there are no additional filters, <i>this is slow</i> on large databases.
+</ul>
 
 <p><ttl>Chromosome</ttl>
 <table class="tx">
@@ -237,7 +256,7 @@ Hits will be shown that have at least one gene, of two possible, with the annota
 	<td>The <ttx>Hit End</ttx> coordinates for the selected chromosome will be &lt;= this number.
 </table>
 <br>It is valid to enter only the <ttl>From</ttl> or <ttl>To</ttl>, or leave both blank.
-<p>Caveats:
+<p>Restrictions:
 <ul>
 <li>The <ttl>From</ttl> and <ttl>To</ttl> are disabled for
 <ttl>Single genes</ttl>, <ttl>Block#</ttl>, <ttl>Collinear set#</ttl>, <ttl>Hit#</ttl>, and <ttl>Gene#</ttl>.
@@ -245,17 +264,30 @@ Hits will be shown that have at least one gene, of two possible, with the annota
 with <ttl>Gene#</ttl>, <ttl>Multi</ttl> or <ttl>Cluster</ttl>, the <ttp>Run Query</ttp> will popup
 a message that is it not allowed, and stop.
 </ul>
+
+<a id="active"></a>
+<table>
+<tr><td>
+<u>Unselect species</u>: When <ttl>Annotation Description</ttl>, <ttl>Single</ttl>, or <ttl>Gene#</ttl> is selected,
+the check boxes beside the species names will be activated.
+In order to have the search only occur on one species, deselect the others as shown
+on the right. Additionally,
+a single chromosome can be selected, but <ttl>From/To</ttl> cannot be entered.
+<td><a href="img/query_active.png">
+<img src="img/query_active.png" alt="Single" style="border: 1px solid black; width: 300px"></a>
+</table>
 <!--------------------------------------------------->
 <a id="sin"></a>
 <h3>2. Single genes</h3>
+<br>&nbsp;
 
 <table><tr>
 <td>The <ttl>Single</ttl> queries produces rows of genes; there is no hit or block
 information since the rows do not represent hits.
+The <ttl>Annotation Description</ttl> filter can be used with the <ttl>Single</ttl> options.
 <td><a href="img/query_single.png">
 <img src="img/query_single.png" alt="Single" style="border: 1px solid black; width: 400px"></a>
 </table>
-Options:
 <ul>
 <li><ttl>Orphan genes (no hits)</ttl>
 <br>
@@ -268,16 +300,11 @@ If X,Y&Z are selected, the orphan genes for X would be those with no hits to Y a
 <li><ttl>All genes (w/o hits)</ttl>, i.e. genes with and without hits
 <br>This shows all genes that meet the additional filters, regardless if they have a hit or not.
 There is always the same set of genes for a project, regardless of synteny.
-</ul>
+<br>&nbsp;
+<li><u>Unselect species</u>: The species check boxes activate, as described <a href="#active">above.</a>
+Uncheck all but one species will limit the results shown to the one species.
 
-<a id="active"></a>
-<table><tr>
-<td><u>Unselect species</u>: When the <ttl>Single</ttl> or <ttl>Gene#</ttl> is selected, the check boxes beside the species names will be
-activated. In order to view the genes from just one species, deactivate the others. Additionally,
-a single chromosome can be selected, but <ttl>From/To</ttl> cannot be entered.
-<td><a href="img/query_active.png">
-<img src="img/query_active.png" alt="Single" style="border: 1px solid black; width: 400px"></a>
-</table>
+</ul>
 
 <!--------------------------------------------------->
 <a id="pair"></a>
@@ -332,7 +359,7 @@ block will be returned. No hits will have a value for the <ttx>Block</ttx> colum
 	<tr><td style="vertical-align: text-top;">
 		<ttl>None</ttl><td>&nbsp;
 		<td>Only hits that do NOT align to a gene on either end will be shown.
-		The <ttx>Gene#</ttx> column will have the <a href="#pseudo">pseudo</a> representation.
+		The <ttx>Gene#</ttx> column will only have the <a href="#pseudo">pseudo</a> representation.
 	<tr><td colspan=3>If a species <a href="#gen">chromosome is selected</a>  with <ttl>One</ttl>,
 the hit must be on the selected chromosome, but the "one" gene can be on either end. Same for
 <ttl>Every</ttl> or <ttl>Every*</ttl>.
@@ -355,11 +382,10 @@ the hit must be on the selected chromosome, but the "one" gene can be on either 
 <a id="hitge"></a>
 <p><ttlb>Hit &gt;=</ttlb>
 <table class="tx">
-<tr><td><ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx>, <ttx>%Olap</ttx>: Enter the lower limit number for one or more text boxes.
-<tr><td><ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx>: These correspond to the hit columns of the same name.
-<tr><td><ttx>%Olap</ttx>: This corresponds to the gene <ttx>%Olap</ttx> column.
-The lower limit will be applied to every gene in a row;
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i>this should not be used if one project is un-annotated</i>.
+<tr><td><ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx>, <ttx>%Olap</ttx><td>Enter the lower limit number for one or more text boxes.
+<tr><td><ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx><td>These correspond to the hit columns of the same name.
+<tr><td><ttx>%Olap</ttx><td>This corresponds to the gene <ttx>%Olap</ttx> column.
+<br>The lower limit will be applied to <ttx>Either</ttx> or <ttx>Both</ttx> genes in a row .
 </table>
 
 <a id="enter"></a>
@@ -392,20 +418,16 @@ All hits in block 1.2.3 will be shown.
 <td>Enter a <ttx>Gene#</ttx> number (<u>the <ttx>Gene#</ttx> column is formatted Chr.Gene#.suffix</u>).
 <ul>
 <li>If a gene has a suffix:
-<ul>
-<li>If only a number is entered, all hits with an end <ttx>Gene#</ttx> with the numeric prefix will be displayed, including minor hits.
-<li>If a number.suffix is entered, the hit with the exact <ttx>Gene#</ttx> will be displayed
-<br>- <i>if the <ttx>Gene#</ttx> has a hit</i>.
-</ul>
-<br>
-<li>All hits with the <ttx>Gene#</ttx> on either end will be shown unless narrowed
-by the chromosome pull-downs as follows:
-<ul>
-<li>The hit has to have one end to the selected chromosome, but the <ttx>Gene#</ttx> can be on either end.
-<li>By unselecting the other species (see <a href="#active">Unselect species</a>),
-the <ttx>Gene#</ttx> will <i>only</i> be on the selected chromosome.
-<li>Only one chromosome can be selected.
-</ul>
+	<ul>
+	<li>If only a number is entered, all hits with an end <ttx>Gene#</ttx> with the numeric prefix will be displayed, including minor hits.
+	<li>If a number.suffix is entered, the hit with the exact <ttx>Gene#</ttx> will be displayed
+	<li>Note: there will be 0 results if the <ttx>Gene#</ttx> not have a hit.
+	</ul>
+<li>All hits with the <ttx>Gene#</ttx> on either end will be shown.
+<li>The <ttx>Gene#</ttx> search can be limited to a species
+by using the <a href="#active">Unselect species</a>. If all species except one are deactivated,
+only one end of the hit will have the <ttx>Gene#</ttx> and it will be for the selected species.
+<li>Narrow the search by using the chromosome pull-downs.
 </ul>
 </table>
 <!--------------------------------------------------->
@@ -695,6 +717,8 @@ The single genes table only has the
 <table class="tx">
 	<tr><td style="vertical-align: text-top;"><ttx>NumHits</ttx>
 	<td>This is the number of hits to the gene in the ENTIRE databases, including SELF synteny.
+	<br>For self-synteny, hits get counted twice and self-chromosome minors do not get counted.
+	<br>Pre-v5.7.9c A&amp;S: If the <ttx>NumHits</ttx>&gt;255, 255 will be shown.
 </table>
 For example:
 <table><tr>
@@ -714,15 +738,14 @@ For example:
 </table>
 Note: For self-synteny, the second row of columns will be empty.
 <a id="save"></a>
-<h4>2.3 Columns and order shown</h4>
+<h4>2.3 Auto-save columns</h4>
 
 During a SyMAP session, when you display a new table,
-it will use the columns and order  from the last table created or modified (add/remove columns).
-<p>The selected columns are saved between sessions (described below), but the order is not.
+it will use the columns and order from the last table that was created or modified (add/remove columns).
 
-<h4>2.4 Auto-save columns</h4>
+<p>The selected columns are saved between sessions, but the order is not.
 The columns selection is saved in a file called <tt>.symap_saved_props</tt> in the user's home directory so
-that the next time you <ttp>viewSymap</ttp>, the table will show the same column (but in their default order).
+that the next time you <ttp>viewSymap</ttp>, the table will show the same columns (but in their default order).
 <p>If you have multiple SyMAP databases, when you change between them the columns displayed are relative to
 the last SyMAP database queried (they may seem some what random to a different SyMAP database).
 
@@ -953,7 +976,8 @@ There may be additional options in between the middle lines,
 depending on the condition used to create the table, as discussed below.
 <table><tr><td>
 <ttl>Reference</ttl>: In all cases, a reference must be selected; all reference genes are listed in a column,
-and any genes it links to (has a hit) are referenced in the other species columns.
+and any genes it links to (has a hit) are referenced in the other species columns. Only annotated
+species can be selected as reference.
 
 <p><ttb>Gene Annotation Columns</ttb>: One or more annotation keywords can be entered in a comma-delimited list (e.g. <tt>product, ID</tt>); the
 keywords must be found in the <ttx>All_anno</ttx> keyword column. A column will be created containing the values of all entered keywords.
@@ -1007,10 +1031,12 @@ The following discussion will all apply to results from 3 or 4 species.
 </table>
 <br>The report lists all genes from the reference species and what genes each aligns to.
 	The image below shows the top of two different <ttx>All Link</ttx> reports, one with
-	Hsa17 selected as the reference and the other is with Mus11 selected.
-<p>Rows are always merged that share the same reference. The top line shows there are 15 single rows
-	 (one gene for each species) and 0 multi rows (multiple non-reference genes for at least one species).
-	 There are 2 multi rows in Mus11, where one is shown in the 3rd row.
+	Hsa selected as the reference and the other is with Mus selected. This was derived from
+	a table of 382 rows.
+<p>Rows are always merged that share the same reference. The top line shows there are 29 unique
+Hsa genes, 28 single rows (one gene for each species) and 1 multi rows
+(multiple non-reference genes for at least one species).
+	 There are 3 multi rows in Mus, though none are shown in the below image.
 	<p>A "=" indicates that the gene is linked to the gene next to it (ignoring the Reference column);
 	a "+" indicates it is linked to the gene over one column (only happens when there are 4 species).
 <p><a href="img/query_report_gene.png">
@@ -1061,9 +1087,10 @@ Shows reference genes that align to at least N genes, where N is the number inpu
 	<tr><td><ttb>Show</ttb><td><ttx>Group</ttx><td>Show the group (size-number) above the respective.
 </table>
 <p>The <ttx>Group</ttx> (size-number) is shown above each group.
-This used the <ttx>Gene#</ttx> option so it prefixes the annotations, and the <ttx>Truncate</ttx> option was
-used on a <ttx>Width</ttx> of 50.
-<p><a href="img/query_report_multi.png"><img src="img/query_report_multi.png" alt="report A.thal ref" style="border: 1px solid black; width: 700px"></a>
+This used the <ttx>All species per row</ttx>, which resulted in 29 rows and 43 merged sets, e.g.
+gene 1.1215 aligns to group 4-71 on chr5 and group 4-72 on chr8. The report was
+derived from a table of 94715 rows.
+<p><a href="img/query_report_multi.png"><img src="img/query_report_multi.png" alt="report A.thal ref" style="border: 1px solid black; width: 650px"></a>
 
 <!---- Cluster Group ---->
 <p><a id="rclust"></a>
@@ -1089,13 +1116,13 @@ In the two images below, the <ttx>Unlinked unique</ttx> is shown on the left and
 shown on the right.
 Each cluster will have all species since the <ttl>Cluster gene</ttl> query included them all (i.e <ttx>Inc(Hsa,Mus,Pan)</ttx>), but not
 all genes will be linked; the <ttx>Linked rows</ttx> shows the genes that are linked.
-<p><ttx>Unlinked unique</ttx>: Cluster #1 (8-1) shows that there is only one Hsa gene, which has 3 links;
-Mus has 4 genes which all have links; Pan has 2 genes with links. If there are only two species shown, then this
-is an easier way to view the results.
-<p><ttx>Linked rows</ttx>: Every gene listed in a row is linked. The first row of 8-1 is the only one that
-is linked across all species. There are 2 fully linked rows in the 3 clusters; each one has the number
-of fully linked rows in parenthesis next the cluster label. This is the most informative when &gt;2 species
-are included.
+
+<p><ttx>Unlinked unique</ttx>: Cluster #1 (9-1) shows that there are two Hsa gene, where 17.47 has 3 links
+(11.650, 17.53, 17.54); Mus has 4 genes which all have links; Pan has 2 genes with links.
+
+<p><ttx>Linked rows</ttx>: Every row has all the linked genes.
+The second row of 9-1 is the only row in that cluster that
+is linked across all species (asr: <u>a</u>ll <u>s</u>pecies <u>r</u>ow).
 <p>
 <a href="img/query_report_clust.png">
   <img src="img/query_report_clust.png" alt="report cluster" style="border: 1px solid black; width: 700px"></a>
@@ -1116,7 +1143,8 @@ i.e. <ttx>Block</ttx>, <ttx>Collinear</ttx>, <ttx>Group</ttx> and <ttx>Gene#</tt
 <br>For a <ttx>Gene#</ttx> with a character suffix (e.g. 1.1.a for chr01, gene# 1.a), enter the '1.a'.
 <tr><td><ttl>Exact</ttl><td>This searches for the exact string.
 <tr><td><ttl>Substring</ttl><td>This searches for a substring, which is most relevant for
-the <ttx>Gene Annotation</ttx> of 'desc' or 'product'.
+the <ttx>Gene Annotation</ttx> of 'desc' or 'product'. To find minors, search for the substring '*'
+in a <ttx>Gene#</ttx> column.
 </table>
 <td><a href="img/query_search.png"><img src="img/query_search.png" alt="Query search" style="border: 1px solid black; width: 230px"></a>
 </table>

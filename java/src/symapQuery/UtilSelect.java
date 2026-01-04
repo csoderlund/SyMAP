@@ -66,7 +66,10 @@ public class UtilSelect {
 			this.grpIdxVec = grpIdxVec;
 			this.isSelf = isSelf;
 			
-			if (numRows==2 && isSelf) return;
+			if (numRows==2 && isSelf) {
+				Popup.showWarning("Only one row can be selected for self-synteny.");// CAS579c add
+				return;
+			}
 			
 			if (numRows==2) showSyntenyfor3();
 			else 			showSynteny();
@@ -104,6 +107,10 @@ public class UtilSelect {
 					Popup.showWarning("The selected row does not belong to a group.");
 					return;
 				}
+				if (isSelf) {// CAS579c add
+					Popup.showWarning("Group-chr does not work for self-synteny; change to Region.");
+					return;
+				}
 				coords = rd.loadGroup(grpIdxVec); // assigns hits to grpIdxVec
 				hd.setForQuery(0, false, false);   // block, set, region; CAS578 make block=F
 			}
@@ -132,7 +139,7 @@ public class UtilSelect {
 			int grp2Idx = rd.chrIdx[1];
 			
 			// create new drawing panel; 				
-			SyMAP2d symap = new SyMAP2d(tPanel.queryFrame.getDBC(), tPanel);
+			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel);
 			symap.getDrawingPanel().setTracks(2); 		
 			symap.getDrawingPanel().setHitFilter(1,hd); 
 			
@@ -231,7 +238,7 @@ public class UtilSelect {
 	 			tPanel.hitNum1 = rd[0].hitnum; tPanel.hitNum2 = rd[1].hitnum;
 				
 	 			// create new drawing panel; 
-	 			SyMAP2d symap = new SyMAP2d(tPanel.queryFrame.getDBC(), tPanel);
+	 			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel);
 	 			symap.getDrawingPanel().setTracks(3); 
 	 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
 	 			symap.getDrawingPanel().setHitFilter(2,hd1);
@@ -255,7 +262,7 @@ public class UtilSelect {
 			try {
 				int start1=Integer.MAX_VALUE, end1=-1, start2=Integer.MAX_VALUE, end2=-1, d;
 				
-				DBconn2 dbc2 = tPanel.queryFrame.getDBC();
+				DBconn2 dbc2 = tPanel.qFrame.getDBC();
 			    String sql = "select start1, end1, start2, end2 from pseudo_hits where runnum=" + set;
 			    if (isSelf && grpIdx1==grpIdx2) sql += " and start1<start2 "; // usually this is start1>start2; but not here...
 				
@@ -297,7 +304,7 @@ public class UtilSelect {
 	    private int [] loadBlockCoords(int block, int idx1, int idx2) {
 			int [] coords = null;
 			try {
-				DBconn2 dbc2 = tPanel.queryFrame.getDBC();
+				DBconn2 dbc2 = tPanel.qFrame.getDBC();
 				
 				String sql = "select start1, end1, start2, end2 from blocks  where blocknum="+block;
 				if (isSelf && idx1==idx2) sql += " and start1<start2 ";
@@ -343,7 +350,7 @@ public class UtilSelect {
 		
 		private MsaAlign() {
 		try {						
-			DBconn2 dbc = tPanel.queryPanel.getDBC();
+			DBconn2 dbc = tPanel.qPanel.getDBC();
 			aPool = new AlignPool(dbc);
 			
 			tPanel.setPanelEnabled(false);
@@ -647,7 +654,7 @@ public class UtilSelect {
 			String [] tabLines = theTable.toArray(new String[0]);
 			
 			// Add tab and align - QueryFrame calls MsaMainPanel, which is treaded
-			tPanel.queryFrame.makeTabMSA(tPanel, names, seqs, tabLines, 
+			tPanel.qFrame.makeTabMSA(tPanel, names, seqs, tabLines, 
 					progress, tabAdd, resultSum, msaSum, bTrim, bAuto, nCPU);
 			
 			theNames.clear(); theTable.clear(); theSeqs.clear();

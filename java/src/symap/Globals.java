@@ -14,8 +14,8 @@ import java.io.File;
  * Version changes may be in (1) database.Version, (2) in code calling DBconn2.tableCheckAddColumn or (3) Version.isVerLt
  */
 public class Globals {
-	public static final String 	VERSION = "v5.7.9b";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
-	public static final String 	DATE = " (20-Dec-25)";
+	public static final String 	VERSION = "v5.7.9c";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
+	public static final String 	DATE = " (4-Jan-26)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
@@ -26,7 +26,7 @@ public class Globals {
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
 	
 	// Set in SyMAPmanager 
-	public static boolean INFO=false;		// -ii; popup indices, query overlap; -ii -tt DB output, Hit Sort Popup; 
+	public static boolean INFO=false;		// -ii; popup indices, query overlap, case-insensitive; also set on -tt and -dd 
 	public static boolean TRACE=false; 		// -tt; write files for query and anchor2
 	public static boolean DEBUG=false; 		// -dd; use for possible error
 	public static boolean DBDEBUG=false;	// -dbd; adds fields to DB
@@ -62,6 +62,7 @@ public class Globals {
 	public static final int T=0, Q=1;				// for target (2) and query (1); 
 	
 	public static final String IGN = "IGN";			// self-synteny; for Report
+	public static final String SS_X = "X", SS_Z="Y";// Self-synteny opposite project ends with this
 	
 	public static final int NO_VALUE = Integer.MIN_VALUE;
 

@@ -12,7 +12,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 
-import symap.Ext;		
+import symap.Ext;
+import symap.Globals;
 import util.ErrorReport;
 
 // WARNING: Does not work for nested queries (because it uses one Statement for all queries). 
@@ -455,7 +456,7 @@ public class DBconn2 {
 				executeUpdate("alter table " + table + " AUTO_INCREMENT=" + max);
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "Reset auto-crement for " + table);}
+		catch (Exception e) {ErrorReport.print(e, "Reset auto-increment for " + table);}
 	}
     /****************************************************************************
    	 * Check database settings when mysql database is created
@@ -496,7 +497,16 @@ public class DBconn2 {
    					System.err.println("   Suggest: set global innodb_flush_log_at_trx_commit=0");
    				}
    			}
-   			
+   			// CAS579c add to see if database search 'like %string%' will be case insensitive
+   			if (Globals.INFO) {
+	   			rs = executeQuery("SELECT DEFAULT_COLLATION_NAME FROM INFORMATION_SCHEMA.SCHEMATA");
+	   			if (rs.next()) {
+	   				String x = rs.getString(1);
+	   				if (x.endsWith("_ci")) System.err.println("   Database is search case-insensitive '" + x +"'");
+	   				else  System.err.println("   Database is search case-sensitive '" + x +"'");
+	   			}
+	   			else System.err.println("   Cannot determine if database is case-insensitive");
+   			}
    			if (cntFlag>0) {
    				System.err.println("For details: see " + util.Jhtml.TROUBLE_GUIDE_URL);
    			}
@@ -571,7 +581,6 @@ public class DBconn2 {
 	    	return b;
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking for database " + dbname); return false;}
-		
 	}
 	private static void checkHost(String hostname, String username, String password) {
         try {

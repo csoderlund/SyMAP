@@ -34,6 +34,7 @@ import util.Utilities;
 
 /***********************************************
  * Create report of gene, collinear genes or multi-hit gene
+ * Unannotated species cannot be reference (it would work for Genes Report, but it has no annotation so just disable it all)
  */
 public class UtilReport extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -60,12 +61,12 @@ public class UtilReport extends JDialog {
 	// Object is reused - so reset anything not wanted from last time
 	private boolean bIsGene1=false, bIsCoSet2=false, bIsMulti3=false; // the 4 types of reports
 	
-	// Default values the first time; set like this in clear()
+	// Default values the first time; set like this in clear(); 123 corresponds to the above 3 types
 	private boolean bPopHtml=true, bExHtml=false, bExTsv=false;
-	private boolean bAllSpRow13=false,  // Gene, Multi: all species must be in each row; must be false for species=2
+	private boolean bAllSpRow1=false,   // Gene, Multi: all species must be in each row; must be false for species=2
 					bLinkRow1=false,    // Gene: all species and at least one link
 					bAllLinkRow1=false, // Gene: complete graph of linked hits
-					bAllSpIgn13=false,	// Gene, Multi: print all, add link if Gene && bShowLink1
+					bAllSpIgn1=false,	// Gene, Multi: print all, add link if Gene && bShowLink1
 					bShowLink1=true,    // Gene: show links
 					bAllUnion2=true,	// CoSet: all species must be in the union
 					bShowNum23=true,    // CoSet & Multi: show the collinear/group set number
@@ -77,7 +78,7 @@ public class UtilReport extends JDialog {
 	private int descWidth=40;
 	private boolean hasKey=false;
 
-	private int refPos=0;			// posRef is the index into Gene.oTag array for reference
+	private int refPos=-1;			// posRef index into Gene.oTag array for reference
 	private int refSpIdx=0;			
 	
 	private PrintWriter outFH = null;
@@ -107,8 +108,8 @@ public class UtilReport extends JDialog {
 	protected UtilReport(TableMainPanel tdp) { // called 1st time for a Table; the report options can change, but not query
 		this.tPanel = tdp;			// rows of the table are read for report
 		
-		queryMultiN = tdp.queryPanel.getMultiN();	
-		spPanel = tdp.queryPanel.speciesPanel;
+		queryMultiN = tdp.qPanel.getMultiN();	
+		spPanel = tdp.qPanel.spPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
@@ -138,7 +139,7 @@ public class UtilReport extends JDialog {
 		int width = 100;
 		JPanel optPanel = Jcomp.createPagePanel();
 		
-		nSpecies = tPanel.queryPanel.nSpecies;
+		nSpecies = tPanel.getNSpecies();
 		
 		radSpecies = new JRadioButton[nSpecies];
 		txtSpKey =   new JTextField[nSpecies];
@@ -155,26 +156,30 @@ public class UtilReport extends JDialog {
 		optPanel.add(row);
 		
 		// width may change if longer species name;
-		for(int x=0; x<nSpecies; x++) {
-			radSpecies[x] = Jcomp.createRadio(spPanel.getSpName(x), "Create report with " + spPanel.getSpName(x) + " as the reference"); 
-			width = Math.max(width, radSpecies[x].getPreferredSize().width);
-			bg.add(radSpecies[x]);
+		for(int p=0; p<nSpecies; p++) {
+			radSpecies[p] = Jcomp.createRadio(spPanel.getSpName(p), "Create report with " + spPanel.getSpName(p) + " as the reference"); 
+			width = Math.max(width, radSpecies[p].getPreferredSize().width);
+			bg.add(radSpecies[p]);
 		}
 		
-		for(int pos=0; pos<nSpecies; pos++) {
+		for(int p=0; p<nSpecies; p++) {
 			row = Jcomp.createRowPanel();
-			row.add(radSpecies[pos]); 
-			if (Jcomp.isWidth(width, radSpecies[pos])) row.add(Box.createHorizontalStrut(Jcomp.getWidth(width, radSpecies[pos])));
+			row.add(radSpecies[p]); 
+			if (Jcomp.isWidth(width, radSpecies[p])) 
+				row.add(Box.createHorizontalStrut(Jcomp.getWidth(width, radSpecies[p])));
 			
-			txtSpKey[pos] = Jcomp.createTextField("",18);
-			row.add(txtSpKey[pos]);
+			txtSpKey[p] = Jcomp.createTextField("",18);
+			row.add(txtSpKey[p]);
 			
 			optPanel.add(row);
+			if (!spPanel.bHasGenes(p)) txtSpKey[p].setEnabled(false);	// CAS579c add disable
+			if (refPos==-1 && spPanel.bHasGenes(p)) refPos=p;
 			
-			int spIdx = spPanel.getSpIdx(pos);
-			spIdxPosMap.put(spIdx, pos);
-			spPosIdxMap.put(pos, spIdx);
+			int spIdx = spPanel.getSpIdx(p);
+			spIdxPosMap.put(spIdx, p);
+			spPosIdxMap.put(p, spIdx);
 		}
+		if (refPos==-1) refPos=0;
 		radSpecies[refPos].setSelected(true);
 		
 		JPanel descPanel = Jcomp.createRowPanel();
@@ -389,11 +394,11 @@ public class UtilReport extends JDialog {
 		bTruncate    = chkTrunc.isSelected();
 		bShowGene    = chkShowGene.isSelected();
 		bShowBorder  = chkBorder.isSelected();
-		bAllSpRow13  = radAllSpRow.isSelected();
+		bAllSpRow1  = radAllSpRow.isSelected();
 		bLinkRow1 	 = radLinkRow.isSelected();
 		bAllLinkRow1 = radAllLinkRow.isSelected();
-		bAllSpIgn13	 = radAllSpIgn.isSelected();
-		if (bLinkRow1 || bAllLinkRow1) bAllSpRow13 = true;
+		bAllSpIgn1	 = radAllSpIgn.isSelected();
+		if (bLinkRow1 || bAllLinkRow1) bAllSpRow1 = true;
 		
 		bAllUnion2   = radAllSpUnion.isSelected(); 
 		bShowNum23   = chkShowNum.isSelected();
@@ -536,7 +541,7 @@ public class UtilReport extends JDialog {
 	private void buildXrow() {
 		try {
 		/*-- filter 1: all species --*/
-			if (!bAllSpIgn13) {
+			if (!bAllSpIgn1) {
 				for (Gene refGn: geneVec) {
 					if (refGn.cntSp != nSpecies) { 
 						refGn.cntHits=0;
@@ -544,7 +549,7 @@ public class UtilReport extends JDialog {
 					}
 				}
 			}
-			if ((!bShowLink1 && bAllSpIgn13) || nSpecies==2) return;	
+			if ((!bShowLink1 && bAllSpIgn1) || nSpecies==2) return;	
 		
 		/*-- Add links --*/
 			// Union per non-ref gene; contains ugeneVec of Refs that it is linked to
@@ -739,7 +744,7 @@ public class UtilReport extends JDialog {
 				newGeneVec.add(gnObj);
 			}	
 		}
-		if (bAllSpRow13) {						// check for all species
+		if (bAllSpRow1) {						// check for all species
 			for (Gene refGn: geneVec) {
 				refGn.resetSpCnt3();
 				if (refGn.cntSp != nSpecies) {  
@@ -1127,7 +1132,7 @@ public class UtilReport extends JDialog {
 					if (bIsCoSet2 && unObj!=lastUn) {// divider between unions	
 						unNum++;
 						String setsz = String.format("%d [%d]", unNum, unObj.cosetCntMap.size());	
-						if (!bAllSpRow13 && !bAllUnion2 && unObj.unSpCnt==nAllNonRefSp) setsz += isAll;
+						if (!bAllSpRow1 && !bAllUnion2 && unObj.unSpCnt==nAllNonRefSp) setsz += isAll;
 						hBodyStr.append(setsz+ "\n");
 						lastUn = unObj;
 					}
@@ -1219,7 +1224,7 @@ public class UtilReport extends JDialog {
 				if (bIsCoSet2 && unObj!=lastUn) {// divider between unions	
 					unNum++;
 					String setsz = String.format("<b>%d [%d sets]</b>", unNum, unObj.cosetCntMap.size());	
-					if (!bAllSpRow13 && !bAllUnion2 && unObj.unSpCnt==nAllNonRefSp) setsz += isAll; 
+					if (!bAllSpRow1 && !bAllUnion2 && unObj.unSpCnt==nAllNonRefSp) setsz += isAll; 
 					if (!bShowBorder) hBodyStr.append("<tr><td colspan=" + colSpan + "><hr>");
 					hBodyStr.append("<tr><td colspan=" + colSpan + ">" + setsz);
 					lastUn = unObj;
@@ -1303,7 +1308,7 @@ public class UtilReport extends JDialog {
 		}
 		/* created after the body of table created */
 		private String htmlHead() {
-			String htitle = (title + " for " + refSpName);
+			String htitle = (title + " for " + refSpName); // tab title
 			
 			// border-collapse: collapse does not work in popup; making border-spacing: 0px makes it too think
 			String head = "<!DOCTYPE html><html>\n<head>\n"
@@ -1318,7 +1323,8 @@ public class UtilReport extends JDialog {
 			}
 			head += "\n</style>\n</head>\n<body>\n" + "<a id='top'></a>\n";
 			
-			head += "<center><b>" + title + "</b>" + strOptions("", htmlBr) + "</head>";// </center> in tail
+			htitle = title + " #" + tPanel.theTableData.getNumRows(); // header title like cluster
+			head += "<center><b>" + htitle + "</b>" + strOptions("", htmlBr) + "</head>";// </center> in tail
 			
 			if (cntOut==0) head += "<table class='ty'>\n";
 			else 		   head += "<p>" + strStats("", "") + "<table class='ty'>\n";
@@ -1431,7 +1437,7 @@ public class UtilReport extends JDialog {
 				if (bIsGene1) { // order is important
 					if (bAllLinkRow1)	  rhead += "All species linked";
 					else if (bLinkRow1)	  rhead += "All species +link";
-					else if (bAllSpRow13) rhead += "All species per row";
+					else if (bAllSpRow1) rhead += "All species per row";
 					else 				  rhead += "All rows";
 				}
 				else if (bIsCoSet2) {
@@ -1439,7 +1445,7 @@ public class UtilReport extends JDialog {
 					else 			rhead += "All rows";
 				}
 				else if (bIsMulti3) {
-					if (bAllSpRow13)  rhead += "All species per row";
+					if (bAllSpRow1)  rhead += "All species per row";
 					else rhead = "";
 				}
 				if (!rhead.equals("")) qhead += ";   " + rhead;
@@ -1474,7 +1480,7 @@ public class UtilReport extends JDialog {
 	    	
 			JFileChooser chooser = new JFileChooser(saveDir);
 			chooser.setSelectedFile(new File(fname));
-			if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+			if(chooser.showSaveDialog(tPanel.qFrame) != JFileChooser.APPROVE_OPTION) return null;
 			if(chooser.getSelectedFile() == null) return null;
 			
 			String saveFileName = chooser.getSelectedFile().getAbsolutePath();

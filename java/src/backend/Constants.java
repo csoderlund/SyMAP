@@ -10,11 +10,10 @@ public class Constants {
  */
 // Set in SymapCE.SyMAPmanager
 public static boolean WRONG_STRAND_PRT = false; // -wsp  print wrong strand hits for algo2 
-public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts; not on -h, leave for possible updates
 public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any mummer files; 
-public static boolean NEW_BLOCK_COORDS = true; 	// -b save hit ends for block coords; not on -h, but still works
-
 public static boolean VERBOSE = false; 			// -v on 
+public static boolean CoSET_ONLY = false;		// -scs on A&S ONLY execute AnchorPosts; not on -h, leave for possible updates
+public static boolean NUMHITS_ONLY = false;		// -nh  on A&S only execute in AnchorMain for v5.7.9c
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 public static final int TARGET=0, QUERY=1, EITHER=2;

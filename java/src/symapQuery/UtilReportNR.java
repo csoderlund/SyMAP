@@ -82,11 +82,11 @@ public class UtilReportNR  extends JDialog {
 	/***************************************************************************/
 	protected UtilReportNR(TableMainPanel tdp) { // this is called 1st time for Query
 		this.tPanel = tdp;
-		spPanel = tdp.queryPanel.speciesPanel;
+		spPanel = tdp.qPanel.spPanel;
 		
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
-		title = "SyMAP Cluster Gene Report";
+		title = "SyMAP Cluster Report";
 		setTitle(title);
 		
 		mainPanel = Jcomp.createPagePanel();
@@ -106,7 +106,8 @@ public class UtilReportNR  extends JDialog {
 	private void createSpecies() {
 		JPanel optPanel = Jcomp.createPagePanel();
 		
-		nSpecies = tPanel.queryPanel.nSpecies;
+		qPanel = tPanel.qPanel;
+		nSpecies = qPanel.nSpecies;
 		
 		radSpecies = new JLabel [nSpecies];
 		txtSpKey =   new JTextField [nSpecies];
@@ -135,6 +136,10 @@ public class UtilReportNR  extends JDialog {
 			txtSpKey[pos] = Jcomp.createTextField("",18);
 			row.add(txtSpKey[pos]);
 			
+			if (!spPanel.bHasGenes(pos) || qPanel.isClExclude(pos)) {//CAS579c add disable
+				radSpecies[pos].setEnabled(false);
+				txtSpKey[pos].setEnabled(false);
+			}
 			optPanel.add(row);
 			
 			int spIdx = spPanel.getSpIdx(pos);
@@ -357,7 +362,7 @@ public class UtilReportNR  extends JDialog {
 	try {	
 		// reused variables
 		cntFullLink=0; 	
-		if (title.endsWith("Report")) title += " " + tPanel.theTableData.getNumRows();
+		if (title.endsWith("Report")) title += " #" + tPanel.theTableData.getNumRows();
 		
 		HashMap <Integer, Clust> grpMap = new HashMap <Integer, Clust>  ();
 		HashSet <String> gnTagSet = new HashSet <String> ();
@@ -757,7 +762,8 @@ public class UtilReportNR  extends JDialog {
 			for (int x=0; x<nSpecies; x++) {
 				colSpan++;
 				String name = spPanel.getSpName(x);
-				hColStr += "<td><b><center>" + name + "</center></b>";
+				if (qPanel.isClExclude(x))	hColStr += "<td><center>" + name + "</center>"; // Exclude CAS579c
+				else hColStr += "<td><b><center>" + name + "</center></b>";
 			}
 			for (int x=0; x<nSpecies; x++) { // Annotation
 				if (!spInputKey[x].isEmpty()) {
@@ -838,8 +844,9 @@ public class UtilReportNR  extends JDialog {
 			
 			head += "<center>" + strTitle("", htmlBr, gnNum) + "</head>"; // </center> in tail
 			
-			head +=  String.format("%s%s%,d Cluster Hits Groups", htmlBr, htmlBr, gnNum);
-			String note = (bLinkRow && cntFullLink>0 && nSpecies>2) ? String.format("; %,d All species rows (asr)", cntFullLink) : "";
+			head +=  String.format("%s%s%,d Clusters", htmlBr, htmlBr, gnNum);
+			String note = (bLinkRow && cntFullLink>0 && nSpecies>2) ? 
+					String.format("; %,d All species rows (asr)", cntFullLink) : "";
 			head +=  note;
 			
 			head += "<table class='ty'>\n"; 
@@ -906,9 +913,11 @@ public class UtilReportNR  extends JDialog {
 			br = br + remark;	
 			
 			String sum = tPanel.theSummary;
-			if (sum.length()>40) {
+			if (sum.length()>40 && !sum.startsWith("Cluster")) {
 				int index = sum.indexOf("Cluster");
-				String part1 = sum.substring(0,index);
+				String part1 = sum.substring(0,index).trim();
+				if (part1.endsWith(";")) 
+					part1 = part1.substring(0, part1.length()-1);
 				String part2 = sum.substring(index);
 				sum = part1 + br + "    " + part2;
 			}
@@ -931,7 +940,7 @@ public class UtilReportNR  extends JDialog {
 	    	
 			JFileChooser chooser = new JFileChooser(saveDir);
 			chooser.setSelectedFile(new File(fname));
-			if(chooser.showSaveDialog(tPanel.queryFrame) != JFileChooser.APPROVE_OPTION) return null;
+			if(chooser.showSaveDialog(tPanel.qFrame) != JFileChooser.APPROVE_OPTION) return null;
 			if(chooser.getSelectedFile() == null) return null;
 			
 			String saveFileName = chooser.getSelectedFile().getAbsolutePath();
@@ -952,6 +961,7 @@ public class UtilReportNR  extends JDialog {
 	/*********************************************************************/
 	// Interface 
 	private TableMainPanel tPanel;
+	private QueryPanel qPanel;
 	private SpeciesPanel spPanel;
 	private JPanel mainPanel;
 	

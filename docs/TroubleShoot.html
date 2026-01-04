@@ -18,6 +18,7 @@
 <a href="#sql">MySQL problems</a>
 <a href="#gen">General</a>
 <a href="#macos">MacOS</a>
+<a href="#java">Java</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -68,6 +69,7 @@
 <tr><td>&nbsp;&nbsp;&nbsp;<a href="#root">Run mysqld as root</a>
 <tr><td>&nbsp;&nbsp;&nbsp;<a href="#msqcase">Cannot create table  (errno: 121)</a>
 <tr><td>&nbsp;&nbsp;&nbsp;<a href="#index">MySQL indices</a>
+
 </table>
 
 <td>&nbsp;&nbsp;&nbsp;
@@ -79,6 +81,7 @@
 <tr><td><a href="#macos">MacOS</a>
 <tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Running external programs</a> <!--- ref in symap -->
 <tr><td>&nbsp;&nbsp;&nbsp;<a href="#font">MacOS Fonts</a>
+<tr><td><a href="#java">Java runtime error</a>
 </table>
 </table>
 
@@ -381,7 +384,20 @@ It does not hurt anything, but its tiresome. Do the following:
 <li>Do the same for <tt>Lucida Bright.zip</tt>.
 <li>Note: after OS updates, you may have to install again.
 </ul>
-
+<a id="java"></a>
+<h2>Java Runtime Error</h2>
+On rare occasions, Java crashes, SyMAP will quit and you will see:
+<pre>
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGBUS (0xa) at pc=0x000000010a05a58e, pid=70813, tid=89091
+etc
+</pre>
+When searching online for this problem, it says:
+"This fatal error occurs when the Java Virtual Machine (JVM) crashes,
+typically due to issues in native code (outside the JVM), memory corruption, or hardware instability".
+<p>Searching native code, it says: "When a 'fatal error' occurs in native code, it means the crash happened in a non-Java component such as a shared library (.dll, .so), a system driver".
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>

@@ -15,12 +15,14 @@ import util.ErrorReport;
 /*********************************************
  * Called by symap and viewSymap scripts; print help; set options; starts ManagerFrame 
  */
-
 public class SyMAPmanager extends ManagerFrame {
 	private static final long serialVersionUID = 1L;
-	
+	private static boolean isReadOnly;
+
 	public static void main(String args[])  {	
 		printVersion(); 
+		
+		isReadOnly = equalOption(args, "-r");
 		
 		if (equalOption(args, "-hhh")) {// for me; put first
 			argPrintHidden(args);
@@ -38,68 +40,27 @@ public class SyMAPmanager extends ManagerFrame {
 		SyMAPmanager frame = new SyMAPmanager(args);
 		frame.setVisible(true);
 	}
-	
-	private SyMAPmanager(String args[]) {
-		super(); 		// Creates ManagerFrame; 
-	}
+	private SyMAPmanager(String args[]) {super(); }		// Creates ManagerFrame; 
 
-	private static void printVersion() {
-		String url = util.Jhtml.BASE_HELP_URL;
-		String base = url.substring(0, url.length()-1);
-		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base);	
-		System.out.println("Running on " + Ext.getPlatform() + " with Java v" + System.getProperty("java.version")); 
-	}
-	/******************************************************************
-	 * Command line parameters
-	 * Add to argCheck, argPrint, argSet
-	 */
-	private static boolean argFail(String args[]) {// return true
-		if (args.length==0) return false;
-		boolean ronly = equalOption(args, "-r");
-		if (args.length==1 && ronly) return false;
-		
-		String [] rArgVec = {"-c", "-sql", "-a", "-go", "-pg", "-ac"};
-		String [] wArgVec = {"-mum", "-wsp", "-p", "-v", };
-		
-		HashSet <String> argSet = new HashSet <String> ();
-		for (String x : rArgVec) argSet.add(x);
-		if (!ronly) for (String x : wArgVec) argSet.add(x);
-		
-		for (int i = 0;  i < args.length;  i++) {
-			String a = args[i];
-			if (equalOption(args, "-r")) continue;
-			
-			if (a.startsWith("-") && !argSet.contains(a)) {
-				System.err.println("*** Illegal argument: " + a);
-				argPrint(args);
-				return true;
-			}
-		}
-		if (ronly && args.length==2 && !args[1].startsWith("-")) { // viewSymap xxx  (-r comes first)
-			System.err.println("*** Illegal argument: " + args[1]);
-			argPrint(args);
-			return true;
-		}
-		if (!ronly && args.length==1 && !args[0].startsWith("-")) {// symap xxx  (check 1st arg)
-			System.err.println("*** Illegal argument: " + args[0]);
-			argPrint(args);
-			return true;
-		}
-		return false;
-	}
+	/** Args **/
+	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
+	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  		// symap
+	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs"}; 	    // hidden
+	
 	private static void argPrint(String args[]) {
-		if (equalOption(args, "-r")) System.out.println("Usage:  ./viewSymap [options]");
-		else 						 System.out.println("Usage:  ./symap [options]");
+		if (isReadOnly) System.out.println("Usage:  ./viewSymap [options]");
+		else 			System.out.println("Usage:  ./symap [options]");
 		
 		System.out.println("  -c string : Filename of config file (to use instead of symap.config)");
 		System.out.println("  -sql      : MySQL: for important settings and external programs");
-		System.out.println("  -p N      : Number of CPUs to use (same as setting CPUs on SyMAPmanager)");
+		System.out.println("  -p N      : Number of CPUs to use (same as setting CPUs on SyMAPmanager)"); // used in Query MSA
 		System.out.println("  -h        : Show help to terminal and exit");
 		
-		if (!equalOption(args, "-r")) { // viewSymap is started with -r arg
+		if (!isReadOnly) { // viewSymap is started with -r arg
 			System.out.println("\nAlign&Synteny:");
 			System.out.println("  -mum      : MUMmer: Do not remove any mummer files");
 			System.out.println("  -wsp      : Algo2: print MUMmer hits that differ from gene strand");
+			System.out.println("  -nh       : NumHits: recompute for v5.7.9c");
 			System.out.println("  -v        : A&S verbose output (same as checking Verbose on Manager)");
 		}
 		System.out.println("\nDisplay:");
@@ -110,21 +71,21 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	private static void argPrintHidden(String args[]) {
 		System.out.println("Developer only special flags ");
-		System.out.println("  -ii  Extra info on 2d popups, Queries ");
+		System.out.println("  -ii  Extra info on 2d popups, extra Query, check Case-insensitive database ");
 		System.out.println("  -tt  Trace output, and query zTest files ");
 		System.out.println("  -dd  Debug - mysql trace, etc");
 		System.out.println("  -dbd Database - saves special tables to db");
 		System.out.println("  -bt  Synteny trace");
 		System.out.println("  -s   Regenerate summary");
 		System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
+		
 	}
 	private static void argSet(String args[]) { 
 		if (args.length ==0) return;
 		
-		if (equalOption(args, "-r")) {// used by viewSymap
-			inReadOnlyMode = true; // no message to terminal
+		if (isReadOnly) {			// used by viewSymap; set in ManagerFrame
+			inReadOnlyMode = true; 
 		}
-		
 		if (equalOption(args, "-c")) {
 			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
 			if (Globals.MAIN_PARAMS==null) {
@@ -140,12 +101,15 @@ public class SyMAPmanager extends ManagerFrame {
 			}
 			catch (Exception e){ System.err.println(x + " is not an integer. Ignoring.");}
 		}
-		
 		if (equalOption(args, "-sql")) {// check MySQL for important settings; 
 			Globals.bMySQL = true; 
 			System.out.println("-sql MySQL: check settings ");
 		}
-	
+	/** Display viewSymap and symap **/
+		if (equalOption(args, "-a")) { 
+			Globals.bTrim=false;
+			System.out.println("-a  2D: Do not trim alignments");
+		}
 		if (equalOption(args, "-go")) { 
 			Globals.bQueryOlap=true;
 			System.out.println("-go  Queries: show gene overlap instead of exon for Cluster Algo2");
@@ -158,16 +122,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.bQuerySaveLgClust=true;
 			System.out.println("-ac  Queries: retain all clusters regardless of size");
 		}
-		
-		if (equalOption(args, "-a")) { 
-			Globals.bTrim=false;
-			System.out.println("-a  2D: Do not trim alignments");
-		}
-		if (equalOption(args, "-s")) { // not in -h
-			System.out.println("-s  Regenerate summary");
-			Globals.bRedoSum = true;
-		}
-		// A&S
+	/** A&S symap **/
 		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output
 			Constants.VERBOSE = true;		
 			System.out.println("-v A&S verbose output");
@@ -180,26 +135,23 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-wsp  Algo2: print MUMmer hits that differ from gene strand");
 			Constants.WRONG_STRAND_PRT = true;
 		}
-		
-		// not shown on -h; leave for possible updates
-		if (equalOption(args, "-sg")) { 
-			System.out.println("-sg  Split genes (Algo1)");
-			Group.bSplitGene= true;
+		if (equalOption(args, "-nh")) {// CAS579c add
+			System.out.println("-nh  numHits: recompute numHits for v5.7.9c");
+			Constants.NUMHITS_ONLY = true;
 		}
 		
-		/*************************************************************************/
-		/** not shown in -h help - hence, the double character so user does not use by mistake **/
+	/** -hhh viewSymap and symap **/
 		if (equalOption(args, "-ii")) {
-			System.out.println("-ii Extra info (e.g. idx on hit and gene info; warning messages");
+			System.out.println("-ii Extra info");
 			Globals.INFO = true;
 		}
 		if (equalOption(args, "-tt")) {
-			System.out.println("-tt Trace output and mysql to file");
-			Globals.TRACE = true;   	
+			System.out.println("-tt Trace output and mysql to file (and -ii)");
+			Globals.TRACE = Globals.INFO = true;   	
 		}
 		if (equalOption(args, "-dd")) {
-			System.out.println("-dd Debug");
-			Globals.DEBUG = true;
+			System.out.println("-dd Debug (and -ii)");
+			Globals.DEBUG = Globals.INFO = true;
 		}
 		if (equalOption(args, "-dbd")) {
 			System.out.println("-dbd Database - add tables to DB");
@@ -213,15 +165,57 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-cs  On A&S, ONLY execute the collinear sets computation");
 			Constants.CoSET_ONLY = true;
 		}
+		if (equalOption(args, "-s")) { 
+			System.out.println("-s  Regenerate summary");
+			Globals.bRedoSum = true;
+		}
+		// not shown on -h; leave for possible updates
+		if (equalOption(args, "-sg")) { 
+			System.out.println("-sg  Split genes (Algo1)");
+			Group.bSplitGene= true;
+		}		
 	}
-	
+	/******************************************************************
+	 * Command line parameters
+	 */
+	private static boolean argFail(String args[]) {// return true
+		if (args.length==0) return false;
+		
+		if (args.length==1 && isReadOnly) return false;
+		
+		HashSet <String> argSet = new HashSet <String> ();
+		for (String x : rArgVec) argSet.add(x);
+		for (String x : hArgVec) argSet.add(x);	
+		if (!isReadOnly) 
+			for (String x : wArgVec) argSet.add(x);
+		
+		for (int i = 0;  i < args.length;  i++) {
+			String a = args[i];
+			
+			if (a.startsWith("-") && !argSet.contains(a)) {
+				System.err.println("*** Illegal argument: " + a);
+				argPrint(args);
+				return true;
+			}
+		}
+		if (isReadOnly && args.length==2 && !args[1].startsWith("-")) { // viewSymap xxx  (-r comes first)
+			System.err.println("*** Illegal argument: " + args[1]);
+			argPrint(args);
+			return true;
+		}
+		if (!isReadOnly && args.length==1 && !args[0].startsWith("-")) {// symap xxx  (check 1st arg)
+			System.err.println("*** Illegal argument: " + args[0]);
+			argPrint(args);
+			return true;
+		}
+		return false;
+	}
 	private static boolean equalOption(String[] args, String name) {
 		for (int i = 0;  i < args.length;  i++)
 			if (args[i].equals(name)) 
 				return true;
 		return false;
 	}
-	
 	private static String getCommandLineOption(String[] args, String name){
 		for (int i = 0;  i < args.length;  i++){
 			if (args[i].startsWith(name) && !args[i].equals(name)){
@@ -235,10 +229,8 @@ public class SyMAPmanager extends ManagerFrame {
 		}
 		return null;
 	} 	
-	
 	/*************************************************
-	 * Sets architecture (Available linux64, mac, macM4)
-	 * Reads from symap.config
+	 * Sets architecture (Available linux64, mac, macM4); Reads from symap.config
 	 */
 	private static boolean setArch() {
 	try {
@@ -263,7 +255,13 @@ public class SyMAPmanager extends ManagerFrame {
 		return true;
 	} catch (Exception e) {ErrorReport.print(e, "Setting architecture"); return false;}
 	}
-	
+	/** Banner**/
+	private static void printVersion() {
+		String url = util.Jhtml.BASE_HELP_URL;
+		String base = url.substring(0, url.length()-1);
+		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base);	
+		System.out.println("Running on " + Ext.getPlatform() + " with Java v" + System.getProperty("java.version")); 
+	}
 	private static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
 	try {
 		String userV = System.getProperty("java.version");

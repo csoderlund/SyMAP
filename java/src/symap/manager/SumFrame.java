@@ -18,7 +18,6 @@ import java.util.Vector;
 import java.util.Arrays;
 import java.sql.ResultSet;
 
-import backend.Utils;
 import database.DBconn2;
 import symap.Globals;
 import util.ErrorReport;
@@ -52,8 +51,9 @@ public class SumFrame extends JDialog implements ActionListener {
 		bRedo=true;			// expects the summary to be regenerated if still exists
 		createSummary(false);
 	}
-	// do not need to regenerate summary with 'Number Pseudo', just add to end; keep current version as not major update; CAS579
-	public SumFrame(DBconn2 dbc2, Mpair mp, boolean addPseudoOnly) { 
+	// do not need to regenerate summary with 'Number Pseudo' or NumHits, 
+	// just add to end; keep current version as not major update; CAS579; CAS579c add action
+	public SumFrame(DBconn2 dbc2, Mpair mp, String action) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
 		
@@ -64,8 +64,8 @@ public class SumFrame extends JDialog implements ActionListener {
 				createSummary(true);
 				return;
 			}
-			if (sum.contains("Number Pseudo")) return;
-			sum += "\n  Number Pseudo";
+			if (sum.contains(action)) return;
+			sum += "\n  " + action + " " + Utilities.getDateOnly(); // CAS579c add date
 			dbc2.executeUpdate("update pairs set summary='" + sum + "' where idx=" + mp.getPairIdx());
 		}
 		catch (Exception e) {ErrorReport.print("Updating summary for pseudo"); }
@@ -136,8 +136,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (isReadOnly) System.out.println("Create Summary for display...");
 		else System.out.println("Creating Summary for save to database... ");
 		
-		String alignDate = "Unknown", syver="Unk", allParams="";
-		
+		String alignDate = null, syver=null, allParams=null; // CAS579c none were null, but was checking for null
 		rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
 		if (rs.next()) { 				
 			alignDate = rs.getString(1);
@@ -155,8 +154,8 @@ public class SumFrame extends JDialog implements ActionListener {
 			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
 			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params
 		}
-		String d = Utilities.getNormalizedDate(alignDate);
-		String v = (syver!=null) ? ("  " + syver) : "";
+		String d = (alignDate==null) ? "Date Unknown"      : Utilities.getNormalizedDate(alignDate); 
+		String v = (syver==null)     ? "  Version Unknown" : ("  " + syver);
 		
 		String info = (isSelf) ? proj1.name + " self-synteny" :  
 			                     proj1.name + " vs. " + proj2.name;

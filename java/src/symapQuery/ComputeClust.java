@@ -80,6 +80,7 @@ public class ComputeClust {
 				if (loadStatus.getText().equals(Q.stop)) {bSuccess=false; return;} 
 				int i = (int) (((double)rowNum/(double)numRow) * 100.0);
 				loadStatus.setText("Cluster " + i + "% of rows into " + clVec.size() + " (" + numMerge + " merged)...");
+				System.gc();
 			}
 			if (dd.annotIdx[0]<=0 || dd.annotIdx[1]<=0) continue; // pseudo_genes have annotIdx
 			
@@ -329,7 +330,7 @@ public class ComputeClust {
 		Vector <Integer> chrIdx = new Vector <Integer> ();
 		
 		private String getDN() {
-			return qPanel.speciesPanel.getSpNameFromSpIdx(spIdx);
+			return qPanel.spPanel.getSpNameFromSpIdx(spIdx);
 		}
 	}
 }

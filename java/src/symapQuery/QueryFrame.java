@@ -38,7 +38,7 @@ public class QueryFrame extends JFrame {
 	private final int MIN_WIDTH = 1000, MIN_HEIGHT = 720; 	
 	private final int MIN_DIVIDER_LOC = 200; 				
 	
-	private static final String [] MENU_ITEMS = { "> Instructions", "> Query Setup", "> Results" }; 
+	private static final String [] MENU_ITEMS = { "> Overview", "> Query Setup", "> Results" }; 
 	static private String propNameAll = "SyMapColumns1"; // 0&1's; use if match number of columns in current DB
 	static private String propNameSingle = "SyMapColumns2"; 
 	
@@ -56,6 +56,7 @@ public class QueryFrame extends JFrame {
 		
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
+		
 		String [] ab = getAbbrevNames();
 		for (int i=0; i<ab.length-1; i++) {// This is now checked in ProjParams, but to be sure...
 			for (int j=i+1; j<ab.length; j++) {
@@ -355,16 +356,17 @@ public class QueryFrame extends JFrame {
 	protected boolean isAlgo2() {return bUseAlgo2;};
 	protected boolean isSelf() {return isSelf;}
 	
-	protected Mpair getMpair(int idx1, int idx2) { // used to get pairIdx instead of reading from DB; CAS575
+	protected Mpair getMpair(int idx1, int idx2) { 
 		return mFrame.getMpair(idx1, idx2);
 	}
-	protected boolean isOneHasAnno() { // not being used, but could be to disable gene queries
+	protected boolean isOneHasAnno() { // CAS579b
+		int cnt=0;
 		for (Mproject mp : mProjs) {
-			if (!mp.hasGenes()) return false;
+			if (mp.hasGenes()) cnt++;
 		}
-		return true;
+		return (cnt==1);
 	}
-	protected boolean isNoHasAnno() { 
+	protected boolean isAllNoAnno() { // CAS579b
 		int cnt=0;
 		for (Mproject mp : mProjs) {
 			if (mp.hasGenes()) cnt++;
@@ -379,7 +381,7 @@ public class QueryFrame extends JFrame {
 	private Vector<Mproject> mProjs = null;
 	protected boolean bUseAlgo2=false;
 	protected boolean isSelf=false;			
-	protected int cntUsePseudo=0, cntSynteny=0; // for instructions
+	protected int cntUsePseudo=0, cntSynteny=0; // for Overview
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;

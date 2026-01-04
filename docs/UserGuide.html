@@ -1543,30 +1543,43 @@ below shows three genomes; A.thal is the reference, which can be changed with th
 
 <a id="self"></a>
 <h3>Self-synteny</h3>
-For self-synteny, hits are computed for the lower part of the <ttp>Dot Plot</ttp> diagonal, then mirrored to
-the upper part. The <ttx>Hit#</ttx> is assigned in consecutive order along the alphanumeric larger chromosome
-name.
-
+<ul>
+<li>Hits are computed for the lower part of the <ttp>Dot Plot</ttp> diagonal, then mirrored to
+the upper part.
+<li>The <ttx>Hit#</ttx> is assigned in consecutive order along the alphanumeric larger chromosome name.
+<li><u>Self-chromosome</u> (e.g. hits from Chr01 to Chr01) are problematic for display and has some issues.
+</ul>
+<table class="tx" style="width:90%">
+<tr><td><a href="#mgr">Manager</a> <ttl>Available Syntenies</ttl>: <i>Only</i> have the project with self-synteny selected in order to
+view its results.
 <p>Self-synteny can be viewed in all views
 (e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
-<p>
+<td><a href="img/viewSelf.png"><img src="img/viewSelf.png" alt="" style="border: 1px solid black; width: 120px"></a>
+</table>
+
 <ul>
-<li><ttp>Dotplot</ttp>: For the self-chromosome, you <u>must</u> select a region from the lower diagonal.
+<li><ttp>Dotplot</ttp>: For the self-chromosome, you <u>must</u> select a block from the lower diagonal.
 <li><ttp>Circle</ttp>: The <ttx>Scale</ttx> option makes no difference in the display with only
 one species.
 <p>
-<li><ttp>2D</ttp>: From the <ttp>Chromosome Explorer</ttp>, it does not directly work for a chromosome compared to itself.
+<li><ttp>2D</ttp>: From the <ttp>Chromosome Explorer</ttp>, it does not directly work for a self-chromosome.
 However, by going through the <ttp>Dotplot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
-the <ttp>2D</ttp> view.
+the <ttp>2D</ttp> view. Also, the <ttp>Queries</ttp> <ttp>2D</ttp> option can show self-chromosomes.
+<br>Problem: the Hit popup will show the same <ttx>Gene#</ttx> for both sides of a 2G hit.
 <p>
-<li><ttp>Queries</ttp> works for self-synteny (as of v5.7.5), with the following exceptions:
+<li><ttp>Queries</ttp> works for self-synteny (as of v5.7.5), but it has multiple problems:
 <ul>
-<li>It can not display minor hits.
+<li>Minor hits: It can not display minor hits except for one exception.
+<br><i>There is no good way to see all the minor hits.</i>
 <ul><li>The <ttx>Every+</ttx> will not be shown.
-<li>A popup will occur on a <ttx>Hit#</ttx> or <ttx>Gene#</ttx> query if there were minor hits that could not be displayed.
+<li>Self-chromosome minor hits for <ttx>Hit#</ttx> or <ttx>Gene#</ttx> can not be
+displayed;
+<br>e.g. <tt>Demo_seq</tt> <ttx>Gene#</ttx> 3.5 shows minor hits to chr5 but not to the self-chr3.
+<br><ttx>Gene#</ttx> has a popup stating the number that cannot be displayed, but <ttx>Hit#</ttx> does not.
 </ul>
 <li>The <ttl>Groups</ttl> filter section will not be shown as they do not work for self-synteny.
-<li>3-track display does not work: selecting 2 rows followed by <ttp>2D</ttp> is ignored.
+<li>3-track display does not work: i.e. selecting 2 rows followed by <ttp>2D</ttp>.
+<li>Problem: <ttx>Collinear</ttx> with chromosome selection shows duplicate sets.
 </ul>
 <p>
 <ttp>Queries</ttp> also displays things a little different:
@@ -1574,7 +1587,7 @@ the <ttp>2D</ttp> view.
 <li>The <ttx>Abbreviation</ttx> for the 2nd is the same as the 1st with the last character replaced with X.
 <li>The <ttx>Block#</ttx> can be Chr1.Chr2.B or Chr2.Chr1.B; they are the same
 <li>The <ttp>2D</ttp> display  will have the chromosomes in the opposite order than expected.
-<li><ttl>Single</ttl>:
+<li><ttl>Single</ttl> filters:
 <ul>
 <li>The <ttx>NumHits</ttx> column counts each hit both above and below the diagonal (i.e. twice).
 <li>It always shows the 1st project only; there will be empty columns for the 2nd.
