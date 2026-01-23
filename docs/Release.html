@@ -69,106 +69,74 @@ which is aware of the exon-intron structure.
 </table>
 
 <a id="v579"></a>
-<h3>Release: v5.7.9</h3>
+<h3>Release: v5.7.8-v5.7.9c (4-Jan-2026)</h3>
 <p><ttp>Queries</ttp>:  New features, improvements and bug fixes.
-<p><i>Release v5.7.9c (4-Jan-26)</i>
+<br>Since there were 4 releases improving <ttp>Queries</ttp>, their release notes are condensed.
 <p>
 <ul>
-<li><ttp>Queries</ttp>: Small changes
+<li><ttp>Queries</ttp>:
+	<ul>
+	<li>New features:
+	<ul>
+
+	<li><ttx>Annotation Description</ttx>: has a check mark, and the species disables works for it.
+	<br>Minors are now always included except for self-synteny self-chromosomes.
+	<li><ttx>%Olap</ttx>: has a <ttx>Both</ttx> or <ttx>Either</ttx> choice.
+	<li><ttl>Cluster genes &gt;= N</ttl>: There is a new option to apply the N to each species instead of number of hits.
+	The group are numbered by size, where group #1 is the largest group.
+	<li>New filters on the <ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx> and <ttx>%Olap</ttx> columns.
+	</ul>
+<p>
+<li>Improved features:
 <ul>
+<li><ttl>Search</ttl>: Was updated to not include numeric columns, be case-insensitive,
+	state how many instances were found, have a <ttx>Next</ttx> button, stays open until manually closed.
 <li>If all projects are un-annotated, filters are not shown if they require gene annotation.
 <br>Ditto for project pairs without <ttx>Numbered Pseudo</ttx>.
-<li>Renamed <ttl>Instructions</ttl> to <ttl>Overview</ttl> and added some info
-(see <a href="Query.html#instruct">Overview</a>).
-<li><ttx>Annotation Description</ttx> now has a check mark, and the species disables works for it.
-<br>Minors are now always included except for self-synteny self-chromosomes.
-<li><ttx>%Olap</ttx> was not being checked for unannotated hits; now there is a <ttx>Both</ttx> or <ttx>Either</ttx> choice.
-<li>Annotation: if there is no value for a species keyword, the table shows "---" instead of ".".
-<li><ttl>Search</ttl>: made case-insensitive. <ttl>Report</ttl>: Disable un-annotated species from showing annotation.
+<li><ttl>Overview</ttl>: Renamed from <ttl>Instructions</ttl>.
+It includes numbered pseudos for un-annotated projects, and what projects do not have synteny or numbered pseudos.
+The <ttx>Notes</ttx> are clearer.
+</ul>
+<p>
+<li>Small things:
+<ul>
+<li><small><ttl>Report</ttl>: Disable un-annotated species from showing annotation.
+Changed the way the information at the top is formatted.</small>
+<li><small><ttl>View 2D</ttl> for <ttx>Groups-chr</ttx>: Do not highlight blocks. State in the information box the number of selected
+	hits, which are the group hits.</small>
+<li><small>If there is no value for a species annotation keyword, the table shows "---" instead of ".".</small>
+</ul>
+<p>
 <li>Bug fixes:
+	<ul>
+	<li><small>Location search for 2 species: Broke in release 5.7.5 - locations were ignored.
+	When querying 2 species, selecting specific chromosome did not always work.
+	From/To were being used, even if disabled.</small>
+	<li><small>The <ttx>Anno</ttx> columns were wrong if all the following were true:
+	Not all selected projects had synteny, a few were annotated but at least one was not, the unannotated was
+	not at the end of species list.</small>
+	<li><small>If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.</small>
+	<li><small><ttx>Gene#</ttx>, <ttx>Multi</ttx> and <ttx>Cluster</ttx> work right with one chromosome selected,
+	but not two; selecting more than one is not allowed now.</small>
+	<li><small><ttl>Cluster genes</ttl>: The clusters were not complete. Now they may be much larger. There is an internal cutoff on size;
+the user will be notified if some are rejected for being too large.</small>
+	<li><small><ttl>Singles</ttl>: The <ttl>Annotation Description</ttl> did not work.</small>
+	</ul>
+</ul>
+<p>
+<li><ttp>Project Manager</ttp>:
 <ul>
-<li><small>Location search for 2 species: Broke in release 5.7.5 - locations were ignored.
-When querying 2 species, selecting specific chromosome did not always work.
-From/To were being used, even if disabled.</small>
-<li><small>The <ttx>Anno</ttx> columns were wrong if all the following were true:
-Not all selected projects had synteny, a few were annotated but at least one was not, the unannotated was
-not at the end of species list.</small>
-<li><small>Starting up Queries would print an error to the terminal, but it still worked.</small>
-</ul>
-<li>Changed a lot of little things to make the interface as clear as possible.
-</ul>
+<li><ttl>Project Parameters</ttl>: The <ttx>Abbreviation</ttx> no longer needs to be exactly 4 characters; it can be &lt;=5 characters.
+Better error checking and messages on duplicate display names and abbreviations.
 <li><ttx>NumHits</ttx> column can now be &gt;255. Execute <tt>symap -nh</tt> to update.
-</ul>
-<i>Release v5.7.9b (20-Dec-25)</i>
-<p>
-<ul>
-<li><ttp>Queries</ttp> Bug fixes and search improvements.
-<ul>
-<li>Update <ttl>Search</ttl>: states how many occurrences exist in the column and does not close between searches.
-(See <a href="Query.html#search" target="_blank" class="ext">Queries Search</a>.)
-<li>Bug fix: If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.
-<li>Minor bug fixes: (1) If <ttx>Gene#</ttx> was set and a chromosome selected, it was not doing what the
-documentation said. (2) <ttx>Gene#</ttx>, <ttx>Multi</ttx> and <ttx>Cluster</ttx> work right with one chromosome selected,
-but not two; selecting more than one is not allowed now.
-</ul>
-</ul>
-
-<i>Release v5.7.9 (18-Dec-25)</i>
-<p>
-<ul>
-<li><ttp>Queries</ttp>: <ttl>Cluster gene</ttl> bug fix and a new feature. Improved <ttl>Search</ttl>.
-<ul>
-<li><ttl>Cluster genes &gt;= N</ttl>:
-<ul>
-<li>There is a new option to apply the N to each species instead of number of hits.
-<li>Bug fix: The clusters were not complete. Now they may be much larger. There is now an internal cutoff on size;
-the user will be notified if some are rejected for being too large.
-</ul>
-<li><ttl>Search</ttl> now does <ttx>Next</ttx> until all values in the table have been found.
-<li><ttl>Report</ttl>: Changed the way the information at the top is formatted.
-<li><ttl>Instructions</ttl> lists information about pseudos for un-annotated projects.
-</ul>
-<li>Small changes:
-Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) will not regenerate the summary anymore as it does not change.
+<li><ttl>Add Project</ttl>: Linux allows case-sensitive names, which SyMAP does not like;
+case-sensitive is now check for. Illegal project names were being added regardless, which no longer happens.
+<li>Removed <ttl>All Pairs</ttl> button from the <ttp>Manager</ttp>.
 Starting <ttp>symap</ttp> or <ttp>viewSymap</ttp> checks input arguments.
+Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) no longer recreates the summary.
+</ul>
 </ul>
 
-<a id="v578"></a>
-<h3>Release: v5.7.8 (3-Dec-25)</h3>
-<ttp>Queries</ttp> updates and additions.
-
-<p>
-<ul>
-<li><ttp>Queries</ttp>
-	<ul>
-	<li><font color=green>New filters</font>: On the <ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx> and <ttx>%Olap</ttx> columns.
-	See <a href="Query.html#pair" target="_blank" class="ext">Queries</a>.
-	<li><ttl>Clusters</ttl>:
-		<ul>
-		<li>The group are numbered by size, where group #1 is the largest group.
-		<br>This creates a consistent ordering; it was the case it could be different order depending on how the database was built.
-		<li>The species statistics were useless, so are removed.
-		</ul>
-	<li><ttl>View 2D</ttl> for <ttx>Groups-chr</ttx>: Do not highlight blocks. State in the information box the number of selected
-	hits, which are the group hits.
-	<li><ttl>Instructions</ttl>: The <ttx>Notes</ttx> are clearer.
-	<li><ttl>Singles</ttl>: Bug fix: The <ttl>Annotations</ttl> did not work.
-	<li><ttl>Search</ttl>: Stop including numeric columns in search selection.
-	</ul>
-	<br>
-<li><ttp>Manager</ttp>
-	<ul>
-	<li><ttl>Project Parameters</ttl>:
-		<ul>
-		<li>The <ttx>Abbreviation</ttx> no longer needs to be exactly 4 characters; it can be &lt;=5 characters.
-		<li>Better error checking and messages on duplicate display names and abbreviations.
-		</ul>
-	<li>Removed <ttl>All Pairs</ttl>. Not useful enough to retain; each A&amp;S should be checked after running.
-	<li><ttl>Add Project</ttl>: Linux allows
-	case-sensitive names, which SyMAP does not like; these are no long allowed. Illegal project
-	names were being added regardless, which no longer happens.
-	</ul>
-</ul>
 
 <a id="v577"></a>
 <h3>Release: v5.7.7 (15-Nov-25)</h3>

@@ -53,7 +53,7 @@ The requirements are listed in <a href="./index.html#seqprep" class="ext" target
 make sure your files have the right requirements for input to SyMAP; if they do, you may directly input them to
 SyMAP.
 
-<p>The <ttp>xToSymap</ttp> conversion programs cannot be of aid to you if your GFF file does not meet the
+<p>The <ttp>xToSymap</ttp> conversion programs cannot be used if your GFF file does not meet the
 requirements specified. You will need to write your own conversion program, or you can send email
 to <ttl>cas1@arizona.edu</ttl> and I will do it for you.
 <p>
@@ -68,7 +68,7 @@ You may be able to use one of the <ttp>xToSymap</ttp> conversion programs for yo
 this is the keyword that says whether the gene is "protein_coding", it is <b>VERY</b> important.
 <br>&nbsp;
 <li><u>Description attribute</u>: Early NCBI files did not have a <ttx>description=</ttx> keyword for the gene, and only had <ttx>product=</ttx>
-keywords for the mRNAs (now it has both). In constrast, Ensembl only has the <ttx>description=</ttx> keyword for the gene.
+keywords for the mRNAs (now it has both). In contrast, Ensembl only has the <ttx>description=</ttx> keyword for the gene.
 <br>&nbsp;
 <li><u>File suffix</u>: NCBI uses the suffixes ".fna" and ".gff" whereas Ensembl uses ".fa" and ".gff3". The respective conversions requires
 the correct suffix; this prevent running the wrong conversion.
@@ -86,8 +86,8 @@ Input type: Ensembl like 'Number, X, Y, Roman'
 The NCBI chromosome prefix is precisely "NC_". However, if your file has its own prefix, but otherwise adheres to the NCBI keywords, you can
 enter a <ttx>Only prefix</ttx> with the NCBI convert.
 
-<p>The Ensembl <ttx>#, X, Y, I</ttx> is when the FASTA line starts with the chromosome indicates,
-<br>e.g. '>1' or '>X' or '>XI';
+<p>The Ensembl chromosome is indicated by <ttx>#, X, Y, I</ttx> in the &gt; FASTA header line,
+<br>e.g. <ttx>&gt;1</ttx> or <ttx>&gt;X</ttx> or <ttx>&gt;XI</ttx>.
 
 <p>When you run <ttb>Summarize</ttb>, if your results match NCBI or Ensembl, that will imply you can use one of them.
 <p>For details on the conversion, see

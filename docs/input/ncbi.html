@@ -60,11 +60,11 @@ it is better to convert them.
 	<table>
 	<tr><td><a href="#dl">Download</a>
 	<tr><td><a href="#cv">Convert files</a>
-	<tr><td><a href="#opts">&nbsp;&nbsp;&nbsp;Options</a>
+	<tr><td><a href="#opts">&nbsp;&nbsp;&nbsp;xToSymap NCBI Options</a>
 	<tr><td><a href="#scaf">&nbsp;&nbsp;&nbsp;Scaffolds</a>
 	</table>
 </td>
-<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
 	<table>
 	<tr><td><a href="#gen">General</a>
@@ -101,61 +101,60 @@ for the gene.
 </ol>
 
 If there are problems converting the NCBI file(s), then <ttp>symap</ttp> will have problems loading the original
-NCBI files. NCBI formats are not totally consistent,
+NCBI files. NCBI formats can be inconsistent,
 so this may not take everything into account; check your files with the <ttp>xToSymap</ttp>
 <ttb>Summarize</ttb> function.
 See <a href="index.html#tg" class="ext" target="_blank">Tested genomes</a>
 and <a href="index.html#edit" class="ext" target="_blank">editing the script</a>.
 
-
-<p>The following instructions will use <i>Brassica oleracea</i> (wild cabbage) as an example.
-
 <a id="dl"></a>
 <h2>Download</h2>
-Go to <a href="https://www.ncbi.nlm.nih.gov" class="ext" target="_blank">NCBI</a>.
+The following instruction were updated on 21-Jan-2026.
 <ol>
-<li>As shown in Fig 1:
-<ol type="A">
-<li>Select <ttl>Genome</ttl> from the pull-down at the top.
-<li>Enter you genome name followed by <ttb>Search</ttb>.
-</ol>
-or, go to <a href="https://www.ncbi.nlm.nih.gov/refseq/annotation_euk/all/" class="ext" target="_blank">All RefSeq</a>
-and select your genome.
-
-<li>As shown in Fig 2:
+<li>Go to <a href="https://www.ncbi.nlm.nih.gov" class="ext" target="_blank">NCBI</a>.
+<br>As shown in Fig 1: Select
+the <font color="darkblue">Genome</font> link under <ttl>Popular Resources</ttl> on right-hand side.
+<p>
+<li>As shown in Fig 2: Enter you genome name followed by <ttb>Search</ttb>.
+<p>
+<li>As shown in Fig 3:
 <ol type="A">
 <li>From the list of files, select the <ttl>Assembly</ttl> you want.
-<li>Select <ttl>Download Package</ttl>.  As shown, a window will popup with options.
-<li>Select the <ttx>RefSeq</ttx><sup>1</sup> format with
-the <ttx>FASTA</ttx> and <ttx>GFF</ttx> files.
+<li>Select <ttl>Download Package</ttl> from the <ttl>Download</ttl> drop-down.  As shown, a window will popup with options.
+<li>Select the <ttl>RefSeq only</ttl> with the <ttl>Genome sequences (FASTA)</ttl> and <ttl>Annotation features (GFF)</ttl> files.
+<br>Note: <ttp>xToSymap</ttp> does NOT work with Genbank files, only RefSeq.
 <li>Select <ttb>Download</ttb>. By default, a file called <tt>ncbi_dataset.zip</tt> will be downloaded.
 </ol>
 </ol>
-<sup>1</sup><ttp>xToSymap</ttp> <ttb>Convert</ttb> NCBI does NOT work with Genbank files, only RefSeq.
 
-<p><a href="img/NCBI-search.png"><img src="img/NCBI-search.png" alt="" style="border: 1px solid black; width: 750px"></a>
-<br><b>Fig 1. </b> Search the NCBI site.
-<p>&nbsp;
+<table><tr><td>
+<a href="img/NCBI-sites.png"><img src="img/NCBI-sites.png" alt="" style="border: 1px solid black; width: 100px"></a>
+<br><b>Fig 1. </b><ttl>Popular Resources</ttl>
+<td><a href="img/NCBI-search.png"><img src="img/NCBI-search.png" alt="" style="border: 1px solid black; width: 500px"></a>
+<br><b>Fig 2. </b> Search the NCBI site.
+</table>
 
 <p><a href="img/NCBI-download.png"><img src="img/NCBI-download.png" alt="" style="border: 1px solid black; width: 500px"></a>
-<br><b>Fig 2. </b> Select the RefSeq genome FASTA and GFF files.
+<br><b>Fig 3. </b> Select the <ttl>RefSeq only</ttl> with the <ttl>FASTA</ttl> and <ttl>GFF</ttl> files.
 
 <!---------------------------------------------------------------->
 <a id="cv"></a>
 <h2>Convert files</h2>
 <table class="tz">
-<tr><td><a href="#opts">Options</a>
+<tr><td><a href="#opts">xToSymap NCBI Options</a>
 <td><a href="#scaf">Scaffolds</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
-
+<p>The following instructions will use <i>Brassica oleracea</i> (wild cabbage) as an example.
 <ol>
 <li>Go to the <tt>symap_5/data/seq</tt> directory.
-<li>Make a subdirectory for your species (see <a href="index.html#iloc"  class="ext" target="_blank">Project directory</a>),
+<p>
+<li>Make a subdirectory for your species
+(see <a href="index.html#iloc"  class="ext" target="_blank">Project directory</a>),
 move <tt>ncbi_dataset.zip</tt> to it, and unzip it, e.g.
 <pre>
-symap_5/data/seq&gt; mkdir cabb
-symap_5/data/seq&gt; cd cabb
+symap_5/data/seq&gt; mkdir cabbN
+symap_5/data/seq&gt; cd cabbN
 symap_5/data/seq/cabb&gt; mv ~/Download/ncbi_dataset.zip .
 symap_5/data/seq/cabb&gt; unzip ncbi_dataset.zip
 Archive:  ncbi_dataset.zip
@@ -166,17 +165,17 @@ Archive:  ncbi_dataset.zip
   inflating: ncbi_dataset/data/GCF_000695525.1/genomic.gff
   inflating: ncbi_dataset/data/dataset_catalog.json
 </pre>
-<li>Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program,
-select the appropriate options (described below),
-then select <ttb>Convert</ttb>. The FASTA file must end in ".fna" and the annotation file
-must end in ".gff" (the NCBI defaults).
+<li>Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program.
+<ul><li>
+Select the appropriate xToSymap NCBI options (described below).
+<li>Then select <ttb>Convert</ttb>.</ul>
 </ol>
 
-The program will output statistics to the terminal and a log file,
-e.g. <a href="./logs/cnvCabbN.html" class="ext" target="_blank">log</a>.
-The results in the cabb directory is as follows:
+The program will output statistics to the terminal and a <a href="./logs/cnvCabbN.html" class="ext" target="_blank">log file</a>.
+The <ttx>cabbN</ttx> directory will contain the following:
+<p>
 <pre>
-symap_5/data/seq/cabb&gt; ls -hlG
+symap_5/data/seq/cabbN&gt; ls -hlG
 total 264008
 -rw-------@ 1 cari  staff   1.6K Jul 23  2024 README.md
 drwxr-xr-x  4 cari  staff   128B Jul 23 09:54 annotation/
@@ -187,69 +186,86 @@ drwxr-xr-x  3 cari  staff    96B Jul 23 09:54 sequence/
 You may remove everything but <tt>annotation/</tt> and <tt>sequence/</tt>.
 However, you may want to keep the original <tt>data/seq/cabb/ncbi_dataset</tt>.
 
-
 <!------------------------------------------------------->
 <a id="opts"></a>
-<h3>Options</h3>
+<h3>xToSymap NCBI Options</h3>
+
+<table class="tx"><tr><td>
+<a href="img/NCBI-options.png"><img src="img/NCBI-options.png" alt="" style="border: 1px solid black; width: 300px"></a>
+
+<td>For the <ttl>NCBI</ttl> option, the FASTA file must end in ".fna" and the annotation file
+must end in ".gff" (the NCBI defaults). These may be zipped files ending in ".gz".
+<td></table>
 
 <table class="ty" style="width:90%;">
 <tr><td><b>Option</b><td><b>Description</b><td><b>Default</b>
 
-<tr><td><ttx>Hard Mask</ttx>
+<tr><td><ttl>Hard Mask</ttl>
     <td>NCBI genome sequences are typically soft-masked, where this option changes it to hard masked
     <td>Leave as soft-mask
-<tr><td><ttx>Include scaffold</ttx><sup>1</sup>
-    <td>Scaffolds will be included in FASTA and GFF. See section <a href="#scaf">Scaffolds</a>
+<tr><td><ttl>Scaffolds</ttl><sup>1</sup>
+    <td>Scaffolds will be included in the resulting FASTA and GFF files. See section <a href="#scaf">Scaffolds</a>
     <td>No scaffolds
-<tr><td><ttx>Include Mt/Pt</ttx>
-    <td>Mt/Pt chromosomes will be included in FASTA and GFF. Only the first occurrence will be included.
+<tr><td><ttl>Mt/Pt</ttl>
+    <td>Mt/Pt chromosomes will be included in the resulting FASTA and GFF fils. Only the first occurrence will be included.
     <td>No Mt/Pt
-<tr><td><ttx>Only prefix</ttx><sup>2</sup><td>Only sequences with the specified prefix will be processed.
+<tr><td><ttl>Only prefix</ttl><sup>2</sup><td>Only sequences with the specified prefix will be processed.
 	<td>None
-<tr><td><ttx>Protein-id</ttx>
-    <td>A new attribute called <ttx>proteinID=</ttx> will be the value of the <ttx>protein-id</ttx> of the 1st CDS for
-    the 1st mRNA of the gene.
-        This can be searched using the <ttb>Queries</ttb>
+<tr><td><ttl>Protein-id</ttl>
+    <td>A new attribute called <ttx>proteinID=</ttx> will have the value of the <ttx>protein-id</ttx> of the 1st CDS for
+    the 1st mRNA of the gene. This can be searched using the <ttp>viewSymap</ttp>
+        <a href="../Query.html" target="_blank" class="ext">Queries</a>.
     <td>Do not include
 
 <tr><td><ttl>Verbose</ttl>
-     <td>Print extra info, see <a href="./logs/cnvCabbNscaf.html" class="ext" target="_blank">log</a>.
-     <td>No print
+     <td>Print extra information, see <a href="./logs/cnvCabbNscaf.html" class="ext" target="_blank">verbose log</a>.
+     <td>No extra information
 </table>
-<sup>1</sup>You may use <ttx>Include scaffold</ttx>, and then limit the input on the <ttp>symap</ttp>
+<p>
+<sup>1</sup>You may include <ttl>Scaffolds</ttl>, and then limit the input on the <ttp>symap</ttp>
 <ttb>Load</ttb> by setting
-<br>&nbsp;&nbsp;<ttx>Minimal length</ttx> in the project's
+<br>&nbsp;&nbsp;<ttl>Minimal length</ttl> in the project's
 <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
-<br><sup>2</sup>For situations needing <ttx>Only prefix</ttx>,
+<p><sup>2</sup>For situations needing <ttl>Only prefix</ttl>,
 see <a href="./index.html#except" class="ext" target="_blank">exceptions</a>.
 
+<a id="rules"></a>
 <p><i><u>Rules</u></i>: There are variations in the text associated with the FASTA ">" header lines. The rules
 used by this script are as follows:
 <ol>
-<li>If <ttx>Only prefix</ttx> is not blank, sequences are filtered out if the <ttx>seqid</ttx> does not
-start with the prefix. Then all the following apply to the non-filtered sequences:
+<li>If <ttl>Only prefix</ttl> is not blank, sequences are filtered out if the <ttx>seqid</ttx> does not
+start with the prefix.
+Then the following rules 2-4 are applied to the non-filtered sequences:
 <br>&nbsp;
 <li>Chromosomes: The name starts with 'NC_'.
 	 <ul>
-	 <li>The exception is that Mt/Pt chromosomes will not be output unless <ttx>Include Mt/Pt</ttx> is selected.
+	 <li>The exception is that Mt/Pt chromosomes will not be output unless <ttl>Mt/Pt</ttl> is selected.
 	  <br>Mt/Pt: header line contains the word 'mitochondrion', 'mitochondrial', 'plastid' or 'chloroplast'.
-	  <li>Chromosomes are always output unless <ttx>Only prefix</ttx> is set, and the prefix does not match.
-	 <li>Output <ttx>Seqid</ttx>: If the ">" line contains "chromosome N", where N={number, X, Y or roman numeral},
-	 than this number is used prefixed by 'Chr' or 'C' (if scaffolds are included).
-	 <br>Otherwise, the word following 'chromosome' is used (e.g. C1).
+	  <li>Chromosomes are always output unless <ttl>Only prefix</ttl> is set, and the prefix does not match.
+	 <li>&gt;<ttx>seqid</ttx>:
+	 <br>If the ">" line contains "chromosome N", where N={number, X, Y or roman numeral},
+	 than this number is used prefixed by 'Chr' or 'C' (if scaffolds are included). For example,
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>&gt;NC_029256.1 Oryza sativa Japonica Group cultivar Nipponbare chromosome 1</tt>
+		<br>&nbsp;&nbsp;&nbsp;is replaced with:
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>&gt;Chr1 NC_029256.1</tt>
+
+	 <p>Otherwise, the word following 'chromosome' is used. For example,
+		 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;<tt>NC_027748.1 Brassica oleracea var. oleracea cultivar TO1000 chromosome C1, BOL,....</tt>
+		 <br>&nbsp;&nbsp;&nbsp;is replaced with:
+		 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&gt;<tt>C1 NC_027748.1</tt>.
 
 	 </ul>
 <br>
 <li>Scaffolds: The name starts with 'NW_' or 'NT_'.
 	<ul>
-	<li>They will only be output if <ttx>Include scaffold</ttx> is selected.
-	<li>Output <ttx>Seqid</ttx>: 'Scaf' followed by a consecutive number.
+	<li>They will only be output if <ttl>Scaffolds</ttl> is selected.
+	<li>&gt;<ttx>seqid</ttx>: 'Scaf' followed by a consecutive number.
 	</ul>
 <br>
 <li>Unknown: All other ">" entries are considered "unknown".
 	<ul>
-	<li>They will only be output if <ttx>Only prefix</ttx> matches.
-	<li>Output <ttx>Seqid</ttx>: 'Unk' followed by a consecutive number.
+	<li>They will only be output if <ttl>Only prefix</ttl> matches.
+	<li>&gt;<ttx>seqid</ttx>: 'Unk' followed by a consecutive number.
 	</ul>
 </ol>
 See <a href="./index.html#sf" class="ext" target="_target">Summarize</a> to help determine how to set the options
@@ -261,7 +277,7 @@ for your input.
 <h3>Scaffolds</h3>
 
 By default, the <ttb>Convert</ttb> option creates the <ttx>genomic.fna</ttx> file with only the chromosomes.
-However, you can have it also include scaffolds by selecting <ttx>Include Scaffolds</ttx>;
+However, you can have it also include scaffolds by selecting <ttl>Scaffolds</ttl>;
 see <a href="./logs/cnvCabbNscaf.html" class="ext" target="_blank">log</a> for convert summary of cabbage.
 
 <p>This will include all chromosomes (assigned prefix 'C') and scaffolds (assigned prefix 's') in the <ttx>genomic.fna</ttx> file.
@@ -270,8 +286,8 @@ Hence, it is best to just align the largest ones (e.g. the longest 30); merge th
 the smaller ones. You should set the following SyMAP project's
 <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>:
 <ol>
-<li><ttx>Group prefix</ttx> needs to be blank as there will be no common prefix.
-<li><ttx>Minimum length</ttx> should be set to only load the largest scaffolds.
+<li><ttl>Group prefix</ttl> needs to be blank as there will be no common prefix.
+<li><ttl>Minimum length</ttl> should be set to only load the largest scaffolds.
 <br>Calculate the length using
 the <ttp>xToSymap</ttp> <a href="./index.html#ol" class="ext" target="_blank">Lengths</a>.
 </ol>
@@ -289,13 +305,14 @@ the <ttp>xToSymap</ttp> <a href="./index.html#ol" class="ext" target="_blank">Le
 <h3>Load files into SyMAP</h3>
 
 The above scenario puts the files in the default SyMAP directories.
-When you start up SyMAP, you will see your projects listed on the left of the panel
-(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">as shown for demos</a>).
+
 <ol>
+<li>When you start up <tt>./symap</tt>, you will see your projects listed on the left of the panel
+(e.g <a href="../SystemGuide.html#demoseq" class="ext" target="_blank">demos</a>).
 <li>Check the projects
-you want to load, which will cause them to be shown on the right of the <ttp>symap</ttp> window.
-<li>For the project you want to load,
-open the project's <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a> window
+you want to load, which will cause them to be shown on the right of the <ttp>symap</ttp> panel.
+<li>For the project you want to load, open the
+<a href="../SystemHelp.html#start" class="ext" target="_blank">Project Parameters</a> panel
 to enter the appropriate values.
 <li>Then select <ttb>Load Project</ttb>.
 </ol>
@@ -318,21 +335,10 @@ Anyway, if it is not parsing the FASTA file correctly, edit the program
 <p><u>FASTA</u>: Reads the file ending in '.fna.gz' (or '.fna') and writes a new file called
 <ttx>sequence/genomic.fna</ttx> with the following changes:
 <ol>
-<li>Sequences must start with the "NC_", "NW_" or "NT_" names,
-or have the word "chromosome" or "scaffold" in their ">" header line
-in order to be copied. Scaffolds are only processed if the <ttx>Include scaffolds</ttx> is selected.
-<p>
-<li>The header line is replaced with ">ChrN", where N comes from the header line "chromosome N", e.g.
-"chromosome 1", etc.
-
-<br>For example:<tt>
->NC_029256.1 Oryza sativa Japonica Group cultivar Nipponbare chromosome 1</tt>
-<br>is replaced with: <tt>Chr1  NC_029256.1</tt>
-<p>
+<li>Sequences are output according to the option <a href="#rules">Rules</a>.
 <li>Gaps of &gt;30,000 are written to the <tt>annotation/gap.gff</tt> file (this value can be changed
 in the <ttp>xToSymap</ttp> interface).
-<p>
-<li>If <ttx>Hard mask</ttx> is selected, all lower case bases are changed to 'N'.
+<li>If <ttl>Hard mask</ttl> is selected, all lower case bases are changed to 'N'.
 </ol>
 
 <p><u>GFF</u>: Reads the file ending in 'gff.gz' (or .gff) and writes the file <tt>annotation/anno.gff</tt>. The
@@ -361,7 +367,7 @@ the 1st mRNA <ttx>product</ttx>.
 by its <i>type=exon</i>, where they each are written with the new seqid and a subset of the
 attributes. The mRNA ID is saved as an gene attribute (rnaID=) to indicate which exons were saved.
 <br>&nbsp;
-<li>If <ttx>Protein-id</ttx> is selected, then the attribute <ttx>protein_id=</ttx>
+<li>If <ttl>Protein-id</ttl> is selected, then the attribute <ttx>protein_id=</ttx>
 from the first <i>type=CDS</i> of the 1st mRNA for the gene is extracted.
 </ol>
 

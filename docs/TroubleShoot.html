@@ -332,23 +332,40 @@ which tells you when it is done.
 <a id="ext"></a>
 <h3>Running external programs</h3>
 
-MacOS will run <ttp>symap</ttp> but not MUMmer, MAFFT or MUSCLE is they have not been authenticated by you.
+MacOS will run <ttp>symap</ttp> but not MUMmer, MAFFT or MUSCLE until they have been authenticated by you.
 
-Running external programs (e.g. MUMmer) from SyMAP,
-you will get a popup like the one shown on the lower left image; select <ttb>Cancel</ttb>, then exit <ttp>symap</ttp>.
-Do the following (e.g. <ttx>prepro</ttx>):
-<ul>
-<li>Using the Finder, go to the <ttx>symap_5/ext/mummer/mac/aux_bin</ttx> directory.
-<li>Select <ttx>prepro</ttx> and "Open With" &rarr; "Terminal" (see lower right image).
-<li>You will get a pop-up, select "Open".
-<li>A terminal window will popup, you can close it.
-</ul>
+The following instructions use <ttp>Sequoia v15.7.3</ttp> and MUMmer program <ttx>mgaps</ttx>:
+<ol>
+<li>Click the apple icon in the upper left, click <ttl>System Settings</ttl>, click <ttl>Privacy &amp; Security</ttl>. Scroll
+down until you see <ttb>Security</ttb>. Leave this window open (see left image below).
+<li>Using the Finder, go to the <ttx>symap_5/ext/mummer/mac</ttx> directory.
+<br>Click <ttx>mgaps</ttx>. You will get a pop-up that will say:
+<br>&nbsp;&nbsp;&nbsp;<tt>"mgaps" Not Opened</tt>.
+<br>&nbsp;&nbsp;&nbsp;Select <ttl>Done</ttl>.
+
+<li>Back on the <ttl>Privacy &amp; Security</ttl> window, you will see under <ttb>Security</ttb>:
+<br>&nbsp;&nbsp;&nbsp;<tt>"mgaps" was blocked to protect your Mac</tt>
+<br>&nbsp;&nbsp;&nbsp;Select <ttl>Open Anyway</ttl>
+
+<li>Then you will get another popup saying (see right image below):
+<br>&nbsp;&nbsp;&nbsp;<tt>Open "mgaps"</tt>
+<br>&nbsp;&nbsp;&nbsp;Select <ttl>Open Anyway</ttl>.
+
+<li>Then you will get another popup asking for your password;
+<br>Enter your Mac password.
+<li>A terminal window will popup.
+<br>You can close it.
+</ol>
+
 <table class="tx">
-<tr><td><a href="img/macVer.png">
-	<img src="img/macVer.png" alt="Mac Verify" style="border: 1px solid black; width: 150px"></a>
+<tr>
+<td><a href="img/macSecurity.png">
+	<img src="img/macSecurity.png" alt="Mac Verify" style="border: 1px solid black; width: 350px"></a>
 <td>&nbsp;&nbsp;
-<td><a href="img/macOpen.png">
-	<img src="img/macOpen.png" alt="Mac Open" style="border: 1px solid black; width: 350px"></a>
+<td>
+<td>Referring to the image on the left, the <tt>mummer</tt> near the bottom will change to <tt>mgaps</tt> on <ttl>Done</ttl> (step 2).
+<p><a href="img/macOpen.png">
+	<img src="img/macOpen.png" alt="Mac Open" style="border: 1px solid black; width: 150px"></a>
 </table>
 
 For running MUMmer, perform this on the following  in <tt>symap_5/ext/mummer/mac</tt>:
@@ -364,11 +381,12 @@ For running MUMmer, perform this on the following  in <tt>symap_5/ext/mummer/mac
 For running MUSCLE, perform this on <ttx>symap_5/ext/muscle/mac/muscle</ttx>:
 <p>
 After that, you should be able to run these via SyMAP, even if you move the <ttx>symap_5</ttx> directory.
+In fact, it still worked even after downloading a new <ttx>symap_5.tar.gz</ttx>. So, even though this is a pain to do,
+its only necessary once (at least with Sonoma).
 
-<p>This worked with my previous Catalina, Monterey, and current Sonoma but
-if it does not work for you, see
-<a href="https://support.apple.com/en-us/102445" target="_blank" class="ext">Apple Help</a>, section
-"If you want to open an app that has not been notarized or is from an unidentified developer".
+<p>Versions of this worked with my previous Catalina, Monterey, and Sonoma.
+If it does not work for you, see
+<a href="https://support.apple.com/en-us/102445" target="_blank" class="ext">Apple Help</a>.
 
 <a id="font"></a>
 <h3>MacOS Fonts</h3>
@@ -398,6 +416,8 @@ When searching online for this problem, it says:
 "This fatal error occurs when the Java Virtual Machine (JVM) crashes,
 typically due to issues in native code (outside the JVM), memory corruption, or hardware instability".
 <p>Searching native code, it says: "When a 'fatal error' occurs in native code, it means the crash happened in a non-Java component such as a shared library (.dll, .so), a system driver".
+<p>This was happening to me recently. I used <ttp>CleanMyMac</ttp> app to remove old files, then rebooted; it has not
+happened since.
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
