@@ -62,7 +62,7 @@ Referenced external docs</u>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a>
 <li><a href="SystemHelp.html" class="ext" target="_blank">Parameters and Interface</a>
 <li><a href="MUMmer.html" class="ext" target="_blank">MUMmer with SyMAP</a>
-<li><a href="Demo.html" class="ext" target="_blank">Results: Demo and Synteny</a>
+<li><a href="Demo.html" class="ext" target="_blank">Demo Results</a>
 <li><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
 </ul>
 1. <u>Introduction</u>
@@ -90,12 +90,9 @@ Referenced external docs</u>
 <li style="margin: 0.4em 0;"><a href="#draft">Draft ordering</a>
 <li style="margin: 0.4em 0;"><a href="#demoself">Self-synteny</a>
 </ul>
-5. <u>New project</u> <!-- #create ref in code -->
+5. <u>New projects and synteny</u> <!-- #create ref in code -->
 <ul>
-<li style="margin: 0.4em 0;"><a href="#create">Create a new project</a>
-<li style="margin: 0.4em 0;"><a href="#dir">Input and directory structure</a>
-<li style="margin: 0.4em 0;"><a href="#load">Load project</a>
-<li style="margin: 0.4em 0;"><a href="#ans">Align&Synteny (A&S)</a>
+<li style="margin: 0.4em 0;"><a href="#create">Load and A&amp;S</a>
 <li style="margin: 0.4em 0;"><a href="#draft2">Draft ordering</a>
 <li style="margin: 0.4em 0;"><a href="#self">Self-synteny</a>
 <li style="margin: 0.4em 0;"><a href="#cancel">Cancel</a>
@@ -133,26 +130,25 @@ divergent eukaryotic genomes.  It is designed for the comparison of a few genome
 <table class="tx">
 <tr><td>
 Its features include the following:
-<p>
-<ul>
-	<li><i>Compute</i>
+<p><i>Compute</i>
 	<ul>
 		<li>Find synteny between two sequenced eukaryotic genomes with optional annotation.
-		<li>Draft sequence ordering by synteny, i.e. align a draft genome to a fully sequence (not draft-to-draft).
+		<p>
+		<li>Order a draft genome against a fully sequence genome (not draft-to-draft).
+		<p>
 		<li>Self-synteny.
 	</ul>
-	<li><i>Query and view</i>
+<p><i>Query and view</i>
 	<ul>
 		<li>For multiple selected synteny pairs, display using dot plot, circular, and side-by-side.
-		<li>Complete queries on annotation, collinear genes, multi-hit genes, etc.
+		<p>
+		<li>Query annotation, collinear genes, multi-hit genes, etc.
 	</ul>
-</ul>
 <td>
 <center><small>Click an image to see the closeup.</small></center>
 <br><a href="img/symapPlants.png"><img src="img/symapPlants.png" alt="viewPlants"
 		style="width:390px;border: 1px solid black;"></a>
 </table>
-
 
 <table class="tx">
 	<tr>
@@ -196,46 +192,46 @@ The following three scripts are provided in the tar file.
 
 <p>Follow the steps below to get started with SyMAP.
 <p>
-
 <table class="tx">
 	<tr><td style="vertical-align: text-top;">1.
-		<td style="vertical-align: text-top;">Use Linux or MacOS.
+		<td style="vertical-align: text-top;">Use Linux or MacOS
 		<td style="vertical-align: text-top;">See <a href="#machine">system requirements</a>.
 	<tr>
 		<td style="vertical-align: text-top;">2.
-		<td style="vertical-align: text-top;">Requirements.
+		<td style="vertical-align: text-top;">Requirements
 		<td style="vertical-align: text-top;">Set up <a href="#java">Perl, Java and MySQL</a> .
 	<tr>
 		<td style="vertical-align: text-top;">3.
-		<td style="vertical-align: text-top;">Install SyMAP.
+		<td style="vertical-align: text-top;">Install SyMAP
 		<td style="vertical-align: text-top;">It is a simple unzip; see <a href="#installation">Installation</a>
 		and <a href="#mysql">SyMAP MySQL parameters</a>.
 	<tr>
 		<td style="vertical-align: text-top;">4.
-		<td style="vertical-align: text-top;">Run the demo.
+		<td style="vertical-align: text-top;">Run the demo
 		<td style="vertical-align: text-top;">Highly recommended. See <a href="#demo">running the demo.</a>
 	<tr>
 		<td style="vertical-align: text-top;">5.
-		<td style="vertical-align: text-top;">Prepare input files.
+		<td style="vertical-align: text-top;">Prepare input files
 		<td style="vertical-align: text-top;">FASTA sequence and optional GFF annotation.
-		<br>See <a href="input/index.html" class="ext" target="_blank">Input</a> and <a href="#create">Creating a new project</a>.
+		See <a href="input/index.html" class="ext" target="_blank">Input</a>.
 	<tr>
 		<td style="vertical-align: text-top;">6.
-		<td style="vertical-align: text-top;">Load the files into SyMAP.
-		<td style="vertical-align: text-top;">Select <ttb>Load project</ttb> by the project name.
-		<br>See <a href="#load">Loading project</a>.
+		<td style="vertical-align: text-top;">Load the files into SyMAP
+		<td style="vertical-align: text-top;">For a project, set <ttb>project parameters</ttb>, then select <ttb>Load project</ttb>.
+		<br>See <a href="#create">New project</a> and <a href="SystemHelp.html#selLoad" class="ext" target="_blank">Load project</a>.
 	<tr>
 		<td style="vertical-align: text-top;">7.
-		<td style="vertical-align: text-top;">Compute alignments and synteny.
-		<td style="vertical-align: text-top;">Select <ttb>Selected project</ttb> beside <ttl>Align&amp;Synteny</ttl>.
-		<br>See <a href="#ans">Align&amp;Synteny</a>.
+		<td style="vertical-align: text-top;">Compute alignments and synteny
+		<td style="vertical-align: text-top;">For a selected pair, set <ttb>pair parameters</ttb>, then select <ttb>Selected pair</ttb>.
+		<br>See <a href="#create">New project</a> and <a href="SystemHelp.html#avail" class="ext" target="_blank">Align&amp;Synteny</a>.
 	<tr>
 		<td style="vertical-align: text-top;">8.
-		<td style="vertical-align: text-top;">View results.
+		<td style="vertical-align: text-top;">View results
 		<td style="vertical-align: text-top;">See
-		<a href="UserGuide.html" class="ext" target="_blank">User Guide</a> for a detailed
-		description of viewing and querying the results.
+		<a href="UserGuide.html" class="ext" target="_blank">User Guide</a> for a details
+		of viewing and querying the results.
 </table>
+
 <!-------------------------------------------------->
 <hr>
 <a id="require"></a>
@@ -252,15 +248,18 @@ The following three scripts are provided in the tar file.
 
 <a id="machine"></a>
 <h3>System Requirements</h3>
-The machine must be a Linux or MacOS 64-bit machine with sufficient memory for your dataset.
+
+<u>Basic knowledge:</u> This documentation requires a basic knowledge of Linux.
+The documentation and SyMAP interface assumes a knowledge of the Linux directory (folder) structure, as
+used by a terminal application.
+
+<p>The machine must be a Linux or MacOS 64-bit machine with sufficient memory for your dataset.
 
 <p>The largest component of SyMAP execution time is running MUMmer<sup>1,2</sup>.
-The time and memory for MUMmer all depends on the genomes sizes, complexity and similarity.
+The time and memory for MUMmer depends on the genomes sizes, complexity and similarity.
 If MUMmer fails, it is often due to insufficient memory; see the
 <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> document, which
-explains how to determine the problem and ways around it.  It explains how
-to <a href="MUMmer.html#cmd"  class="ext" target="_blank">run MUMmer on a different machine</a> and port the
-results to the <tt>symap_5/data/seq_results</tt> directory.
+explains how to determine the problem and ways around it.
 The results in <a href="#time">Tested datasets and timings</a> gives an idea of compute times and memory.
 
 <p>If gene discovery is not important, then masking all but the gene sequences <i>greatly</i> reduces the time and memory.
@@ -268,7 +267,7 @@ See <a href="#mask">Masked</a> below.
 
 <p>If SyMAP runs out of memory, see <a href="TroubleShoot.html#memory" class="ext" target="_blank">Trouble Shoot</a>.
 
-<p> For viewing alignments with <tt>viewSymap</tt>, CPU and memory needs are typically negligible, unless
+<p> For viewing alignments with <ttp>viewSymap</ttp>, CPU and memory needs are typically negligible, unless
 you are performing queries on more than 4-5 genomes at once.
 
 <a id="tested"></a>
@@ -562,7 +561,6 @@ see <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoo
 check that the provided external programs (e.g. MUMmer) are executable; if it shows any problems,
 see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>.
 For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
-<p>
 
 <a id="demoseq"></a>
 <h3>Demo two genome synteny</h3>
@@ -599,7 +597,6 @@ automatically be selected (green cell).
 The <ttl>Align&amp;Synteny</ttl> takes less than 5 minutes on the MacOS x86_64 but could take up to 30 minutes
 on a slow machine.
 <p>When done, the table will have a checkmark (&#10003), signifying that the synteny is available for viewing.
-
 <td>
 <a href="img/demoTable.png"><img src="img/demoTable.png" alt="demoTable" style="border: 1px solid black; width: 400px"></a>
 
@@ -642,7 +639,6 @@ See the first dot plot in <a href="Demo.html#draft" class="ext" target="_blank">
 <a href="SystemHelp.html#clust" class="ext" target="_blank">Cluster Algo1</a> and <a href="SystemHelp.html#syn" class="ext" target="_blank">Synteny Original</a>.
 		<td>
 <a href="img/demoSumDraft.png"><img src="img/demoSumDraft.png" alt="demo Sum Draft" style="border: 1px solid black; width: 400px"></a>
-
 </table>
 
 <p>The ordering algorithm creates the following files and directories:
@@ -693,137 +689,71 @@ This computes a few tiny 'iffy' blocks, as described in
 <!---------------------------------------------------------->
 <!--------------------- NEW PROJECT ----------------------------------->
 <!-- ref create in code --->
-
 <hr>
 <a id="create"></a>
-
-<h2>5. New project</h2>
+<h2>5. New projects and synteny</h2>
 <table class="tz"><tr>
-<td><a href="#create2">Create</a>
-<td><a href="#dir">Input and<br>directory</a>
 <td><a href="#load">Load<br>project</a>
-<td><a href="#ans">Align<br>&amp; Synteny</a>
+<td><a href="#create2">Align&amp;<br>synteny</a>
 <td><a href="#draft2">Draft<br>ordering</a>
 <td><a href="#self">Self<br>synteny</a>
 <td><a href="#cancel">Cancel</a>
 <td style="text-align: right"><a href="#top">Go to top</a>
 </table>
-<a id="create2"></a>
-<h3>Create a new project</h3>
 
-<u>Database name</u>: The parameter <ttx>db_name</ttx> (database name) in the <tt>symap.config</tt>
-file that comes with the tar file is set to <ttx>symapDemo</ttx>.
+<p><u>Database name</u>: In the <tt>symap.config</tt> file that comes with the tar file,
+the parameter <ttx>db_name</ttx> (database name) is set to <ttx>symapDemo</ttx>.
 Edit the <tt>symap.config</tt> file to set the database name to something more meaningful.
 It is protocol to start the database name with 'symap'.
 
-<p> The following gives an outline of the steps and important details
-of the directory structure, linking to the appropriate sections
-in <a href="./SystemHelp.html" class="ext" target="_blank">Interface and parameters</a> document, which
-details all functions and parameters.
-<p>
+<p>The following provides an outline of building a synteny database, referring to the webpages that
+contain the specific information.
 
-<a id="dir"></a>
-<h3>Input and directory structure</h3>
-<u>Input</u>:
-See <a href="./input/index.html#projDir" class="ext" target="_blank">Input</a> for description of
-the sequence (FASTA) and annotation (GFF) files. The
-<a href="input/index.html#if" class="ext" target="_blank">xToSymap</a> interface takes as input NCBI or Ensembl files,
-and outputs the best input files for SyMAP, along with automatically creating the correct directory
-structure.
-
-<p><u>Project-name</u>:
-Each project has a <ttx>project-name</ttx>, which is also the project's directory name.
-The <ttx>project-name</ttx> should be a short descriptive name; see the <a href="input/index.html#iloc" class="ext" target="_blank">
-Input's Project directory</a> for important details.
-The use of the <ttx>project-name</ttx> is shown below.
-
-<p><u>Project directory structure</u>:
-
-<p>Each project has a directory as follows:
-<pre>
-  /data/seq/&lt;project-name&gt;
-</pre>
-
-<p>The default location for sequence and annotation files is:
-<pre>
-  /data/seq/&lt;project-name&gt;/sequence
-  /data/seq/&lt;project-name&gt;/annotation
-</pre>
-To indicate to the <ttp>symap</ttp> <ttb>Load project</ttb> function where the project's input files are,
-do one of the following three:
-<ol>
-<li>Create  these sub-directories under <tt>/data/seq</tt> and put your files there,
-<br>e.g using <ttx>project-name=foobar</ttx>:
-<pre>
-  cd data/seq
-  mkdir foobar
-  cd foobar
-  mkdir sequence
-  mkdir annotation
-</pre>
-Move your FASTA file(s) to <tt>data/seq/&lt;project-name&gt;/sequence</tt>
-(e.g. <tt>data/seq/foobar/sequence</tt>)
-and your optional GFF files(s) to <tt>data/seq/&lt;project-name&gt;/annotation</tt>
-(e.g. <tt>data/seq/foobar/annotation</tt>)
-<p>
-
-<li>Create these sub-directories under <tt>/data/seq</tt> and use soft links to point to the file locations,
-<br>e.g using <ttx>project-name=foobar</ttx>:
-<pre>
-  cd data/seq
-  mkdir foobar
-  cd foobar
-  ln -s &lt;location of directory of sequence files&gt; sequence
-  ln -s &lt;location of directory of annotation files&gt; annotation
-</pre>
-<li>Use the <ttb>Add project</ttb> button on the <ttp>symap</ttp> interface (lower-left corner) to
-add the project name to the <tt>data/seq</tt> directory.
-Use the <a href="SystemHelp.html#projParams" class="ext" target="_blank">project's parameter</a>
-panel to enter the location of the sequences and optional annotation files into the <ttx>Sequence files</ttx>
-and <ttx>Anno files</ttx> parameters.
-</ol>
-<p>For options 1 and 2, it is not necessary to enter the locations of the files in the
-<a href="SystemHelp.html#projParams" class="ext" target="_blank"> project parameter</a> panel since
-both use the default locations.
-<p>
-All sub-directories in <tt>data/seq</tt> are shown on the left-panel of the <ttp>symap</ttp> interface.
-<table>
-<tr><td style="vertical-align: text-top;">
-<p>Each project is shown with its <ttx>Display name</ttx>, which is set in the project's parameters.
-The <ttx>project-name</ttx> is shown on the right hand image as the <ttx>Directory name</ttx>, as they are the same.
-<td>
-<a href="img/projNew2.png"><img src="img/projNew2.png" alt="projNew2" style="border: 1px solid black; width: 450px"></a>
-</table>
-The <ttp>symap</ttp> program requires the directories to be present (and will create them if necessary), <ttp>viewSymap</ttp> does not.
-
-<!------------ load ----------------------->
 <a id="load"></a>
 <h3>Load project</h3>
-See <a href="./SystemHelp.html#projParams" class="ext" target="_blank">project parameters</a>
-on setting the parameters.
 
-See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for loading a project.
+<p><u>Input files</u>: See <a href="./input/index.html" class="ext" target="_blank">Input</a> for an explanation
+on the input files and how to define their location to <ttp>symap</ttp>.
+<p><u>Load project</u>: Assume that the projects <ttx>foo</ttx> and <ttx>bar</ttx> were created as described in
+<a href="./input/index.html#create" class="ext" target="_blank">Create</a>.
 
-<table style="width: 95%"><tr><td style="text-align: left"><td style="text-align: right"><a href="#top">Go to top</a></table>
-<!------------ ans ----------------------->
-<a id="ans"></a>
-<h3>Align&amp;Synteny</h3>
-
-<table class="tx">
-<tr><td style="vertical-align: text-top;">See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a>
-on setting the pair parameters for the this step.
-<p>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these two options.
-<p>Then select <ttb>Selected Pair</ttb> to run the Align&amp;Synteny.
-<td><a href="img/demoTable2.png"><img src="img/demoTable2.png" alt="align and synteny" style="border: 1px solid black; width: 500px"></a>
+<table class="tx"><tr><td>
+<ul>
+<li>See <a href="./SystemHelp.html#projParams" class="ext" target="_blank">project parameters</a>
+on setting the parameters; it is important to get these correct before running A&amp;S.
+<p><li>Then select <ttb>Load project</ttb>.
+See <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load</a> for details.
+</ul>
+<td><a href="img/newLoad.png"><img src="img/newLoad.png" alt="load " style="border: 1px solid black; width: 400px"></a>
 </table>
 
-<p>For initial fast results:
+<a id="create2"></a>
+<h3>Align&amp;Synteny</h3>
+<a id="ans"></a>
+
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
 <ul>
-<li>Select the <ttl>Mask</ttl> option for both sequences <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> before aligning.
+<li>See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">pair parameters</a>
+on setting the pair parameters for the this step.
+<p>
+<li>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these two options.
+<p>
+<li>Then select <ttb>Selected Pair</ttb> to run the Align&amp;Synteny.
+See <a href="./SystemHelp.html#avail" class="ext" target="_blank">Available Syntenies</a> for details.
+</ul>
+<td><a href="img/newPair.png"><img src="img/newPair.png" alt="align and synteny" style="border: 1px solid black; width: 400px"></a>
+</table>
+
+<p>Suggestion for initial fast results:
+<ul>
+<li>Select the <ttl>Mask</ttl> option for both sequences
+<a href="./SystemHelp.html#pairParams" class="ext" target="_blank">pair parameters</a> before aligning.
+<li>This should performs a fast alignment.
 <li>Then, if the initial results look good and gene-discovery is desired, <ttl>Clear Pair</ttl> and redo without the masking.
 </ul>
 
-<p><u>Align&amp;Synteny files</u>:
+<p><u>Results</u>:
 The result files are in the following directory:
 <pre>
    /data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;/align
@@ -834,29 +764,11 @@ the project files to be reloaded and/or the synteny to be recomputed; if these f
 MUMmer files will be used, which <i><b>saves a lot of time</b></i>.
 
 <p>The log files are in the <tt>/logs</tt> directory, see
-<a href="MUMmer.html#log" class="ext" target="_blank">Running MUMmer</a> for more details.
+<a href="MUMmer.html#log" class="ext" target="_blank">MUMmer log files</a> for more details.
 
 <p>See <a href="MUMmer.html"  class="ext" target="_blank">Using MUMmer with SyMAP</a>
 for a discussion on how it works in SyMAP, trouble-shooting, and running MUMmer externally
-(i.e. if your local machine does not have enough memory or CPUs, you may need to run it on
-a bigger machine).
-
-<p><u>Incomplete alignment</u>
-If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will have the following files:
-<p><pre>
--rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
--rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum
--rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum.done
--rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum
--rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum.done
-</pre>
-<ol>
-<li>The 'all.done' indicates that the all alignments completed.
-<li>If 'all.done' does not exist, SyMAP will perform any alignments that do NOT have a corresponding 'mum.done'.
-If the <ttl>Concat</ttl> setting has been switched between the previous and current run, this will not work correctly.
-<li>If the user supplied the alignments (<a href="MUMmer.html#cmd"  class="ext" target="_blank">Supply MUMmer files</a>),
-there may not be 'mum.done' files but there should be an 'all.done', so it is assumed they are all done.
-</ol>
+(i.e. if your local machine does not have enough memory, you may need to run it on a bigger machine).
 
 <!--------------------------------------------------------------------->
 <a id="draft2"></a>

@@ -14,12 +14,13 @@
 <p class=sidetit>&nbsp;&nbsp;Parameters</p>
 <p>
 <a href="#build">Build database</a>
-<a href="#projParams">Project Parameters</a>
-<a href="#pairParams">Pair Parameters</a>
+<a href="#projParams">Load Project Parameters</a>
+<a href="#pairParams">A&amp;S Pair Parameters</a>
 <a href="#align2">&nbsp;&nbsp;Alignment</a>
 <a href="#clust">&nbsp;&nbsp;Cluster Algo</a>
 <a href="#clParam">&nbsp;&nbsp;Cluster Params</a>
 <a href="#syn">&nbsp;&nbsp;Synteny</a>
+<a href="#synResults">Synteny Compare</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -58,18 +59,19 @@ for the long introns of mammalian genomes, and less diverse genomes.
 
 <p>
 <table class="tx center">
-<tr><td><a href="#start"><u>Start SyMAP</u></a>
 <tr><td style="vertical-align: text-top;">
 1. <a href="#build"><u>Build database</u></a>
 <ol type="a">
-<li style="margin: 0.4em 0;"><a href="#selLoad">Selected</a>
-<li style="margin: 0.4em 0;"><a href="#avail">Available Syntenies</a>
-<li style="margin: 0.4em 0;"><a href="#fun">Function buttons</a>
+<li style="margin: 0.4em 0;"><a href="#start">Start SyMAP</a>
+<li style="margin: 0.4em 0;"><a href="#selLoad">Load project</a>
+<li style="margin: 0.4em 0;"><a href="#avail">Available syntenies</a>
+<li style="margin: 0.4em 0;"><a href="#fun">Align&amp;Synteny (A&amp;S)</a>
 <li style="margin: 0.4em 0;"><a href="#cpu">CPU and Verbose</a>
+<li style="margin: 0.4em 0;"><a href="#addInfo">Additional information</a>
 </ol>
-
+<td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
-2. <a href="#projParams"><u>Project Parameters</u></a> 			<!-- in code -->
+2. <a href="#projParams"><u>Load Project Parameters</u></a> 			<!-- in code -->
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#start">Parameter panel</a>
 <li style="margin: 0.4em 0;"><a href="#display">Display</a>
@@ -77,22 +79,38 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#anno">Load annotation</a>
 <li style="margin: 0.4em 0;"><a href="#annot">GFF Attributes</a>
 <li style="margin: 0.4em 0;"><a href="#save1">Save project parameters</a>
-
 </ol>
+<td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
-3. <a href="#pairParams"><u>Pair Parameters</u></a>  			<!-- in code pre-v546 -->
+3. <a href="#pairParams"><u>A&amp;S Pair Parameters</u></a>  			<!-- in code pre-v546 -->
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#over2">Parameter panel</a>
 <li style="margin: 0.4em 0;"><a href="#align2">Alignment</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#clust">Cluster Hits</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#syn">Synteny</a>				<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#save2">Save pair parameters</a>
-<li style="margin: 0.4em 0;"><a href="#mum">MUMmer parameters</a>
 </ol>
-</table>
-This document provide details of parameters and functions.
+4. <a href="#synResults"><u>Synteny comparisons</u></a>
 
-<h2>Start SyMAP</h2>
+</table>
+
+<!---------------------------------------------------------------------------->
+<a id="build"></a> <!-- # ref in code -->
+<h2>1. Build database</h2>
+
+<table class="tz">
+<tr>
+<td><a href="#start">Start<br>SyMAP</a>
+<td><a href="#selLoad">Select<br>and Load</a>
+<td><a href="#avail">Available<br>Synteny</a>
+<td><a href="#fun">Align&amp;<br>Synteny</a>
+<td><a href="#cpu">CPU&amp;<br>Verbose</a>
+<td><a href="#addInfo">Additional<br>information</a>
+<td class="colrt"><a href="#top">Go to<br>top</a></td></tr>
+</table>
+
+<a id="start"></a>
+<h3>1.a Start SyMAP</h3>
 <table class="tx"><tr>
 <td style="vertical-align: text-top;">To start SyMAP, type at the command line: <tt>./symap</tt>
 <p>To view the command line options: <tt>./symap -h</tt>
@@ -101,7 +119,7 @@ This document provide details of parameters and functions.
 <ul>
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
 <li><a href="SystemGuide.html#demo" class="ext" target="_blank">Demo</a> to run the demo (do not skip this step!).
-<li><a href="SystemGuide.html#create" class="ext" target="_blank">Create a new project</a>.
+<li><a href="input/index.html" class="ext" target="_blank">Input</a> for file formats.
 </ul>
 </table>
 
@@ -109,21 +127,8 @@ This document provide details of parameters and functions.
 <br><a href="img/symapPlants.png">
 	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 580px"></a>
 
-<!---------------------------------------------------------------------------->
-<a id="build"></a> <!-- # ref in code -->
-<h2>1. Build database</h2>
-
-<table class="tz">
-<tr>
-<td><a href="#selLoad">Selected</a>
-<td><a href="#avail">Available Synteny</a>
-<td><a href="#fun">Function buttons</a>
-<td class="colrt"><a href="#top">Go to top</a></td></tr>
-</table>
-
 <a id="selLoad"></a>
-
-<h3>1.a Selected</h3>
+<h3>1.b Select and Load</h3>
 The projects selected from the <ttb>Projects</ttb> in
 the left panel are listed in the <ttb>Selected</ttb> section on the right.
 The possible functions vary with the state, as listed below:
@@ -189,7 +194,7 @@ to confirm that you want this done! If it will be removing multiple alignment di
 on each one.
 
 <a id="avail"></a>
-<h3>1.b Available Syntenies</h3>
+<h3>1.c Available Syntenies</h3>
 
 Sequence alignments are performed with
 <a href="http://mummer.sourceforge.net/manual" class="ext" target="_blank">MUMmer3</a>,
@@ -224,17 +229,11 @@ the buttons that can be selected are activated.
 <p>See <a href="#over2">Pair Parameters</a> for additional information on the <ttb>Available Syntenies</ttb> and codes.
 
 <a id="fun"></a>
-<h3>1.c Function Buttons</h3>
+<h3>1.d Align&amp;Synteny</h3>
 
 <table class="ty">
 <tr><td colspan=2><i>Align&amp;Synteny (A&amp;S)</i> Synteny usually implies <i>Cluster&amp;Synteny</i>
 as the process has 2 distinct algorithms.
-<tr><td style="white-space: nowrap;vertical-align: text-top;">
-		<ttb>All Pairs</ttb>
-	<td>
-		Run (or complete) the synteny computation for all pairs in the <ttb>Available Syntenies</ttb> table.
-		However, this will not run 'self-syntenies'; those need to be done individually by selecting
-		the pair.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<ttb>Selected Pair</ttb>
 		<br><ttb>Selected Redo</ttb>
@@ -255,10 +254,10 @@ as the process has 2 distinct algorithms.
 	<td>Set the <a href="#pairParams">pair parameters</a> for the selected pair cell .
 </table>
 
-<p>For the remaining display buttons, see <a href="UserGuide.html#views" class="ext" target="_blank">User Guide</a>.
+<p>For the display buttons, see <a href="UserGuide.html#views" class="ext" target="_blank">User Guide</a>.
 
 <a id="cpu"></a>
-<h3>1.d CPU and Verbose</h3>
+<h3>1.e CPU and Verbose</h3>
 <ttl>CPUs:</ttl> Enter the maximum number of CPUs to use for an alignment. SyMAP will use
 up to that number (but may use fewer, depending on the number of sequences being aligned). Alternatively,
 the number of CPUs may be entered in the <tt>symap.config</tt> file or
@@ -272,12 +271,21 @@ entered as a command line argument (-p N).
 	<li>It is not saved as a parameter. This can also be turned on using a command line argument:
 	<tt>symap -v</tt>
 	</ul>
+
+<a id="addInfo"></a>
+<h3>1.f Additional information</h3>
+<table class="tx">
+<tr><td><a href="MUMmer.html" class="ext" target="_blank">MUMmer</a><td>Resolving problems if MUMmer does not run
+<tr><td><a href="SystemGuide.html#draft2" class="ext" target="_blank">Draft</a><td>Ordering draft sequence
+<tr><td><a href="SystemGuide.html#self" class="ext" target="_blank">Self</a><td>Self-synteny
+<tr><td><a href="SystemGuide.html#cancel" class="ext" target="_blank">Cancel</a><td>Cancelling an A&amp;S
+</table>
 <hr>
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <!---------------------------------------------------------------------->
 <a id="projParams"></a> <!-- # ref in code -->
-<h2>2. Project Parameters</h2>
+<h2>2. Load Project Parameters</h2>
 
 <table class="tz">
 <tr>
@@ -290,7 +298,6 @@ entered as a command line argument (-p N).
 <td class="colrt"><a href="#top">Go to top</a></td></tr>
 </table>
 
-<a id="start"></a>
 <h3>2.a Parameter panel</h3>
 <table>
 <tr><td style="vertical-align: text-top;">
@@ -496,7 +503,7 @@ When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are s
 <!----------------------------------------------------------------------->
 <!----------------------------------------------------------------------->
 <a id="pairParams"></a> <!-- # ref in code -->
-<h2>3. Pair Parameters</h2>
+<h2>3. A&amp;S Pair Parameters</h2>
 
 <table class="tz">
 <tr>
@@ -505,7 +512,7 @@ When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are s
 <td><a href="#clust"><i>Cluster<br>Hits</i></a>
 <td><a href="#syn"><i>Synteny</i></a>&nbsp;&nbsp;&nbsp;
 <td><a href="#save2">Save</a>
-<td><a href="#mum">MUMmer<br>parameters</a>
+<td><a href="#synResults">Synteny<br>results</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
@@ -513,6 +520,7 @@ When the <ttl>A&amp;S</ttl> is executed, then the corresponding parameters are s
 <h3>3.a Parameter panel</h3>
 The <a href="#avail">Available Syntenies</a> section at the beginning explains the table in the lower right. The following provides
 more information in the context of the pair parameters.
+<p>
 <table>
 <tr>
 	<td>
@@ -523,7 +531,7 @@ more information in the context of the pair parameters.
 	<tr><td><b>A</b><td>Yes<td>No
 	<tr><td>&#10004;<td>Yes<td>Yes
 	</table>
-	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 550px"></a>
+	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 500px"></a>
 </table>
 
 <table>
@@ -626,24 +634,26 @@ The default MUMmer parameter seems to work fine with SyMAP, so probably do not n
 <tr>
 <td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>PROmer Args</ttl><sup>1</sup>
-	<td>Arguments for PROmer. See <a href="#mum">MUMmer parameters</a>.
+	<td>Arguments for PROmer
 	<td>&nbsp;-
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>NUCmer Args</ttl><sup>1</sup>
-	<td>Arguments for NUCmer. See <a href="#mum">MUMmer parameters</a>.
+	<td>Arguments for NUCmer
 	<td>&nbsp;-
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>Self Args</ttl><sup>2</sup>
-	<td>Arguments to use when aligning a chromosome to itself.
+	<td>Arguments to use when aligning a chromosome to itself
 	<td>&nbsp;-
 <tr><td>&nbsp;&nbsp;<ttl>PROmer Only</ttl><sup>3</sup>
-	<td>Use PROmer for all alignments.
+	<td>Use PROmer for all alignments
 	<td>Off
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<ttl>NUCmer Only</ttl><sup>3</sup>
-	<td>Use NUCmer for all alignments.
+	<td>Use NUCmer for all alignments
 	<td>Off
 </table>
 <br><sup>1</sup>
-<small><font color="red">BEWARE</font>: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
-</small>
+<small>
+<font color="red">BEWARE</font>: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
+See <a href="MUMmer.html#mum" target="_blank" class="ext">MUMmer parameters</a>.</small>
+
 <br><sup>2</sup><small>When self-alignment is performed, standard arguments are used
 when comparing different chromosomes. However, additional arguments may be desired
 when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt>.
@@ -651,7 +661,9 @@ when a chromosome sequence is run against itself, e.g. <tt>--nosimplify</tt>.
 <br><sup>3</sup><small> By default, PROmer is used for alignments between different
 projects, while NUCmer is used for self alignments.
 </small>
-
+<p>All MUMmer files but the those with the <tt>.mum</tt> suffix are removed by <ttp>symap</ttp>. If you prefer them not to be removed,
+use the "-mum" command line parameter, i.e.
+<pre> ./symap -mum</pre>
 <!------------------------------------------------------------------------>
 <!------------------------------------------------------------------------>
 <a id="clust"></a>
@@ -873,7 +885,7 @@ for draft sequence.
 	<br><ttx>Close</ttx>: Blocks that overlap or are close will be merged.
 </table>
 
-<p>See <a href="demo.html#synteny" class="ext" target="_blank">Synteny results</a> for comparison of using the different
+<p>See <a href="#synResults">Synteny results</a> for comparison of using the different
 synteny parameters. The following is a brief comparison of three images of the same regions
 when evaluated with the following 3 parameter sets:
 
@@ -882,7 +894,6 @@ when evaluated with the following 3 parameter sets:
 <ttl>Same orient</ttl> with <ttl>Merge</ttl> (two blocks).
 <a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
 <br>In the last image, the reverse orientation block is embedded in another block
-
 
 <a id="order"></a>
 <h4>Order against</h4>
@@ -957,36 +968,49 @@ viewed and changed using <ttp>symap</ttp> (not <ttp>viewSymap</ttp>).
 <p>BEWARE: If you run <ttl>A&amp;S</ttl>, then change the PROmer or NUCmer settings, but forget to <ttb>Clear Pair</ttb>
 before running <ttl>A&amp;S</ttl> again, the parameters
 on the <ttb>Summary</ttb> page will be wrong (SyMAP does not check for this situation).
-<!------------------------------------------------------------------------>
-<a id="mum"></a>
-<h3>3.f MUMmer parameters</h3>
 
-The arguments for MUMmer are <b>NOT</b> checked for correctness.
+<!--------------------------------------------------------------->
+<a id="synResults"></a>
+<h2>4. Synteny parameter comparisons</h2>
+The following is from comparing <i>Arabidopsis thaliana</i> chromosomes 1 and 2 with
+<i>Brassica rapa</i> chromosomes 1 and 7. The <ttx>Clustering hits Algo2 (exon-intron)</ttx> was
+used in all cases.
 <p>
-To see the parameters for the default MUMmer V3 on MacOS, from the <tt>symap</tt> directory:
-<pre>
-./ext/mummer/mac/mummer -h
-./ext/mummer/mac/promer -h
-./ext/mummer/mac/nucmer -h
-</pre>
-To see the parameters for the default MUMmer V3 on Linux:
-<pre>
-./ext/mummer/linux/mummer -h
-./ext/mummer/linux/promer -h
-./ext/mummer/linux/nucmer -h
-</pre>
+<table>
+<tr><td colspan=2><u><ttx>Original</ttx> vs <ttx>Strict</ttx></u>: Both allow a mix of inverted and non-inverted hits in a block, but
+<ttx>Strict</ttx> only allows small inversions within a non-inverted block and vice-versa (unless
+<ttx>Merge</ttx> is used).
+The <ttx>Strict</ttx> blocks tend to not have the tails of dots that have bigger gaps.
+<tr><td><ttx>Original</ttx><br><a href="img/dp.ab.orig.all.png">
+    <img src="img/dp.ab.orig.all.png" alt="Arab Brap orig" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict</ttx><br><a href="img/dp.ab.strict.all.png">
+    <img src="img/dp.ab.strict.all.png" alt="Arab Brap strict" style="border: 1px solid black; width: 380px"></a>
 
-If  you compiled V4 in the /ext directory:
-<pre>
-./ext/mummer4/m4/bin/mummer -h
-./ext/mummer4/m4/bin/promer -h
-./ext/mummer4/m4/bin/nucmer -h
-</pre>
-For a detail discussion of MUMmer running in SyMAP,
-see <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>.
-<p>After running MUMmer, all alignment files are removed except the ".mum" file; to prevent removal,
-<br> execute
-<tt>./symap -mum</tt>.
+<tr><td><ttx>Original</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.part.png">
+    <img src="img/dp.ab.orig.part.png" alt="Arab Brap orig 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.part.png">
+    <img src="img/dp.ab.strict.part.png" alt="Arab Brap strict 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Orient</ttx></u>: This requires all hits in a block to be in the same orientation.
+This options fits with what some other software packages consider 'synteny'.
+<tr><td><ttx>Original Orient</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.or.png">
+    <img src="img/dp.ab.orig.or.png" alt="Arab Brap orig orient 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Orient</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.or.png">
+    <img src="img/dp.ab.strict.or.png" alt="Arab Brap strict orient 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Merge Overlap</ttx></u>: Only overlapping blocks can be merged. This will
+have little effect if <ttx>Orient</ttx> has been used since mixed blocks cannot be merged.
+<tr><td><ttx>Original Merge Overlap</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.olap.png">
+    <img src="img/dp.ab.orig.olap.png" alt="Arab Brap orig overlap 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Merge Overlap</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.olap.png">
+    <img src="img/dp.ab.strict.olap.png" alt="Arab Brap strict overlap 1-7" style="border: 1px solid black; width: 380px"></a>
+<tr><td colspan=2>&nbsp;
+<tr><td colspan=2><u><ttx>Merge Close</ttx></u>: Blocks that are close can be merged.
+<tr><td><ttx>Original Merge Close</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.close.png">
+    <img src="img/dp.ab.orig.close.png" alt="Arab Brap orig close 1-7" style="border: 1px solid black; width: 380px"></a>
+    <td><ttx>Strict Merge Close</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.close.png">
+    <img src="img/dp.ab.strict.close.png" alt="Arab Brap strict close 1-7" style="border: 1px solid black; width: 380px"></a>
+</table>
 
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">

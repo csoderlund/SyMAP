@@ -65,7 +65,7 @@ The corresponding MUMmer documentation is
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Executables</a>
 	</table>
 <td>&nbsp;&nbsp;&nbsp;
-<td>
+<td style="vertical-align: text-top;" class="tx">
 	<table>
 	<tr><td><a href="#mem">Out of Memory</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#cat">Limit CPUs and uncheck Concat</a>
@@ -77,7 +77,7 @@ The corresponding MUMmer documentation is
 	<table>
 	<tr><td><a href="#cmd">MUMmer from the command line</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#example">Example</a>
-	<tr><td>&nbsp;
+	<tr><td><a href="#mum">MUMmer parameters</a>
 	<tr><td><tr><td><a href="#help">Getting Help</a>
 	</table>
 </table>
@@ -98,9 +98,9 @@ For example,
    demo_seq_cc.demo_seq2_f1.mum.done
 </pre>
 
-<p>All MUMmer files but the ".mum" are removed by <tt>symap</tt>; if you prefer them not to be removed,
-start <tt>symap</tt> with the "-mum" command line parameter, i.e.
-<tt> ./symap -mum</tt>
+<p>All MUMmer files but those with the <tt>.mum</tt> suffix are removed by <ttp>symap</ttp>. If you prefer them not to be removed,
+use the "-mum" command line parameter, i.e.
+<pre> ./symap -mum</pre>
 
 <p>The log files are in the <tt>/logs/&lt;project-name1&gt;-to-&lt;project-name2&gt</tt> directory.
 
@@ -276,6 +276,22 @@ you will see a "?" for the pair as shown on the below.
 <ttb>Selected Pair</ttb> and it will complete the failed processes.
 </table>
 
+<p><u>Incomplete alignment</u>
+If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will have the following files:
+<p><pre>
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
+-rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum.done
+-rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum.done
+</pre>
+<ol>
+<li>The 'all.done' indicates that the all alignments completed.
+<li>If 'all.done' does not exist, SyMAP will perform any alignments that do NOT have a corresponding 'mum.done'.
+If the <ttl>Concat</ttl> setting has been switched between the previous and current run, this will not work correctly.
+<li>If the user supplied the alignments (<a href="MUMmer.html#cmd"  class="ext" target="_blank">Supply MUMmer files</a>),
+there may not be 'mum.done' files but there should be an 'all.done', so it is assumed they are all done.
+</ol>
 <!------------------------------------------------------------------>
 <a id="cmd"></a>
 <h2>Running MUMmer from the command line</h2>
@@ -349,7 +365,36 @@ See <a href="input/logs/mummer.html">script</a> for the full set of mummer comma
 
 <p>This demo has been fully tested with <ttp>symap</ttp> v5.6.9.
 
+<!------------------------------------------------------------------------>
+<a id="mum"></a>
+<h2>MUMmer parameters</h2>
 
+When setting parameters for MUMmer in
+<a href="SystemHelp.html#over2" target="_blank" class="ext">pairs parameters</a>,
+they are <b>NOT</b> checked for correctness.
+<p>
+To see the parameters for the default MUMmer V3 on MacOS, from the <tt>symap</tt> directory:
+<pre>
+./ext/mummer/mac/mummer -h
+./ext/mummer/mac/promer -h
+./ext/mummer/mac/nucmer -h
+</pre>
+To see the parameters for the default MUMmer V3 on Linux:
+<pre>
+./ext/mummer/linux/mummer -h
+./ext/mummer/linux/promer -h
+./ext/mummer/linux/nucmer -h
+</pre>
+
+If  you compiled V4 in the /ext directory:
+<pre>
+./ext/mummer4/m4/bin/mummer -h
+./ext/mummer4/m4/bin/promer -h
+./ext/mummer4/m4/bin/nucmer -h
+</pre>
+<p>After running MUMmer, all alignment files are removed except the ".mum" file; to prevent removal,
+<br> execute
+<tt>./symap -mum</tt>.
 <!----------------------------------------------------->
 <a id="help"></a>
 <h2>Getting Help</h2>

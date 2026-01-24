@@ -18,7 +18,6 @@
 <a href="#draft">&nbsp;&nbsp;Draft</a>
 <a href="#self">&nbsp;&nbsp;Self-synteny</a>
 <a href="#slog">&nbsp;&nbsp;symap.log</a>
-<a href="#synteny">Synteny Results</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -51,16 +50,10 @@
 
 <!---------------------------- bulk of page ------------------------------------------->
 <div class="main">
-<p><center><b><big>Demo and Synteny Results</big></b></center>
-<br>
-<table class="tz"><tr> <!----- top index  ------->
-<td><a href="#reg">&nbsp;&nbsp;&nbsp;Demo_Seq-Demo_Seq2 Results</a><td>
-<td><a href="#synteny">Synteny Results</a>&nbsp;&nbsp;&nbsp;&nbsp;
-</table>
-<p>The first section provides results from the supplied demo, which
-is used by <a href="SystemGuide.html" class="ext">System Guide</a> in discussion of running the demo.
-<p>The second section describes synteny results using the different options; it uses a chromosome
-from <i>Arabidopsis thaliana</i> and one from <i>Brassica rapa</i>.
+
+<p>This webpage provides results from the supplied demo, which
+is used by <a href="SystemGuide.html#demo" target="_blank" class="ext">System Guide</a>.
+<br>This demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration
 
 <a id="reg"></a>
 <h2>Demo Results</h2>
@@ -70,7 +63,6 @@ from <i>Arabidopsis thaliana</i> and one from <i>Brassica rapa</i>.
 <td><a href="#self">Self-synteny</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#slog">symap.log</a>&nbsp;&nbsp;&nbsp;&nbsp;
 </table>
-<p>This demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration.
 
 <a id="two"></a>
 <h3>Two complete genomes: Demo-Seq to Demo-Seq2</h3>
@@ -116,7 +108,7 @@ The second is recommended for complete genome sequence; it does not perform well
 <tr><td colspan="2">There is very little difference between the <ttp>Dotplots</ttp>. The differences are
 more pronounced on the <ttp>Chromosome Explorer 2D</ttp> and <ttp>Queries</ttp>. The
 difference in the synteny algorithm are obvious on the more complicated examples, as shown in
-<a href="#synteny">Synteny</a>.
+<a href="SystemHelp.hmtl#synteny" target="_blank" class="ext">Synteny Results</a>.
 </table>
 
 <!----------------------------------------------------------->
@@ -306,48 +298,7 @@ Finding synteny for demo_seq and demo_seq2
             6 Collinear Sets not in blocks (12 total hits)
 Finish Synteny                       1s
 </small></pre>
-<!--------------------------------------------------------------->
-<a id="synteny"></a>
-<h2>Synteny Results</h2>
-The following is from comparing <i>Arabidopsis thaliana</i> chromosomes 1 and 2 with
-<i>Brassica rapa</i> chromosomes 1 and 7. The <ttx>Clustering hits Algo2 (exon-intron)</ttx> was
-used in all cases.
-<p>
-<table>
-<tr><td colspan=2><u><ttx>Original</ttx> vs <ttx>Strict</ttx></u>: Both allow a mix of inverted and non-inverted hits in a block, but
-<ttx>Strict</ttx> only allows small inversions within a non-inverted block and vice-versa (unless
-<ttx>Merge</ttx> is used).
-The <ttx>Strict</ttx> blocks tend to not have the tails of dots that have bigger gaps.
-<tr><td><ttx>Original</ttx><br><a href="img/dp.ab.orig.all.png">
-    <img src="img/dp.ab.orig.all.png" alt="Arab Brap orig" style="border: 1px solid black; width: 380px"></a>
-    <td><ttx>Strict</ttx><br><a href="img/dp.ab.strict.all.png">
-    <img src="img/dp.ab.strict.all.png" alt="Arab Brap strict" style="border: 1px solid black; width: 380px"></a>
 
-<tr><td><ttx>Original</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.part.png">
-    <img src="img/dp.ab.orig.part.png" alt="Arab Brap orig 1-7" style="border: 1px solid black; width: 380px"></a>
-    <td><ttx>Strict</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.part.png">
-    <img src="img/dp.ab.strict.part.png" alt="Arab Brap strict 1-7" style="border: 1px solid black; width: 380px"></a>
-<tr><td colspan=2>&nbsp;
-<tr><td colspan=2><u><ttx>Orient</ttx></u>: This requires all hits in a block to be in the same orientation.
-This options fits with what some other software packages consider 'synteny'.
-<tr><td><ttx>Original Orient</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.or.png">
-    <img src="img/dp.ab.orig.or.png" alt="Arab Brap orig orient 1-7" style="border: 1px solid black; width: 380px"></a>
-    <td><ttx>Strict Orient</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.or.png">
-    <img src="img/dp.ab.strict.or.png" alt="Arab Brap strict orient 1-7" style="border: 1px solid black; width: 380px"></a>
-<tr><td colspan=2>&nbsp;
-<tr><td colspan=2><u><ttx>Merge Overlap</ttx></u>: Only overlapping blocks can be merged. This will
-have little effect if <ttx>Orient</ttx> has been used since mixed blocks cannot be merged.
-<tr><td><ttx>Original Merge Overlap</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.olap.png">
-    <img src="img/dp.ab.orig.olap.png" alt="Arab Brap orig overlap 1-7" style="border: 1px solid black; width: 380px"></a>
-    <td><ttx>Strict Merge Overlap</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.olap.png">
-    <img src="img/dp.ab.strict.olap.png" alt="Arab Brap strict overlap 1-7" style="border: 1px solid black; width: 380px"></a>
-<tr><td colspan=2>&nbsp;
-<tr><td colspan=2><u><ttx>Merge Close</ttx></u>: Blocks that are close can be merged.
-<tr><td><ttx>Original Merge Close</ttx> chr1&amp;chr7<br><a href="img/dp.ab.orig.close.png">
-    <img src="img/dp.ab.orig.close.png" alt="Arab Brap orig close 1-7" style="border: 1px solid black; width: 380px"></a>
-    <td><ttx>Strict Merge Close</ttx> chr1&amp;chr7<a href="img/dp.ab.strict.close.png">
-    <img src="img/dp.ab.strict.close.png" alt="Arab Brap strict close 1-7" style="border: 1px solid black; width: 380px"></a>
-</table>
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <!---- END BODY -->
