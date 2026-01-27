@@ -114,9 +114,12 @@ use the "-mum" command line parameter, i.e.
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<p>If the MUMmer alignment fails, first check the <a href="#ext">Executables</a>.
-If they are okay, then inspect the log files.
-The log files are as follows:
+<p>If the MUMmer alignment fails:
+<ul>
+<li>Check that the sequences loaded correctly using the <ttb>View</ttb> option on the <ttp>Manager</ttp>.
+<li>If the files loaded correctly, check the <a href="#ext">Executables</a>.
+<li>If the executables are okay, inspect the log files. The log files are as follows:
+</ul>
 <p>&nbsp;&nbsp;<ttx>p1</ttx> = <ttx>project-name1</ttx> and <ttx>p2</ttx> = <ttx>project-name2</ttx>
 
 <pre>
@@ -188,11 +191,12 @@ Execute the program from the command line to make sure it works on you machine, 
 </pre>
 The above shows that the promer code will execute on my MacOS.
 
-<p><u>Executable on MacOS</u>:
+<p><font color="red"><u>Executable on MacOS</u></font>:
 Any executable that has not been okayed by Apple results in the error message
 <pre>
-  cannot be opened because the developer cannot be verified
+  Apple could not verify "prepro" is free of malware that may harm your mac...
 </pre>
+
 See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External</a> for the fix.
 
 <!-------------------------------------------------->

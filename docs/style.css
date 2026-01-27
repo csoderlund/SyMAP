@@ -73,7 +73,7 @@ ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color
 ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
 ttlb  {font-family: Serif, monospace; font-size: 16px; font-weight: 600; color: DarkSlateGrey;}
 ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-tt   {font-size:13px}
+tt   {font-size:13px; }
 pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}
 ul   {margin-top: 0; }
 p    {margin-bottom: 0; }
@@ -90,3 +90,12 @@ p    {margin-bottom: 0; }
 .colrt {text-align: right;}
 .coltop {vertical-align: text-top;}
 .colnp {white-space: nowrap;}
+
+.hanging-indent {
+  /* Indent all lines by 2em first */
+  text-indent: -2em;
+  /* Then pull the first line back by the same amount */
+  margin-left: 2em;
+  /* Add margin to the container so the text is not flush with the edge */
+  padding-left: 1em;
+}
