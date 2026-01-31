@@ -183,8 +183,8 @@ if you use SyMAP results in a paper, poster, or presentation.
 		<br><ttx>Algo1</ttx> or <ttx>Algo2</ttx><small><sup>1</sup></small>
 		<td>During the synteny computation, either the <ttx>Algo1</ttx> or <ttx>Algo2</ttx> algorithm could have
 		been selected to cluster hits.
-		<br>&bull; The original <ttx>Algo1</ttx> was updated v5.4.0 to be more gene-aware but does not know exon-intron structure.
-		The new <ttx>Algo2</ttx> knows exon-intron structure, last updated v5.6.0.
+		<br>&bull; The original <ttx>Algo1</ttx> was updated to be more gene-aware but does not know exon-intron structure.
+		The new <ttx>Algo2</ttx> knows exon-intron structure.
 		 See <a href="SystemHelp.html#clust" class=ext target="_blank">System Parameters</a> for details.
 
 		<br>&bull; The <a href="#sum">Summary</a> specifies which was used.
@@ -209,7 +209,7 @@ if you use SyMAP results in a paper, poster, or presentation.
 		<td>The hits are numbered sequentially along the chromosome of the alphabetically lesser
 		<ttx>Directory</ttx> name. For example, if on the <ttp>Project Manager</ttp> panel (see below),
 		you select <ttl>A.thal</ttl> and <ttl>B.rapa</ttl>,
-		which have <ttx>Directory</ttx> names <ttx>Arab</ttx> and <ttx>Brap</ttx>,
+		which have <ttx>Directory</ttx> names <ttx>Arab</ttx> and <ttx>Brapa</ttx>,
 		the hit numbering will be sequential down the <ttx>Arab</ttx> chromosomes.
 	<tr><td>Block and !Block
 		<td>Hits that are in a block and hits that are not within a block, respectively.
@@ -222,7 +222,7 @@ if you use SyMAP results in a paper, poster, or presentation.
 
 The display in the image on the lower right is shown when the following is executed from the terminal:
 <pre>   ./viewSymap</pre>
-Is it also available from <tt>./symap</tt>, which will include the alignment commands.
+Is it also available from <tt>./symap</tt>, which will include the commands to build the synteny database.
 <p>
 
 <table>
@@ -230,8 +230,9 @@ Is it also available from <tt>./symap</tt>, which will include the alignment com
 	<p>All projects in the database will be listed on the left panel. The date beside the project name
 	is when it was loaded. If a [n] follows the date, it is part of n computed syntenies.
 
-	<p>Selecting projects on the left panel shows them on the right panel. Clicking the <ttb>View</ttb> popups
-	a window with the information about the project.
+	<p>Selecting projects on the left panel shows them on the right panel. Clicking the
+	<ttb>View</ttb> popups
+	a window with the information about the project, e.g. <a href="./img/viewArab.png">View panel</a>.
 
 	<p>A check mark (&#10003) in the <ttb>Available Syntenies</ttb> table indicates the pair has computed synteny that can be viewed.
 

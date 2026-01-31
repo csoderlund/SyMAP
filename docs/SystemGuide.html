@@ -350,24 +350,26 @@ The following datasets have timings reported for them.
 <p>
 <table>
 <tr><th colspan=3>Mammalia complete<th colspan=3>Mammalia partial
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Homo sapiens</i> (Hsa)<td>24 chrs, 3Gb
-    <td>&nbsp;&nbsp;&nbsp;<td><i>Homo sapiens</i> (Hsa)<td>Chr 5,17,X,Y; 478Mb
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Mus musculus</i> (Mus)<td>21 chrs, 2.7Gb
-    <td>&nbsp;&nbsp;&nbsp;<td><i>Pan troglodytes</i> (Pan)<td>Chr 5,17,X,Y; 447Mb
-<tr><td>&nbsp;&nbsp;&nbsp;<td><td>
-    <td>&nbsp;&nbsp;&nbsp;<td><i>Mus musculus</i> (Mus)<td>Chr 11,13,X,Y; 504Mb
+<tr><td>&nbsp;&nbsp;<td><i>Homo sapiens</i> (Hsa)<td>24 chrs, 3Gb
+   <td>&nbsp;&nbsp;<td><i>Homo sapiens</i> (Hsa)<td>Chr 5,17,X,Y; 478Mb
+
+<tr><td>&nbsp;&nbsp;<td><i>Pan troglodtes</i> (Hsa)<td>25 chrs, 3Gb
+    <td>&nbsp;&nbsp;<td><i>Pan troglodytes</i> (Pan)<td>Chr 5,17,X,Y; 447Mb
+
+<tr><td>&nbsp;&nbsp;<td><i>Mus musculus</i> (Mus)<td>21 chrs, 2.7Gb
+    <td>&nbsp;&nbsp;<td><i>Mus musculus</i> (Mus)<td>Chr 11,13,X,Y; 504Mb
 <tr><td colspan=6>&nbsp;
 <tr><th colspan=3>Brassicales<th colspan=3>Poaceae
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Arabidopsis thaliana</i> (A.thal)<td>5 chr, 119Mb
-    <td>&nbsp;&nbsp;&nbsp;<td><i>Oryza Sativa</i> (Rice)<td>12 chr, 373Mb
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Brassica rapa</i> (B.rapa)<td>10 chr, 297Mb
-     <td>&nbsp;&nbsp;&nbsp;<td><i>Zea Mays</i> (Maize)<td>10 chr, 2.1Gb
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Brassica oleracea</i> (B.oler)<td>9 chr, 447Mb
-     <td>&nbsp;&nbsp;&nbsp;<td><i>Triticum aestivum</i> (Wheat)<td>22 chrs, 14.5Gb
+<tr><td>&nbsp;&nbsp;<td><i>Arabidopsis thaliana</i> (A.thal)<td>5 chr, 119Mb
+    <td>&nbsp;&nbsp;<td><i>Oryza Sativa</i> (Rice)<td>12 chr, 373Mb
+<tr><td>&nbsp;&nbsp;<td><i>Brassica rapa</i> (B.rapa)<td>10 chr, 297Mb
+     <td>&nbsp;&nbsp;<td><i>Zea Mays</i> (Maize)<td>10 chr, 2.1Gb
+<tr><td>&nbsp;&nbsp;<td><i>Brassica oleracea</i> (B.oler)<td>9 chr, 447Mb
+     <td>&nbsp;&nbsp;<td><i>Triticum aestivum</i> (Wheat)<td>22 chrs, 14.5Gb
      <tr><td colspan=6>&nbsp;
 <tr><th colspan=3>Rosales<td colspan=3><td colspan=3>
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Prunus persica</i>&nbsp;(Peach)<td>8 chr, 227Mb<td colspan=3>
-<tr><td>&nbsp;&nbsp;&nbsp;<td><i>Prunus yedoensis</i>&nbsp;(Pyedo)<td>250 scaffolds, 408Mb<td colspan=3>
+<tr><td>&nbsp;&nbsp;<td><i>Prunus persica</i>&nbsp;(Peach)<td>8 chr, 227Mb<td colspan=3>
+<tr><td>&nbsp;&nbsp;<td><i>Prunus yedoensis</i>&nbsp;(Pyedo)<td>250 scaffolds, 408Mb<td colspan=3>
 </table>
 
 <h4>Timings</h4>
@@ -375,34 +377,43 @@ Most of the testing was on MacOS M4.
 <p>
 <div class="hanging-indent"><u>Times</u> These are from the SyMAP <tt>symap.log</tt> file,
 which uses the Java system time functions (clock times are greater than the Java CPU system times).
+Times can vary over multiple executions; timings for only one execution is shown.
 </div>
 <div class="hanging-indent"><u>CPU</u> Unless stated otherwise, the following #CPU was used: (1) 4 CPUs with amino
 acid alignment, <br>(2) 6 CPUs with self-synteny nucleotide alignment (NT).
+As mentioned earlier, it is important that the machine has at least 5Gb of RAM for the number of CPUs used;
+see <a href="SystemHelp.html#cpu" target="_blank" class="ext">CPU</a>.
 </div>
 <div class="hanging-indent"><u>Memory</u> SyMAP inputs chr x chr into MUMmer, so the
-largest chromosome size will have the biggest impact on memory
-(<a href="SystemHelp.html#align2" target="_blank" class="ext">Concat</a> concatenates small chromosomes).
+largest chromosome size will have the biggest impact on memory.
+<a href="SystemHelp.html#align2" target="_blank" class="ext">Concat</a> concatenates small chromosomes;
+in <u>Notes</u> below, <ttl>!Concat</ttl> indicates this was not performed so that input to MUMmer was smaller files;
+self-synteny always uses chr x chr.
 </div>
 
-
 <ol>
-<li>MacOS M4 with 48Gb has been tested with the following:
+<li><i>MacOS M4 with 48Gb</i> has been tested with the following:
 
 <p><table>
 	<tr><td><u>Species</u><td style="text-align: right;"><u>MUMmer</u><td style="text-align: right;"><u>SyMAP</u>
 	    <td>&nbsp;&nbsp;&nbsp;<td style="text-align: center;"><u>Size</u><td><u>Notes</u>
 	<tr><td><td style="text-align: right;">hr:min<td style="text-align: right;">min:sec<td><td>&nbsp;<td><td>
 
-	<tr><td>Hsa x Mus (All chr)&nbsp;<td>30h:45m</b><td style="text-align: right;"> 5m:13s
-		<td>&nbsp;<td style="text-align: center;">&nbsp;&nbsp;3Gb x 2.7Gb<td>504 alignments, <ttl>Concat</ttl> unchecked
+	<tr><td style="white-space: nowrap;">Hsa x Mus (All chr)&nbsp;<td>30h:45m<td style="text-align: right;"> 5m:13s
+		<td>&nbsp;<td style="text-align: center;">&nbsp;&nbsp;3Gb x 2.7Gb<td>504 alignments, <ttl>!Concat</ttl>
+	<tr><td style="white-space: nowrap;">Hsa x Mus (All chr)&nbsp;<td>12h:58m<td style="text-align: right;"> 0m:49s
+		<td>&nbsp;<td style="text-align: center;">&nbsp;&nbsp;3Gb x 2.7Gb<td>504 alignments, MASKED, <ttl>!Concat</ttl>
 
-	<tr><td>Hsa x self (All chr)&nbsp;<td style="text-align: right;">7h:45m<td style="text-align: right;">8m:28s
+<tr><td style="white-space: nowrap;">Hsa x Pan (All chr)&nbsp;<td>22h:48m<td style="text-align: right;">9m:31s
+		<td>&nbsp;<td style="text-align: center;">3Gb x 3Gb<td>closely related, 600 alignments, MASKED, <ttl>!C</ttl>...
+
+	<tr><td style="white-space: nowrap;">Hsa x self (All chr)&nbsp;<td style="text-align: right;">7h:45m<td style="text-align: right;">8m:28s
 		<td>&nbsp;<td style="text-align: center;">3Gb x 3Gb<td>276 alignments, NT
 
- 	<tr><td>Hsa x Pan (partial)&nbsp;<td style="text-align: right;">2h:15m<td style="text-align: right;"> 0m:35s
- 		<td>&nbsp;<td style="text-align: center;">478Mb x 447Mb&nbsp;<td>closely related
-    <tr><td>Hsa x Mus (parital)&nbsp;<td style="text-align: right;">0h:55m<td style="text-align: right;"> 0m:04s
+    <tr><td style="white-space: nowrap;">Hsa x Mus (parital)&nbsp;<td style="text-align: right;">0h:55m<td style="text-align: right;"> 0m:04s
     	<td>&nbsp;<td style="text-align: center;">478Mb x 504Mb<td>
+    <tr><td style="white-space: nowrap;">Hsa x Pan (partial)&nbsp;<td style="text-align: right;">2h:15m<td style="text-align: right;"> 0m:35s
+ 		<td>&nbsp;<td style="text-align: center;">478Mb x 447Mb&nbsp;<td>closely related
 
 	<tr><td colspan=5>&nbsp;
 	<tr><td>A.thal x B.oler<td style="text-align: right;">0h:31m<td style="text-align: right;"> 1m:14s
@@ -420,11 +431,11 @@ largest chromosome size will have the biggest impact on memory
 	<tr><td>Maize x Rice<td style="text-align: right;">5h:59m<td style="text-align: right;">1m:16s
 		<td>&nbsp<td style="text-align: center;">2.1Gb x 373Mb<td>
 	<tr><td>Maize x self <sup>a</sup><td style="text-align: right;">&gt;48hr<td style="text-align: right;"> 28m:52s
-		<td>&nbsp;<td style="text-align: center;">2.1Gb x 2.1Gb<td>duplication, 3 CPU, NT
+		<td>&nbsp;<td style="text-align: center;">2.1Gb x 2.1Gb<td>duplications, 3 CPU, NT
 	<tr><td>Maize x self <sup>b</sup><td style="text-align: right;">0h:16m<td style="text-align: right;"> 5m:03s
-		<td>&nbsp;<td style="text-align: center;">2.1Gb x 2.1Gb<td>duplication, MASKED, NT
+		<td>&nbsp;<td style="text-align: center;">2.1Gb x 2.1Gb<td>duplications, MASKED, NT
 	<tr><td>Wheat x Rice <sup>c</sup><td style="text-align: right;">6hr:11m<td style="text-align: right;">3m:32s
-		<td>&nbsp;<td style="text-align: center;">14Gb x 373Mb<td>Largest chr 801Mb; MASKED, CPU 1
+		<td>&nbsp;<td style="text-align: center;">14Gb x 373Mb<td>Largest chr 801Mb; MASKED, CPU 1; <ttl>!Concat</ttl>
 </table>
 <a id="mask"></a> <!-- Ref in Requirements -->
 
@@ -444,29 +455,23 @@ on <a href="SystemHelp.html#align2" target="_blank" class="ext">Mask parameter</
 it ran out of application memory due to processing very large chromsomes in parallel.
 </ol>
 
-<p><li> MacOS x86_64 was tested on the following:
+<p><li><i>MacOS x86_64 with 64Gb</i> was tested on the following:
 	<table>
 	<tr><td><u>Species</u><td><u>MUMmer</u><td><u>SyMAP</u>
 	<tr><td>A.thal x B.oler&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>0h:33m&nbsp;&nbsp;<td>4m:06s
 	</table>
 Note the longer time for the synteny computation on the older Mac machine.
 
-<p><li> Linode nanode with 1Gb was too small to run MUMmer, so the MUMmer demo result files were transfered to the
+<p><li><i>Linode nanode with 1Gb</i> was too small to run MUMmer, so the MUMmer demo result files were transfered to the
 <tt>data/seq_results/demo_seq_to_demo_seq2</tt> directory.
 This allowed all other features to be tested on the demo, including running the synteny algorithm
 without the alignment. Also, two tiny input files were used to test MUMmer.
 
-<p><li>Linux amd64 with 128Gb was used extensively on large plant genomes.
+<p><li><i>Linux amd64 with 128Gb</i> was used extensively on large plant genomes.
 <br>For example, to align Maize x Rice used a total of <b>1h:3m</b> using 8 CPUs
 </ol>
 
-<u>Memory summary</u>
-<ul>
-<li>When B.rapa x B.oler was run with 8 CPUs, it took 4h:23m versus 1h:25m with 4 CPUs.
-With 48Gb of RAM, it was possibly memory bound, which slowed it down.
-<li>Unless the genomes and chromosomes are very small, it is important that the machine has at least 5Gb of RAM for the number of CPUs used;
-see <a href="SystemHelp.html#cpu" target="_blank" class="ext">CPU</a>.
-</ul>
+
 <!--------------------------------------------->
 <hr>
 <a id="installation"></a>
@@ -779,7 +784,7 @@ on setting the pair parameters for the this step.
 <p>
 <li>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these two options.
 <p>
-<li>Then select <ttb>Selected Pair</ttb> to run the Align&amp;Synteny.
+<li>Then select <ttb>Selected Pair</ttb> to run the <ttl>Align&amp;Synteny</ttl>.
 See <a href="./SystemHelp.html#avail" class="ext" target="_blank">Available Syntenies</a> for details.
 </ul>
 <td><a href="img/newPair.png"><img src="img/newPair.png" alt="align and synteny" style="border: 1px solid black; width: 400px"></a>
