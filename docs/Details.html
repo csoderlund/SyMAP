@@ -26,7 +26,6 @@
 <!------ right side header and body ----------------------------------------------------->
 <div class="rightSide">
 <a id="top"></a>
-
 <div class="topnav"> <!-- header same in all pages -->
     <br>
 	<table>
@@ -53,6 +52,7 @@
 <div class="main">
 
 	<!---- START BODY -->
+<p><center>This webpage provides  details on the following subjects.</center>
 <p>
 <table class="tz">
 <tr>
@@ -65,7 +65,7 @@
 </table>
 <a id="col"></a>
 <h2>Collinear sets</h2>
-Using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttx>Collinear Sets</ttx>.
+Either using the <ttb>Hit Filter</ttb>, or right click in the hit region, set the highlighting for <ttx>Collinear Sets</ttx>.
 As shown below, the number of highlighted collinear hits and sets will be shown in
 the <ttl>Information</ttl> box (<ttx>CoSets</ttx> is the abbreviation for <ttx>Collinear Sets</ttx>).
 <br>
@@ -79,7 +79,7 @@ green is the 2nd; these are <a href="UserGuide.html#wheel" class="ext" target="_
 <ttx>Highlight1</ttx> and <ttx>Highlight2</ttx> colors. The sets were broken by an extra gene on Human Chr01.
 <p>A collinear set either has all hits/genes to the same strand (+/+, -/-) or different (+/-, -/+).
 In the image on the right, all genes in both sets are on different strands.
-<p><b>Note</b>: The above is not guaranteed when using <ttl>Algo1</ttl> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>),
+<p>Note: The above is not guaranteed when using <ttl>Algo1</ttl> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>),
 as the hit strands may be different than the strands assigned to the homologous genes.
 
 <p>The collinear set algorithm does not consider the amount of overlap of the hit to a gene, or the similarity
@@ -91,8 +91,7 @@ of the hit sequences.
 </table>
 
 <p>The image below shows a collinear set of 4 genes and 6 brown hit-wires that are not part of the set. The following
-explains them, using the symbols g0 (hits 0 genes), g1 (hits 1 gene), g2 (hits paired genes, at
-least one on each chromosome).
+explains them, using the symbols g0 (hit 0 genes), g1 (hit 1 gene), g2 (hit paired genes).
 <table>
 
 <tr><td   style="vertical-align: text-top;">
@@ -107,7 +106,7 @@ least one on each chromosome).
 <tr><td>6<td>g2<td>This could start a new set, but is not followed by another paired gene.
 </table>
 
-<p>Sometimes two genes look as one, so the <ttb>Sequence Filter</ttb> <ttl>Gene Delimiter</ttl> option is important to
+<p>Sometimes two genes look as one, so the <ttb>Sequence Filter</ttb> <ttx>Gene Delimiter</ttx> option is important to
 view these.
 <br><a href="img/colSetGL.png">
 	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 250px"></a>
@@ -120,38 +119,51 @@ view these.
 <table style="width: 95%"><tr><td style="text-align: left">
 <h2>Hit popup</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+<table class="tz">
+<tr>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#hit">Default view</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#merge">Merge</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#order">Order</a>
+</table>
 
-Default view:
+<h3>Default view</h3>
 <ul>
 <li>Both lists are sorted by start coordinate.
 <li>The <b>#</b> column in the two tables align to each, e.g. the rows #2 align to each other.
-<li>The sequence name that is alphabetically lower (e.g. arab&lt;cabb) is the <i>query</i> and
+<li>The project <ttx>Directory</ttx> name that is alphabetically lower (e.g. Arab&lt;Cabb) is the <i>query</i> and
 the other is the <i>target</i>. The query is numbered 1-N; the target
 	is ordered to match the query.
-<li>Two subhits may overlap (Gap&lt;=0) on one chromosome but not the other.
+<li>Two subhits may overlap (<ttx>Gap</ttx>&lt;=0) on one chromosome but not the other.
 </ul>
 
+<a id="merge"></a>
 <h3>Merge</h3>
 <table><tr>
 <td><a href="img/2DhitMerge.png">
 		<img src="img/2DhitMerge.png" alt="2D Hit Merge" style="border: 1px solid black; width: 500px"></a>
-<td style="vertical-align: text-top;">In the merge view, hits with gap&lt;=0 are merged with the hit they overlap with.
-<p>The numbered hits  are no longer 1-to-1, i.e. they do not necessarily align to each other like they do in the un-merged view.
+<td style="vertical-align: text-top;">In the <ttl>Merged</ttl> view,
+hits with <ttx>Gap</ttx>&lt;=0 are merged with the hit they overlap with.
+<p>The numbered hits  are no longer 1-to-1, i.e. they do not necessarily align to each other
+like they do in the un-merged view.
 <p><ttx>Totals</ttx> are provided for the <ttx>Len</ttx> and <ttx>Gap</ttx>.
-<p>The merge view corresponds better to the visual view on the 2D track.
-<p>The existence of the <ttl>Merge</ttl> is a quick indication that there are overlapping hits.
+<p>The <ttl>Merged</ttl> view corresponds better to the visual view on the 2D track.
+<p>The existence of the <ttb>Merge</ttb> button is a quick indication that there are overlapping hits.
 </table>
 
+<a id="order"></a>
 <h3>Order</h3>
 <table><tr>
 <td><a href="img/2DhitOrder.png">
 		<img src="img/2DhitOrder.png" alt="2D Hit Order" style="border: 1px solid black; width: 450px"></a>
 <td style="vertical-align: text-top;">
-As stated above, each numbered hit corresponds to the same number in the opposite list,
-e.g. the two #1 aligns. An <b>#</b> on the far right implies that the order numbers are not sequential.
+As stated above, each numbered subhit corresponds to the same number in the opposite list,
+e.g. the two #1 subhit aligns. An <b>#</b> on the far right implies that the order numbers are not sequential.
 <p>The <ttl>Order</ttl> option produces another popup where the target list is sorted by
 the <b>#</b> column, and the coordinates are no longer sorted.
-<p>The existence of the <ttl>Order</ttl> is a quick indication that there are <i>disordered</i> hits.
+<p>The existence of the <ttb>Order</ttb> button is a quick indication that there are <i>disordered</i> subhits.
 
 </table>
 
@@ -160,20 +172,28 @@ the <b>#</b> column, and the coordinates are no longer sorted.
 
 <h2>3-chr conserved</h2>
 
-Both the <ttp>Chromosome Explorer</ttp> and <ttp>Queries</ttp> allow viewing results from 3 chromosomes.
-
-<h3>Chromosome Explorer</h3>
-<table>
-<tr><td>
-The <ttp>Dot plot</ttp> can show 3 chromosomes, as illustrated on the right (click image for a better view).
-<p>&nbsp;
-<p>Selecting <ttp>2D</ttp> brings up the 3-track view, as discussed below.
-<td><a href="img/dotplot-3chr.png">
-<img src="img/dotplot-3chr.png" alt="dotplot" style="border: 1px solid black; width: 400px"></a>
-<td>
+<center>The <ttp>Explorer</ttp> and <ttp>Queries</ttp> allow viewing results from 3 chromosomes.</center>
+<p>
+<table class="tz">
+<tr>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#2dg3">Chromosome Explorer</a>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#q3">Queries</a>
 </table>
 
 <a id="2dg2"></a>
+<h3>Chromosome Explorer</h3>
+<table>
+<tr>
+<td><a href="img/dotplot-3chr.png">
+<img src="img/dotplot-3chr.png" alt="dotplot" style="border: 1px solid black; width: 375px"></a>
+<td><a href="img/2D-3chr.png">
+<img src="img/2D-3chr.png" alt="dotplot" style="border: 1px solid black; width: 400px"></a>
+</table>
+The <ttp>Dot plot</ttp> can show 3 chromosomes, as illustrated on the upper below (click image for a better view).
+<p>The <ttp>2D</ttp> can show a 3-track view, as illustrated on the upper right and discussed below.
+
 <p><ttp>2D</ttp>: The <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>
 for the <i>reference</i> track will have an extra section of filters as shown below.
 <table>
@@ -212,22 +232,22 @@ and the other has a g1 (but a possible g2 if it is missing the gene annotation).
 </ul>
 <a href="img/seqG2xN.png">
 	<img src="img/seqG2xN.png" alt="g2xN" style="border: 1px solid black; width: 780px"></a>
-Notice that when this feature is used along with the <ttb>Sequence Filter</ttb> of <ttx>Show Gene#</ttx>,
-the <ttx>Gene#</ttx> is only shown for the highlighted genes.
+<p>The <ttb>Sequence Filter</ttb> of <ttx>Show Gene# with Hit</ttx> is used in the above display.
 
 <p><font color=red>Caveats of display: Nothing is refreshed or recalculated!</font>
 <ul>
-<li>Suggestion: Set the filter from the full view, then you can zoom in and back out and the highlight will
-remain. Likewise, set the <ttx>Gene#</ttx> visible from the full view.
-<li>If the highlighting looks wrong after zooming, open <ttb>Sequence Filter</ttb>, click <ttx>None</ttx> and re-click <ttx>g2x2</ttx> or <ttx>g2x1</ttx>.
+<li>Suggestion: Set the filters from the "full sequence" view, then you can zoom in and back out and the highlight will
+remain.
+<li>If the highlighting looks wrong after zooming, open <ttb>Sequence Filter</ttb>,
+click <ttx>None</ttx> and re-click <ttx>g2x2</ttx> or <ttx>g2x1</ttx>.
 </ul>
 
 <p><font color=green>Caveats of algorithm:</font>
 <ul>
 <li>For g2x2, say it shows genes A-B-C are conserved. The algorithm only
 checks the A-B hit and B-C hits exist, but does not check the A-C hit.
-<li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks. This is because multiple hits can align to a gene, and one gene can align
-to two different opposite genes.
+<li>There may be different numbers of highlighted genes on the different tracks or hit-wires between tracks.
+This is because multiple hits can align to a gene, and one gene can align to two different opposite genes.
 <li>When there are overlapping genes, a hit is assigned to just one of them, which
 causes some conserved genes to have incorrect pairing.
 <li>There are occasional tiny hits that just barely overlap genes; the current algorithm marks them as conserved genes.
@@ -241,7 +261,8 @@ algorithm marks these as conserved.
 <a id="q3"></a>
 <h3>Queries</h3>
 
-&rarr; For a query result, <a href="Query.html#report" class="ext" target="_blank">Report</a> is only way to view more than two species in a query row.
+&rarr; For a query result, <a href="Query.html#report" class="ext" target="_blank">Report</a>
+is only way to view more than two species in a query row.
 <br>&rarr; As shown here, it is possible to bring up the 2D display with 3 chromosomes from the query table.
 <p>
 <table>
@@ -253,13 +274,14 @@ algorithm marks these as conserved.
 
 	<p><small>Different species</small>
 	<br><a href="img/query_2D_2row.png"><img src="img/query_2D_2row.png" alt="Select 2 rows" style="border: 1px solid black; width: 280px"></a>
-	<p>Select <a href="Query.html#view2D" class="ext" target="_blank">View 2D</a> with either the <ttx>Region</ttx> and <ttx>Collinear</ttx> options. The
+	<p>Select <a href="Query.html#view2D" class="ext" target="_blank">View 2D</a>
+	with either the <ttx>Region</ttx> and <ttx>Collinear</ttx> options. The
 	image on the right used the <ttx>Collinear</ttx> options.
 
 	<p><small>Same species</small>
 	<br><a href="img/query_2D_2rowb.png"><img src="img/query_2D_2rowb.png" alt="Select 2 rows" style="border: 1px solid black; width: 240px"></a>
-	<p>Atha will be the reference since Gene# 5468 is listed in both rows, and Brap chromosomes 7 and 9 will
-	be on its left and right. 2D image not shown.
+	<p>Atha will be the reference since <ttx>Gene#</ttx> 5468 is listed in both rows, and Brap chromosomes 7 and 9 will
+	be on its left and right (this 2D display is not shown).
 
 	<td><a href="img/2d-3chr-coset.png"><img src="img/2d-3chr-coset.png" alt="report A.thal ref" style="border: 1px solid black; width: 480px"></a>
 </table>
