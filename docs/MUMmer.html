@@ -118,9 +118,10 @@ use the "-mum" command line parameter, i.e.
 <ul>
 <li>Check that the sequences loaded correctly using the <ttb>View</ttb> option on the <ttp>Manager</ttp>.
 <li>If the files loaded correctly, check the <a href="#ext">Executables</a>.
-<li>If the executables are okay, inspect the log files. The log files are as follows:
+<li>If the executables are okay, inspect the log files.
 </ul>
-<p>&nbsp;&nbsp;<ttx>p1</ttx> = <ttx>project-name1</ttx> and <ttx>p2</ttx> = <ttx>project-name2</ttx>
+<h3>Log files</h3>
+<p>Using <tt>p1</tt> = <tt>project-name1</tt> and <tt>p2</tt> = <tt>project-name2</tt>
 
 <pre>
    symap_5/
@@ -133,11 +134,11 @@ use the "-mum" command line parameter, i.e.
           symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
 </pre>
 
-e.g. <ttx>p1</ttx> = <ttx>demo_seq</ttx> and <ttx>p2</ttx> = <ttx>demo_seq2</ttx>
+e.g. <tt>p1</tt> = <tt>demo_seq</tt> and <tt>p2</tt> = <tt>demo_seq2</tt>
 <pre>
        demo_seq_to_demo_seq2/
-         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file
-         demo_seq_cc.demo_seq2_f2.log  #   same for the second mummer execution
+         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file for process 1
+         demo_seq_cc.demo_seq2_f2.log  # MUMmer output directed to this file for process 2
          symap.log                     # SyMAP terminal output
 </pre>
 
@@ -145,15 +146,17 @@ e.g. <ttx>p1</ttx> = <ttx>demo_seq</ttx> and <ttx>p2</ttx> = <ttx>demo_seq2</ttx
 the corresponding <tt>&lt;p1_cc.p2_fn&gt;.log</tt> file will contain the MUMmer error
 (see <a href="img/mummerLog.png">example mummer log</a>).
 <p>&rarr;
-If the error is not found in the log files or it is not clear, try the following:
-<br>Copy the command from the terminal (or log file), and paste it on a new terminal line to execute, e.g.
-(the following is one line wrapped around):
+If the error is not found in the log files or the error is not clear, try the following:
+Copy the command from the terminal (or log file), and paste to a terminal to execute.
+The command will look similar to the following, though it will all be on one line:
+<p>
 <pre>
-  ext/mummer/mac/promer -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
-  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
-  data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+  > ext/mummer/mac/promer
+    -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
+     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
+     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
 </pre>
-This shows <tt>promer</tt> output directly on the terminal. Typically the problem is not enough memory.
+This shows <tt>promer</tt> output directly on the terminal and provides a better description of the problem.
 
 <!----------------------------------------------------->
 <a id="mum4"></a>
@@ -168,7 +171,7 @@ Enter the <tt>ext/mummer4</tt> directory and follow the instructions in the READ
 <h3>Executables</h3>
 
 The alignment programs are provided in the <tt>symap/ext</tt> directory. There are
-executables for 64-bit Linux and 64-bit MacOS. SyMAP will
+64-bit executables for Linux, MacOS x86_64, and MacOS M4. SyMAP will
 select the correct directory for the machine you are running from, i.e. you
 do not need to do anything. See <a href="SystemGuide.html#ext" class="ext" target="_blank">System Guide</a> for details.
 
@@ -237,11 +240,12 @@ but not in <tt>symap/logs/&lt;..&gt;/symap.log</tt>.
 
 There is no straight-forward way to know if you have enough memory as it depends on the
 size and complexity of the two genomes being compared.
-If you think memory may be tight or MUMmer produced an error as shown in the section above,
-first try running again with reduced CPUs and unchecked <ttl>Concat</ttl>:
+If you think memory may be tight or MUMmer produced an error as shown in the above section,
+first try running again with reduced <ttl>CPUs</ttl> and unchecked <ttl>Concat</ttl>:
 <ol>
 <li>On the <ttb>Project Manager</ttb> panel, limit the number of CPUs, as each
 CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
+See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU</a> for further information.
 <p><li>
 In the <ttb>Project Parameters</ttb> panel, uncheck <ttl>Concat</ttl> to reduce the
 size of the input files to MUMmer.
@@ -252,8 +256,11 @@ this option.
 <a id="mask"></a>
 <h3>Not-masked or Soft-masked</h3>
 A memory problem can occur if the genome sequence is not masked or only soft-masked.
-Either: (1) change the sequence to hard-masked, or (2) set the
-<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a> parameter <ttx>Mask</ttx>.
+Try either of the following:
+<ul><li>Change the sequence to hard-masked (see <a href="input/index.html#seqprep" class="ext" target="_blank">Sequence files</a>).
+<li>Set the <a href="SystemHelp.html#align2" class="ext" target="_blank">Pair Parameters</a> parameter to <ttx>Mask</ttx>
+all sequence but the genes.
+</ul>
 
 <!----------------------------------------------------->
 <a id="fail2"></a>
@@ -280,7 +287,7 @@ you will see a "?" for the pair as shown on the below.
 <ttb>Selected Pair</ttb> and it will complete the failed processes.
 </table>
 
-<p><u>Incomplete alignment</u>
+<p><u>Incomplete alignment</u>:
 If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will have the following files:
 <p><pre>
 -rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
@@ -290,28 +297,40 @@ If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will h
 -rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum.done
 </pre>
 <ol>
-<li>The 'all.done' indicates that the all alignments completed.
-<li>If 'all.done' does not exist, SyMAP will perform any alignments that do NOT have a corresponding 'mum.done'.
+<li>The <tt>all.done</tt> indicates that the all alignments completed.
+<li>If <tt>all.done</tt> does not exist, SyMAP will perform any alignments that do NOT have a corresponding <tt>mum.done</tt>.
 If the <ttl>Concat</ttl> setting has been switched between the previous and current run, this will not work correctly.
-<li>If the user supplied the alignments (<a href="MUMmer.html#cmd"  class="ext" target="_blank">Supply MUMmer files</a>),
-there may not be 'mum.done' files but there should be an 'all.done', so it is assumed they are all done.
+<li>If the user supplied the alignments (<a href="MUMmer.html#cmd">Supply MUMmer files</a>),
+there may not be <tt>mum.done</tt> files but there should be an <tt>all.done</tt>, so it is assumed they are all done.
 </ol>
 <!------------------------------------------------------------------>
 <a id="cmd"></a>
 <h2>Running MUMmer from the command line</h2>
-<table class="tz" style="width:70%"><tr>
+<table class="tz" style="width:40%"><tr>
+<td><a href="#cmd">Command line</a>
 <td><a href="#example">Example</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-If you need to run MUMmer using the command line from some other machine, do the following:
+<h3>Command line</h3>
+
+If you need to run MUMmer using the terminal command line from some other machine, do the following:
+
 
 <ol>
+<li><u>The naming of your files and their order into MUMmer is VERY important.</u> Everything will mess up
+if this is done wrong!
+<ul>
+<li>It uses the <ttx>Directory</ttx> name of the two projects in the <tt>data/seq</tt> directory.
+<li>Say the projects are in <tt>data/seq/arab</tt> and <tt>data/seq/brap</tt>.
+<li>The directory name <tt>arab</tt>
+is <i>alphanumerically less</i> than <tt>brap</tt>, so it is <tt>proj1</tt> and <tt>brap</tt> is <tt>proj2</tt>.
+</ul>
+<p>
 <li>If your chromosomes are large, split the sequence file into chromosome files using <a href="input/index.html#sp" class="ext" target="_blank">xToSymap</a>.
 Process each chromosome file for the first genome with each chromosome file for the second genome.
 <p>
-<li>Create a directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt> where <tt>proj1</tt> is
-alphabetically less than <tt>proj2</tt>.
+<li>Create a directory <tt>data/seq_results/&lt;proj1-to-proj2&gt;/align</tt>.
 <p>
 <li>Running MUMmer: The query must be alphanumerically less than reference. For the <tt>promer</tt> command:
 <pre>
@@ -319,13 +338,17 @@ USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
 e.g.   promer proj2 proj1
 </pre>
 <p>
-See the commands for the <u>Example</u> below. Replace the demo names with your project/chromosome names.
-If you have many chromosome pairs to process, put them in a script, e.g. <a href="input/logs/mummer.html">demo commands</a>.
+See the commands for the <b>Example</b> below. Replace the demo names with your project/chromosome names.
+If you have many chromosome pairs to process,
+put them in a script, e.g. <a href="input/logs/mummer.html">demo script</a>.
+Then execute the script from the main symap directory.
+
+<p>To view the MUMmer parameters, see <a href="SystemHelp.html#mum" class="ext" target="_blank">MUMmer parameters</a>.
 	<ul>
 	<li>Promer: The output of promer is input to "show-coords -dlkT".
 	<li>Nucmer: The output of nucmer is input to "show-coords -dlT".
 	</ul>
-<p>To view the MUMmer parameters, see <a href="SystemHelp.html#mum" class="ext" target="_blank">MUMmer parameters</a>.
+
 <p>
 <li>Result files:
 <ul>
@@ -345,29 +368,42 @@ the files in the directory ending with ".mum".
 <a id="example"></a>
 <h3>Example</h3>
 This example will use MUMmer for the loaded projects <tt>demo_seq</tt> and <tt>demo_seq2</tt>.
-First, remove the directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>.
+<br>If you want to try this and you have already run the demo, remove the synteny results
+from the database using the <ttp>symap</ttp>
+<ttb>Clear Pair</ttb> along with the directory <tt>data/seq_results/demo_seq_to_demo_seq2</tt>.
 
-<p><tt>Demo_seq</tt> has chr3 and chr5 in the file <tt>genomic.a</tt> and
-<tt>demo_seq2</tt> has files <tt>chr1.seq.gz</tt> and <tt>chr3.seq</tt>. The commands are as follows:
-
+<p>Input:
+<ul>
+<li>Project <tt>demo_seq</tt> has file <tt>genomic.fa</tt> (containing 2 chromosomes).
+<li>Project <tt>demo_seq2</tt> has files <tt>chr1.seq.gz</tt> and <tt>chr3.seq</tt>.
+<li>Note that <tt>demo_seq</tt> is alphanumerically less than <tt>demo_seq2</tt>.
+</ul>
+<p>The commands are as follows:
+<p>
 <pre>
    gunzip data/seq/demo_seq2/sequence/chr1.seq.gz  # MUMmer does not process zipped files
    cd data/seq_results
    mkdir demo_seq_to_demo_seq2
    mkdir demo_seq_to_demo_seq2/align
    touch demo_seq_to_demo_seq2/align/all.done
-   cd ../..
+
+   # from symap directory, execute the following (the indented line are part of the previous line)
    ext/mummer/mac/promer  -p data/seq_results/demo_seq_to_demo_seq2/align/results.promer
          data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/genomic.fa
-   ext/mummer/mac/show-coords -dlkTH data/seq_results/demo_seq_to_demo_seq2/align/results.promer.delta
+   ext/mummer/mac/show-coords
+        -dlkTH data/seq_results/demo_seq_to_demo_seq2/align/results.promer.delta
          &gt;data/seq_results/demo_seq_to_demo_seq2/align/seq1chr1.mum
 </pre>
-See <a href="input/logs/mummer.html">script</a> for the full set of mummer command to process all sequence data.
+See <a href="input/logs/mummer.html">script</a> for the full set of MUMmer commands to process all sequence data.
+<br>It is easiest to run the demo by copying the contents of the script
+into a file (e.g. <tt>./symap/demo.txt</tt>),
+<br>then from the <tt>symap</tt> directory, execute it (e.g. <tt>sh demo.txt</tt>).
 
-<p>When symap is started and <tt>demo_seq</tt> and <tt>demo_seq2</tt> selected, there will be a "A" in their cell; select it followed by
+<p>When <tt>./symap</tt> is started, select <tt>demo_seq</tt> and <tt>demo_seq2</tt>.
+There will be a "A" in their cell; select it followed by
 <ttb>Selected Pair</ttb> and it will load the alignments and compute the synteny.
 
-<p>This demo has been fully tested with <ttp>symap</ttp> v5.6.9.
+<p>This demo has been fully tested with <ttp>symap</ttp> v5.7.9.
 
 <!------------------------------------------------------------------------>
 <a id="mum"></a>

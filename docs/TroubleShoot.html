@@ -95,7 +95,7 @@ script has the following lines:
   #!/bin/sh
   mem="8192m";
   echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
-  java -Xmx$mem -classpath /Users/cari/Workspace/github/symap/java/jar/symap.jar symapCE.SyMAPmanager $@
+  java -Xmx$mem -classpath java/jar/symap.jar symapCE.SyMAPmanager $@
 </pre>
 Change the number after <tt>mem=</tt>. The <tt>viewSymap</tt> script also requests 8192m memory,
 which you can also edit.
@@ -117,8 +117,8 @@ For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ex
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<p>SyMAP prints out the values of these three important MySQL variables when a symap database is created. Additionally,
-if you use <tt>./symap -sql</tt> they will be printed.
+<p>SyMAP prints out the values the important MySQL variables when a symap database is created.
+<br>Additionally, they will be printed if the following is executed: <tt>./symap -sql</tt>
 
 <a id="msqslow"></a>
 <h3>Slow to load sequence and annotation</h3>
@@ -126,7 +126,7 @@ if you use <tt>./symap -sql</tt> they will be printed.
 Two MySQL settings are especially important for SyMAP performance (and generally for InnoDB table
 performance).
 <p>
-<table class="ty" style="width:670px;">
+<table class="ty" style="width:750px;">
 	<tr>
 		<td><tt>innodb_buffer_pool_size</tt></td>
 		<td>
@@ -161,7 +161,7 @@ try different combinations of these two variables to see what performs the faste
 
 <a id="slow"></a>
 <h3>Slow queries</h3>
-<table  class="ty" style="width:600px;">
+<table  class="ty" style="width:650px;">
 	<tr>
 		<td><tt>max_allowed_packet</tt></td>
 		<td>
@@ -195,25 +195,24 @@ To change this variable, then type:
 
 <p>
 On startup, error messages mentioning the database or SQL probably mean that the database connection
-could not be established or was lost. A message at startup means SyMAP was not able
-to connect to the database using the provided information in <tt>symap.config</tt>. First, make sure
-your <tt>db_adminuser</tt> and <tt>db_adminpasswd</tt> are correct.
+could not be established or was lost. First, make sure
+your <tt>db_adminuser</tt> and <tt>db_adminpasswd</tt> are correct in the <tt>symap.config</tt> file.
 
 <p>These days, the best way to find the MySQL problems is to search the internet. However,
 the following are some things to check for connection problems on SyMAP startup:
 
 <p><u>Check the database privileges</u>:
-The database users specified in <tt>symap.config</tt> may not have necessary access to the database.
-If you running the read/write <ttp>symap</ttp>, then the relevant user is <tt>db_adminuser</tt>. If
-you are running a read-only session using <ttp>viewSymap</ttp>, it will use the
-read-only <tt>db_clientuser</tt> or read-write <tt>db-adminuser</tt>. In either case the user needs
-to have database access privileges <i>from the machine where you are working</i>.
+The database user specified in <tt>symap.config</tt> may not have necessary access to the database.
+<ul>
+<li>If you running the read/write <ttp>symap</ttp>, then <tt>db_adminuser</tt> is used.
+<li>If you are running a read-only <ttp>viewSymap</ttp>, it will use the
+read-only <tt>db_clientuser</tt>
+<br>or read-write <tt>db-adminuser</tt>.
+</ul>
+In either case the user needs to have database access privileges <i>from the machine where you are working</i>.
 
-Note that MySQL privileges are granted specifically to certain users on certain machines. You can test
-the user access by using the MySQL command line client <tt>mysql</tt>, if it is installed
-on your machine, or by looking at the privilege table using an administration interface
-such as PHPMyAdmin. The <tt>mysqlaccess</tt> tool is also useful, if it is installed
-on your machine.
+<p>MySQL privileges are granted specifically to certain users on certain machines. You can check these by
+starting the <tt>mysql</tt> from the command line, and then using <pre>SELECT User, Host FROM mysql.user;</pre>
 
 <p><u>Check the MySQL configuration</u>:
 The MySQL configuration file (<tt>/etc/my.cnf</tt>) should <b>not</b> contain any
