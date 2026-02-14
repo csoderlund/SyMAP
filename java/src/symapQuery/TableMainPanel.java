@@ -276,27 +276,32 @@ public class TableMainPanel extends JPanel {
     	JPanel buttonPanel = Jcomp.createPagePanel();
     
     // Top row
+    	boolean isl = Jhtml.isLinux();
+    	int sp0 = (isl) ? 3 : 1; // group of buttons
+    	int sp1 = (isl) ? 6 : 2; // group of buttons
+    	int spv = (isl) ? 16 : 8; // vertoca;
+    	
     	JPanel topRow = Jcomp.createRowPanel();
-    	topRow.add(Jcomp.createLabel("Selected: ")); topRow.add(Box.createHorizontalStrut(4));
-    	 
+    	
     	btnShowRow = Jcomp.createButton("Show", "Popup with every value listed"); // view data in row
  	    btnShowRow.addActionListener(new ActionListener() {
 	   		public void actionPerformed(ActionEvent arg0) {
 	   			showRow();
 	   		}
 		});  
- 	    topRow.add(btnShowRow);					topRow.add(Box.createHorizontalStrut(3));
- 	    
+ 	   
     	btnShowMSA = Jcomp.createButton("MSA... ", "Align selected sequences using MUSCLE or MAFFT"); // setMsaButton
  	    btnShowMSA.addActionListener(new ActionListener() {
     		public void actionPerformed(ActionEvent arg0) {
     			showMSA();
     		}
- 		});  
- 	    topRow.add(btnShowMSA);				topRow.add(Box.createHorizontalStrut(8));
+ 		}); 
+ 	    topRow.add(Jcomp.createLabel("Selected: ")); topRow.add(Box.createHorizontalStrut(sp1));
+ 	    topRow.add(btnShowRow);						 topRow.add(Box.createHorizontalStrut(sp1));
+ 	    topRow.add(btnShowMSA);						 topRow.add(Box.createHorizontalStrut(spv));
 	 	 
  	    // View 2D
- 	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(2)); // Needs box on Linux
+ 	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(spv)); // Needs box on Linux
 	    btnShow2D = Jcomp.createButton("View 2D", "View in 2D display"); 
 	    btnShow2D.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -321,18 +326,18 @@ public class TableMainPanel extends JPanel {
 	  
 	    chk2Dhigh = Jcomp.createCheckBox("High", "If checked, highlight hit on 2D", true);
 	    chk2Dgene = Jcomp.createCheckBox("Gene#", "If checked, show Gene#, else show Annotation", true);
-	   
-	    topRow.add(btnShow2D);	topRow.add(Box.createHorizontalStrut(1));
-	    topRow.add(lbl2Das);	topRow.add(Box.createHorizontalStrut(1));
-	    topRow.add(cmb2Dopts);	topRow.add(Box.createHorizontalStrut(1));
-	    topRow.add(txt2Dregion);topRow.add(Box.createHorizontalStrut(1));
-	    topRow.add(lbl2Dkb); 	topRow.add(Box.createHorizontalStrut(2));    
-	    topRow.add(chk2Dhigh); 	topRow.add(Box.createHorizontalStrut(1));
-	    if (!(isAllNoAnno && isNoPseudo)) {topRow.add(chk2Dgene); topRow.add(Box.createHorizontalStrut(3));}
+	  
+	    topRow.add(btnShow2D);	topRow.add(Box.createHorizontalStrut(sp0));
+	    topRow.add(lbl2Das);	topRow.add(Box.createHorizontalStrut(sp0));
+	    topRow.add(cmb2Dopts);	topRow.add(Box.createHorizontalStrut(sp0));
+	    topRow.add(txt2Dregion);topRow.add(Box.createHorizontalStrut(sp0));
+	    topRow.add(lbl2Dkb); 	topRow.add(Box.createHorizontalStrut(sp0+1));    
+	    topRow.add(chk2Dhigh); 	topRow.add(Box.createHorizontalStrut(sp0));
+	    if (!(isAllNoAnno && isNoPseudo)) topRow.add(chk2Dgene); 
 	    
 	    // set opt based on query
 	    if (isCollinear)  cmb2Dopts.setSelectedIndex(showSET);
-	    else if (isGroup && !isSelf) cmb2Dopts.setSelectedIndex(showGRP); // CAS579c does not work for Groups
+	    else if (isGroup && !isSelf) cmb2Dopts.setSelectedIndex(showGRP); // does not work for Groups
 	    else if (isBlock) cmb2Dopts.setSelectedIndex(showBLOCK);
 	    else              cmb2Dopts.setSelectedIndex(showREGION);
 	   
@@ -341,7 +346,8 @@ public class TableMainPanel extends JPanel {
 	    cmb2Dopts.setEnabled(false); txt2Dregion.setEnabled(false); chk2Dhigh.setEnabled(false); chk2Dgene.setEnabled(false);
 	    
 	    // Help
-	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(15));
+	    topRow.add(Box.createHorizontalStrut(spv));
+	    topRow.add(new JSeparator(JSeparator.VERTICAL)); topRow.add(Box.createHorizontalStrut(spv));
 	    btnHelp = Jhtml.createHelpIconQuery(Jhtml.result); 
 		topRow.add(btnHelp);
 	    

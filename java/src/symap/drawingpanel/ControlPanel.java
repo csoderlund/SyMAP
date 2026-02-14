@@ -20,6 +20,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
 import colordialog.ColorDialogHandler;
+import symap.Ext;
 import symap.Globals;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
@@ -84,15 +85,16 @@ public class ControlPanel extends JPanel implements HelpListener {
 		editColorsButton =  Jcomp.createIconButton(this,bar,buttonListener,"/images/colorchooser.gif",
 				"Colors: Edit the color settings");
 		
-		helpButtonLg = Jhtml.createHelpIconUserLg(Jhtml.align2d);
+		helpButtonLg = (Ext.isLinux()) ? Jhtml.createHelpIconUserSm(Jhtml.align2d)
+									   : Jhtml.createHelpIconUserLg(Jhtml.align2d);
 		helpButtonSm=  Jcomp.createIconButton(this,bar,buttonListener,"/images/info.png",
 				"Quick Help Popup");
 		
 		createMouseFunctionSelector(bar); // for drag&drop
 		
-		zoomPopupButton = Jcomp.createButtonGray(this,bar, null,"Zoom",
+		zoomPopupButton = Jcomp.createButton(this,bar, null,"Zoom",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
-		showPopupButton = Jcomp.createButtonGray(this,bar, null,"Show",
+		showPopupButton = Jcomp.createButton(this,bar, null,"Show",
 				"Click checkmark to activate; Select button for menu; see Info (i)");
 		createSelectPopups(); 
 		
@@ -106,6 +108,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 		gbc.ipadx = gbc.ipady = 0;
 		
 		String sp0="", sp1=" ", sp2="  ";
+		if (Ext.isLinux()) {sp1="  "; sp2="   ";}
+		
 		if (hc != null) {
 			addToGrid(row, gbl, gbc, homeButton, sp1);
 			addToGrid(row, gbl, gbc, backButton, sp1);

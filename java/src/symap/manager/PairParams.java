@@ -1,11 +1,8 @@
 package symap.manager;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
@@ -16,12 +13,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
@@ -43,6 +37,7 @@ public class PairParams extends JDialog {
 	private String opt0Alt =       "Align&Synteny"; // Manager button Selected Pair
 	private String[] actOptions = {"Clust&Synteny", // Manager button Selected Redo
 								   "Synteny Only","Number Pseudo"}; // Manager button sets from mp.bSynOnly...
+	private int actCnS=0, actSyn=1, actPseudo=2;
 	  
 	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	// These are NOT in the order displayed, but do not change without changing access everywhere else
@@ -199,8 +194,21 @@ public class PairParams extends JDialog {
 				setCancel();
 			}
 		});
-		btnActPop = Jcomp.createButton("tmp label", "Click button for menu of options; Must be 'Save' to take effect.");
-		createPopup();
+		
+		String [] acts;
+		if (!isAlignDone || !mp.hasSynteny()) {
+			acts = new String [1];			// not going to be shown
+			acts[0] = opt0Alt; 
+		}
+		else {
+			acts = actOptions;
+		}
+		cmbAction = Jcomp.createComboBox(acts, "Action to be performed on 'Selected Pair'", 0); 
+		cmbAction.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setAction();
+			}
+		});
 		
 		/*-------- Create Layout ------------------*/
 		//////////////////////////////////////////////////////////////////////////
@@ -335,11 +343,12 @@ public class PairParams extends JDialog {
 		// Buttons
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
 		
+		int sp = (Jhtml.isLinux()) ? 6 : 3;
 		row = Jcomp.createRowPanel();
 		JPanel buttonPanel = Jcomp.createRowPanel();
-		buttonPanel.add(btnActPop);		buttonPanel.add(Box.createHorizontalStrut(14));
-		buttonPanel.add(btnKeep);		buttonPanel.add(Box.createHorizontalStrut(3));
-		buttonPanel.add(btnLoadDef);	buttonPanel.add(Box.createHorizontalStrut(3));
+		if (acts.length>1) {buttonPanel.add(cmbAction);	buttonPanel.add(Box.createHorizontalStrut(14));}
+		buttonPanel.add(btnKeep);		buttonPanel.add(Box.createHorizontalStrut(sp));
+		buttonPanel.add(btnLoadDef);	buttonPanel.add(Box.createHorizontalStrut(sp));
 		buttonPanel.add(btnDiscard);		
 		
 		buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -358,52 +367,7 @@ public class PairParams extends JDialog {
 		setResizable(false);
 		setLocationRelativeTo(null); 
 	}
-	/******************************************************/
-	private void createPopup() {
-		if (!isAlignDone) actOptions[0] = opt0Alt; 
-		act0Radio	= new JRadioButtonMenuItem(actOptions[0]);
-		act1Radio	= new JRadioButtonMenuItem(actOptions[1]);
-		act2Radio	= new JRadioButtonMenuItem(actOptions[2]);
-		    
-		PopupListener listener = new PopupListener();
-		act0Radio.addActionListener(listener);
-		act1Radio.addActionListener(listener);
-		act2Radio.addActionListener(listener);
-		
-    	JPopupMenu popupMenu = new JPopupMenu();
-		popupMenu.setBackground(symap.Globals.white);
-		
-		JMenuItem popupTitle = new JMenuItem();
-		popupTitle.setText("Select Task");
-		popupTitle.setEnabled(false);
-		popupMenu.add(popupTitle);
-		popupMenu.addSeparator();
-		
-		popupMenu.add(act0Radio);
-		popupMenu.add(act1Radio);
-		popupMenu.add(act2Radio);
-		
-		if (!mp.hasSynteny()) {
-			act1Radio.setEnabled(false);
-			act2Radio.setEnabled(false);
-		}
-		
-		ButtonGroup grp = new ButtonGroup();
-		grp.add(act0Radio); grp.add(act1Radio); grp.add(act2Radio); 
-		
-		btnActPop.setComponentPopupMenu(popupMenu); // zoomPopupButton create in main
-		btnActPop.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-		Dimension d = new Dimension(120, 30); // w,d
-		btnActPop.setPreferredSize(d); btnActPop.setMaximumSize(d); btnActPop.setMinimumSize(d);
-		
-		if (mp.bSynOnly) setPopup(act1Radio);
-		else if (mp.bPseudo) setPopup(act2Radio);
-		else setPopup(act0Radio);
-	}
+	
 	/************************************************************************/
 	private String getValue(String symbol) {// ORDER MUST BE SAME AS array
 		int x=0;
@@ -488,38 +452,29 @@ public class PairParams extends JDialog {
 	private void setInit() {
 		setParams(mp.getFileParams());
 		
-		if (mp.bSynOnly) setPopup(act1Radio);
-		else if (mp.bPseudo) setPopup(act2Radio);
-		else setPopup(act0Radio);
+		if (mp.bSynOnly) 		cmbAction.setSelectedIndex(actSyn);
+		else if (mp.bPseudo) 	cmbAction.setSelectedIndex(actPseudo);
+		else 					cmbAction.setSelectedIndex(actCnS);
 	}
 	private void setParams(HashMap <String, String> valMap) {
 		for(int x=0; x<SYMBOLS.length; x++)
 			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
 	}
-	private void setPopup(Object src) {
-		int idx=0;
-		if (src==act0Radio)      {
-			idx=0; mp.bPseudo=false; mp.bSynOnly=false;
+	private void setAction() {
+		int idx = cmbAction.getSelectedIndex();
+		if (idx==actCnS)      {
+			mp.bPseudo=false; mp.bSynOnly=false;
 		}
-		else if (src==act1Radio) { 
-			idx=1; mp.bPseudo=false; mp.bSynOnly=true;
+		else if (idx==actSyn) { 
+			mp.bPseudo=false; mp.bSynOnly=true;
 			setSaveSynOnly();
 		}
-		else if (src==act2Radio) {
-			idx=2; mp.bPseudo=true;  mp.bSynOnly=false; 
+		else if (idx==actPseudo) {
+			mp.bPseudo=true;  mp.bSynOnly=false; 
 			setSavePseudo();
 		}
-		else return;
-		
-		btnActPop.setText(actOptions[idx]);
 	}
-	private class PopupListener implements ActionListener {
-		private PopupListener() { }
-		public void actionPerformed(ActionEvent event) { 
-			Object src = event.getSource();
-			setPopup(src);
-		}
-	 }
+	
 	/*****************************************************/
 	private void setDefaults() {
 		setParams(mp.getDefaults());
@@ -527,7 +482,7 @@ public class PairParams extends JDialog {
 		chkDef.setSelected(true); // Defaults should reset this, but not initial load from file
 		
 		mp.bPseudo = mp.bSynOnly = false;
-		setPopup(act0Radio);
+		cmbAction.setSelectedIndex(actCnS);
 	}
 	private void setCancel() { 
 		mp.bPseudo  = bSavPseudo;
@@ -668,11 +623,8 @@ public class PairParams extends JDialog {
 	private JComboBox <String> cmbMergeBlocks = null;
 	private JRadioButton radOrdNone=null, radOrdProj1=null, radOrdProj2=null;
 	
+	private JComboBox <String> cmbAction = null;	// CAS580 was radiobuttons
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
 	
-	private JButton btnActPop;  						
-    private JRadioButtonMenuItem act0Radio	= null;
-    private JRadioButtonMenuItem act1Radio	= null;
-    private JRadioButtonMenuItem act2Radio	= null;
     private boolean bSavPseudo=false, bSavSynOnly=false;
 }

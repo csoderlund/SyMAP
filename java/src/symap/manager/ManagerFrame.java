@@ -25,7 +25,7 @@ import blockview.BlockViewFrame;
 import circview.CircFrame;
 import dotplot.DotPlotFrame;
 import props.PropertiesReader;
-
+import symap.Ext;
 import symap.Globals;
 import symap.frame.ChrExpInit;
 import symapQuery.QueryFrame;
@@ -64,11 +64,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private final String DATA_PATH = Constants.dataDir;
 	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; (same as 2D)
 	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager
-	private final int MIN_DIVIDER_LOC = 220; 				
-	private final int LEFT_PANEL = 450;      
-	private final int TOP_PANEL = 300;		
-	
+	private final int MIN_DIVIDER_LOC = 220; 				  
+	private final int TOP_PANEL = 300;			
 	private static final String HTML = "/html/ProjMgrInstruct.html";
+	private boolean isLinux = false;
 	
 	private final Color cellColor = new Color(0,170,0,85);  // pale green; for selected box 
 	private final Color textColor = new Color(0,100,0,255); // dark green for "Select a Pair..." 
@@ -117,6 +116,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/*****************************************************************/
 	public ManagerFrame() {
 		super("SyMAP " + Globals.VERSION);
+		isLinux = Ext.isLinux();
 		
         // Add window handler to kill mysqld on clean exit
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -204,6 +204,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	/*******************************************************************/
 	public void refreshMenu() {
+		getCPUs(); // if changed, gets changed back; this saves it; CAS580
+		
 		Jcomp.setCursorBusy(this, true);
 		
 		initProjects(false); // recreates project lists on every refresh; easier then modifing projVec etc
@@ -266,15 +268,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			for (Mproject p : cat2Proj.get(cat)) {
 				if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // nothing to view
 					
-				ProjectCheckBox cb = null;
 				String name = p.getDisplayName();
 				boolean bLoaded = (p.getStatus() != Mproject.STATUS_ON_DISK);
 				if (bLoaded) 
 					name += " (" + p.getLoadDate() + ") " + p.getCntSyntenyStr(); 
-				cb = new ProjectCheckBox( name, p );
-				Font f = new Font(cb.getFont().getName(), Font.PLAIN, cb.getFont().getSize());
-				cb.setFont(f); 
-				subPanel.add( cb );
+				
+				ProjectCheckBox cb = new ProjectCheckBox(name, p);
+				//Font f = new Font(cb.getFont().getName(), Font.PLAIN, cb.getFont().getSize()); // looks better on Linux without; CAS580
+				//cb.setFont(f); 
+				subPanel.add(cb);
 			}
 			subPanel.add( Box.createVerticalStrut(5) );
 		}
@@ -309,25 +311,28 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		return panel;
 	}
 	/***** Right panel of selected projects ***********************************************/
-	private JPanel createSelectedPanel() { 
+	private JPanel createSelectedPanel() { // CAS580 make look better on Linux and compress buttons
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout( new BoxLayout ( mainPanel, BoxLayout.Y_AXIS ) );
 		mainPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 0));
 		
-	// Top area
-		JLabel lblTitle = Jcomp.createLabel("Selected", Font.BOLD, 18);
+	/* Top area */
+		JPanel projPanel = new JPanel();
+		projPanel.setLayout( new BoxLayout ( projPanel, BoxLayout.Y_AXIS ) );
+		projPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		projPanel.add( Box.createVerticalStrut(5) );
+		
+		JPanel topRow = Jcomp.createRowPanelGray();
+		JLabel topSelLbl = Jcomp.createLabel("Selected", Font.BOLD, 18);
 		JButton btnHelp;
 		if (!inReadOnlyMode)btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.build); 
 		else 				btnHelp = Jhtml.createHelpIconUserSm(Jhtml.view); 
-		mainPanel.add( Jcomp.createHorizPanel( new Component[] { lblTitle,btnHelp}, LEFT_PANEL, 0)); 
+		topRow.add(topSelLbl); topRow.add(Box.createHorizontalGlue()); 
+		topRow.add(btnHelp); topRow.add(Box.createHorizontalStrut(5));
+		projPanel.add(topRow); projPanel.add(Box.createVerticalStrut(5));
 		
-	// Add individual project summaries
-		JPanel subPanel = new JPanel();
-		subPanel.setLayout( new BoxLayout ( subPanel, BoxLayout.Y_AXIS ) );
-		subPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		subPanel.add( Box.createVerticalStrut(5) );
-		
+		// Conditional Load All
 		int nUnloaded = 0;
 		for (Mproject p : selectedProjVec) {
 			if (p.getStatus() == Mproject.STATUS_ON_DISK) nUnloaded++;
@@ -335,11 +340,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (nUnloaded > 0) {
 			LinkLabel  btnLoadAllProj = new LinkLabel("Load All Projects", Color.blue, Color.blue.darker());
 			btnLoadAllProj.addMouseListener( doLoadAllProj );
-			subPanel.add(btnLoadAllProj );
-			subPanel.add( Box.createVerticalStrut(10) );			
+			projPanel.add(btnLoadAllProj );
+			projPanel.add( Box.createVerticalStrut(10) );			
 		}
+		// Add individual project summaries and links
 		for (Mproject mProj : selectedProjVec) {
-			lblTitle = Jcomp.createLabel( mProj.getDisplayName(), Font.BOLD, 15 );
+			JLabel nameLbl = Jcomp.createLabel( mProj.getDisplayName(), Font.BOLD, 15 );
 			
 			JPanel textPanel = new JPanel();
 			textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.PAGE_AXIS));
@@ -347,7 +353,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			// line 1
 			String label1 = "Directory: " + mProj.getDBName() + "    Abbrev: " + mProj.getdbAbbrev(); 
-			
 			textPanel.add(new JLabel(label1)); 
 			
 			// line 2
@@ -364,7 +369,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				if (Utilities.isEmpty(group)) group = "Chromosome"; 
 				String label2 = String.format("%s: %d    Bases: %,d    %s", 
 						group, mProj.getNumGroups(), mProj.getLength(), mProj.getAnnoStr());
-				
 				textPanel.add(new JLabel(label2));
 			}
 			textPanel.setMaximumSize(textPanel.getPreferredSize());
@@ -380,7 +384,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				btnLoadOrRemove = new ProjectLinkLabel("Load project", mProj, Color.red);
 				btnLoadOrRemove.addMouseListener( doLoad );
 
-				btnReloadParams = new ProjectLinkLabel("Parameters", mProj, Color.blue);
+				btnReloadParams = new ProjectLinkLabel("Parameters", mProj, Color.red);
 				btnReloadParams.addMouseListener( doSetParamsNotLoaded ); 
 			}
 			else { 
@@ -401,189 +405,206 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 			if (mProj.getStatus() == Mproject.STATUS_ON_DISK) {
 				if (!inReadOnlyMode) 
-					subPanel.add( Jcomp.createHorizPanel( new Component[] 
-						{ lblTitle, btnRemoveFromDisk, btnLoadOrRemove, btnReloadParams }, 15, 0 ) );				
+					projPanel.add(Jcomp.createHorizPanel( new Component[] 
+						{nameLbl, btnRemoveFromDisk, btnLoadOrRemove, btnReloadParams }, 15, 0 ));				
 			}
 			else {
 				if (!inReadOnlyMode) { 
-					subPanel.add( Jcomp.createHorizPanel( new Component[] 
-					{ lblTitle, btnLoadOrRemove, btnReloadSeq, btnReloadAnnot, btnReloadParams, btnView}, 10, 0 ) );						
+					projPanel.add( Jcomp.createHorizPanel(new Component[] 
+								{nameLbl, btnLoadOrRemove, btnReloadSeq, btnReloadAnnot, btnReloadParams, btnView}, 10, 0));						
 				}
 				else { 
-					subPanel.add( Jcomp.createHorizPanel( new Component[] { lblTitle, btnView}, 15, 0));
+					projPanel.add( Jcomp.createHorizPanel(new Component[] { nameLbl, btnView}, 15, 0));
 				}
 			}
-			subPanel.add( textPanel );
-			subPanel.add( Box.createVerticalStrut(10) );
+			projPanel.add(textPanel);
+			projPanel.add(Box.createVerticalStrut(10));
 		}
+		projPanel.setMaximumSize(projPanel.getPreferredSize());
 		
-		subPanel.setMaximumSize( subPanel.getPreferredSize() );
-		JScrollPane subScroller = new JScrollPane(subPanel, 
+		JScrollPane projScroller = new JScrollPane(projPanel, 
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		subScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
-		subScroller.getVerticalScrollBar().setUnitIncrement(10);
-		subScroller.setBorder(null);
-		// PreferredSize keeps it big and spread out; MinimumSize makes it really weird - maybe subPanel?
-		subScroller.setMaximumSize(new Dimension(MIN_WIDTH, TOP_PANEL)); 
-		mainPanel.add( subScroller );
+		projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
+		projScroller.getVerticalScrollBar().setUnitIncrement(10);
+		projScroller.setBorder(null);
 		
-	// Add alignment table; lower part
-		JComponent tableScroll = createPairTable();
-		if (tableScroll != null) {
-			lblTitle = Jcomp.createLabel("Available Syntenies", Font.BOLD, 16);
+		projScroller.setMaximumSize(new Dimension(MIN_WIDTH, TOP_PANEL)); 
+		mainPanel.add( projScroller );
 		
-			JTextArea text1 = new JTextArea(symapLegend, 4, 1);
-					
-			text1.setBackground( getBackground() );
-			text1.setEditable(false);
-			text1.setLineWrap(false);
-			text1.setAlignmentX(Component.LEFT_ALIGNMENT);
-			
-			JTextArea text2 = new JTextArea(selectPairText,2,1);
-			text2.setBackground( getBackground() );
-			text2.setEditable(false);
-			text2.setLineWrap(false);
-			text2.setAlignmentX(Component.LEFT_ALIGNMENT);
-			text2.setForeground(textColor); 
-		
-			btnSelAlign = Jcomp.createButtonGray("Selected Pair", "Run Align/Clust/Synteny on the selected pair"); 
-			btnSelAlign.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					alignSelectedPair();
-				}
-			} );
-			btnSelClearPair = Jcomp.createButtonGray("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
-			btnSelClearPair.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					btnSelClearPair.setEnabled(false);// (wheel does not stay)
-					Jcomp.setCursorBusy(getInstance(), true); 
-					
-					removeClearPair();
-					
-					Jcomp.setCursorBusy(getInstance(), false); 
-					btnSelClearPair.setEnabled(true);
-				}
-			} );	
-			
-			// CAS578 removed; gives diff results and not worth it; btnAllPairs = Jcomp.createButtonGray("All Pairs", "Run Align/Clust/Synteny on all pairs"); 
-			btnSelDotplot = Jcomp.createButtonGray("Dot Plot", "Display Dot Plot for selected pair");
-			btnSelDotplot.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					showDotplot();
-				}
-			});
-			btnSelBlockView = Jcomp.createButtonGray("Blocks", "Display Blocks View for selected pair"); 
-			btnSelBlockView.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					showBlockView();
-				}
-			});
-			btnSelCircView = Jcomp.createButtonGray("Circle", "Display Circle View for selected pair"); 
-			btnSelCircView.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					showCircleView();
-				}
-			});
-			
-			btnSelReports = Jcomp.createButtonGray("Reports...", "Select 'Summary' or 'Block Report'");
-			showReports();
-			
-			btnAllChrExp = Jcomp.createButtonGray("Chromosome Explorer", "Select chromosomes from all pairs for the 2D display"); 
-			btnAllChrExp.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					showChrExp();
-				}
-			});
-			btnAllDotplot = Jcomp.createButtonGray("Dot Plot", "Display Dot Plot for all pairs"); 
-			btnAllDotplot.addActionListener( new ActionListener() {
-				public void actionPerformed(ActionEvent e) { 
-					showAllDotPlot();
-				}
-			});
-			btnAllQueryView = Jcomp.createButtonGray("Queries", "Query all pairs");
-			btnAllQueryView.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					showQuery();
-				}
-			});
-
-			JPanel titleText = new JPanel();
-			titleText.setLayout(new BoxLayout ( titleText, BoxLayout.Y_AXIS ) );
-			titleText.add(lblTitle);
-			titleText.add( Box.createRigidArea(new Dimension(0,5)) );
-			titleText.add(text2);
-			
-			JPanel instructText = new JPanel();
-			instructText.setLayout(new BoxLayout ( instructText, BoxLayout.X_AXIS ) );
-			instructText.setAlignmentX(Component.LEFT_ALIGNMENT);
-			instructText.add(titleText);
-			instructText.add(Box.createRigidArea(new Dimension(20,0)));
-			instructText.add(new JSeparator(SwingConstants.VERTICAL)); //
-			instructText.add(Box.createRigidArea(new Dimension(20,0)));
-			instructText.add(text1);
-			instructText.add(Box.createHorizontalGlue());
-			instructText.setMaximumSize(instructText.getPreferredSize());
-			
-			JLabel lbl1 = new JLabel("Align & Synteny"); 
-			JLabel lbl2 = new JLabel("Selected Pair  ");  
-			JLabel lbl3 = new JLabel("All " + TBL_DONE + " Pairs"); 
-			JLabel lbl4 = new JLabel("               "); 
-			Dimension d = lbl1.getPreferredSize();
-			lbl2.setPreferredSize(d); lbl3.setPreferredSize(d); lbl4.setPreferredSize(d);
-			
-			totalCPUs = Runtime.getRuntime().availableProcessors(); 
-			if (maxCPU<1) maxCPU = totalCPUs;
-			
-			txtCPUs = new JTextField(2);
-			txtCPUs.setMaximumSize(txtCPUs.getPreferredSize());
-			txtCPUs.setMinimumSize(txtCPUs.getPreferredSize());
-			txtCPUs.setText("" + maxCPU);
-			
-			checkVB = Jcomp.createCheckBoxGray("Verbose","For A&S, Verbose output to symap.log & terminal."); // not saved
-			checkVB.setSelected(Constants.VERBOSE);
-			checkVB.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent arg0) {
-					Constants.VERBOSE = checkVB.isSelected();
-				}
-			});
-			
-			mainPanel.add( new JSeparator() );
-			mainPanel.add( Box.createVerticalStrut(15) );
-			mainPanel.add(instructText); 
-			mainPanel.add( Box.createVerticalStrut(15) );
-			
-			int sp=8, ex=24;
-			if (!inReadOnlyMode) {
-				Component cpu = Jcomp.createHorizPanel( new Component[] 
-						{ tableScroll, new JLabel("   CPUs:"), txtCPUs, new JLabel("  "), checkVB}, sp, ex );
-				mainPanel.add(cpu);			
-			}
-			else {	
-				mainPanel.add( Jcomp.createHorizPanel( new Component[] { tableScroll, new JLabel(" ")}, sp, ex ));			
-			}
-			btnPairParams = Jcomp.createButtonGray("Parameters", "Set parameters for Align&Synteny");
-			btnPairParams.addActionListener(showPairProps);
-			
-			if (!inReadOnlyMode) {
-				mainPanel.add( Box.createRigidArea(new Dimension(0,15)) );	
-				mainPanel.add( Jcomp.createHorizPanel( new Component[] { lbl1,
-					btnSelAlign, btnSelClearPair,  btnPairParams}, sp, ex) );  
-			}
-			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );  
-			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl2, 
-					btnSelCircView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp, ex) );
-
-			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl3, 
-					btnAllChrExp, btnAllDotplot, null, btnAllQueryView }, sp, ex) );
-
-			mainPanel.add( Box.createRigidArea(new Dimension(0,15))  );
-			mainPanel.add( Jcomp.createHorizPanel( new Component[] {lbl4 }, sp, ex) );
-		} else {
+	/* Lower Half with project table and buttons */
+		JComponent pairTable = createPairTable();
+		if (pairTable==null) {
 			mainPanel.add( Box.createVerticalGlue() );
-			mainPanel.add( Jcomp.createTextArea("",getBackground(), false) ); // kludge to fix layout problem			
+			mainPanel.add( Jcomp.createTextArea("",getBackground(), false) ); // kludge to fix layout problem		
+			return mainPanel;
 		}
+		
+		// Available Syntenies + Instruct | Legend
+		JLabel availTitle = Jcomp.createLabel("Available Syntenies", Font.BOLD, 16);
+		JTextArea pairText = new JTextArea(selectPairText,2,1);
+		pairText.setBackground( getBackground() );
+		pairText.setEditable(false);
+		pairText.setLineWrap(false);
+		pairText.setAlignmentX(Component.LEFT_ALIGNMENT);
+		pairText.setForeground(textColor); 
+		
+		JTextArea legendText = new JTextArea(symapLegend, 4, 1);
+		legendText.setBackground( getBackground() );
+		legendText.setEditable(false);
+		legendText.setLineWrap(false);
+		legendText.setAlignmentX(Component.LEFT_ALIGNMENT);
+		
+		JPanel availPage = new JPanel();
+		availPage.setLayout(new BoxLayout ( availPage, BoxLayout.Y_AXIS ) );
+		availPage.add(availTitle);
+		availPage.add( Box.createRigidArea(new Dimension(0,5)) );
+		availPage.add(pairText);
+		
+		JPanel availRow = new JPanel();
+		availRow.setLayout(new BoxLayout ( availRow, BoxLayout.X_AXIS ) );
+		availRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+		
+		availRow.add(availPage);
+		availRow.add(Box.createRigidArea(new Dimension(20,0)));
+		availRow.add(new JSeparator(SwingConstants.VERTICAL)); //
+		availRow.add(Box.createRigidArea(new Dimension(20,0)));
+		
+		availRow.add(legendText);
+		availRow.add(Box.createHorizontalGlue());
+		availRow.setMaximumSize(availRow.getPreferredSize());
+			
+		// PairTable CPU Verbose
+		totalCPUs = Runtime.getRuntime().availableProcessors(); 
+		if (maxCPU<1) maxCPU = totalCPUs;
+		
+		txtCPUs = new JTextField(2);
+		txtCPUs.setMaximumSize(txtCPUs.getPreferredSize());
+		txtCPUs.setMinimumSize(txtCPUs.getPreferredSize());
+		txtCPUs.setText("" + maxCPU);
+		
+		checkVB = Jcomp.createCheckBoxGray("Verbose","For A&S, Verbose output to symap.log & terminal.", false); // not saved
+		checkVB.setSelected(Constants.VERBOSE);
+		checkVB.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Constants.VERBOSE = checkVB.isSelected();
+			}
+		});
+		
+		// Buttons
+		JLabel lblAnS = new JLabel("Align & Synteny"); 
+		JLabel lblSel = new JLabel("Selected Pair  ");  
+		JLabel lblAll = new JLabel("All " + TBL_DONE + " Pairs"); 
+		JLabel lblSp = new JLabel("               "); 
+		Dimension d = lblAnS.getPreferredSize();
+		lblSel.setPreferredSize(d); lblAll.setPreferredSize(d); lblSp.setPreferredSize(d);
+		
+		btnSelAlign = Jcomp.createButton("Selected Pair", "Run Align/Clust/Synteny on the selected pair"); 
+		btnSelAlign.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				alignSelectedPair();
+			}
+		} );
+		btnSelClearPair = Jcomp.createButton("Clear Pair", "Remove from database, and optionally, remove MUMmer results"); 
+		btnSelClearPair.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				btnSelClearPair.setEnabled(false);// (wheel does not stay)
+				Jcomp.setCursorBusy(getInstance(), true); 
 				
+				removeClearPair();
+				
+				Jcomp.setCursorBusy(getInstance(), false); 
+				btnSelClearPair.setEnabled(true);
+			}
+		} );	
+		btnPairParams = Jcomp.createButton("Parameters", "Set parameters for Align&Synteny");
+		btnPairParams.addActionListener(showPairProps);
+		
+		btnSelDotplot = Jcomp.createButton("Dot Plot", "Display Dot Plot for selected pair");
+		btnSelDotplot.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showDotplot();
+			}
+		});
+		btnSelBlockView = Jcomp.createButton("Blocks", "Display Blocks View for selected pair"); 
+		btnSelBlockView.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showBlockView();
+			}
+		});
+		btnSelCircView = Jcomp.createButton("Circle", "Display Circle View for selected pair"); 
+		btnSelCircView.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showCircleView();
+			}
+		});
+		
+		btnSelReports = Jcomp.createButton("Reports...", "Select 'Summary' or 'Block Report'");
+		showReports(); // adds drop-down
+		
+		btnAllChrExp = Jcomp.createButton("Chromosome Explorer", "Select chromosomes from all pairs for the 2D display"); 
+		btnAllChrExp.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showChrExp();
+			}
+		});
+		btnAllDotplot = Jcomp.createButton("Dot Plot", "Display Dot Plot for all pairs"); 
+		btnAllDotplot.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showAllDotPlot();
+			}
+		});
+		btnAllQueryView = Jcomp.createButton("Queries", "Query all pairs");
+		btnAllQueryView.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showQuery();
+			}
+		});
+		
+		// Build lower right side
+		mainPanel.add( new JSeparator() );
+		mainPanel.add( Box.createVerticalStrut(5) );
+		mainPanel.add(availRow); 
+		mainPanel.add( Box.createVerticalStrut(15) );
+		
+		int sp=8, ex=24;
+		if (isLinux) {sp=12; ex=50;}
+		
+		if (!inReadOnlyMode) {
+			Component cpu = Jcomp.createHorizPanel( new Component[] 
+					{pairTable, new JLabel("   CPUs:"), txtCPUs, new JLabel("  "), checkVB}, sp, ex);
+			mainPanel.add(cpu);			
+		}
+		else {	
+			mainPanel.add( Jcomp.createHorizPanel( new Component[] {pairTable, new JLabel(" ")}, sp, ex));			
+		}
+		
+		// 
+		JPanel butPanel = new JPanel();
+		butPanel.setLayout( new BoxLayout ( butPanel, BoxLayout.Y_AXIS ) );
+		butPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		butPanel.add( Box.createVerticalStrut(5) );
+		
+		if (!inReadOnlyMode) {
+			butPanel.add( Box.createRigidArea(new Dimension(0,15)));	
+			butPanel.add( Jcomp.createHorizPanel(new Component[] {lblAnS,
+				btnSelAlign, btnSelClearPair,  btnPairParams}, sp, ex));  
+		}
+		butPanel.add( Box.createRigidArea(new Dimension(0,15))); 
+		butPanel.add( Jcomp.createHorizPanel( new Component[] {lblSel, 
+				btnSelCircView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp, ex) );
+
+		butPanel.add( Box.createRigidArea(new Dimension(0,15)));
+		butPanel.add( Jcomp.createHorizPanel( new Component[] {lblAll, 
+				btnAllChrExp, btnAllDotplot, null, btnAllQueryView }, sp, ex) );
+
+		butPanel.add( Box.createRigidArea(new Dimension(0,15)));
+		butPanel.add( Jcomp.createHorizPanel( new Component[] {lblSp }, sp, ex) );
+		
+		butPanel.add( Box.createRigidArea(new Dimension(0,15)));
+		butPanel.setMaximumSize(butPanel.getPreferredSize());
+		
+		mainPanel.add(butPanel);
+			
 		updateEnableButtons();
 		
 		return mainPanel;
@@ -884,8 +905,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		int nCol = pairTable.getSelectedColumn();
 		String val = (String)pairTable.getValueAt(nRow, nCol);
 		
-		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_DONE)));
+		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_DONE))); // A or Check
 	}
+	
 	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame 
 	public Mpair getMpair(int idx1, int idx2) { // projIdx
 		String key = idx1 + ":" + idx2;
@@ -1281,12 +1303,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			if ( e.getStateChange() == ItemEvent.SELECTED ) {
 				if ( !selectedProjVec.contains(p) ) selectedProjVec.add(p);
-				cb.setBackground(cellColor); // highlight
+				//cb.setBackground(cellColor); // highlight CAS580 only worked on Linux and not necessary
 				changed = true;
 			}
 			else if ( e.getStateChange() == ItemEvent.DESELECTED ) {
 				selectedProjVec.remove(p);
-				cb.setBackground(Color.white); // un-highlight
+				//cb.setBackground(Color.white); // un-highlight
 				changed = true;
 			}
 			
@@ -1516,6 +1538,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 
 	private int getCPUs() {
+		if (txtCPUs==null) return 1;
+		String cpu = txtCPUs.getText();
+		if (cpu.trim().equals("")) { // Gets called before Load, where the CPU isn't set yet; CAS580
+			if (maxCPU>=1) txtCPUs.setText(maxCPU+""); 
+			else txtCPUs.setText("1");
+		}
 		try { maxCPU = Integer.parseInt(txtCPUs.getText()); }
 		catch (Exception e) {
 			Popup.showErrorMessage("Please enter a valid value for number of CPUs to use.");
@@ -1658,17 +1686,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			getContentPane().setBackground(Color.WHITE);
 			setTitle("Add Project");
 			
-			pnlMainPanel = new JPanel();
-			pnlMainPanel.setLayout(new BoxLayout(pnlMainPanel, BoxLayout.PAGE_AXIS));
-			pnlMainPanel.setBackground(Color.WHITE);
+			pnlMainPanel = Jcomp.createPagePanel();
 			
-			projName = new JTextField(15);
-			projName.setAlignmentX(Component.LEFT_ALIGNMENT);
-			projName.setMaximumSize(projName.getPreferredSize());
-			projName.setMinimumSize(projName.getPreferredSize());
+			projName = Jcomp.createTextField("", 15);
 			
-			btnAdd = new JButton("Add");
-			btnAdd.setBackground(Color.WHITE);
+			btnAdd = Jcomp.createButton("Add", "Add new project");
 			btnAdd.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					if (isAddValid())
@@ -1677,8 +1699,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			});
 			btnAdd.setEnabled(true); 
 			
-			btnCancel = new JButton("Cancel");
-			btnCancel.setBackground(Color.WHITE);
+			btnCancel = Jcomp.createButton("Cancel", "Cancel new project");
 			btnCancel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					projName.setText("");
@@ -1689,31 +1710,18 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnAdd.setMinimumSize(btnCancel.getPreferredSize());
 			btnAdd.setMaximumSize(btnCancel.getPreferredSize());
 
-			JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.SYS_GUIDE_URL, Jhtml.create);
+			JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, Jhtml.addproj); //CAS580 change 
 			
-			JPanel tempRow = new JPanel();
-			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
-			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-			tempRow.setBackground(Color.WHITE);
-						
-			tempRow.add(new JLabel("Name:"));
-			tempRow.add(Box.createHorizontalStrut(5));
+			JPanel tempRow = Jcomp.createRowPanel();
+			tempRow.add(Jcomp.createLabel("Name:", "Directory name")); tempRow.add(Box.createHorizontalStrut(5));
 			tempRow.add(projName);
-			
-			tempRow.setMaximumSize(tempRow.getPreferredSize());
 			
 			pnlMainPanel.add(Box.createVerticalStrut(10));
 			pnlMainPanel.add(tempRow);
 			
-			tempRow = new JPanel();
-			tempRow.setLayout(new BoxLayout(tempRow, BoxLayout.LINE_AXIS));
-			tempRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-			tempRow.setBackground(Color.WHITE);
-
-			tempRow.add(btnAdd);
-			tempRow.add(Box.createHorizontalStrut(20));
-			tempRow.add(btnCancel);
-			tempRow.add(Box.createHorizontalStrut(20));
+			tempRow = Jcomp.createRowPanel();
+			tempRow.add(btnAdd);	tempRow.add(Box.createHorizontalStrut(10));
+			tempRow.add(btnCancel);	tempRow.add(Box.createHorizontalStrut(20));
 			tempRow.add(btnHelp);
 			
 			pnlMainPanel.add(Box.createVerticalStrut(30));
@@ -1726,6 +1734,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			add(pnlMainPanel);
 			
 			pack();
+			setLocationRelativeTo(null); // CAS580 add
 		}
 	
 		private void reset() { 
@@ -1743,8 +1752,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				Popup.showErrorMsg("Name must be characters, numbers or underscore");
 				return false;
 			}
-			String dir = Constants.seqDataDir + name;
-			if (FileDir.dirExists(dir)) {
+			String seqDir = Constants.seqDataDir + name;
+			if (FileDir.dirExists(seqDir)) {
 				Popup.showErrorMsg("Directory exists: " + name);
 				return false;
 			}
@@ -1761,10 +1770,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			FileDir.checkCreateDir(strDataPath, true);
 			FileDir.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
 			FileDir.checkCreateDir(Constants.seqRunDir,  true);
-			
-			// CAS578 was adding even if illegal or blank; 
-			// was being done in a listener elsewhere in the code, and a separate method
-			FileDir.checkCreateDir(dir, true);
+			FileDir.checkCreateDir(seqDir, true);
 			refreshMenu();
 			
 			return true;
@@ -1779,6 +1785,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		public ProjectLinkLabel(String text, Mproject project, Color c) {
 			super(text, c.darker().darker(), c);
+			if (isLinux) setFont(new Font("SansSerif", Font.BOLD, 11)); // was forcing scroll even with demo on linux; CAS580
 			this.project = project;
 		}
 		
@@ -1792,12 +1799,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			super(text);
 			project = p;
 			setFocusPainted(false);
+			setBackground( Color.white );
+			
 			if (selectedProjVec.contains(p)) {
 				setSelected(true);
-				setBackground( cellColor); // this doesn't seem to do anything, see createPairTable
+				//setBackground( cellColor); Only works on Linux and looks weird; CAS580
 			}
-			else
-				setBackground( Color.white );
+			// else setBackground( Color.white );
 			addItemListener( checkboxListener );
 		}
 		public Mproject getProject() { return project; }

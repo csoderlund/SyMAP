@@ -140,7 +140,7 @@ public class TmpRowData {
 	protected int [] loadGroup(Vector <Integer> grpIdxVec) {
 	try {
 		int [] coords = {0,0,0,0}; 
-		coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1];
+		coords[0] = start[0]; coords[1] = end[0]; coords[2] = start[1]; coords[3] = end[1]; // start/end of selected row
 		
 		for (int r=0; r<tPanel.theTableData.getNumRows(); r++) {
 			HashMap <String, Object> colHeadVal = tPanel.theTableData.getRowLocData(r); 
@@ -196,6 +196,15 @@ public class TmpRowData {
 				coords[3] = Math.max(coords[3], e[1]);
 			}
 		} // finish all rows
+		
+		// The coords are on the hit start/end; CAS580 add pad
+		int pad = (Math.abs(coords[1]-coords[0])/1000)*2;
+		pad = Math.max(pad, 200);
+		coords[0] -= pad; coords[1] += pad;  				
+		pad = (Math.abs(coords[3]-coords[2])/1000)*2;
+		pad = Math.max(pad, 200);
+		coords[2] -= pad; coords[3] += pad; 
+		
 		return coords;
 	} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return null;}
 	}

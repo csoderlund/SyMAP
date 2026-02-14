@@ -57,7 +57,7 @@ public class Annotation {
 	private boolean isPopup=false; 				// Gene has popup - highlight if bHighPopup
 	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
 	
-	private boolean isSelectedGene=false; 		// Gene is filtered
+	private boolean isGeneN=false; 		// Gene is filtered
 	private boolean isG2xN=false;			    // Highlight exons of G2xN genes
 	
 	/**
@@ -172,7 +172,7 @@ public class Annotation {
 				g2.fillRect((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
 				
 				if (itype==GENE_INT) {// Gene Delimiter
-					if (bGeneLineOpt || isPopup || isSelectedGene) {
+					if (bGeneLineOpt || isPopup || isGeneN) {
 						Stroke oldstroke = g2.getStroke();
 						g2.setStroke(new BasicStroke(2)); 
 						g2.drawLine((int)rect.x-10, (int)rect.y, ((int)rect.x + 13), (int)rect.y);
@@ -182,29 +182,35 @@ public class Annotation {
 			}
 			else 	// Else draw as line 
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
-			
-			// XXX Gene#      LastR is Rect, not text (Gray box drawn in Sequence.buildGraphics)
-			boolean doGeneNum = (bShowGeneNum && itype==GENE_INT) || (bShowGeneNumHit && showGeneHasHit());
-			if (doGeneNum) { 
-				 g2.setPaint(Color.black);
-				 g2.setFont(Globals.textFont);
-				 
-				 int x, w=0;
-				 if (seqObj.isRef()) { 	// right side
-					 if (lastR!=null && lastR.x>rect.x && lastR.y+lastR.height>rect.y) 
-						   x = (int)lastR.x + (int) Sequence.EXON_WIDTH-2;
-					 else  x = (int)rect.x  + (int) Sequence.EXON_WIDTH-2;	// paint on right
-				 }
-				 else { 				// left side
-					 FontMetrics metrics = g2.getFontMetrics(Globals.textFont);
-					 w = metrics.stringWidth(strGeneNum) + 6; // tested stringWidth of 'a' is 7
-					 x = (int) rect.x-w;
-				 }
-				 int y = (int)rect.y + (Globals.textHeight/2);
-				 if (lastR!=null && Math.abs(lastR.y-rect.y)<Globals.textHeight) y+=Globals.textHeight-2;	// move it down
-					 
-				 g2.drawString(strGeneNum, x, y);
-			}
+		}
+	}
+	public void paintText(Graphics2D g2) { // separate loop so text goes on top; CAS580
+		if (itype >= numTypes || itype == CENTROMERE_INT) return;
+		
+		g2.setPaint(getColor());
+		
+		// XXX Gene#      LastR is Rect, not text (Gray box drawn in Sequence.buildGraphics)
+		boolean doGeneNum = (bShowGeneNum && itype==GENE_INT) || (bShowGeneNumHit && showGeneHasHit());
+		if (doGeneNum) { 
+			 g2.setPaint(Color.black);
+			 g2.setFont(Globals.textFont);
+			 
+			 int x, w=0;
+			 if (seqObj.isRef()) { 	// right side
+				 if (lastR!=null && lastR.x>rect.x && lastR.y+lastR.height>rect.y) 
+					   x = (int)lastR.x + (int) Sequence.EXON_WIDTH-2;
+				 else  x = (int)rect.x  + (int) Sequence.EXON_WIDTH-2;	// paint on right
+			 }
+			 else { 				// left side
+				 FontMetrics metrics = g2.getFontMetrics(Globals.textFont);
+				 w = metrics.stringWidth(strGeneNum) + 6; // tested stringWidth of 'a' is 7
+				 x = (int) rect.x-w;
+			 }
+			 int y = (int)rect.y + (Globals.textHeight/2);
+			 if (lastR!=null && Math.abs(lastR.y-rect.y)<Globals.textHeight) { 
+				 y += Globals.textHeight - Math.abs(lastR.y-rect.y);	// move it down; CAS580 was -3
+			 }	 
+			 g2.drawString(strGeneNum, x, y);
 		}
 	}
 	private Color getColor() {
@@ -213,7 +219,7 @@ public class Annotation {
 				if (isPopup)    return geneHighColor; // only exon highlighted when Gene Filter
 				if (isHitPopup) return Mapper.pseudoLineGroupColor; 
 			}
-			if (isSelectedGene) return geneHighColor; 
+			if (isGeneN) return geneHighColor; 
 			
 			if (isG2xN)    		return geneHighColor; 
 			
@@ -225,7 +231,7 @@ public class Annotation {
 				if (isPopup)  	return geneHighColor;
 				if (isHitPopup) return Mapper.pseudoLineGroupColor; 
 			}	
-			if (isSelectedGene) return geneHighColor;
+			if (isGeneN) return geneHighColor;
 			
 			return geneColor;
 		}
@@ -493,10 +499,10 @@ public class Annotation {
 		if (exonVec!=null) 
 			for (Annotation ad : exonVec) ad.isHitPopup=b; 
 	}
-	protected void setIsSelectedGene(boolean b) { // Called for filtered gene (never turned off)
-		isSelectedGene=b; 
+	protected void setGeneN(boolean b) { // Called for filtered gene (never turned off)
+		isGeneN=b; 
 		if (exonVec!=null) 
-			for (Annotation ad : exonVec) ad.isSelectedGene=b; 
+			for (Annotation ad : exonVec) ad.isGeneN=b; 
 	}
 	
 	/* g2xN methods */

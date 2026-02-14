@@ -486,6 +486,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				if (annot.isGene() && annot.isHighG2xN()) cntCon++; 
 			}
 		}
+		for (Annotation annot : allAnnoVec) {
+			if (annot.isVisible()) annot.paintText(g2); 	
+		}
 		if (nG2xN!=0) {
 			String x = (nG2xN==2) ? "g2x2" : "g2x1";
 			paintCntMsg = String.format("\n%s genes: %,d", x, cntCon);
@@ -623,6 +626,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 				if (aObj.getAnnoIdx()==idx1) return aObj; 
 			}
 		}
+		Globals.tprt("getAnnoObj: Not found idx1 " + idx1); // do not think checking 2nd is necessary....
 		if (idx2>0) {
 			for (Annotation aObj : geneVec) {
 				if (aObj.getAnnoIdx()==idx2) return aObj;
@@ -691,28 +695,28 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		return counts;
 	}
 	// Filter: enter gene#
-	protected int getSelectGeneCoord(String name) { // Sfilter 
+	protected int getGeneNCoord(String name) { // Sfilter 
 		int mid = -1;
 		for (Annotation aObj : geneVec) {
-			mid = aObj.isMatchGeneN(name);	// Sets selectGeneObj and return mid coordinate
+			mid = aObj.isMatchGeneN(name);	// Sets geneNObj and return mid coordinate
 			if (mid>0) {
-				sfilObj.selectGeneObj = aObj;
-				aObj.setIsSelectedGene(true);
+				sfilObj.geneNObj = aObj;
+				aObj.setGeneN(true);
 				return mid;
 			}
 		}
 		return mid;
 	}
-	protected void setSelectGene(Annotation aObj) { // Filter actions and display
+	protected void setGeneNObj(Annotation aObj) { // Filter actions and display
 		if (aObj==null) {
-			if (sfilObj.selectGeneObj!=null) {
-				sfilObj.selectGeneObj.setIsSelectedGene(false);
-				sfilObj.selectGeneObj=null;
+			if (sfilObj.geneNObj!=null) {
+				sfilObj.geneNObj.setGeneN(false);
+				sfilObj.geneNObj=null;
 			}
 		}
 		else {
-			sfilObj.selectGeneObj = aObj;
-			aObj.setIsSelectedGene(true);
+			sfilObj.geneNObj = aObj;
+			aObj.setGeneN(true);
 		}
 	}
 	

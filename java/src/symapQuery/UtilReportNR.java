@@ -1,5 +1,6 @@
 package symapQuery;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -253,17 +254,21 @@ public class UtilReportNR  extends JDialog {
 				popupHelp();
 			}
 		});
+		boolean isl = Jhtml.isLinux();
+		int sp = (isl) ? 60 : 25;
 		
 		JPanel buttonPanel = Jcomp.createRowPanel();
-		buttonPanel.add(Box.createHorizontalStrut(25));
-		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
-		buttonPanel.add(btnCancel);		buttonPanel.add(Box.createHorizontalStrut(5));
-		buttonPanel.add(btnClear);		buttonPanel.add(Box.createHorizontalStrut(20));
+		buttonPanel.add(Box.createHorizontalStrut(sp));
+		
+		sp = (isl) ? 25 : 5;
+		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(sp));
+		buttonPanel.add(btnCancel);		buttonPanel.add(Box.createHorizontalStrut(sp));
+		buttonPanel.add(btnClear);		buttonPanel.add(Box.createHorizontalStrut(sp+5));
 		buttonPanel.add(btnInfo);
 		
 		mainPanel.add(optPanel); 	mainPanel.add(Box.createVerticalStrut(5));
 		mainPanel.add(new JSeparator());
-		mainPanel.add(buttonPanel);
+		mainPanel.add(buttonPanel, BorderLayout.CENTER);
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		add(mainPanel);
 	}

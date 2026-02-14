@@ -24,6 +24,7 @@ import database.DBconn2;
 import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
+import util.Jhtml;
 import util.Utilities;
 
 /**************************************************************
@@ -139,11 +140,14 @@ public class Report extends JDialog  {
 				setVisible(false);
 			}
 		});
+		boolean isl = Jhtml.isLinux();
+		int sp = (isl) ? 60 : 30;
 		
 		JPanel buttonPanel = Jcomp.createRowPanel();
-		buttonPanel.add(Box.createHorizontalStrut(25));
-		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(5));
-		buttonPanel.add(btnCancel);		buttonPanel.add(Box.createHorizontalStrut(5));
+		buttonPanel.add(Box.createHorizontalStrut(sp));
+		
+		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(sp));
+		buttonPanel.add(btnCancel);		
 		
 		mainPanel.add(new JSeparator());
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(3));

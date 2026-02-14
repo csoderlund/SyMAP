@@ -119,6 +119,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
 <li><a href="SystemGuide.html#demo" class="ext" target="_blank">Demo</a> to run the demo (do not skip this step!).
 <li><a href="input/index.html" class="ext" target="_blank">Input</a> for file formats.
+<li><a href="UserGuide.html#term" class="ext" target="_blank">Terminology</a>.
 </ul>
 </table>
 
@@ -420,7 +421,7 @@ This option sounds trivial but is important for a good display, so please read c
 		enter it later and it will be removed from all sequence names. However, <i><u>this is not reversible</u></i>,
 		a prefix cannot be added to the sequence names.
 	<tr><td style="vertical-align: text-top;">5.
-	<td>This is case-sensitive.
+	<td>This is case-insensitive.
 	</table>
 <td><a href="img/demoPrefix.png"><img src="img/demoPrefix.png" alt="Demo prefix" style="border: 1px solid black; width: 80px"></a>
 </table>
@@ -569,12 +570,17 @@ button, which will popup the panel shown on the right.
 		click the lower-left drop-down and select <ttx>Synteny Only</ttx>
 		(see <a href="#drop">drop-down</a>).
 	</table>
-	<p>&nbsp;<p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
-	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
+	<p>If the <ttl>Align&amp;Synteny</ttl> has already been run, the last row will have an extra
+	drop-down, as shown below (see <a href="#drop">drop-down</a>):
+	<br><a href="img/parameters2last.png">
+	<img src="img/parameters2last.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
 
 	<td>&nbsp;&nbsp;&nbsp;
 	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
 </table>
+<p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
+	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
+
 
 <a id="align"></a>
 <a id="align2"></a>
@@ -946,34 +952,33 @@ one or two chromosomes will be slightly different compared to whole genome synte
 
 <a id="drop"></a>
 <h4>Lower-left drop-down</h4>
-On the lower left side of the parameters window is a drop-down with the following options:
-<table class="tx">
-<tr><td><ttx>Align&Synteny</ttx>
-	<td>If the pair has a blank in the <ttl>Available Syntenies</ttl> table,
-	this will be the only option.
-<tr><td><ttx>Clust&Synteny</ttx>
-	<td>If the pair has an <b>A</b> in the <ttl>Available Syntenies</ttl> table,
-	this option will replace the <ttx>Align&Synteny</ttx> in the drop-down.
-	Use this option if you have changed the clustering parameters.
-<tr><td><ttx>Synteny Only</ttx><td>
-If the pair has a &#10004; in the <ttl>Available Syntenies</ttl> table, this option will
-be available.
-<br>If you have only changed synteny parameters, select this option.
-<tr><td><ttx>Number Pseudo</ttx><td>
-If the pair has a &#10004; in the <ttl>Available Syntenies</ttl> table, this option will
-be available.
-<br>If you only want the pseudos number, select this option (see <a href="#pseudo"> Pseudos</a>).
+<table class="tx"><tr>
+<td>If the <ttl>Align&amp;Synteny</ttl> has already been run,
+the lower left side of the parameters window will have a drop-down with the following options:
+<td><a href="img/parameters2last.png">
+	<img src="img/parameters2last.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
 </table>
-<ul>
-<li>Select <ttb>Save</ttb> after changing this.
-<p>
-<li><ttp>Manager</ttp>: The <ttb>Selected pair</ttb> button
+
+<table class="tx">
+<tr><td><ttx>Clust&Synteny</ttx>
+	<td>If you have changed the
+	<a href="#clParam">clustering</a> parameters, select this option.
+<tr><td><ttx>Synteny Only</ttx>
+	<td>If you have only changed
+	<a href="#syn">synteny</a> parameters, select this option.
+<tr><td><ttx>Number Pseudo</ttx>
+	<td>If you want to add <a href="#pseudo">pseudo numbers</a>, select this option.
+</table>
+
+<p><ttp>Manager</ttp>: The <ttb>Selected Pair</ttb> button
 will have its label replace to reflect the drop-down setting, as follows:
-<ttx>Align&amp;Synteny &rarr; Selected Pair
-<br>Clust&amp;Synteny &rarr; Selected Redo
-<br>Synteny Only &nbsp;&rarr; Synteny Only
-<br>Number Pseudo &rarr; Pseudo Only</ttx>
-</ul>
+<br>
+
+<br>&nbsp;&nbsp;<ttx>Clust&amp;Synteny</ttx> &rarr; <ttb>Selected Redo</ttb>
+<br>&nbsp;&nbsp;<ttx>Synteny Only</ttx> &nbsp;&rarr; <ttb>Synteny Only</ttb>
+<br>&nbsp;&nbsp;<ttx>Number Pseudo</ttx> &rarr; <ttb>Pseudo Only</ttb>
+<p>If you have changed the <a href="#align2">alignment</a> parameters, you must remove them using the <ttb>Clear Pair</ttb>
+option on the <ttp>Manager</ttp> panel.
 <!--------------------->
 <h4>Saving pairs parameters</h4>
 

@@ -22,6 +22,19 @@ public class Ext {
 	public static String getPlatform() {
 		return  System.getProperty("os.name") + ":" + System.getProperty("os.arch");
 	}
+	/***********************************************************************************
+	 * These also exist in util.Jhtml
+	 ***************************************/
+	public static boolean isLinux() { // CAS580 add
+		String plat =  System.getProperty("os.name").toLowerCase();
+		return (plat.contains("linux"));
+	}
+	public static boolean isMac() {
+		return System.getProperty("os.name").toLowerCase().contains("mac"); // contains includes macM4
+	}
+	public static boolean isMacM4() {
+		return System.getProperty("os.name").toLowerCase().contains("macM4");
+	}
 	/**************************************************************
 	 *  SyMAPmanager reading config; can physically set; otherwise, will calculate
 	 */
@@ -93,13 +106,7 @@ public class Ext {
 		
 		return path; 
 	}
-	/***********************************************************************************/
-	public static boolean isMac() {
-		return System.getProperty("os.name").toLowerCase().contains("mac");
-	}
-	public static boolean isMacM4() {
-		return archDir.equals("macM4/");
-	}
+	
 	/**************************************************************
 	 * Check ext directory when database is created or opened
 	 * .. not checking blat since that is probably obsolete

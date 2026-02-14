@@ -233,8 +233,9 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         infoLink.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				Jcomp.setCursorBusy(ChrExpFrame.this, true);
-				if ( !Jhtml.tryOpenURL(Jhtml.USER_GUIDE_URL) )
-					System.err.println("Error opening URL: " + Jhtml.USER_GUIDE_URL);
+				String url = Jhtml.USER_GUIDE_URL + Jhtml.exp; // CAS579 go to Explorer; was going to top of UserGuide
+				if ( !Jhtml.tryOpenURL(url)) 
+					System.err.println("Error opening URL: " + url);
 				Jcomp.setCursorBusy(ChrExpFrame.this, false);
 			}
 		});

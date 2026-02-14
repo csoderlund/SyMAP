@@ -9,6 +9,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.GridBagConstraints;
 
 import javax.swing.event.ChangeEvent;
@@ -31,6 +32,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
+import symap.Ext;
 import symap.drawingpanel.DrawingPanel;
 import util.Jcomp;
 import util.Jhtml;
@@ -66,24 +68,24 @@ public class Hfilter extends JDialog {
 	private JRadioButton hGene1Radio 	= Jcomp.createRadioGray(HIT1, "Highlight hits that align to a gene on one side"); 
 	private JRadioButton hGene0Radio	= Jcomp.createRadioGray(HIT0, "Highlight hits that do not align to a gene on either side"); 
 	private JRadioButton hNoneRadio		= Jcomp.createRadioGray(NONE, "Turn off all highlightening");
-	private JCheckBox 	 hPopupCheck	= Jcomp.createCheckBoxGray(POPUP, "Highlight hit-wire and genes for hit popup");
+	private JCheckBox 	 hPopupCheck	= Jcomp.createCheckBoxGray(POPUP, "Highlight hit-wire and genes for hit popup", true);
 	
 	// Show - any number can be selected
-	private JCheckBox sBlockCheck		= Jcomp.createCheckBoxGray(SYN, "Show all synteny hits");
+	private JCheckBox sBlockCheck		= Jcomp.createCheckBoxGray(SYN, "Show all synteny hits", false);
 	private JRadioButton blockAndRadio	= Jcomp.createRadioGray("And", "Hits shown will pass ALL checks");
 	private JRadioButton blockOrRadio	= Jcomp.createRadioGray("Or", "Hits shown will pass ANY checks");
 	
-	private JCheckBox sCsetCheck	= Jcomp.createCheckBoxGray(COL, "Show all collinear sets");
-	private JCheckBox sGene2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides");
-	private JCheckBox sGene1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one side");
-	private JCheckBox sGene0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene");
-	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits - overrides all but identity"); 
+	private JCheckBox sCsetCheck	= Jcomp.createCheckBoxGray(COL, "Show all collinear sets", false);
+	private JCheckBox sGene2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides", false);
+	private JCheckBox sGene1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one side", false);
+	private JCheckBox sGene0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene", false);
+	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits - overrides all but identity", false); 
 	
 	// Id
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
 	private JLabel  pctidText    = new JLabel("0%");
 	
-	private JCheckBox  blockOnlyCheck = Jcomp.createCheckBoxGray("Block #", "Only show this block's hits");  
+	private JCheckBox  blockOnlyCheck = Jcomp.createCheckBoxGray("Block #", "Only show this block's hits", false);  
 	private JTextField blockOnlyText = Jcomp.createTextField("0", "Block number, hit return for immediate effect", 2);
 	
 // On popup menu
@@ -117,23 +119,25 @@ public class Hfilter extends JDialog {
 	/* Filter dialog */
 	private void createFilterDialog(FilterListener listener) {
 		// Buttons
-		okButton = Jcomp.createButtonGray("Save","Save changes and close"); 
+		okButton = Jcomp.createButton("Save","Save changes and close"); 
 		okButton.addActionListener(listener);
 
-		cancelButton = Jcomp.createButtonGray("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createButton("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = Jcomp.createButtonGray("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createButton("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 		
 		helpButton = Jhtml.createHelpIconUserSm(Jhtml.hitfilter);
 		
 		buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.add(new JSeparator(),BorderLayout.NORTH);
+		int sp= (Ext.isLinux()) ? 3 : 1;
+		
 		JPanel innerPanel = new JPanel();
-		innerPanel.add(okButton);
-		innerPanel.add(cancelButton);
-		innerPanel.add(defaultButton);
+		innerPanel.add(okButton);  		innerPanel.add(Box.createHorizontalStrut(sp));
+		innerPanel.add(cancelButton);	innerPanel.add(Box.createHorizontalStrut(sp));
+		innerPanel.add(defaultButton);	innerPanel.add(Box.createHorizontalStrut(sp));
 		innerPanel.add(helpButton);
 		buttonPanel.add(innerPanel,BorderLayout.CENTER);
 		
@@ -183,9 +187,11 @@ public class Hfilter extends JDialog {
 
 		contentPane.setLayout(gridbag);
 		c1.fill = GridBagConstraints.HORIZONTAL;
+		c1.anchor = GridBagConstraints.WEST;
+		c1.insets = new Insets(1, 10, 1, 5); // top, left, bottom, right
 		c1.gridheight = 1;
-		c1.ipadx = 4;
-		c1.ipady = 7;
+		c1.ipadx = 8;
+		c1.ipady = 8;
 
 		// highlight
 		int rem=GridBagConstraints.REMAINDER;

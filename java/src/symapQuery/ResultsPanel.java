@@ -112,18 +112,19 @@ public class ResultsPanel extends JPanel {
 	private JPanel addButtonPanel() {
 		JPanel thePanel = Jcomp.createRowPanel();
 		
-		btnRemoveSelQueries = Jcomp.createButton("Remove Selected", false);
+		btnRemoveSelQueries = Jcomp.createButton("Remove Selected", "Remove selected row");
 		btnRemoveSelQueries.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				removeSelectedSummaries(theTable.getSelectedRows());
 			}
 		});
-		btnRemoveAllQueries = Jcomp.createButton("Remove All", false);
+		btnRemoveAllQueries = Jcomp.createButton("Remove All", "Remove all rows");
 		btnRemoveAllQueries.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				removeAllSummaries();
 			}
 		});
+		btnRemoveSelQueries.setEnabled(false);
 		thePanel.add(btnRemoveSelQueries); thePanel.add(Box.createHorizontalStrut(20));
 		thePanel.add(btnRemoveAllQueries); thePanel.add(Box.createHorizontalStrut(20));
 		

@@ -27,7 +27,9 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
+import symap.Ext;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 
@@ -41,12 +43,16 @@ import symap.frame.HelpListener;
  * 6 ComboBox
  * 7 Width
  * 8 Screen
+ * Buttons do not need color; defaults Linux blue, Mac white
+ * Rows, Labels and Radio button labels default to gray; keep on gray background, change on white     
+ * CheckBox seems to perform right without color specified; but going to specify anyway
+ * Manager Right and Filter windows are gray
  */
 public class Jcomp {
 	public static final String ok = "OK", close = "Close", cancel="Cancel"; // for buttons
 	 
 	// XXX Page and Row
-	static public JPanel createPagePanel() {
+	static public JPanel createPagePanel() { // Manager and Filters create their own page without color
 		JPanel page = new JPanel();
 		page.setLayout(new BoxLayout(page, BoxLayout.PAGE_AXIS)); // Y_AXIS
 		page.setBackground(Color.white);
@@ -70,7 +76,6 @@ public class Jcomp {
 
 		return row;
 	}
-	
 	static public JPanel createRowPanelGray() {
 		JPanel row = new JPanel();
 		row.setLayout(new BoxLayout(row, BoxLayout.LINE_AXIS)); // X_AXIS
@@ -84,19 +89,22 @@ public class Jcomp {
 		return row;
 	}
 	// Manager Frame to layout a row
-	static public Component createHorizPanel( Component[] comps, int gapWidth, int extra ) {
+	static public Component createHorizPanel(Component[] comps, int gapWidth, int extra) {
 		JPanel panel = new JPanel();
-		panel.setLayout( new BoxLayout ( panel, BoxLayout.X_AXIS ) );
+		panel.setLayout(new BoxLayout (panel, BoxLayout.X_AXIS));
 		panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
 		for (Component c : comps) {
 			if (c != null) {
 				panel.add( c );
-				if (gapWidth > 0)panel.add( Box.createHorizontalStrut(gapWidth) );
+				if (gapWidth > 0) panel.add(Box.createHorizontalStrut(gapWidth));
 			}
-			else if (extra > 0)panel.add( Box.createHorizontalStrut(extra) ); 
+			else if (extra > 0) { // null & extra means give extra break before next button
+				panel.add(Box.createHorizontalGlue());		// for linux, looks better; CAS580
+				panel.add(Box.createHorizontalStrut(extra));
+			}
 		}
-		panel.add( Box.createHorizontalGlue() );
+		//panel.add(Box.createHorizontalGlue()); // moved above CAS580
 		
 		return panel;
 	}
@@ -107,7 +115,13 @@ public class Jcomp {
 	  pack();
 	 */
 	
-	// XXX Label
+	// XXX Label - Gray for Filters due to gray background
+	static public JLabel createLabelGray(String label, String tip) {
+		JLabel tmp = new JLabel(label);
+		tmp.setToolTipText(tip);
+		tmp.setEnabled(true);
+		return tmp;
+	}
 	public static JLabel createLabel(String text, int fontStyle, int fontSize) {
 		JLabel label = new JLabel(text);
 		label.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -129,12 +143,7 @@ public class Jcomp {
 		tmp.setEnabled(true);
 		return tmp;
 	}
-	static public JLabel createLabelGray(String label, String tip) {
-		JLabel tmp = new JLabel(label);
-		tmp.setToolTipText(tip);
-		tmp.setEnabled(true);
-		return tmp;
-	}
+	
 	static public JLabel createLabel(String label, String tip, boolean enable) {
 		JLabel tmp = new JLabel(label);
 		tmp.setToolTipText(tip);
@@ -172,9 +181,9 @@ public class Jcomp {
 		l.setToolTipText(t);
 		return l;
 	}
-	static public JLabel createBoldLabel(String label, int sz) {// for Instructions
+	static public JLabel createBoldLabel(String label, int sz) {// for Block
 		JLabel lab = new JLabel(label);
-		lab.setFont(new Font(Font.MONOSPACED,Font.BOLD, sz)); 
+		lab.setFont(new Font(Font.SERIF,Font.BOLD, sz)); 
 		lab.setBackground(Color.white);
 		return lab;
 	}
@@ -190,7 +199,7 @@ public class Jcomp {
 		lab.setBackground(Color.white);
 		return lab;
 	}
-	// XXX Button
+	// XXX Button Linux default blue, Mac white
 	public static JButton createIconButton(HelpListener parent, HelpBar bar, ActionListener l, String path, String tip) {
 		Icon icon = ImageViewer.getImageIcon(path);  
 		JButton button = new JButton(icon);
@@ -241,7 +250,6 @@ public class Jcomp {
 	// This is to be used as toggle with getBorderColor! Has border and smaller
 	public static JButton createBorderButton(HelpListener parent, HelpBar bar, ActionListener l, String label, String tip) {
 			JButton button = new JButton(label);
-			button.setBackground(Color.white);
 			button.setAlignmentX(Component.LEFT_ALIGNMENT);
 			button.setFont(new Font(button.getFont().getName(),Font.PLAIN,11));
 			button.setBorder(BorderFactory.createRaisedBevelBorder());
@@ -258,10 +266,17 @@ public class Jcomp {
 			return button;
 	}
 	public static Color getBorderColor(boolean isSelect) {
-		if (isSelect) return Color.gray;
-		else return Color.white;
+		if (Ext.isLinux()) { // CAS580 tailor for linux
+			if (isSelect) return Color.white;
+			else return UIManager.getColor("Button.background");
+		}
+		else {
+			if (isSelect) return Color.gray;
+			else return Color.white;
+		}
 	}
-	public static JButton createButtonGray(HelpListener parent, HelpBar bar, ActionListener l, String label, String tip) { 
+	
+	public static JButton createButton(HelpListener parent, HelpBar bar, ActionListener l, String label, String tip) { 
 		JButton button = new JButton(label);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		
@@ -276,30 +291,14 @@ public class Jcomp {
 		
 		return button;
 	}
-	
-	static public JButton createButtonGray(String s, String t) {
-		JButton jbutton = new JButton(s);
-		jbutton.setMargin(new Insets(1,3,1,3));
-		jbutton.setToolTipText(t);
-		return jbutton;
-	}
 	static public JButton createButton(String s, String t) {
 		JButton jbutton = new JButton(s);
-		jbutton.setBackground(Color.white); 
 		jbutton.setMargin(new Insets(1,3,1,3));
 		jbutton.setToolTipText(t);
-		return jbutton;
-	}
-	static public JButton createButton(String s, boolean b) {
-		JButton jbutton = new JButton(s);
-		jbutton.setBackground(Color.white); 
-		jbutton.setMargin(new Insets(1,3,1,3));
-		jbutton.setEnabled(b);
 		return jbutton;
 	}
 	static public JButton createPlainButton(String label, String tip) { 
 		JButton button = new JButton(label);
-		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setFont(new Font(button.getFont().getName(),Font.PLAIN,10));
@@ -309,7 +308,6 @@ public class Jcomp {
 	static public JButton createBoldButton(String label, String tip) { // for xToSymap
 		JButton button = new JButton(label);
 		button.setToolTipText(tip);
-		button.setBackground(Color.white);
 		button.setAlignmentX(Component.LEFT_ALIGNMENT);
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setFont(new Font(button.getFont().getName(),Font.BOLD,12));
@@ -320,29 +318,21 @@ public class Jcomp {
 		jbutton.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13)); 
 		jbutton.setMargin(new Insets(1,3,1,3));
 		jbutton.setToolTipText(t);
-		jbutton.setBackground(Color.white);
 		return jbutton;
 	}
-	static public JButton createMonoButtonSmGray(String s, String t) {
+	static public JButton createMonoButtonSm(String s, String t) {
 		JButton jbutton = new JButton(s);
 		jbutton.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11)); 
 		jbutton.setMargin(new Insets(0,0,0,0));
 		jbutton.setToolTipText(t);
 		return jbutton;
 	}
-	// XXX CheckBox and Radio
-	public static JCheckBox createCheckBox(HelpListener parent, HelpBar bar, ActionListener l, String label, String tip) {
+	// XXX CheckBox and Radio; Gray for Filter gray background
+	static public JCheckBox createCheckBoxGray(String label, String tip, boolean def) { 
 		JCheckBox box = new JCheckBox(label);
-		box.setBackground(Color.white);
+		box.setToolTipText(tip);
 		box.setMinimumSize(box.getPreferredSize());
 		box.setMaximumSize(box.getPreferredSize());
-		
-		if (l != null) box.addActionListener(l);
-		
-		box.setToolTipText(tip);
-		box.setName(tip); 
-		if (bar != null) bar.addHelpListener(box,parent);
-		
 		return box;
 	}
 	static public JCheckBox createCheckBox(String label, String tip, boolean def) {
@@ -353,42 +343,18 @@ public class Jcomp {
 		box.setMaximumSize(box.getPreferredSize());
 		return box;
 	}
-	static public JCheckBox createCheckBox(String label, boolean def) {
-		JCheckBox box = new JCheckBox(label, def);
-		box.setBackground(Color.white);
-		box.setMinimumSize(box.getPreferredSize());
-		box.setMaximumSize(box.getPreferredSize());
-		return box;
-	}
-	static public JCheckBox createCheckBoxGray(String label, String tip) { 
-		JCheckBox box = new JCheckBox(label);
-		box.setToolTipText(tip);
-		box.setMinimumSize(box.getPreferredSize());
-		box.setMaximumSize(box.getPreferredSize());
-		return box;
-	}
-	static public JRadioButton createRadio(HelpListener parent, HelpBar bar, ActionListener l, String label, String tip) {
-		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
-		button.setMargin(new Insets(0,0,0,0));
-		
-		if (l != null) button.addActionListener(l);
-		
-		button.setToolTipText(tip);
-		button.setName(tip); 
-		if (bar != null) bar.addHelpListener(button,parent);
-		
-		return button;
-	}
-	public static JRadioButton createRadio(String label, String tip) {
-		JRadioButton button = new JRadioButton(label); button.setBackground(Color.white);
+	
+	public static JRadioButton createRadioGray(String label, String tip) { // filters use gray background 
+		JRadioButton button = new JRadioButton(label); 
 		button.setToolTipText(tip);
 		button.setMargin(new Insets(0,0,0,0));
 		button.setMinimumSize(button.getPreferredSize());
 		button.setMaximumSize(button.getPreferredSize());
 		return button;
 	}
-	public static JRadioButton createRadioGray(String label, String tip) { // filters use gray background 
-		JRadioButton button = new JRadioButton(label); 
+	public static JRadioButton createRadio(String label, String tip) {
+		JRadioButton button = new JRadioButton(label);  
+		button.setBackground(Color.white);
 		button.setToolTipText(tip);
 		button.setMargin(new Insets(0,0,0,0));
 		button.setMinimumSize(button.getPreferredSize());

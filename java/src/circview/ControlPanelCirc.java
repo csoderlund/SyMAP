@@ -31,12 +31,13 @@ import javax.swing.WindowConstants;
 
 import colordialog.ColorDialogHandler;
 import props.PersistentProps;
+import symap.Ext;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
+import util.Jhtml;
 import util.Popup;
-import util.Utilities;
 
 /*******************************************************************
  * Control Panel for Circle View
@@ -99,7 +100,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
             }
         });
 		
-		viewPopupButton = Jcomp.createButtonGray(this,helpPanel, null /*has own listener*/,"View",
+		viewPopupButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"View",
 				"Click button for menu of options");
 		createViewPopup();
 		
@@ -116,7 +117,9 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 							"Save image" );
 		infoButton = Jcomp.createIconButton(this,helpPanel,buttonListener,"/images/info.png",
 							"Quick Circle Help" );
-		helpButton = util.Jhtml.createHelpIconUserLg(util.Jhtml.circle);
+		
+		helpButton = (Ext.isLinux()) ? Jhtml.createHelpIconUserSm(Jhtml.circle)
+				   					 : Jhtml.createHelpIconUserLg(Jhtml.circle);
 		
 		//// build row ///////////
 		JPanel row = Jcomp.createRowPanelGray(); 
@@ -129,6 +132,7 @@ public class ControlPanelCirc extends JPanel implements HelpListener  {
 		gbc.ipady = 0;
 		
 		String sp1=" ", sp2="  ";
+		if (Ext.isLinux()) {sp1="  "; sp2="   ";}
 		addToGrid(row, gbl,gbc,homeButton,	 sp2); 
 		addToGrid(row, gbl,gbc,plusButton,	 sp1);					
 		addToGrid(row, gbl,gbc,minusButton,	 sp2);

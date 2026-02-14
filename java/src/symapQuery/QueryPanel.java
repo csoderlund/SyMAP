@@ -49,7 +49,7 @@ import util.Utilities;
  */
 public class QueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
-	private final int wFil1=150, wFil2=60;					// Spacing between left hand label and filters; CAS579c was 140
+	private int wFil1=140, wFil2=60;					// Spacing between left hand label and filters
 	private final String coDefNum = "3", groupDefNum="4";	// coset and group defaults
 	private final boolean AND=true;							// For mysql joins
 	
@@ -64,6 +64,8 @@ public class QueryPanel extends JPanel {
 	private int nChkNone=0, nChkSingle=1, nChkBlk=2, nChkCoSet=3, nChkHit=4, nChkGene=5, nChkMulti=6, nChkClust=7;
 	
 	protected QueryPanel(QueryFrame parentFrame) {
+		if (Jhtml.isLinux()) {wFil1 = 160; wFil2 = 70;}
+		
 		qFrame = parentFrame;
 		olapDesc = (qFrame.isAlgo2() && Globals.bQueryOlap==false) ? "Exon" : "Gene";
 		
@@ -323,11 +325,12 @@ public class QueryPanel extends JPanel {
 		radBlkNo =   Jcomp.createRadio("No", "Only list hits that are not in a synteny block"); 	
 		radBlkIgn =  Jcomp.createRadio("Ignore", "Does not matter if hit is in a block or not"); 
 		
+		int sp = (Jhtml.isLinux()) ? 8 : 3;
 		brow.add(lblBlkOpts); 	
 		if (Jcomp.isWidth(wFil1, lblBlkOpts)) brow.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil1, lblBlkOpts)));
-		brow.add(radBlkYes);  brow.add(Box.createHorizontalStrut(1));
-		brow.add(radBlkNo);	  brow.add(Box.createHorizontalStrut(1));
-		brow.add(radBlkIgn);  brow.add(Box.createHorizontalStrut(1));
+		brow.add(radBlkYes);  brow.add(Box.createHorizontalStrut(sp));
+		brow.add(radBlkNo);	  brow.add(Box.createHorizontalStrut(sp));
+		brow.add(radBlkIgn);  brow.add(Box.createHorizontalStrut(sp));
 		
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(radBlkYes); bg.add(radBlkNo); bg.add(radBlkIgn); radBlkIgn.setSelected(true);
@@ -348,15 +351,15 @@ public class QueryPanel extends JPanel {
 		radAnno_ii = Jcomp.createRadio(olap, "Only " + olap + " genes"); 	
 		
 		arow.add(lblAnnoOpts); 	
-		if (Jcomp.isWidth(wFil1, lblAnnoOpts)) arow.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil1, lblAnnoOpts)));
+		if (Jcomp.isWidth(wFil1, lblAnnoOpts)) 		arow.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil1, lblAnnoOpts)));
 		
-		arow.add(radAnnoEvery);		brow.add(Box.createHorizontalStrut(1));
-		if (!isSelf) {arow.add(radAnnoEveryStar);	brow.add(Box.createHorizontalStrut(1)); }
-		arow.add(radAnnoOne);		brow.add(Box.createHorizontalStrut(1));
-		if (!bOneAnno) {arow.add(radAnnoBoth);		brow.add(Box.createHorizontalStrut(1));}
-		arow.add(radAnnoNone);		brow.add(Box.createHorizontalStrut(1));
-		arow.add(radAnnoIgn);	brow.add(Box.createHorizontalStrut(1));
-		if (Globals.INFO) {arow.add(radAnno_ii);	brow.add(Box.createHorizontalStrut(1));} // -ii
+		arow.add(radAnnoEvery);						arow.add(Box.createHorizontalStrut(sp));
+		if (!isSelf) {arow.add(radAnnoEveryStar);	arow.add(Box.createHorizontalStrut(sp)); }
+		arow.add(radAnnoOne);						arow.add(Box.createHorizontalStrut(sp));
+		if (!bOneAnno) {arow.add(radAnnoBoth);		arow.add(Box.createHorizontalStrut(sp));}
+		arow.add(radAnnoNone);						arow.add(Box.createHorizontalStrut(sp));
+		arow.add(radAnnoIgn);						arow.add(Box.createHorizontalStrut(sp));
+		if (Globals.INFO) {arow.add(radAnno_ii);	arow.add(Box.createHorizontalStrut(sp));} // -ii
 		
 		ButtonGroup ag = new ButtonGroup();
 		ag.add(radAnnoEvery); ag.add(radAnnoEveryStar); ag.add(radAnnoOne); ag.add(radAnnoBoth);
@@ -384,9 +387,9 @@ public class QueryPanel extends JPanel {
 		ButtonGroup g = new ButtonGroup();
 		g.add(radCoSetGE); g.add(radCoSetEQ); g.add(radCoSetLE); g.add(radCoSetIgn);
 		radCoSetIgn.setSelected(true);
-		crow.add(radCoSetGE); crow.add(Box.createHorizontalStrut(1));
-		crow.add(radCoSetEQ); crow.add(Box.createHorizontalStrut(1));
-		crow.add(radCoSetLE); crow.add(Box.createHorizontalStrut(1));
+		crow.add(radCoSetGE); crow.add(Box.createHorizontalStrut(sp));
+		crow.add(radCoSetEQ); crow.add(Box.createHorizontalStrut(sp));
+		crow.add(radCoSetLE); crow.add(Box.createHorizontalStrut(sp));
 		crow.add(radCoSetIgn);
 		if (!bNoAnno && !bOneAnno) panel.add(crow); 
 		
@@ -407,6 +410,7 @@ public class QueryPanel extends JPanel {
 		JPanel panel = Jcomp.createPagePanelNB();
 		JPanel row = Jcomp.createRowPanel();
 		int sp1 = 3, sp2 = 11;
+		if (Jhtml.isLinux()) sp2 = 21;
 		
 		lblChkExact = Jcomp.createLabel("Exact", "Search for exact string; do not prefix with chromosome numbers");
 		row.add(lblChkExact); row.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil2-3, lblChkExact)));
@@ -623,7 +627,7 @@ public class QueryPanel extends JPanel {
 		for(int x=0; x<nSpecies; x++) {
 			speciesAbbr[x] = theProjects.get(x).getdbAbbrev();
 			speciesName[x] = theProjects.get(x).getDisplayName();
-			incSpecies[x] = Jcomp.createCheckBox(speciesName[x], true);
+			incSpecies[x] = Jcomp.createCheckBox(speciesName[x], "Select this species", false);
 			incSpecies[x].addActionListener(new ActionListener() { 
 				public void actionPerformed(ActionEvent e) {
 					int cnt=0;
@@ -642,7 +646,7 @@ public class QueryPanel extends JPanel {
 		}
 		exSpecies = new JCheckBox[theProjects.size()];
 		for(int x=0; x<exSpecies.length; x++) {
-			exSpecies[x] = Jcomp.createCheckBox(speciesName[x], false);
+			exSpecies[x] = Jcomp.createCheckBox(speciesName[x], "Select this species", false);
 			exSpecies[x].addActionListener(new ActionListener() { 
 				public void actionPerformed(ActionEvent e) {
 					for (int x=0; x<nSpecies; x++) {

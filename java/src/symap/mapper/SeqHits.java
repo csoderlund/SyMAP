@@ -19,6 +19,7 @@ import symap.closeup.TextShowInfo;
 import symap.closeup.AlignPool;
 import symap.sequence.Annotation;
 import symap.sequence.Sequence;
+import symap.Ext;
 import symap.Globals;
 
 /***********************************************
@@ -821,7 +822,7 @@ public class SeqHits  {
 			String proj1 = seqObj1.getTitle(); //Proj Chr
 			String proj2 = seqObj2.getTitle(); 
 			Annotation aObj1 = seqObj1.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // check seqObj1 geneVec
-			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // check seqObj2 geneVec
+			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot2(), hitDataObj.getAnnot1()); // put 2 1st; CAS580 for self-chr
 			
 			String trailer = "";
 			if (Globals.INFO) {

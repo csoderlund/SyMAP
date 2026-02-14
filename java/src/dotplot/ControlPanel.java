@@ -15,10 +15,12 @@ import javax.swing.JTextField;
 import javax.swing.JComboBox;
 
 import colordialog.ColorDialogHandler;
+import symap.Ext;
 import symap.frame.HelpBar;
 import symap.frame.HelpListener;
 import util.ImageViewer;
 import util.Jcomp;
+import util.Jhtml;
 import util.Utilities;
 import util.Popup;
 
@@ -62,14 +64,17 @@ public class ControlPanel extends JPanel implements HelpListener {
 		hb.addHelpListener(referenceSelector, this);
 		
 		filter = new Filter(d, this);
-		filterButton     = Jcomp.createButtonGray(this,hb, buttonListener, 
+		filterButton     = Jcomp.createButton(this,hb, buttonListener, 
 				"Filters", "Filters and display options");
 	
 		showImageButton  =  Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/print.gif", "Save as image");
 		editColorsButton = Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/colorchooser.gif", "Edit the color settings");
-		helpButtonLg     = util.Jhtml.createHelpIconUserLg(util.Jhtml.dotplot);
+		
+		helpButtonLg = (Ext.isLinux()) ? Jhtml.createHelpIconUserSm(Jhtml.dotplot)
+				   					   : Jhtml.createHelpIconUserLg(Jhtml.dotplot);
+		
 		helpButtonSm     = Jcomp.createIconButton(this, hb, buttonListener,
 				"/images/info.png", "Quick Help Popup");
 		statsButton = (JButton) Jcomp.createIconButton(this, hb, buttonListener,
@@ -84,6 +89,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 		gbc.ipadx = gbc.ipady = 0;
 		
 		String sp1=" ", sp2="  ";
+		if (Ext.isLinux()) {sp1="  "; sp2="    ";}
 		addToGrid(row, gbl,gbc,homeButton,sp1);	
 		addToGrid(row, gbl,gbc,plusButton, sp1);
 		addToGrid(row, gbl,gbc,minusButton,sp1);	

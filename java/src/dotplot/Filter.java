@@ -13,6 +13,9 @@ import java.awt.Dimension;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import symap.Ext;
+
+import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -58,23 +61,24 @@ public class Filter extends JDialog  {
 		
 		FilterListener listener = new FilterListener();
 		
-		okButton = Jcomp.createButtonGray("Save","Save changes and close");
+		okButton = Jcomp.createButton("Save","Save changes and close");
 		okButton.addActionListener(listener);
 
-		cancelButton = Jcomp.createButtonGray("Cancel", "Discard changes and close");
+		cancelButton = Jcomp.createButton("Cancel", "Discard changes and close");
 		cancelButton.addActionListener(listener);
 
-		defaultButton = Jcomp.createButtonGray("Defaults", "Reset to defaults");
+		defaultButton = Jcomp.createButton("Defaults", "Reset to defaults");
 		defaultButton.addActionListener(listener);
 
 		JButton helpButton = util.Jhtml.createHelpIconUserSm(util.Jhtml.dotfilter); 
 		
+		int sp= (Ext.isLinux()) ? 3 : 1;
 		buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.add(new JSeparator(), "North");
 		JPanel jpanel = new JPanel();
-		jpanel.add(okButton);
-		jpanel.add(cancelButton);
-		jpanel.add(defaultButton);
+		jpanel.add(okButton);		jpanel.add(Box.createHorizontalStrut(sp));
+		jpanel.add(cancelButton); 	jpanel.add(Box.createHorizontalStrut(sp));
+		jpanel.add(defaultButton);  jpanel.add(Box.createHorizontalStrut(sp*2));
 		jpanel.add(helpButton);
 		buttonPanel.add(jpanel, "Center");
 
@@ -144,13 +148,13 @@ public class Filter extends JDialog  {
 		group2.add(b0GeneHits);
 		bGeneHits.setSelected(true);
 		
-		showBlkNumBox = Jcomp.createCheckBoxGray("Number", "Show block number");
+		showBlkNumBox = Jcomp.createCheckBoxGray("Number", "Show block number", false);
 		showBlkNumBox.addItemListener(listener);
 
-		showBlocksBox = Jcomp.createCheckBoxGray("Boundary", "Show boundary of block");
+		showBlocksBox = Jcomp.createCheckBoxGray("Boundary", "Show boundary of block", true);
 		showBlocksBox.addItemListener(listener);
 
-		showEmptyBox = Jcomp.createCheckBoxGray("Show Empty Regions", "Show regions with no hits");
+		showEmptyBox = Jcomp.createCheckBoxGray("Show Empty Regions", "Show regions with no hits", false);
 		showEmptyBox.addItemListener(listener);
 		
 		Container cp = getContentPane();

@@ -13,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,6 +22,7 @@ import java.util.TreeSet;
 
 import util.ErrorReport;
 import util.Jcomp;
+import util.Jhtml;
 
 /*****************************************************
  * Search button: select column to search and search for the entered gene
@@ -132,7 +134,7 @@ public class UtilSearch  extends JDialog{
 		
 		selectPanel.add(new JSeparator()); selectPanel.add(Box.createVerticalStrut(5));
 			
-	// Text status - above buttons CAS579b add
+	// Text status - above buttons 
 		JPanel rows = Jcomp.createRowPanel(); rows.add(Box.createHorizontalStrut(6));
 		txtStatus = new JTextField("New search", 25); txtStatus.setBackground(Color.WHITE);
 		txtStatus.setBorder(BorderFactory.createEmptyBorder());
@@ -140,15 +142,17 @@ public class UtilSearch  extends JDialog{
 		selectPanel.add(rows); selectPanel.add(Box.createVerticalStrut(5));
 		
 	// Buttons
-		JPanel row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
+		int sp = (Jhtml.isLinux()) ? 10 : 5;
+		JPanel row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(sp));
+		
 		JButton btnOK = Jcomp.createButton("Next", "Search for next string in table"); 	
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {	
-				doNext(); // CAS579b do not close windows after search
+				doNext(); // do not close windows after search
 			}
 		});
-    	row.add(Box.createHorizontalStrut(5));
-    	row.add(btnOK); 				row.add(Box.createHorizontalStrut(5));
+    	row.add(Box.createHorizontalStrut(sp));
+    	row.add(btnOK); 				row.add(Box.createHorizontalStrut(sp));
     	btnOK.setEnabled(numCols>0);
     	
     	JButton btnCancel = Jcomp.createButton(Jcomp.close, "Close window"); 
@@ -157,7 +161,7 @@ public class UtilSearch  extends JDialog{
 				setVisible(false);
 			}
 		});
-    	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(5));
+    	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(sp));
     	
     	JButton btnClear = Jcomp.createButton("Restart", "Restarts the search from the first row"); 
     	btnClear.addActionListener(new ActionListener() {
@@ -165,7 +169,7 @@ public class UtilSearch  extends JDialog{
 				restart();
 			}
 		});
-    	row.add(btnClear); 			row.add(Box.createHorizontalStrut(5));
+    	row.add(btnClear); 			row.add(Box.createHorizontalStrut(sp+sp));
     	
     	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
 		btnInfo.addActionListener(new ActionListener() {
@@ -173,9 +177,9 @@ public class UtilSearch  extends JDialog{
 				popupHelp();
 			}
 		});
-		row.add(btnInfo); 			row.add(Box.createHorizontalStrut(5));
+		row.add(btnInfo); 			
 			
-		selectPanel.add(row);
+		selectPanel.add(row,BorderLayout.CENTER);
 		selectPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		selectPanel.setMinimumSize(selectPanel.getPreferredSize());
 		selectPanel.setMaximumSize(selectPanel.getPreferredSize());

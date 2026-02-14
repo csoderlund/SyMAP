@@ -259,7 +259,7 @@ public class ToFrame extends JDialog implements WindowListener {
 			}
 		});
 		
-		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, ""); 
+		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, Jhtml.xtosymap); // CAS579 goto xToSymap
 		row.add(btnHelp); row.add(Box.createHorizontalStrut(10));
 		
 		panel.add(row);

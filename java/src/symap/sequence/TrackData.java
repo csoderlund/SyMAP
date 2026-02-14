@@ -21,7 +21,7 @@ public  class TrackData {
 
 	private boolean bFlipped;
 	private boolean bGeneNCheck;
-	private Annotation selectGeneObj=null; 
+	private Annotation geneNObj=null; 
 	
 	private boolean bHighHit2g2, bHighHit2g1, bHighHit2g0; 
 	
@@ -64,7 +64,7 @@ public  class TrackData {
 		bShowHitNumText = sf.bShowHitNumText;	
 		
 		bGeneNCheck 	= sf.bGeneNCheck;		 
-		selectGeneObj   = sf.selectGeneObj;
+		geneNObj   		= sf.geneNObj;
 		
 		bHighHit2g2  	= sf.bHighG2x2;
 		bHighHit2g1  	= sf.bHighG2x1;
@@ -110,9 +110,9 @@ public  class TrackData {
 		sf.bShowScoreText 	= bShowScoreText; 
 		sf.bShowHitNumText = bShowHitNumText; 
 		
-		if (sf.selectGeneObj!=null) seq.setSelectGene(null);
-		if (selectGeneObj!=null)    seq.setSelectGene(selectGeneObj);
-		sf.selectGeneObj = selectGeneObj;
+		if (sf.geneNObj!=null) seq.setGeneNObj(null);
+		if (geneNObj!=null)    seq.setGeneNObj(geneNObj);
+		sf.geneNObj 	 = geneNObj;
 		sf.bGeneNCheck   = bGeneNCheck;
 		
 		sf.bHighG2x2  	= bHighHit2g2;
