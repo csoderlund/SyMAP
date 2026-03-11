@@ -45,7 +45,7 @@ public class SyMAPmanager extends ManagerFrame {
 	/** Args **/
 	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
 	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  		// symap
-	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs"}; 	    // hidden
+	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat"}; 	    // hidden
 	
 	private static void argPrint(String args[]) {
 		if (isReadOnly) System.out.println("Usage:  ./viewSymap [options]");
@@ -78,7 +78,7 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -bt  Synteny trace");
 		System.out.println("  -s   Regenerate summary");
 		System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
-		
+		System.out.println("  -ncat Do not concat any sequence files for v5.8.1");
 	}
 	private static void argSet(String args[]) { 
 		if (args.length ==0) return;
@@ -160,6 +160,10 @@ public class SyMAPmanager extends ManagerFrame {
 		if (equalOption(args, "-bt")) {  
 			System.out.println("-bt Synteny trace");
 			backend.synteny.SyntenyMain.bTrace = true;
+		}
+		if (equalOption(args, "-ncat")) {  // CAS581
+			System.out.println("-ncat No concatenation");
+			backend.AlignMain.bNoCAT = true;
 		}
 		if (equalOption(args, "-cs")) { // shown on -h for v5.7.7
 			System.out.println("-cs  On A&S, ONLY execute the collinear sets computation");

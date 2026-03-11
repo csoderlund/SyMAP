@@ -290,4 +290,10 @@ public class ProgressDialog extends JDialog  {
 			catch (Exception e) {}
 		}
 	}
+	// Dialog, symap.log, error.log, termimal; CAS580 add
+	public void msgToAll(String s) {
+		ErrorReport.print(s);
+		msgOnly(s);
+		msgToFileOnly(s);
+	}
 }

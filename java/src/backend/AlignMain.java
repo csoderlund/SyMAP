@@ -30,10 +30,12 @@ import util.FileDir;
  * Set up to run MUMmer for alignments for one pair of genomes
  */
 public class AlignMain {
+	public static boolean bNoCAT = false;		// CAS581 testing multiple threads, do not concatenate any
 	protected boolean mCancelled = false;
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; // 1000000
 	private static final int maxFileSize = 60000000; // 'Concat' parameter works for demo using this size
+	private static final int maxConcatSize = 1000000000; // MUMmer seems not to work with 3Gb files; CAS581
 	
 	private ProgressDialog plog;
 	private String proj1Dir, proj2Dir; // also dbName, directory name
@@ -249,7 +251,7 @@ public class AlignMain {
 	 */
 	private void buildAlignments()  {
 		try {
-			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + " with " + nMaxCPUs + " CPUs"); 
+			plog.msg("\nAligning " + proj1Dir + " and " + proj2Dir + " with " + nMaxCPUs + " CPUs at " + Utils.getDateStr(Utils.getTime())); 
 			
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
@@ -344,7 +346,8 @@ public class AlignMain {
 	}
 	
 	/**************************************
-	 *  Write sequences to file; first is concatenated, second is not. Apply gene masking if requested.
+	 *  Write sequences to file; first is concatenated (if Concat), second is not. Apply gene masking if requested.
+	 *  CAS581 MUMmer seems to fail when the input is very large, e.g. 3G. Hence, it is now restricted to 1G max.
 	 */
 	private boolean writePreprocSeq(File dir, Mproject mProj,  boolean concat, boolean isSelf, String who) {
 		try {
@@ -373,31 +376,36 @@ public class AlignMain {
 				FileDir.clearAllDir(dir); // leaves directory, just removes files
 		
 		// Figure out what chromosomes to group into one file.
-			Vector<Vector<Integer>> groups = new Vector<Vector<Integer>>();
-		
 			String msg = projName + ": ";
 			if (!isSelf) {
-				if (concat) msg += "Concatenating all sequences into one file for " + who; 
+				if (concat) msg += "Concatenating all sequences into large file(s) for " + who; 
 				else        msg += "Writing sequences into one or more files for " + who; 
 			}
 			else msg += "Writing separate chromosome files for self-synteny";
 					
+			Vector<Vector<Integer>> groups = new Vector<Vector<Integer>>();
+			groups.add(new Vector<Integer>());
+			
+			long curSize = 0, totSize = 0;
+			int nOrigGrp = 0, nGrp = 0;
+			
 			// pseudos (files): grp_idx, fileName (e.g. chr3.seq), length
 			// xgroups (chrs):  idx, proj_idx, chr#, fullname where grp_idx is xgroups.idx
 			ResultSet rs = tdbc2.executeQuery("select grp_idx, length from pseudos " +
 					" join xgroups on xgroups.idx=pseudos.grp_idx " +
 					" where xgroups.proj_idx=" + projIdx + " order by xgroups.sort_order");
-			groups.add(new Vector<Integer>());
-			long curSize = 0, totSize = 0;
-			int nOrigGrp = 0, nGrp = 0;
+						
 			while (!interrupted && rs.next()) {
 				nOrigGrp++;
 				int grp_idx = rs.getInt(1);
 				long chrLen = rs.getLong(2);
 				totSize += chrLen;
 				
-				if (!isSelf) {  // Unless concat=true, group up to total seq length maxFileSize.
-					if (!concat && nOrigGrp > 1 && curSize+chrLen > maxFileSize) { // 60,000,000
+				if (!isSelf && !bNoCAT) {  // Unless concat=true, group up to total seq length maxFileSize.
+					boolean noCat = !concat && nOrigGrp > 1 && curSize+chrLen > maxFileSize;  // 60,000,000
+					boolean yesCat = concat && nOrigGrp > 1 && curSize+chrLen > maxConcatSize;// 1,000,000,000; CAS581 new restriction
+					
+					if (noCat || yesCat) { 
 						nGrp++;
 						groups.add(new Vector<Integer>());
 						curSize = 0;
@@ -458,7 +466,7 @@ public class AlignMain {
 			for (int i = 0; i < groups.size(); i++) {
 				if (groups.get(i).size() == 0) break; // last one can come up empty
 				
-				String fileName = (concat) ? ("_cc") : ("_f" + (i+1)); 
+				String fileName = (concat) ? ("_c" + (i+1)) : ("_f" + (i+1)); // CAS581 concat now need suffix#
 				
 				fileName = projName + fileName + Constants.faFile;
 				msg = "   " + fileName + ": ";

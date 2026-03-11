@@ -581,7 +581,6 @@ button, which will popup the panel shown on the right.
 <p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
 	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
 
-
 <a id="align"></a>
 <a id="align2"></a>
 <h3>3.b Alignment</h3>
@@ -593,17 +592,21 @@ button, which will popup the panel shown on the right.
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td><ttl>Concat</ttl>
 <td>
-By default, all sequences of the 1st genome are concatenated into one file
-and then multiple files are created from the 2nd genome to be searched against the first.
-For the 2nd genome, sequential short sequences are put into one file until the file length is &gt;60M.
+<ttl>Concat</ttl> checked:
+<div class="hanging-indent">&bull;For the 1st genome, sequences are concatenated into a file as long as the file length is &lt;1G. Multiple
+files of maximum file length 1G may be created.</div>
+<div class="hanging-indent">&bull;For the 2nd genome, the same as above except the maximum file length is 60M.</div>
+<div class="hanging-indent">&bull;All files from the 1st genome are searched against all files from the 2nd genome.
+This results in fewer MUMmer alignments, which can be faster.</div>
 
 <p><ttl>Concat</ttl> unchecked: To reduce memory usage, you can uncheck <ttl>Concat</ttl> so that
-multiple files are created for each genomes,
-and all files from the 1st genome are searched against the all files from the 2nd genome. For both genomes,
-sequential short sequences are put into one file until the file length is &gt;60M.
-<p>See below for timing differences.
+multiple files &lt;60M  are created for each genomes. This results in more MUMmer alignments, which can be slower.
+
+
 <p>The exception is self-synteny, where all chromosomes are written to their own file, so <ttl>Concat</ttl> is
 not relevant.
+
+<p>See below for timing differences.
 <td>On
 
 <tr><td style="white-space: nowrap;"><ttl>Mask</ttl> &lt;abbrev&gt;<td>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
@@ -611,7 +614,7 @@ be provided).
 <p>The &lt;abbrev&gt;, which is set in the <a href="#projParams">Project parameters</a> popup <ttl>Abbreviation</ttl> parameter,
 is used to determine which sequence will be masked.
 
-<p>Both sequences may both be masked, which results in <i>very fast execution</i>
+<p>Both sequences may be masked, which results in <i>very fast execution</i>
 and gene-based synteny.
 
 <p>If <ttl>Mask</ttl> is changed after <ttl>A&amp;S</ttl>, the alignment files need to be
@@ -1042,7 +1045,7 @@ have little effect if <ttx>Orient</ttx> has been used since mixed blocks cannot 
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
+<p class="trailer">  Email: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 </div>
 </body>

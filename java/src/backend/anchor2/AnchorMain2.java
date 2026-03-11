@@ -310,101 +310,115 @@ public class AnchorMain2 {
 		int hitNum=0, hitEQ=0, hitNE=0, cntLongHit=0;
 		int [] cntHitGene = {0,0};
 		String line;
+	
 		GrpPair pairObj;
-		int cntErr=0, cntHits=0, cntNoChr=0;
+		int cntErr=0, cntLine=0, cntNoChr=0;
 		TreeSet <String> noChrSetQ = new TreeSet <String> ();
 		TreeSet <String> noChrSetT = new TreeSet <String> ();
 		
-		BufferedReader reader = new BufferedReader ( new FileReader ( fObj ) ); 
-		while ((line = reader.readLine()) != null) {	
+		BufferedReader fh = new BufferedReader ( new FileReader ( fObj ) ); 
+		while ((line = fh.readLine()) != null) {	
+			cntLine++;
 			line = line.trim();
 			if (line.equals("") || !Character.isDigit(line.charAt(0))) continue;
 			
-			cntHits++;
 			String[] tok = line.split("\\s+");
 			if (tok.length<13) { 								
 				plog.msg("*** Missing values, only " + tok.length + " must be >=13                       ");
 				plog.msg("  Line: " + line);
-				plog.msg("  Line " + cntHits + " of file " + fObj.getAbsolutePath());
+				plog.msg("  Line " + cntLine + " of file " + fObj.getName());
 				cntErr++;
-				if (cntErr>5) Globals.die("Too many errors in " + fObj.getAbsolutePath());
+				if (cntErr>5) Globals.die("Too many errors in " + fObj.getName());
 				continue;
 			}
-			int poffset = (tok.length > 13 ? 2 : 0); // nucmer vs. promer
-			
-			int [] start = {Integer.parseInt(tok[0]), Integer.parseInt(tok[2])};
-			int [] end =   {Integer.parseInt(tok[1]), Integer.parseInt(tok[3])};
-			int [] len =   {Integer.parseInt(tok[4]), Integer.parseInt(tok[5])};
-			int id =       (int) Math.round(Double.parseDouble(tok[6]));
-			int sim = 	   (poffset==0) ? 0 : (int) Math.round(Double.parseDouble(tok[7]));
-			
-			int [] f =  {0, 0}; // frame; in Hit but not used
-			if (poffset==2) {
-				f[T] = Integer.parseInt(tok[11]);
-				f[Q] = Integer.parseInt(tok[12]);	
-			}
-			String [] chr = {"",""};
-			chr[T] = tok[11+poffset];
-			chr[Q] = tok[12+poffset]; 
-			
-		// Get grpIdx using name
-			int [] grpIdx = {0,0};
-			grpIdx[Q] = mProj1.getGrpIdxFromFullName(chr[Q]); // proj1 is Q, 2nd set of coords (Q==1, T==0)
-			if (grpIdx[Q]==-1) { 									
-				if (!noChrSetQ.contains(chr[Q])) noChrSetQ.add(chr[Q]);
-				cntNoChr++; continue;
-			}
-			grpIdx[T] = mProj2.getGrpIdxFromFullName(chr[T]); 
-			if (grpIdx[T]==-1) {									
-				if (!noChrSetT.contains(chr[T])) noChrSetQ.add(chr[T]);
-				cntNoChr++; continue;
-			}
-			
-			String strand = (start[Q] <= end[Q] ? "+" : "-") + "/" + (start[T] <= end[T] ? "+" : "-"); 	// copied from anchor1
-			if (Arg.isEqual(strand)) hitEQ++; else hitNE++;
-			
-			if (start[T]>end[T]) {int t=start[T]; start[T]=end[T]; end[T]=t;} 
-			if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
-			
-		// Add hit to pairObj 
-			String grp2grpkey=grpIdx[Q]+"-"+grpIdx[T]; 
+			try {
+				int poffset = (tok.length > 13 ? 2 : 0); // nucmer vs. promer
 				
-			if (!grpPairMap.containsKey(grp2grpkey)) {
-				if (donePair.contains(grp2grpkey)) die(chr[Q] + " and " + chr[T] + " occurs in multiple files");
-				donePair.add(grp2grpkey);
+				int [] start = {Integer.parseInt(tok[0]), Integer.parseInt(tok[2])};
+				int [] end =   {Integer.parseInt(tok[1]), Integer.parseInt(tok[3])};
+				int [] len =   {Integer.parseInt(tok[4]), Integer.parseInt(tok[5])};
+				int id =       (int) Math.round(Double.parseDouble(tok[6]));
+				int sim = 	   (poffset==0) ? 0 : (int) Math.round(Double.parseDouble(tok[7]));
 				
-				pairObj = new GrpPair(this, grpIdx[T], proj2Name, chr[T], grpIdx[Q], proj1Name, chr[Q], plog);
-				grpPairMap.put(grp2grpkey, pairObj);
-			}
-			else pairObj = grpPairMap.get(grp2grpkey);
-			
-		// Create hit
-			hitNum++;
-			Hit ht = new Hit(hitNum, id, sim, start, end, len, grpIdx, strand, f); 
-			pairObj.addHit(ht);
-			
-		// add hit to gene and vice versa;
-			if (qGrpGeneMap.size()>0 && qGrpGeneMap.containsKey(grpIdx[Q])) { // grp may have no genes
-				GeneTree qGrpGeneObj = qGrpGeneMap.get(grpIdx[Q]); 
-				TreeSet <Gene> qSet = qGrpGeneObj.findOlapSet(start[Q], end[Q], true);
-			
-				for (Gene gn : qSet) {
-					cntHitGene[Q]++;
-					pairObj.addGeneHit(Q, gn, ht);
+				int [] f =  {0, 0}; // frame; in Hit but not used
+				if (poffset==2) {
+					f[T] = Integer.parseInt(tok[11]);
+					f[Q] = Integer.parseInt(tok[12]);	
 				}
-			}
-			if (tGrpGeneMap.size()>0 && tGrpGeneMap.containsKey(grpIdx[T])) {
-				GeneTree tGrpGeneObj = tGrpGeneMap.get(grpIdx[T]); 
-				TreeSet <Gene> tSet = tGrpGeneObj.findOlapSet(start[T], end[T], true);
-			
-				for (Gene gn : tSet) {
-					cntHitGene[T]++;
-					pairObj.addGeneHit(T, gn, ht);
+				String [] chr = {"",""};
+				chr[T] = tok[11+poffset];
+				chr[Q] = tok[12+poffset]; 
+				
+			// Get grpIdx using name
+				int [] grpIdx = {0,0};
+				grpIdx[Q] = mProj1.getGrpIdxFromFullName(chr[Q]); // proj1 is Q, 2nd set of coords (Q==1, T==0)
+				if (grpIdx[Q]==-1) { 									
+					if (!noChrSetQ.contains(chr[Q])) noChrSetQ.add(chr[Q]);
+					cntNoChr++; continue;
 				}
-			}	
-			if (len[T]>Arg.mamGeneLen || len[Q]>Arg.mamGeneLen) cntLongHit++;
+				grpIdx[T] = mProj2.getGrpIdxFromFullName(chr[T]); 
+				if (grpIdx[T]==-1) {									
+					if (!noChrSetT.contains(chr[T])) noChrSetQ.add(chr[T]);
+					cntNoChr++; continue;
+				}
+				
+				String strand = (start[Q] <= end[Q] ? "+" : "-") + "/" + (start[T] <= end[T] ? "+" : "-"); 	// copied from anchor1
+				if (Arg.isEqual(strand)) hitEQ++; else hitNE++;
+				
+				if (start[T]>end[T]) {int t=start[T]; start[T]=end[T]; end[T]=t;} 
+				if (start[Q]>end[Q]) {int t=start[Q]; start[Q]=end[Q]; end[Q]=t;}
+				
+			// Add hit to pairObj 
+				String grp2grpkey=grpIdx[Q]+"-"+grpIdx[T]; 
+					
+				if (!grpPairMap.containsKey(grp2grpkey)) {
+					if (donePair.contains(grp2grpkey)) die(chr[Q] + " and " + chr[T] + " occurs in multiple files");
+					donePair.add(grp2grpkey);
+					
+					pairObj = new GrpPair(this, grpIdx[T], proj2Name, chr[T], grpIdx[Q], proj1Name, chr[Q], plog);
+					grpPairMap.put(grp2grpkey, pairObj);
+				}
+				else pairObj = grpPairMap.get(grp2grpkey);
+				
+			// Create hit
+				hitNum++;
+				Hit htObj = new Hit(hitNum, id, sim, start, end, len, grpIdx, strand, f); 
+				pairObj.addHit(htObj);
+				
+			// add hit to gene and vice versa;
+				if (qGrpGeneMap.size()>0 && qGrpGeneMap.containsKey(grpIdx[Q])) { // grp may have no genes
+					GeneTree qGrpGeneObj = qGrpGeneMap.get(grpIdx[Q]); 
+					TreeSet <Gene> qSet = qGrpGeneObj.findOlapSet(start[Q], end[Q], true);
+				
+					for (Gene gn : qSet) {
+						cntHitGene[Q]++;
+						pairObj.addGeneHit(Q, gn, htObj);
+					}
+				}
+				if (tGrpGeneMap.size()>0 && tGrpGeneMap.containsKey(grpIdx[T])) {
+					GeneTree tGrpGeneObj = tGrpGeneMap.get(grpIdx[T]); 
+					TreeSet <Gene> tSet = tGrpGeneObj.findOlapSet(start[T], end[T], true);
+				
+					for (Gene gn : tSet) {
+						cntHitGene[T]++;
+						pairObj.addGeneHit(T, gn, htObj);
+					}
+				}	
+				if (len[T]>Arg.mamGeneLen || len[Q]>Arg.mamGeneLen) cntLongHit++;
+			} 
+			catch (Exception e) { // CAS581; files can get corrupted when copying from memory stick
+				if (cntErr < 5){
+					Globals.rclear(); // last print gets mixed with print(line)
+					ErrorReport.print(line);
+					String msg = String.format("Error in line: %,d   File: %s", cntLine, fObj.getName());
+					plog.msgToAll(msg); // Will go to symap.log, message window, error.log and terminal
+					cntErr++;
+					continue;
+				}
+				else {fh.close(); Globals.die("Too many errors in file " + fObj.getName());}
+			}
 		} // finish reading file
-		reader.close();
+		fh.close();
 		
 		/* ---------- Finish ----------- */
 		Globals.rclear();

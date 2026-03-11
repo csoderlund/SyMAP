@@ -31,6 +31,8 @@ import util.ProgressDialog;
  * CAS575 made self-synteny not dependent on order of schema, removed binstats; self-chr diagonal not saved
  *   New algo: Only lower diagonal hits are analyzed, then mirrored. e.g. Rice_f8.Rice_f11.mum swap coords, Rice_f9.Rice_f1.mum no swap.
  *   Old algo: Mix of lower and upper as input, then all are mirrored.
+ * CAS581 copied maize x maize from memory stick, which replaced a number with '%'. This caused the whole
+ *   process to fail. Removed all throw Exceptions -- everything has catch
  */
 enum HitStatus  {In, Out, Undecided }; 
 enum QueryType  {Query, Target, Either };	
@@ -69,7 +71,7 @@ public class AnchorMain1 {
 	}
 	
 	/**************************************************************************/
-	public boolean run(Mproject pj1, Mproject pj2, File dh) throws Exception {
+	public boolean run(Mproject pj1, Mproject pj2, File dh) { // CAS581 remove throw
 	try {
 		tdbc2 = new DBconn2("Anchors-"+DBconn2.getNumConn(), dbc2);
 		proj1Name = pj1.getDBName(); proj2Name = pj2.getDBName();
@@ -144,7 +146,7 @@ public class AnchorMain1 {
 
 	/*******************************************************************
 	 */
-	private boolean scanAlignFiles(File dh) throws Exception {
+	private boolean scanAlignFiles(File dh) {// CAS581 remove throw exception
 	try {
 	/** first scan: process all aligned files in directory */
 		plog.msg("   Scan files to create candidate genes from hits"); 	
@@ -158,7 +160,7 @@ public class AnchorMain1 {
 	
 		for (int i=0; i<nLoop; i++) {
 			for (File f : fs) { 
-				if (!f.isFile() || f.isHidden()) continue; // CAS576 add isHidden
+				if (!f.isFile() || f.isHidden()) continue; 
 				
 				String fName = f.getName();
 				if (!fName.endsWith(Constants.mumSuffix))continue;
@@ -168,7 +170,7 @@ public class AnchorMain1 {
 				}
 				nFile++;
 				
-				int nHits = scanFile1AnnoBins(f, syProj1, syProj2); 
+				int nHits = scanFile1AnnoBins(nFile, f, syProj1, syProj2); 
 						
 				if (nHits == 0) skipList.add(fName);
 				else 			nHitsScanned += nHits;
@@ -208,7 +210,7 @@ public class AnchorMain1 {
 					if (i==1 && !fName.startsWith(Constants.selfPrefix)) continue;
 				}
 				nFile++;	
-				int nHits = scanFile2ClusterFilter(f, syProj1, syProj2);
+				int nHits = scanFile2ClusterFilter(nFile, f, syProj1, syProj2);
 				nHitsScanned += nHits;	
 				
 				if (failCheck()) return false;
@@ -230,19 +232,20 @@ public class AnchorMain1 {
 	/*************************************************************
 	 * first time through, create the predicted genes from non-gene hits
 	 */
-	private int scanFile1AnnoBins(File mFile, Proj p1, Proj p2) throws Exception { 
+	private int scanFile1AnnoBins(int nFile, File mFile, Proj p1, Proj p2) { // CAS581 add nFile, remove throw exception
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {	
-		if (!VB) Globals.rprt(String.format("Scan %s",  Utils.fileFromPath(mFile.toString())));
+		if (!VB) Globals.rprt(String.format("%2d. Scan %s",  nFile, Utils.fileFromPath(mFile.toString()))); 
 		
 		String line, fileType="PROMER";
 		int numErrors = 0, hitNum = 0;
-		int cntSkip=0, cntSwap=0;
+		int cntSkip=0, cntSwap=0, cntLine=0;
 		
 	/** Read file and build rawHits **/
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		
 		while (fh.ready()) {
+			cntLine++;
 			line = fh.readLine().trim();
 			if (line.length() == 0) continue;
 			if (!Character.isDigit(line.charAt(0))) {
@@ -256,10 +259,11 @@ public class AnchorMain1 {
 			Hit hit = new Hit();
 			hit.origHits = 1;
 		
-			boolean success = scanNextMummerHit(line,hit);
+			boolean success = scanNextMummerHit(line,hit, true);
 			if (!success) {
 				if (numErrors < 5){
-					plog.msg("  Error on line " + hitNum + " in " + mFile.getName()); // Will go to symap.log and terminal
+					String msg = String.format("Error in line: %,d   File: %s", cntLine, mFile.getName());
+					plog.msgToAll(msg); // Will go to symap.log, message window, error.log and terminal
 					numErrors++;
 					continue;
 				}
@@ -299,12 +303,13 @@ public class AnchorMain1 {
 			if (failCheck()) {fh.close(); return 0;}
 		}
 		fh.close();
+		System.gc(); // CAS581 maize x maize fails on something different every time; finished on this change
 		
 		if (Globals.TRACE && isSelf) {
 			if (cntSkip>0) Utils.prtNumMsg(cntSkip, String.format(" skipped coords from %,8d ", hitNum) + Utils.fileFromPath(mFile.toString()));
 			else Utils.prtNumMsg(cntSwap, String.format(" swapped coords from %,8d ", hitNum) + Utils.fileFromPath(mFile.toString()));
 		}
-		String msg= String.format("%,10d scanned %s %s", hitNum, fileType, Utils.fileFromPath(mFile.toString()));
+		String msg= String.format("%2d. %,10d scanned %s %s",nFile, rawHits.size(), fileType, Utils.fileFromPath(mFile.toString()));
 		if (VB) Utils.prtMsgFile(plog, msg);  else    Globals.rprt(msg);
 		
 		if (hitNum==0 || mTotalHits==0) return 0;
@@ -312,8 +317,12 @@ public class AnchorMain1 {
 	/** Scan1 processing: all hits get added to each grp; create non-genes (predicted); hit has start<end **/
 		for (Hit h : rawHits) {			
 			Group grp1 = p1.getGrpByIdx(h.queryHits.grpIdx);
-			Group grp2 = p2.getGrpByIdx(h.targetHits.grpIdx);
+			Group grp2 = p2.getGrpByIdx(h.targetHits.grpIdx);	
 			
+			if (grp1 == null || grp2 == null) {// CAS581 add because had failure
+				System.out.println(h.getInfo());
+				Utils.die("Problem continuing -- could be memory");
+			}
 			grp1.createAnnoFromHits1(h.queryHits.start, h.queryHits.end, h.isRev);
 			grp2.createAnnoFromHits1(h.targetHits.start, h.targetHits.end, h.isRev);
 		}
@@ -322,18 +331,26 @@ public class AnchorMain1 {
 	}
 	catch (Exception e) {
 		rawHits.clear();
-		ErrorReport.print(e, "ScanFile1: Reading file for hits"); 
+		ErrorReport.print(e, "ScanFile1: Reading file for hits                      "); 
 		bSuccess=false; 
 		return 0;}
+	catch (OutOfMemoryError e) { // CAS581 failed on Maize x Maize
+		filtHitSet.clear();
+		tdbc2.shutdown();
+		ErrorReport.prtMem();
+		System.out.println("\n\nOut of memory! Edit the symap script and increase the memory limit (mem=).\n\n");
+		System.exit(0);
+		return 0;
+	}		
 	}
 	/*********************************************************************
 	 * 2nd time through - do the clustering
 	 * this is about the same as scanFile1 except for no checks, diagonals, and final processing
 	 */
-	private int scanFile2ClusterFilter(File mFile, Proj p1, Proj p2) throws Exception {
+	private int scanFile2ClusterFilter(int nFile, File mFile, Proj p1, Proj p2) { // CAS581 add nFile, remove throw exception
 		Vector<Hit> rawHits = new Vector<Hit>(HIT_VEC_INC,HIT_VEC_INC);
 	try {
-		if (!VB) Globals.rprt(String.format("Cluster %s",  Utils.fileFromPath(mFile.toString())));
+		if (!VB) Globals.rprt(String.format("%2d. Cluster %s",  nFile, Utils.fileFromPath(mFile.toString())));
 		
 		BufferedReader fh = new BufferedReader(new FileReader(mFile));
 		String line;
@@ -343,17 +360,14 @@ public class AnchorMain1 {
 		while (fh.ready()) {
 			line = fh.readLine().trim();
 			
-			if (line.length() == 0) continue;
-			if (!Character.isDigit(line.charAt(0))) continue; 
+			if (line.length() == 0) {Globals.tprt("Zero line");continue; }
+			if (!Character.isDigit(line.charAt(0))) {Globals.tprt("Line: " + line);continue;} 
 			
 			Hit hit = new Hit();	
 			hit.origHits = 1;
 			
-			boolean success = scanNextMummerHit(line,hit);
-			if (!success) { // should have already been caught in ScanFile1
-				plog.msg("  Error in file " + Utils.fileFromPath(mFile.toString()));
-				errCnt++;
-				if (errCnt>=5) Utils.die("Too many errors");
+			boolean success = scanNextMummerHit(line,hit, false);
+			if (!success) { // already been caught in ScanFile1
 				continue;
 			}
 			
@@ -384,6 +398,8 @@ public class AnchorMain1 {
 			if (failCheck()) {fh.close(); return 0;}
 		}
 		fh.close();
+		System.gc(); 	// CAS581 add 
+		if (diagHits.size()>0 && rawHits.size()==0) Globals.tprt("DiagHits " + diagHits.size() + " no raw hits");
 		if (rawHits.size()==0) return 0;
 		
 	/** Scan2 processing ***/
@@ -391,9 +407,9 @@ public class AnchorMain1 {
 		rawHits.clear();
 		Collections.sort(clustHits);
 		
-		filterClusterHits2(clustHits, p1, p2);	     			if (!bSuccess) return 0;
+		filterClusterHits2(clustHits, p1, p2);	     	if (!bSuccess) return 0;
 		
-		String msg= String.format("%,10d clustered %s", clustHits.size(), Utils.fileFromPath(mFile.toString()));
+		String msg= String.format("%2d. %,10d clustered %s", nFile, clustHits.size(), Utils.fileFromPath(mFile.toString()));
 		if (VB) Utils.prtMsgFile(plog, msg); else Globals.rprt(msg);
 		return clustHits.size();
 	}
@@ -402,6 +418,14 @@ public class AnchorMain1 {
 		ErrorReport.print(e, "scanFile2: Reading file for hits "); 
 		bSuccess=false; 
 		return 0;}
+	catch (OutOfMemoryError e) { // CAS581 added for maize x maize error, but never happened
+		filtHitSet.clear();
+		tdbc2.shutdown();
+		ErrorReport.prtMem();
+		System.out.println("\n\nOut of memory! Edit the symap script and increase the memory limit (mem=).\n\n");
+		System.exit(0);
+		return 0;
+	}	
 	}	
 	
 	/*********************************************************************
@@ -409,7 +433,7 @@ public class AnchorMain1 {
 	 * So our possible hit set will now be a subset of annotations x annotations, and the
 	 * actual length of the hits will be the sum of the subhits that went into them.
 	 */
-	private Vector<Hit> clusterHits2(Vector<Hit> inHits) throws Exception {
+	private Vector<Hit> clusterHits2(Vector<Hit> inHits) { // CAS581 remove throw
 		Vector<Hit> outHits = new Vector<Hit>(HIT_VEC_INC, HIT_VEC_INC);
 		
 		// all use key = qAnno.mID + "_" + tAnno.mID;
@@ -473,7 +497,7 @@ public class AnchorMain1 {
 	 * Add hits to their topN bins, applying the topN criterion immediately when possible to reduce memory
 	 * Called from scanFile2; hits get transfered to respective project [preFilterHit2]
 	 */
-	private void filterClusterHits2(Vector<Hit> clustHits, Proj p1, Proj p2) throws Exception {
+	private void filterClusterHits2(Vector<Hit> clustHits, Proj p1, Proj p2) { // CAS581 remove throw
 	try {
 		// Bin the annotated/candidate genes [syProj1.collectPGInfo]; 
 		Vector <Group> grp1Vec = syProj1.getGroups();
@@ -549,7 +573,8 @@ public class AnchorMain1 {
 	 * MUMmer S1/E1 is from proj2idx, which is referred to by SyMAP as target
 	 *        S2/E2 is from proj1idx, which is referred to by SyMAP as query
 	 */
-	private boolean scanNextMummerHit(String line, Hit hit) {
+	private boolean scanNextMummerHit(String line, Hit hit, boolean bPrt) {
+		try {
 		String[] fs = line.split("\\s+");
 		if (fs.length < 13) { 
 			plog.msg("*** Missing values, only " + fs.length + " must be >=13                       ");
@@ -574,11 +599,19 @@ public class AnchorMain1 {
 		hit.setHit(queryChr, targetChr, qstart, qend, tstart, tend, match, pctid, pctsim, strand); 
 		
 		return true;
+		}
+		catch (Exception e) {
+			if (bPrt) {
+				Globals.rclear();
+				ErrorReport.print(e, line); 
+			}
+			return false;
+		}
 	}	
 	/*******************************************************************
 	 * XXX 
 	 */
-	private void saveAllResults()  throws Exception {
+	private void saveAllResults() { // CAS581 remove throw
 	try {
 		if (Constants.VERBOSE) plog.msg("Save results"); else Globals.rprt("Save results");
 		long memTime = Utils.getTimeMem();
@@ -597,13 +630,13 @@ public class AnchorMain1 {
 		
 		if (Globals.TRACE) Utils.prtMsgTimeFile(plog, "Complete save", memTime);
 	}
-	catch (Exception e) {ErrorReport.print(e, "save results"); throw e;}
+	catch (Exception e) {ErrorReport.print(e, "save results"); bSuccess = false;}
 	}
 	/************************************************
 	 * Save hits
 	 * if bMirror, self-synteny, mirror hits; add refidx and swap all 1-2 columns and query/target
 	 */
-	private void saveFilterHits(Vector <Hit> filtHits, boolean bMirror) throws Exception { 
+	private void saveFilterHits(Vector <Hit> filtHits, boolean bMirror) { 
 		try {
 			String msg = (bMirror) ? "   Save mirrored filtered hits " : "   Save filtered hits ";
 			msg += String.format("%,d", filtHits.size());
@@ -680,6 +713,7 @@ public class AnchorMain1 {
 	 * 2. refidx = idx of mirror hit: second time the hit is entered
 	 */
 	private void addIsSelfRefIdx(Vector <Hit> filtHits, boolean bMirror) { // CAS575 new method for isSelf
+	try {
 		for (Hit hit : filtHits) {
 			if (hit.queryHits.grpIdx==hit.targetHits.grpIdx 
 			 && hit.queryHits.start == hit.targetHits.start 
@@ -708,6 +742,7 @@ public class AnchorMain1 {
 			fht.idx = idxMap.get(key);
 		}
 		loadHits.clear();
+	}catch (Exception e) {ErrorReport.print(e, "add mirror"); bSuccess=false;}
 	}
 	private String intArrayToBlockStr(int[] ia) {
 		String out = "";

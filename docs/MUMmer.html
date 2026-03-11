@@ -16,6 +16,8 @@
 <a href="#mfiles">MUMmer files</a>
 <a href="#log">Finding the problem</a>
 <a href="#mem">Out of Memory</a>
+<a href="#toobig">Input file too big</a>
+<a href="#fail2">One or more fails</a>
 <a href="#cmd">MUMmer from the command line</a>
 <a href="#help">Getting Help</a>
 <p>&nbsp;
@@ -70,11 +72,12 @@ The corresponding MUMmer documentation is
 	<tr><td><a href="#mem">Out of Memory</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#cat">Limit CPUs and uncheck Concat</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#mask">Not-masked or Soft-masked</a>
-	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#fail2">One or more alignments fail</a>
+	<tr><td><a href="#toobig">Input file too big</a>
 	</table>
 <td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
 	<table>
+	<tr><td><a href="#fail2">One or more alignments fail</a>
 	<tr><td><a href="#cmd">MUMmer from the command line</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#example">Example</a>
 	<tr><td><a href="#mum">MUMmer parameters</a>
@@ -93,9 +96,9 @@ When <ttp>symap</ttp> executes MUMmer, the resulting alignment files are in:
 For example,
 <pre>
    data/seq_results/demo_seq_to_demo_seq2/align> ls
-   all.done				demo_seq_cc.demo_seq2_f2.mum
-   demo_seq_cc.demo_seq2_f1.mum		demo_seq_cc.demo_seq2_f2.mum.done
-   demo_seq_cc.demo_seq2_f1.mum.done
+   all.done				demo_seq_c1.demo_seq2_f2.mum
+   demo_seq_c1.demo_seq2_f1.mum		demo_seq_c1.demo_seq2_f2.mum.done
+   demo_seq_c1.demo_seq2_f1.mum.done
 </pre>
 
 <p>All MUMmer files but those with the <tt>.mum</tt> suffix are removed by <ttp>symap</ttp>. If you prefer them not to be removed,
@@ -117,8 +120,14 @@ use the "-mum" command line parameter, i.e.
 <p>If the MUMmer alignment fails:
 <ul>
 <li>Check that the sequences loaded correctly using the <ttb>View</ttb> option on the <ttp>Manager</ttp>.
-<li>If the files loaded correctly, check the <a href="#ext">Executables</a>.
+<li>If the files loaded correctly, check the <a href="#ext">Executables</a>. On Mac, the executables may need to be verified.
 <li>If the executables are okay, inspect the log files.
+<ul>
+<li>There may not be enough memory, see <a href="#mem">Memory</a>.
+<li>The input files may be too large, see <a href="#toobig">Too big</a>.
+<li>On my 2018 MacOS x86_64 it sometimes fails, I have to reboot and then it works.
+<li>If you encounter a different problem, I would appreciate if you let me know so I can add it to this webpage.
+</ul>
 </ul>
 <h3>Log files</h3>
 <p>Using <tt>p1</tt> = <tt>project-name1</tt> and <tt>p2</tt> = <tt>project-name2</tt>
@@ -129,21 +138,21 @@ use the "-mum" command line parameter, i.e.
 
      logs/
        &lt;p1&gt;-to-&lt;p2&gt;/         # one directory per project-to-project alignment
-          &lt;p1_cc.p2_f1&gt;.log  # MUMmer terminal output - one file per MUMmer process
-          &lt;p1_cc.p2_f2&gt;.log  #    fn is n=1,2... for number of processes, e.g f2 is 2nd process
+          &lt;p1_c1.p2_f1&gt;.log  # MUMmer terminal output - one file per MUMmer alignment
+          &lt;p1_c1.p2_f2&gt;.log  #   2nd alignment....
           symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
 </pre>
 
 e.g. <tt>p1</tt> = <tt>demo_seq</tt> and <tt>p2</tt> = <tt>demo_seq2</tt>
 <pre>
        demo_seq_to_demo_seq2/
-         demo_seq_cc.demo_seq2_f1.log  # MUMmer output directed to this file for process 1
-         demo_seq_cc.demo_seq2_f2.log  # MUMmer output directed to this file for process 2
+         demo_seq_c1.demo_seq2_f1.log  # MUMmer output directed to this file for process 1
+         demo_seq_c1.demo_seq2_f2.log  # MUMmer output directed to this file for process 2
          symap.log                     # SyMAP terminal output
 </pre>
 
 &rarr; If an alignment is listed as failed in the <tt>error.log</tt> file,
-the corresponding <tt>&lt;p1_cc.p2_fn&gt;.log</tt> file will contain the MUMmer error
+the corresponding <tt>&lt;p1_c1.p2_fn&gt;.log</tt> file will contain the MUMmer error
 (see <a href="img/mummerLog.png">example mummer log</a>).
 <p>&rarr;
 If the error is not found in the log files or the error is not clear, try the following:
@@ -152,9 +161,9 @@ The command will look similar to the following, though it will all be on one lin
 <p>
 <pre>
   > ext/mummer/mac/promer
-    -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
+    -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_c1.demo_seq2_f2.promer
      data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
-     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_c1.fa
 </pre>
 This shows <tt>promer</tt> output directly on the terminal and provides a better description of the problem.
 
@@ -194,12 +203,11 @@ Execute the program from the command line to make sure it works on you machine, 
 </pre>
 The above shows that the promer code will execute on my MacOS.
 
-<p><font color="red"><u>Executable on MacOS</u></font>:
+<p><font color="green"><u>Executable on MacOS</u></font>:
 Any executable that has not been okayed by Apple results in the error message
 <pre>
   Apple could not verify "prepro" is free of malware that may harm your mac...
 </pre>
-
 See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External</a> for the fix.
 
 <!-------------------------------------------------->
@@ -207,9 +215,9 @@ See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External
 <h2>Out of memory</h2>
 
 <table class="tz"><tr>
-<td><a href="#cat">Limit CPUs and<br>uncheck Concat</a>
-<td><a href="#mask">Not-masked or<br>Soft-masked</a>
-<td><a href="#fail2">One or more<br>alignments fail</a>
+<td><a href="#cat">Limit CPUs and uncheck Concat</a>
+<td><a href="#mask">Not-masked or Soft-masked</a>
+
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 <p>A MUMmer failure is typically from insufficient memory.
@@ -233,7 +241,6 @@ Alignment program error code: 1
 </pre>
 The error code will appear on the terminal and the MUMmer log file,
 but not in <tt>symap/logs/&lt;..&gt;/symap.log</tt>.
-
 <!----------------------------------------------------->
 <a id="cat"></a>
 <h3>Limit CPUs and uncheck Concat</h3>
@@ -244,7 +251,7 @@ If you think memory may be tight or MUMmer produced an error as shown in the abo
 first try running again with reduced <ttl>CPUs</ttl> and unchecked <ttl>Concat</ttl>:
 <ol>
 <li>On the <ttb>Project Manager</ttb> panel, limit the number of CPUs, as each
-CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 20GB of memory at once).
+CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 24G of memory at once).
 See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU</a> for further information.
 <p><li>
 In the <ttb>Project Parameters</ttb> panel, uncheck <ttl>Concat</ttl> to reduce the
@@ -263,15 +270,35 @@ all sequence but the genes.
 </ul>
 
 <!----------------------------------------------------->
+<a id="toobig"></a>
+<h2>Input file too big</h2>
+Another error that can occur is the following:
+<p><pre>
+./ext/mummer/macM4/mummer:
+ cannot open file "data/seq_results/Mus_to_Rab/align/Mus_cc.Rab_f1.promer.aaqry"
+ or file "data/seq_results/Mus_to_Rab/align/Mus_cc.Rab_f1.promer.aaqry" is empty
+</pre>
+The MUMmer temporary files will have been created, but the <tt>.aaqry</tt> file is all zeros, hence,
+MUMmer could not produce the final results.
+The appears to happen when the input it very big, e.g. &gt;1G (one gigabyte).
+If this happens, deselect <ttl>Concat</ttl>.
+<p>
+Using pre-v5.8.1 release with <ttl>Concat</ttl> selected, SyMAP would concatenate all sequences for one species into one file.
+This could create an input file &gt;1G (one gigabyte) resulting in the above error on my Mac M4 (48G).
+<br>In Release v5.8.1, SyMAP was altered to only concatenate sequences into a file of maximum length 1G.
+This fixed the problem on my Mac M4 (48G).
+<br>Note: because the 1st species can be concatenated into more than one file, the <tt>_cc</tt> is replaced with <tt>_c1</tt>,  etc.
+
+<!----------------------------------------------------->
 <a id="fail2"></a>
-<h3>One or more fails</h3>
+<h2>One or more fails</h2>
 
 Sometimes just one or a few of the alignment processes will fail. You will see a line such as:
 <pre>
   Error: Running command: /Users/cari/Workspace/symap_5/ext/mummer/mac/promer
-   -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_cc.demo_seq2_f2.promer
-   data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
-   data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_cc.fa
+   -p data/seq_results/ncbi_HS_to_ncbi_XT/align/ncbi_HS_cc.ncbi_XT_f1.promer
+   data/seq_results/ncbi_HS_to_ncbi_XT/tmp/ncbi_HS/ncbi_XT_f1.fa
+   data/seq_results/ncbi_HS_to_ncbi_XT/tmp/ncbi_XT/ncbi_HS_cc.fa
 </pre>
 
 <table>
@@ -291,10 +318,10 @@ you will see a "?" for the pair as shown on the below.
 If SyMAP completed the alignment, e.g. the demo <tt>/align</tt> directory will have the following files:
 <p><pre>
 -rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
--rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum
--rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 demo_seq_cc.demo_seq2_f1.mum.done
--rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum
--rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 demo_seq_cc.demo_seq2_f2.mum.done
+-rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 ncbi_HS_cc.ncbi_XT_f1.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 ncbi_HS_cc.ncbi_XT_f1.mum.done
+-rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 ncbi_HS_cc.ncbi_XT_f2.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 ncbi_HS_cc.ncbi_XT_f2.mum.done
 </pre>
 <ol>
 <li>The <tt>all.done</tt> indicates that the all alignments completed.
@@ -306,17 +333,14 @@ there may not be <tt>mum.done</tt> files but there should be an <tt>all.done</tt
 <!------------------------------------------------------------------>
 <a id="cmd"></a>
 <h2>Running MUMmer from the command line</h2>
-<table class="tz" style="width:40%"><tr>
-<td><a href="#cmd">Command line</a>
-<td><a href="#example">Example</a>
+<table class="tz" style="width:60%"><tr>
+<td><a href="#cmd">Command line</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#example">Example</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <h3>Command line</h3>
-
 If you need to run MUMmer using the terminal command line from some other machine, do the following:
-
-
 <ol>
 <li><u>The naming of your files and their order into MUMmer is VERY important.</u> Everything will mess up
 if this is done wrong!
@@ -445,20 +469,20 @@ with the following files (described in <a href="#mfiles">MUMmer files</a>):
 <ol>
 <li><tt>error.log</tt>
 <li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</tt>
-<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cc.p2.fn&gt;.log</tt> where n is the process number
+<li><tt>logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cn.p2.fm&gt;.log</tt> where n and m are the input file number.
 <li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
 </ol>
 For example, email the terminal output and:
 <pre>
   symap/error.log
   symap/logs/demo_seq_to_demo_seq2/symap.log
-  symap/logs/demo_seq_to_demo_seq2/demo_seq_cc.demo_seq2_f2.log
+  symap/logs/demo_seq_to_demo_seq2/demo_seq_c1.demo_seq2_f2.log
 </pre>
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
+<p class="trailer">  Email: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 </div>
 </body>
