@@ -28,6 +28,7 @@ import util.ErrorReport;
  */
 
 public class AnnotLoadMain {
+	private static final int maxPrtErr = SeqLoadMain.maxPrtErr;
 	private final String idKey 		= "ID"; 			// Gene and mRNA
 	private final String parentKey 	= "Parent"; 		// mRNA and Exon
 	
@@ -135,9 +136,9 @@ public class AnnotLoadMain {
 			if (fs.length < 9) {
 				ErrorCount.inc();
 				numParseErrors++;
-				if (numParseErrors <= 3) {
+				if (numParseErrors <= maxPrtErr) {
 					plog.msgToFile("*** Parse: expecting at least 9 tab-delimited fields in gff file at line " + lineNum);
-					if (numParseErrors >= 3) plog.msgToFile("*** Suppressing further parse errors");
+					if (numParseErrors >= maxPrtErr) plog.msgToFile("*** Suppressing further parse errors");
 				}
 				continue; // skip this annotation
 			}
@@ -192,11 +193,11 @@ public class AnnotLoadMain {
 			
 	/** Process for write **/
 			// Chromosome idx
-			grpIdx = mProj.getGrpIdxRmPrefix(chr); 
+			grpIdx = mProj.getGrpIdx(chr); // Was checking for valid ID, but if its in the database, then it is. CAS582
 			if (grpIdx < 0) {// this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
-					if (noGrpSet.size() < 3) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
-					else if (noGrpSet.size() == 3) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
+					if (noGrpSet.size() < maxPrtErr) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
+					else if (noGrpSet.size() == maxPrtErr) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
 					if (noGrpSet.size()==0) System.out.println("Valid names: " + mProj.getValidGroup());
 					noGrpSet.add(chr);
 				}
@@ -435,7 +436,7 @@ public class AnnotLoadMain {
 					}
 				}
 			}
-			if (saveAnnoDir!="") {// print on View
+			if (!saveAnnoDir.isBlank()) {// print on View; CAS582 was !=""
 				modDirDate = new File(saveAnnoDir).lastModified();
 				mProj.saveProjParam("proj_anno_date", Utils.getDateStr(modDirDate));
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);

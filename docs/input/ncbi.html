@@ -145,7 +145,19 @@ the <font color="darkblue">Genome</font> link under <ttl>Popular Resources</ttl>
 <td><a href="#scaf">Scaffolds</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
-<p>The following instructions will use <i>Brassica oleracea</i> (wild cabbage) as an example.
+
+<p>The following instructions will use the <i>Brassica oleracea</i> (wild cabbage) as an example.
+
+<ol type="I">
+<li>If you have NCBI <tt>.fna</tt> and <tt>.gff</tt> files, do the following:
+<ol>
+<li>Go to the <tt>symap_5/data/seq</tt> directory.
+<li>Make a subdirectory for your species, e.g. <tt>mkdir cabbN</tt>
+<li>Move your <tt>.fna</tt> and <tt>.gff</tt> files to this directory.
+</ol>
+<p>
+<li>If you have the <tt>ncbi_dataset.zip</tt> file as discussed above in <a href="#dl">Download</a>,
+do the following.
 <ol>
 <li>Go to the <tt>symap_5/data/seq</tt> directory.
 <p>
@@ -165,26 +177,23 @@ Archive:  ncbi_dataset.zip
   inflating: ncbi_dataset/data/GCF_000695525.1/genomic.gff
   inflating: ncbi_dataset/data/dataset_catalog.json
 </pre>
-<li>Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program.
+
+</ol>
+</ol>
+Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program.
 <ul><li>
 Select the appropriate xToSymap NCBI options (described below).
 <li>Then select <ttb>Convert</ttb>.</ul>
-</ol>
 
 The program will output statistics to the terminal and a <a href="./logs/cnvCabbN.html" class="ext" target="_blank">log file</a>.
-The <ttx>cabbN</ttx> directory will contain the following:
+The <tt>symap_5/data/seq/cabbn</tt> directory will contain the following new directories and files:
 <p>
 <pre>
-symap_5/data/seq/cabbN&gt; ls -hlG
-total 264008
--rw-------@ 1 cari  staff   1.6K Jul 23  2024 README.md
-drwxr-xr-x  4 cari  staff   128B Jul 23 09:54 annotation/
-drwxr-xr-x@ 3 cari  staff    96B Jul 23 08:19 ncbi_dataset/
--rw-r--r--@ 1 cari  staff   126M Jul 23 07:11 ncbi_dataset.zip
-drwxr-xr-x  3 cari  staff    96B Jul 23 09:54 sequence/
+annotation/anno.gff	annotation/gap.gff	sequence/genomic.fna
 </pre>
+
 You may remove everything but <tt>annotation/</tt> and <tt>sequence/</tt>.
-However, you may want to keep the original <tt>data/seq/cabb/ncbi_dataset</tt>.
+However, you may want to keep the original <tt>.fna</tt> and <tt>.gff</tt> files.
 
 <!------------------------------------------------------->
 <a id="opts"></a>
@@ -237,7 +246,8 @@ used by this script are as follows:
 start with the prefix.
 Then the following rules 2-4 are applied to the non-filtered sequences:
 <br>&nbsp;
-<li>Chromosomes: The name starts with 'NC_'.
+<li>Chromosomes: The name starts with 'NC_' or the header line contains the word "chromosome"
+(this 2nd condition was added in v5.8.2).
 	 <ul>
 	 <li>The exception is that Mt/Pt chromosomes will not be output unless <ttl>Mt/Pt</ttl> is selected.
 	  <br>Mt/Pt: header line contains the word 'mitochondrion', 'mitochondrial', 'plastid' or 'chloroplast'.

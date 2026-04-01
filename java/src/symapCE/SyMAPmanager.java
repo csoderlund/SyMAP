@@ -252,7 +252,7 @@ public class SyMAPmanager extends ManagerFrame {
 		
 		// mummer path
 		String mummer 	= dbProps.getProperty("mummer_path"); 
-		if (mummer!=null && mummer!="") {
+		if (mummer!=null && mummer!="" && !mummer.isBlank()) {
 			System.out.println("   MUMmer path: " + mummer);
 			Ext.setMummer4Path(mummer);
 		}

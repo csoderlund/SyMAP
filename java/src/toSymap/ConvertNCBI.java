@@ -48,7 +48,7 @@ public class ConvertNCBI {
 	static private boolean isToSymap=true;
 	static private int defGapLen=30000;
 	
-	private final String header = "### Written by SyMAP ConvertNCBI"; // Split expects this to be 1st line
+	private final String header = "### Written by SyMAP ConvertNCBI"; // SeqLoadMain && Split expects this to be 1st line
 	private String logFileName = "/xConvertNCBI.log";
 	private final String plus ="+", star="*"; 
 	
@@ -293,7 +293,7 @@ public class ConvertNCBI {
     				
     				isChr=isScaf=isMT=false; 
     				
-    				if (idcol1.startsWith("NC_")) isChr=true; 
+    				if (idcol1.startsWith("NC_") || line.contains(chrType)) isChr=true; // CAS582 add contains ChrType
     				else if (idcol1.startsWith("NW_") || idcol1.startsWith("NT_") ) isScaf=true;
     				
     				if (isChr) {
@@ -441,7 +441,7 @@ public class ConvertNCBI {
 			String name=null;
 			String [] words = line.split("\\s+"); 
 			for (int i=0; i<words.length; i++) {
-				if (words[i].equals("chromosome")) {
+				if (words[i].equals(chrType)) {
 					if (i+1 < words.length) name = words[i+1];
 					break;
 				}
@@ -453,8 +453,8 @@ public class ConvertNCBI {
 					name = chrPrefix + padNum(name);
 				}
 				catch (Exception e) {
-					if (name.endsWith("X") || name.endsWith("Y") || 
-						name.endsWith("I") || name.endsWith("V")) name = "Chr" + name;
+					if (name.matches("^[XYIV]*$")) name = "Chr" + name;;
+					// CAS582 if (name.endsWith("X") || name.endsWith("Y") || name.endsWith("I") || name.endsWith("V")) name = "Chr" + name;
 				}	
 			}
 			if (name == null) {

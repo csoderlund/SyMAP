@@ -138,25 +138,7 @@ public class Utils {
 	    }
 		return null;
 	}
-	// The prefix must be present. if no prefix, just use the given name.
-	public static String parseGrpName(String name, String prefix){
-		name = name + " "; // hack, otherwise we need two cases in the regex
-		
-		String regx = ">\\s*(" + prefix + ")(\\w+)\\s?.*";
-		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
-		Matcher m = pat.matcher(name);
-		if (m.matches()) return m.group(2);
-		
-		return parseGrpFullName(name);
-	}
-	public static String parseGrpFullName(String in){
-		String regx = ">\\s*(\\w+)\\s?.*";
-		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
-		Matcher m = pat.matcher(in);
-		if (m.matches()) return m.group(1);
-		
-		return null;
-	}
+	
 	/********************************************************
 	 * DONE 
 	 */

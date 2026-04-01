@@ -11,6 +11,7 @@ import javax.swing.WindowConstants;
 import colordialog.ColorDialogHandler;
 import database.DBconn2;
 import props.PersistentProps;
+import symap.Globals;
 import symap.frame.HelpBar;
 
 /*****************************************************************
@@ -25,14 +26,14 @@ public class DotPlotFrame extends JFrame {
 	public DotPlotFrame(String title, DBconn2 dbc2, int projXIdx, int projYIdx) {
 		this(title, dbc2, new int[] { projXIdx, projYIdx }, null, null, null, true); 
 	}
-	// ManagerFrame for all genomes, DotPlotFrame for chromosomes, ChrExpFrame for chromosomes; 
+	// ManagerFrame for all genomes, DotPlotFrame for chromosomes, ChrExpFrame (CE) for chromosomes; 
 	public DotPlotFrame(String title, DBconn2 dbc2, int[] projIDs,
 			int[] xGroupIDs, int[] yGroupIDs, 	// null if whole genome
 			HelpBar helpBar, 					// not null if from CE
 			boolean hasRefSelector)  		    // false if from CE
 	{
 		super(title);
-		if (projIDs==null || projIDs.length==0) System.err.println("No Projects! Email symap@agcol.arizona.edu"); 
+		if (projIDs==null || projIDs.length==0) Globals.die("No Projects! Cannot continue."); 
 	
 		String type =  (hasRefSelector) ? "G" : "E";    // mark connections in Data
 		boolean is2D = (hasRefSelector) ? false : true; // for info display and Home

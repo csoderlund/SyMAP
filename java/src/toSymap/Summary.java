@@ -173,7 +173,7 @@ public class Summary {
 				if (line.startsWith(">")) {
 					if (len>0) { // process last sequence
 						totalLen += len;
-						System.out.print("  #" + cntAll +"  process ID " + idCol1 + " " + totalLen + " bases...  \r");
+						System.out.print("  #" + cntAll +"  " + idCol1 + " " + totalLen + " bases...  \r");
 						
 						for (int i=0; i < lenCutoff.length; i++) {
 							if (len<lenCutoff[i] || lenCutoff[i]==0) {

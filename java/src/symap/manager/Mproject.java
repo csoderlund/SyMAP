@@ -6,8 +6,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.sql.ResultSet;
 
 import util.ErrorReport;
@@ -47,9 +45,10 @@ public class Mproject implements Comparable <Mproject> {
 	
 	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01
-	private TreeMap<String,Integer>   grpName2Idx = new TreeMap <String, Integer> ();     // full name and name
-	private Pattern namePat;
-	private boolean bHasSelf=false; 
+	private TreeMap <String, Integer> grpName2Idx = new TreeMap <String, Integer> ();     // full name and name
+	private TreeMap <String, String>  grpName2Lab = new TreeMap <String, String> ();      // name to labname; CAS582 add
+	
+	private boolean bHasSelf=false, bHasLab=true; 
 	
 	private HashMap<String, Params> pLabelMap = new HashMap<String, Params> ();
 	private HashMap<String, Params> pKeysMap = new HashMap<String, Params> ();
@@ -76,7 +75,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (annotdate!="")  {
+			if (!annotdate.isBlank())  {// CAS572 was !=""
 				strDate = Utilities.reformatAnnotDate(annotdate);
 				if (strDate.contentEquals("???")) 
 					System.out.println("Warning: " + strName + " interrupted on load - reload");
@@ -178,21 +177,19 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public int getGrpIdxFromFullName(String name) {// can be full or short
 		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
-		return getGrpIdxRmPrefix(name);
+		return getGrpIdx(name);
 	}
 	
-	public int getGrpIdxRmPrefix(String name) {	// grpName2Idx has both w/o prefix
-		String s = name;
-		
-		Matcher m = namePat.matcher(name);
-		if (m.matches()) s = m.group(2);
-		if (grpName2Idx.containsKey(s)) return grpName2Idx.get(s);
+	public int getGrpIdx(String name) {	// grpName2Idx has both w/o prefix
+		// String prefix = getProjVal(lGrpPrefix); // CAS582 Was checking for prefix and \\w+; not necessary
+		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		return -1;
 	}
 	public String getValidGroup() { // AnnotLoadMain; 
-		String msg= grpName2Idx.size()+": ";
+		String msg= grpIdx2FullName.size()+": "; // CAS582 was using grName2Idx which has name and fullname
 		int cnt=0; 
-		for (String x : grpName2Idx.keySet())  {
+		for (int idx : grpIdx2FullName.keySet())  {
+			String x = grpIdx2FullName.get(idx);
 			msg += x + ";";
 			cnt++;
 			if (cnt>50) {
@@ -271,7 +268,7 @@ public class Mproject implements Comparable <Mproject> {
 			}
 			rs.close();
 			
-			System.err.println("Change " + idxSet.size() + " group names to remove '" + prefix + "'" );
+			Globals.prt("Change " + idxSet.size() + " group names to remove '" + prefix + "'" );
 			
 			for (int i=0; i<idxSet.size(); i++) {					
 				dbc2.executeUpdate("update xgroups set name='" + nameSet.get(i) + 
@@ -287,30 +284,28 @@ public class Mproject implements Comparable <Mproject> {
 	 */
 	public String loadProjectForView() { 
 	try {
-		TreeMap <String, Integer> chrNameMap = new TreeMap <String, Integer> (); // name, idx
 		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();// idx, chrName
 		
-	// get chrs and lengths
-		ResultSet rs = dbc2.executeQuery("select xgroups.idx, xgroups.fullname, pseudos.length from pseudos " +
+	// get chrs and lengths (CAS582 stop reading for name)
+		ResultSet rs = dbc2.executeQuery("select xgroups.idx, pseudos.length from pseudos " + 
 				" join xgroups on xgroups.idx=pseudos.grp_idx " +
 				" where xgroups.proj_idx=" + projIdx);
 		while (rs.next()) {
 			int idx = rs.getInt(1);
-			String name = rs.getString(2);
-			int len = rs.getInt(3);
-			chrNameMap.put(name, idx);
+			int len = rs.getInt(2);
 			chrLenMap.put(idx, len);
 		}
-		String desc = dbc2.executeString("select value from proj_props "
-				+ "where name='description' and proj_idx=" + projIdx); 
+		String desc = dbc2.executeString("select value from proj_props where name='description' and proj_idx=" + projIdx); 
 		
 		String info="Project " + strDisplayName + "\n";
 		if (!Utilities.isEmpty(desc)) info += desc + "\n";
 		info += "\n";
 		
-		String [] fields = {"Chr", "Length", "  ","#Genes", "AvgLen", "  ", "#Exons", "AvgLen", "  ", "Gaps"}; 
-		int [] justify =   {1,    0,    0, 0, 0, 0, 0, 0, 0, 0};
-		int nRow = chrNameMap.size()+1;
+		String [] fields = {"Chr", " ", "Length",   " ","#Genes","AvgLen",   "  ","#Exons","AvgLen",  "  ","Gaps"}; 
+		int [] justify =   {1,     1,   0,          0,    0,        0,          0,    0,        0,     0,     0};
+		if (bHasLab) fields[1] = "Name";
+				
+		int nRow = chrLenMap.size()+1;
 	    int nCol=  fields.length;
 	    String [][] rows = new String[nRow][nCol];
 	    int r=0, c=0;
@@ -318,8 +313,7 @@ public class Mproject implements Comparable <Mproject> {
 	    long totLen=0;
 	    float totAvgGenes=0, totAvgExons=0;
 	    
-	    for (String name : chrNameMap.keySet()) {
-	    	int idx = chrNameMap.get(name);
+	    for (int idx : chrLenMap.keySet()) {
 	    	rs = dbc2.executeQuery("select count(*) from pseudo_annot where type='gene' and grp_idx=" + idx);
 	    	int geneCnt = (rs.next()) ? rs.getInt(1) : 0;
 	    	
@@ -335,7 +329,11 @@ public class Mproject implements Comparable <Mproject> {
 	    	rs = dbc2.executeQuery("select AVG(end-start+1) from pseudo_annot where type='exon' and grp_idx=" + idx);
 	    	double avgelen = (rs.next()) ? rs.getDouble(1) : 0.0;
 	    	
-	    	rows[r][c++] = name;
+	    	String name = grpIdx2Name.get(idx);
+	    	String full = grpIdx2FullName.get(idx);
+	    	
+	    	rows[r][c++] = full; 
+	    	rows[r][c++] = (bHasLab) ? grpName2Lab.get(name) : "";
 	    	rows[r][c++] = String.format("%,d",chrLenMap.get(idx));
 	    	rows[r][c++] = "  ";
 	    	rows[r][c++] = String.format("%,d",geneCnt);
@@ -357,6 +355,7 @@ public class Mproject implements Comparable <Mproject> {
 	    totAvgGenes /= r;
 	    totAvgExons /= r;
 	    rows[r][c++] = "Totals";
+	    rows[r][c++] = "  ";
     	rows[r][c++] = String.format("%,d",totLen);
     	rows[r][c++] = "  ";
     	rows[r][c++] = String.format("%,d",totGenes);
@@ -607,12 +606,13 @@ public class Mproject implements Comparable <Mproject> {
 				setProjVal(sAbbrev, abbrev);
 			}
 		}
-		String regx = "(" + getProjVal(lGrpPrefix) + ")?(\\w+).*"; 
-		namePat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
 	}
 	
 	public void loadDataFromDB() throws Exception {
-		ResultSet rs = dbc2.executeQuery("select idx, fullname, name from xgroups where proj_idx=" + projIdx);
+		bHasLab = dbc2.tableColumnExists("xgroups", "labname"); // CAS582 backward
+		String sql = (bHasLab) ? ", labname" : "";
+		
+		ResultSet rs = dbc2.executeQuery("select idx, fullname, name " + sql + " from xgroups where proj_idx=" + projIdx);
 		while (rs.next()) {
 			int idx = rs.getInt(1);
 			String full = rs.getString(2);
@@ -621,10 +621,22 @@ public class Mproject implements Comparable <Mproject> {
 			grpName2Idx.put(full, idx);
 			grpName2Idx.put(name, idx);
 			grpIdx2Name.put(idx, name);
-			grpIdx2FullName.put(idx, full);
+			grpIdx2FullName.put(idx, full);	// Created in SeqLoadMain.parse2ndName
+			
+			if (bHasLab) grpName2Lab.put(name, rs.getString(4));
 		} 
 		rs.close();
 		
+		if (bHasLab) {
+			int cnt=0;
+			for (String v : grpName2Lab.values()) {
+				if (v.isBlank()) cnt++;
+			}
+			if (grpName2Lab.size()==cnt) {
+				bHasLab = false;
+				grpName2Lab.clear();
+			}
+		}
 		numGroups = dbc2.executeCount("SELECT count(*) FROM xgroups WHERE proj_idx=" + projIdx);
        
         numExon = dbc2.executeCount("select count(*) from pseudo_annot as pa " +

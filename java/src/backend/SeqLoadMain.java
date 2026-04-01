@@ -26,9 +26,12 @@ import blockview.BlockViewFrame;
  */
 public class SeqLoadMain {
 	static int projIdx = 0;
+	protected static final int maxPrtErr=2;
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE;
 	private static final int MAX_GRPS =   BlockViewFrame.MAX_GRPS; 	
 	private static final int MAX_COLORS = BlockViewFrame.maxColors; 
+	private static final int maxLenName = 20; // in input/index.html secondary name
+	
 	private Mproject mProj;
 	private DBconn2 tdbc2=null;
 	private ProgressDialog plog;
@@ -38,6 +41,7 @@ public class SeqLoadMain {
 	private long modDirDate=0;
 	private int totalnSeqs=0, cntFile=0, totalSeqIgnore=0, totalBasesWritten=0;
 	private Vector<String> grpList = new Vector<String>();
+	private int fileType=0, iNCBI=1, iEns=2; 
 	
 	protected boolean run(DBconn2 dbc2, ProgressDialog plog, Mproject mProj) throws Exception {
 		try {
@@ -174,6 +178,8 @@ public class SeqLoadMain {
 	 */
 	private boolean loadSeqFiles() {
 	try {
+		tdbc2.tableCheckAddColumn("xgroups", "labname", "VARCHAR(40) NOT NULL", "fullname"); // CAS582 backwards
+		
 		String prefix = mProj.getGrpPrefix();
 		if (prefix.contentEquals("")) plog.msg("   No sequence prefix supplied (See Parameters - Group prefix)");
 		else 						  plog.msg("   Load sequences with '" + prefix + "' prefix (See Parameters - Group prefix)");
@@ -193,13 +199,19 @@ public class SeqLoadMain {
 			plog.msg("Reading " + f.getName());
 			
 			StringBuffer curSeq = new StringBuffer();
-			String grpName = null, grpFullName = null, firstTok=null, line;
+			String grpName = null, grpFullName = null, grpLabName = null, line;
 			
 			BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); 
-
+			
 			while ((line = fh.readLine()) != null) {
 				
-				if (line.startsWith("#") || line.isEmpty()) continue; 
+				if (line.startsWith("#") || line.isEmpty()) {
+					if (line.contains("Written by SyMAP")) {
+						if (line.contains("ConvertNCBI")) fileType=iNCBI;
+						else if (line.contains("ConvertEnsembl")) fileType=iEns;
+					}
+					continue; 
+				}
 				
 				if (line.startsWith(">")) {
 					if (grpName != null && curSeq.length() >= minSize) {
@@ -215,36 +227,36 @@ public class SeqLoadMain {
 							String chrSeq = curSeq.toString(); // prevent two copies in memory at once
 							curSeq.setLength(0);
 							
-							uploadSequence(grpName,grpFullName,chrSeq,f.getName(),totalnSeqs+1);	
+							uploadSequence(grpName,grpFullName, grpLabName, chrSeq,f.getName(),totalnSeqs+1);	
 		
 							chrSeq = null;
 							System.gc();	
 						}
 						else {
-							plog.msgToFile("+++ Dup seqid: " + grpName + " (" + firstTok + ") skipping...");
+							plog.msgToFile("+++ Dup seqid: " + grpName + " skipping...");
 						}
 					} else seqIgnore++;
 					
 					readSeq++;
 					if (readSeq%100 == 0) Globals.rprt("Read sequences " + readSeq); 
 					
-					grpName = null; firstTok = grpFullName = "";
+					grpName = null;  grpFullName = "";
 					curSeq.setLength(0);
 					
-					if (!parseHasPrefix(line, prefix)){ 
+					grpName = parse1stId(line, prefix);
+					if (grpName == null){ 
 						seqPrefixIgnore++;
-						if (seqPrefixIgnore<=3) plog.msgToFile("+++ Invalid prefix, ignore: " + line);
-						if (seqPrefixIgnore==3) plog.msgToFile("+++ Surpressing further invalid prefix ");
+						if (seqPrefixIgnore<=maxPrtErr) plog.msgToFile("+++ Invalid prefix, ignore: " + line);
+						if (seqPrefixIgnore==maxPrtErr) plog.msgToFile("+++ Surpressing further invalid prefix ");
 						continue;
 					}
 					
-					grpName     = Utils.parseGrpName(line,prefix);
-					grpFullName = Utils.parseGrpFullName(line);
+					grpFullName = parse1stId(line, "");
+					grpLabName 	= parse2ndName(line, grpFullName);
+					
 					if (grpName==null || grpFullName==null || grpName.equals("") || grpFullName.equals("")){	
 						return rtError("Unable to parse group name from:" + line);
 					}
-					String [] tl = line.split(" "); 
-					firstTok = (tl.length>0) ? tl[0] :  Utils.parseGrpFullName(line); 
 				} 	
 				else if (grpName!=null) { // sequence for valid grpName
 					line = line.replaceAll("\\s+",""); 
@@ -271,7 +283,7 @@ public class SeqLoadMain {
 				
 				String chrSeq = curSeq.toString(); 
 				curSeq.setLength(0);
-				uploadSequence(grpName, grpFullName, chrSeq, f.getName(), totalnSeqs+1);	
+				uploadSequence(grpName, grpFullName, grpLabName, chrSeq, f.getName(), totalnSeqs+1);	
 				chrSeq="";
 			}
 			else if (curSeq.length()>0) seqIgnore++; 
@@ -301,24 +313,97 @@ public class SeqLoadMain {
 		return false;
 	}
 	}
-	private boolean parseHasPrefix(String name, String prefix){
-		if (prefix.equals("")) return true;
 	
-		String regx = "\\s*(" + prefix + ")(\\w+)\\s?.*"; 
-		Pattern pat = Pattern.compile(regx,Pattern.CASE_INSENSITIVE);
+	// Prefix - if no prefix, return null
+	// Prefix - remove and return what is after it
+	// No prefix - return 1st word after >
+	private String parse1stId(String lineIn, String prefix) {
+		String line = lineIn;
+		if (line.startsWith(">")) line = line.substring(1, line.length());
+
+		line = line.trim();
+		if (line.isBlank()) return null;
 		
-		String n = name + " "; // hack, otherwise we need two cases in the regex
-		if (n.startsWith(">")) n = n.substring(1);
-		Matcher m = pat.matcher(n);
-		if (m.matches()) return true;
-		return false;
+		if (prefix!=null && !prefix.isBlank()) {
+			if (line.toLowerCase().startsWith(prefix.toLowerCase())) {
+				line = line.substring(prefix.length(), line.length());
+			}
+			else return null;
+			
+		}
+		String id = line.split("\\s+")[0];
+		if (id.length()>maxLenName) {
+			plog.msgToFile("+++ Invalid Sequence Id; must be <= " + maxLenName + " characters, ignore: " + line);
+			return null;
+		}
+		
+		String regex = "^[a-zA-Z0-9-_.]*$";
+		Pattern pat = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
+		Matcher m = pat.matcher(id);
+		if (m.matches()) return id;
+		return null;
 	}
+	// CAS582 find secondary name (labname)
+	// >Chr1  NC0000.1 chromosome; xToSymap produces headers with 3 words
+	// if not 3 words, check for NCBI header
+	private String parse2ndName(String line, String mainId) {
+		String [] words = line.split("\\s+");
+		int len = words.length;
+		
+		if (len>1 && len<4 && words[1].length()<=maxLenName) {
+			if (fileType==iEns && mainId.endsWith(words[1])) return "";
+			
+			if (words[1].equals(mainId)) return "";
+			
+			return words[1];
+		}
+		
+		// NCBI Only Make the name the chromosome number
+		// >BK006935.2 TPA_inf: Saccharomyces cerevisiae S288C chromosome I, complete sequence
+		for (int i=0; i<words.length; i++) {
+			String prefix=null;
+			if (words[i].equalsIgnoreCase("chromosome"))    prefix = "Chr";
+			else if (words[i].equalsIgnoreCase("scaffold")) prefix = "Scaf";
+			else if (words[i].equalsIgnoreCase("contig"))   prefix = "Ctg";
+			else if (words[i].equalsIgnoreCase("linkage"))  prefix = "Lg";
+			
+			if (prefix!=null) { 
+				if (i+1 < words.length && words[i+1].length()<=maxLenName) {
+					String n = words[i+1];
+					if (n.contains(",")) n = n.replace(",", "");
+					
+					try {
+						int d = Integer.parseInt(n);
+						if (d<10) return String.format("%s%02d", prefix, d);
+						else      return prefix + n;
+					}
+					catch (Exception e) {}
+					
+					if (n.matches("^[XYIV]*$")) return prefix + n;
+					
+					if (n.matches("^[a-zA-Z0-9-_.]*$")) return n;
+				}
+				return prefix;
+			}
+			else {
+				String w = words[i];
+				if (w.contains(",")) w = w.replace(",", "");
+				if (w.equalsIgnoreCase("mitochondrion") || w.equalsIgnoreCase("mitochondrial")) return "Mt";
+				if (w.equalsIgnoreCase("chloroplast")) return "Cp";
+				if (w.equals("plastid")) return "Pt";
+			}
+		}
+		return "";
+	}
+	
 	/***********************************************************************/
-	private void uploadSequence(String grp, String fullname, String seq, String file, int order)  {
+	private void uploadSequence(String grpname, String fullname, String labname, String seq, String file, int order)  {
 	try {
 		// First, create the group; FIXME check for duplicates
-		tdbc2.executeUpdate("INSERT INTO xgroups VALUES('0','" + projIdx + "','" + 
-				grp + "','" + fullname + "'," + order + ",'0')" );
+		tdbc2.executeUpdate("INSERT INTO xgroups VALUES('0','" + 
+		        projIdx + "','" + grpname + "','" +  fullname + "','" +  
+				labname + "'," + order + ",'0')" ); // CAS582 add labname
+		
 		String sql = "select max(idx) as maxidx from xgroups where proj_idx=" + projIdx;
 		ResultSet rs = tdbc2.executeQuery(sql);
 		rs.next(); 
@@ -347,7 +432,7 @@ public class SeqLoadMain {
 		}
 	}
 	catch (Exception e) {
-		ErrorReport.print(e, "Fail load sequence: " +  projIdx + "','" + grp + "','" + fullname + "'," + order); 
+		ErrorReport.print(e, "Fail load sequence: " +  projIdx + "','" + grpname + "','" + fullname + "'," + order); 
 		Globals.prt("  This can happen if a project was just removed and another added immediately."); 
 	}
 	}

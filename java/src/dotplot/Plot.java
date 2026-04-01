@@ -20,6 +20,7 @@ import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
 import symap.frame.HelpListener;
+import symap.Globals;
 import symap.frame.HelpBar;
 
 /**
@@ -94,7 +95,7 @@ public class Plot extends JPanel implements HelpListener {
 		g.setColor(BACKGROUND_BORDER);
 		g.drawRect(MARGIN, MARGIN, dim.width, dim.height);
 
-	//draw title
+	//draw title of reference chromosome
 		drawCenterText(g, data.getProject(X).getDisplayName(),					// Ref
 				MARGIN, MARGIN/4 + 10,  MARGIN + dim.width, MARGIN/2,  HORZ);
 	
@@ -679,9 +680,25 @@ public class Plot extends JPanel implements HelpListener {
 			}
 			repaint();
 		}
-		public void mouseEntered(MouseEvent e) { }
+		public void mouseEntered(MouseEvent e) {}
 		public void mouseExited(MouseEvent e)  { }
-		public void mouseMoved(MouseEvent e)   { }
+		public void mouseMoved(MouseEvent e)   { // CAS582 add so chrs of tile is shown
+			if (data.isTileView()) return;
+			
+			long x = e.getX();
+			long y = e.getY();
+			
+			setDims();
+			
+			long bpX = (long)((x-MARGIN)/xPixelBP);
+			long bpY = (long)((y-MARGIN)/yPixelBP);
+			
+			if (x >= MARGIN && x <= MARGIN+dim.width && y >= MARGIN && y <= MARGIN+dim.height) {
+				String info = data.infoTile(bpX, bpY);
+				if (info!=null) lastInfoMsg = info; // will show in bottom HelpBar
+			}
+			else prtCntsInfo();
+		}
 	}
 	/****************************************************************/
 	// dotplot.properties was removed and hardcoded here

@@ -68,6 +68,30 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
 </table>
 
+<h3>Release: v5.8.2 (1-Apr-2026)</h3>
+<p>Small changes for the input.
+<ul>
+<li>Bug fix: If no category had been previously defined, <ttp>symap</ttp> would not
+bring up the <ttl>Project Parameters</ttl> window.
+<p><li>Input files:
+	<ul>
+	<li><ttp>xToSymap</ttp>: For NCBI files, an input sequence is considered a
+	chromosome if the header line <tt>seqid</tt> starts with NC_. Now it will also be considered a chromosome
+	if the header line contains the word "chromosome".
+	<p><li><ttl>Load Project</ttl>:
+		<ul><li>A sequence identifier was restricted to letters and numbers; now it can also include
+		"_", "-" and ".".
+		<li>A secondary name can now be associated with the
+		sequence identifier, see <a href="./input/index.html#seqprep">Sequence files</a>.
+		Both identifiers will be shown in <ttl>View</ttl>. This requires a small database
+		change, but it is done on <ttl>Load Project</ttl>.
+		</ul>
+	</ul>
+<p>
+<li><ttp>Dot Plot</ttp>: When the mouse is over a chr-chr cell in the whole genome view, the Chromosome names will be shown.
+If either has a secondary name, it will be shown too.
+</ul>
+
 <h3>Release: v5.8.1 (11-Mar-2026)</h3>
 Two small improvements to the <ttl>Alignment&amp;Synteny</ttl>.
 <p><ul>

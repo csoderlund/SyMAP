@@ -11,7 +11,6 @@ import java.util.Vector;
 
 import database.DBconn2;
 import props.PropsDB;
-import symap.Globals;
 import symap.drawingpanel.SyMAP2d;
 import symap.mapper.HfilterData;
 import util.ErrorReport;
@@ -49,11 +48,14 @@ public class Data  {
 	private DBconn2 tdbc2;
 	private DBload dbLoad;
 	protected boolean isSelf=false; 
+	private boolean bHasLab = false; // CAS582 backwards
 	
 	// Called from DotPlotFrame; for ChrExp, called on first time its used
 	protected Data(DBconn2 dbc2, String type, boolean is2d) {
 		try { 
 			tdbc2 = new DBconn2("Dotplot" + type + "-" + DBconn2.getNumConn(), dbc2);
+			bHasLab = tdbc2.tableColumnExists("xgroups", "labname");
+			
 			this.is2D = is2d;
 			
 			dbLoad = new DBload(tdbc2); 
@@ -264,6 +266,20 @@ public class Data  {
 	
 	protected void    show2dArea() 	  {show2dArea(sX1,sY1,sX2,sY2);}
 		
+	// Plot.PlotListerer mouseEnter; CAS582 add
+	protected String infoTile(long xUnits, long yUnits) {
+		if (projects[X] == null || projects[Y] == null) return null;
+		
+		Group gx = projects[X].getGroupByOffset(xUnits);
+		if (gx==null) return null;
+		Group gy = getGroupByOffset(yUnits, getVisibleGroupsY(getVisibleGroups(X)));
+		if (gy==null) return null;
+		
+		String grpX = gx.getFullLabName();
+		String grpY = gy.getFullLabName();
+		
+		return grpX + " - " + grpY;
+	}
 	// Plot.PlotListener mouseClick
 	protected boolean selectTile(long xUnits, long yUnits) {
 		if (projects[X] == null || projects[Y] == null) return false;
@@ -447,7 +463,11 @@ public class Data  {
 		protected void loadGrpsAndBlocks(Project[] projects, int[] xGroupIDs, int[] yGroupIDs, PropsDB pp) {
 		try {
 			Vector<Group> list = new Vector<Group>();
-			String qry;
+			
+			String sql = "SELECT g.idx, g.sort_order, g.name, g.fullname, p.length ";
+			if (bHasLab) sql += ", g.labname";				// CAS582 backwards
+			sql += " FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) ";
+			
 			ResultSet rs;
 			String groupList = null;
 			
@@ -461,17 +481,16 @@ public class Data  {
 				}
 				String inGrp =  (groupList == null) ? "" : " AND g.idx IN " + groupList;
 				
-				qry = "SELECT g.idx, g.sort_order, g.name, g.fullname, p.length " + 
-					  " FROM xgroups AS g JOIN pseudos AS p ON (p.grp_idx=g.idx) " +
-					  " WHERE g.proj_idx=" + prj.getID() +  inGrp + 
-					  " AND g.sort_order > 0 ORDER BY g.sort_order";
+				String qry = sql + " WHERE g.proj_idx=" + prj.getID() +  inGrp + " AND g.sort_order > 0 ORDER BY g.sort_order";
 				
 				rs = tdbc2.executeQuery(qry);
 				while (rs.next()) {
 					int idx = rs.getInt(1);
 					Group g = prj.getGroupByID(idx);
-					if (g == null)
-						g = new Group(idx, rs.getInt(2), rs.getString(3), rs.getString(4), rs.getInt(5),  prj.getID());
+					if (g == null) {
+						String lab = (bHasLab) ? rs.getString(6) : ""; 
+						g = new Group(idx, rs.getInt(2), rs.getString(3), rs.getString(4), lab, rs.getInt(5), prj.getID());
+					}
 					list.add(g);
 				}
 				prj.setGroups( list.toArray(new Group[0]) );
@@ -492,7 +511,7 @@ public class Data  {
 				int p1 =  (swapped) ? pX.getID() : pY.getID();
 				int p2 =  (swapped) ? pY.getID() : pX.getID();
 				
-				qry = "SELECT b.grp1_idx, b.grp2_idx " +
+				String qry = "SELECT b.grp1_idx, b.grp2_idx " +
 					  " FROM blocks AS b " +
 					  " JOIN xgroups AS g ON (g.idx=b.grp1_idx) " +
 				      " WHERE (b.proj1_idx=" + p1 + " AND b.proj2_idx=" + p2 + inGrp + 

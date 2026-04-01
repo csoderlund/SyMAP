@@ -100,6 +100,10 @@ public class Version {
 				updateVer6();
 				idb=7;
 			}
+			if (idb==7) {// CAS582 not used yet
+				updateVer7();
+				idb=8;
+			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Error checking database version");}
 	}
@@ -207,7 +211,13 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database");}
 	}
-	
+	// DB 7 has not happened; this contains on-the-fly add; to be done officially when there is more to add
+	private void updateVer7() {
+		try {
+			dbc2.tableCheckAddColumn("xgroups", "labname", "VARCHAR(40) NOT NULL", "fullname"); // search CAS582 backwards
+		}
+		catch (Exception e) {ErrorReport.print(e, "Could not update database for v7");}
+	}
 	/****************************************************
 	 * -dbd
 	 */

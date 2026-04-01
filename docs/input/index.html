@@ -61,6 +61,7 @@
    <tr><td>&nbsp;&nbsp;<td><a href="#seqprep">Sequence</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#annot">Annotation</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#dir">Location of files</a> <!-- ref# in code -->
+    <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#load">Load Project</a>
    </table>
 
 <td style="vertical-align: text-top;">
@@ -82,8 +83,10 @@
 <td style="vertical-align: text-top;">
    <table>
    <tr><td>&nbsp;&nbsp;<td><u>General</u>
-   <tr><td>&nbsp;&nbsp;<td> <a href="#edit">Editing the convert scripts</a>
+   <tr><td>&nbsp;&nbsp;<td> <a href="#second">Secondary name</a>
+    <tr><td>&nbsp;&nbsp;<td> <a href="#orig">Loading the original files</a>
    <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td> <a href="#tg">Tested Genomes</a>
+   <tr><td>&nbsp;&nbsp;<td> <a href="#edit">Editing the convert scripts</a>
 
    </table>
 </table>
@@ -103,7 +106,7 @@ The input is one or more FASTA files of chromosome, sequenced contigs or scaffol
 annotation file(s).
 <p>
 <ul>
-<li>As of v5.5.7, NCBI and Ensembl files can be loaded directly.
+<li>As of v5.5.7, many NCBI and Ensembl files can be loaded directly, though variations could limit some.
 See <a href="#tg">Tested genomes</a> for results on loading the files directly.
 <p>
 <li><ttp>xToSymap</ttp> converts the NCBI and Ensembl files to a format friendly to <ttp>symap</ttp>;
@@ -118,29 +121,29 @@ used by a terminal application.
 <a id="seqprep"></a> <!-- accessed in SystemHelp -->
 <h3>Sequence files</h3>
 The sequence file(s) must be FASTA format with one or more sequences.
-For the FASTA format, the name of a sequence is the string immediately following the "&gt;", e.g.
-<pre>
-&gt;Chr3  Oryza Sativa
-GAATTCGAATTTGGGTAATGCTAATCAATACAGGTCAAAATCTATGTATTGAGTGGAATATACTGCAAAGTAATTACCTT
-CTTCCAAAGGAAAGCATTCCTTCTCTCTTGTGGGACTAGCAGATGATCTCGCAGCCAAGACGTGACCACCCAAGGCTCAC
-...
+A header line, which starts with a "&gt;", occurs before the sequence, e.g.
+<p><pre>
+  >Chr01 NC_003070.9 chromosome
+  ccctaaaccctaaaccctaaaccctaaacctctGAATCCTTAATCCCTAAATCCCTAAATCTTTAAATCCTACATCCATG
+  AATCCCTAAATACCTAAttccctaaacccgaaaccggTTTCTCTGGTTGAAAATCATTGTGtatataatgataattttat...
 </pre>
-In this example, the sequence name is "Chr3" and the chromosome 3 sequence follows. The additional information
-"Oryza Sativa" is ignored.
+The first word (<tt>Chr01</tt>) is used as the sequence identifier (<ttx>seqid</ttx>) in <ttp>symap</ttp>.
+If the <ttx>seqid</ttx> is &gt;20 characters, the sequence will be ignored.
+See <a href="#second">Secondary name</a> for assigning NC_003070.9 as the secondary name.
 
 <p>
 <i>Important points in naming sequences for SyMAP</i>:
 <table style="margin-left:10px;margin-top:5px;padding:5px">
    <tr><td style="vertical-align: text-top;">A.
       <td style="vertical-align: text-top;">
-         Sequence names <u>can only contain</u> letters, numbers, and underscores.
+         Sequence identifiers <u>can only contain</u> letters, numbers, underscores "_", dash "-" or period ".".
          This is in contrast with names allowed in
          <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 files</a>,
-         which allows the <ttx>seqid</ttx> to contain the additional characters of [.:^*$@!+?-|].
-         The sequence name (<ttx>seqid</ttx>) must be renamed if it contains any of these characters.
+         which allows the <ttx>seqid</ttx> to contain the additional characters of [:^*$@!+?|].
+         The sequence identifier (<ttx>seqid</ttx>) must be renamed if it contains any of these characters.
    <tr><td style="vertical-align: text-top;">B.
       <td style="vertical-align: text-top;">
-         The sequence names <u>must <i>exactly</i> </u>match those
+         The sequence identifiers <u>must <i>exactly</i> </u>match those
          used in the annotation files (first column), or the annotations will not be loaded.
    <tr><td style="vertical-align: text-top;">C.
       <td style="vertical-align: text-top;">
@@ -202,7 +205,7 @@ which is a tab-delimited file of 9 columns.
 
 <table class="tx">
 <tr><td  style="vertical-align: text-top;"><ttx>Seqid</ttx>
-     <td>The first column must exactly match the sequence names in the FASTA files.
+     <td>The first column must exactly match the sequence identifier in the FASTA files.
 <tr><td  style="vertical-align: text-top;"><ttx>Type</ttx>
     <td>The third column determines how SyMAP uses the entry.
 	<br>Only types <ttx>gene</ttx>, <ttx>mRNA</ttx>, <ttx>exon</ttx>, <ttx>gap</ttx> or <ttx>centromere</ttx> are recognized.
@@ -335,6 +338,8 @@ panel to enter the location of the sequences and optional annotation files into 
 and <ttx>Anno files</ttx> parameters.
 </ul>
 </ol>
+<a id="load"></a>
+<h4>Load Project</h4>
 <p>For options 1-3, it is not necessary to enter the locations of the files in the
 <a href="SystemHelp.html#projParams" class="ext" target="_blank"> project parameter</a> panel since
 they use the default locations.
@@ -348,9 +353,11 @@ using its <ttl>Display name</ttl>, which is set in the project's parameters.
 the label <ttl>Directory</ttl>.
 <td>
 <a href="../img/demoLoad.png"><img src="../img/demoLoad.png" alt="projNew2" style="border: 1px solid black; width: 450px"></a>
-</table>
+<tr><td>
 <u>Load project</u> accesses the files and loads them into the database.
-
+Once loaded, the <u>View</u> option will be present. <i>Always check the results before continuing!!</i>
+<td><a href="./img/loaded.png"><img src="./img/loaded.png" alt="loaded" style="border: 1px solid black; width: 450px"></a>
+</table>
 <p>The <ttp>symap</ttp> program requires the directories to be present (and will create them if necessary),
 <ttp>viewSymap</ttp> does not access the directories.
 
@@ -405,13 +412,13 @@ Perform the following steps:
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sf1">Summarize</a>
 		<br>with <ttl>Converted</ttl>
 	<td>Run this to make sure that the conversion worked as you expected.
-	<br>This shows the sequence prefixes, and can be used to set the <ttl>Group Prefix</ttl>
+	<br>This shows the sequence prefixes, and can be used to set the <ttx>Group Prefix</ttx>
 	in the <ttp>symap</ttp>  <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
-<tr><td colspan=3>Optional. The following run on the files in the <ttx>/sequence</ttx> and <ttx>/annotation</ttx>
+<tr><td colspan=3>Optional. The following run on the files in the <tt>/sequence</tt> and <tt>/annotation</tt>
 		sub-directories.
 <tr><td style="vertical-align: text-top;">4.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#ol">Lengths</a>
-	<td>Run it to see if you need to set a <ttl>Minimal lengths</ttl> value in
+	<td>Run it to see if you need to set a <ttx>Minimal lengths</ttx> value in
 	<ttp>symap</ttp> <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
 <tr><td style="vertical-align: text-top;">5.
 	<td style="white-space: nowrap; vertical-align: text-top;"><a href="#sp">Split</a>
@@ -579,12 +586,14 @@ The FASTA files must be in the project's <ttx>/sequence</ttx> sub-directory
 to work. It reads the FASTA file(s), prints out the names and lengths of all sequences, then
 writes a summary.
 <p><i>Summary</i>: If your file has many small scaffolds and you just want to process the large
-ones, the summary will help you decide what to you as the project's
+ones, the summary will help you decide what value to use as the
+
 <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Parameter</a>
-<ttl>Minimum length</ttl> values. For example, the following <ttb>Length</ttb> output:
+<ttx>Minimum length</ttx> values. For example, the following is output from  <ttb>Length</ttb>:
 <p>
 <pre>
 Values for parameter 'Minimal length' (assuming no duplicate lengths):
+
 #Seqs Minimum length
    10  550,871
    20  193,719
@@ -597,7 +606,7 @@ Values for parameter 'Minimal length' (assuming no duplicate lengths):
    90   61,049
   100   58,280
 </pre>
-If you set the minimal length at 550871, SyMAP will process the 10 largest sequences.
+If you set the <ttx>Minimal length</ttx> at 550,871, SyMAP will process the 10 largest sequences.
 
 <a id="sp"></a>
 <h3>Split</h3>
@@ -621,27 +630,54 @@ remove the ones you do not want processed.
 <a id="gen"></a>
 <h2>General</h2>
 <table class="tz"><tr>
-<td><a href="#edit">Editing the convert scripts</a>
+<td><a href="#second">Secondary name</a>
+<td><a href="#orig">Original files</a>
 <td><a href="#tg">Tested genomes</a>
+<td><a href="#edit">Editing the convert scripts</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<a id="edit"></a>
-<h3>Editing the convert scripts</h3>
+<!---------------------------------------------------------->
+<a id="second"></a>
+<h3>Secondary name</h3>
+
+A secondary name can be assigned during the <ttp>symap</ttp> <ttl>Load Project</ttl> action.
+If a sequence header has between 2-3 words,
+the 2nd word will be used as the secondary name as long as it is &lt;=20 characters.
+
+The following example shows the header line of an NCBI <ttp>xToSymap</ttp> converted file.
+<p><pre>
+  >Chr01 NC_003070.9 chromosome
+</pre>
+<table><tr><td>
+The <ttp>symap</ttp> <ttb>Load Project</ttb> will make
+Chr01 the unique identifier and NC_003070.9 will be its secondary name.
+This secondary name will be shown on the <ttl>View</ttl> popup.
+<p>Ensembl <ttp>xToSymap</ttp> converted files do not have a secondary name.
+<p><font color="green">Note: The secondary name was introduced in v5.8.2.</font>
+<td><a href="./img/viewA.png"><img src="./img/viewA.png" alt="View with secondary" style="border: 1px solid black; width: 350px"></a>
+</table>
+
+<a id="orig"></a>
+<h3>Original files</h3>
+<p><i>Load Original NCBI File</i>: Though it is not recommended, the original NCBI
+files will probably load. An example header line will be:
+<p><pre>
+  >NC_003070.9 Arabidopsis thaliana chromosome 1 sequence
+</pre>
+In this case, NC_003070.9 will be its identifier and "Chr01" will be its secondary name.
+The secondary name is only assigned if the value "chromosome " or "scaffold " exists on the header line.
+
+<p><i>Load Original Ensembl File</i>: This will usually work, but generally no secondary name is assigned.
+However, in some cases it does assign one incorrectly, which will look weird in <ttp>View</ttp>.
+
+<p>Loading the original files can lead to small problems. For example,
 <ul>
-<li>The convert scripts are in the <tt>symap_5/scripts</tt> directory called
-<tt>convertNCBI.java</tt> and <tt>convertEnsembl.java</tt>.
-<p>
-<li>Move the one you want to change to the <tt>symap_5/data/seq</tt> directory, as
-it must be run from there.
-<p>
-<li>Once you make your changes, execute: <tt>javac ConvertNCBI.java</tt>
-<br>You will need to have JDK installed to use the <tt>javac</tt> command.
-<p>
-<li>To run your compiled script:
-<tt>java ConvertNCBI &lt;project directory name&gt;</tt>
+<li><ttp>symap</ttp> will load names with the "." in them to preserve the original name,
+but these cannot be searched on in <ttl>Query</ttl>.
+<li>Genes are not restricted to protein-coding.
+<li>See <a href="#orig2">Load original files</a> for more examples.
 </ul>
-<p>These scripts are simply written, using only standard operations found in all major languages.
 
 <p>
 <!---------------------------------------------------------->
@@ -663,43 +699,11 @@ In Aug 2024, the scripts were tested on the following:
 <tr><td>Homo Sapiens (human)<td>Chr 1-22, X, Y<td>Chr 1-22, X, Y<td style="text-align: right">3,298M<td>&nbsp;
 </table>
 <p>See <a href="../SystemGuide.html#time"  class="ext" target="_blank">Times</a> for more about tested genomes and the compute time.
-<h4>Load original files</h4>
-<p>To <u>load the originals files</u> into SyMAP, the following was done:
-<ul>
-<li>Create <tt>/sequence</tt> and move the FASTA file into it.
-<li>Create <tt>/annotation</tt> and move the GFF file into it.
-<li>Run the <ttp>xToSymap</ttp> <ttb>Summarize</ttb> and <ttb>Lengths</ttb> functions.
-<ul><li>For Ensembl, a <ttl>Minimal length</ttl> was set to only load the sequence &gt;= the smallest chromosome length.
-<li>For NCBI, <ttl>Group prefix</ttl> to 'NC_' to only load the chromosomes.
-</ul>
-
-<p>For example, for species such as Homo Sapiens, if <tt>Group prefix</tt> or <tt>Minimal length</tt> were NOT specified,
-over 500 sequences were loaded.
-With Ensembl, it also had a problem
-with duplicate entries because it has scaffold names such as HSCHR19KIR_CA01-TB04_CTG3_1 and HSCHR19KIR_CA01-TB01_CTG3_1,
-where the name was truncated at the "-", hence, HSCHR19KIR_CA01 is a duplicate name.
-</ul>
-
-Problem during <ttb>Load</ttb> of originals:
-<ul>
-<li>Ensembl Danio rerio (zebrafish): It could not be loaded without conversion.
-It has 1922 sequences where most of them had prefix "ALT", the word 'chromosome' in their header line,
-and were the size of their REF chromosome,
-so setting a <tt>Minimal length</tt> did not exclude them. And there was no unique chromosome ID prefix to use as
-the <tt>Group prefix</tt> in <ttp>symap</ttp>.
-</ul>
-
-<p><ttb>A&S</ttb> with the originals:
-<ul>
-<li>Ensembl Oryza and NCBI Arabidopsis were aligned and synteny computed.
-There was no problem with the Synteny, but the Arabidopsis names cluttered the displays, and there were many attributes for each.
-<li>NCBI Mus musculus and Homo Sapiens were converted/split and their Chr17 successfully aligned.
-</ul>
 
 <!-------------------------------------------->
 <a id="except"></a>
-<h4>Exceptions</h4>
-<p>Exceptions to <u>load the converted files</u> into SyMAP: The above downloaded genomes were all converted with the defaults,
+<h4>xToSymap - exceptions to the defaults</h4>
+<p>The above downloaded genomes were all converted with the <ttp>xToSymap</ttp> defaults,
 with the following exceptions:
 <p>
 <ul>
@@ -709,11 +713,11 @@ hence, the <ttl>Only #,X,Y,I</ttl> option was used.
 <li>Ensembl Bemisia tabaci (whitefly): The words 'chromosome' or 'scaffold'
 were NOT part of the header lines. The header line ID prefix was 'Contig',
 hence, the <ttl>Prefix only</ttl>='Contig' was used; the output used the sequence ID prefix 'Unk'.
-Then <ttb>Lengths</ttb> was used to determine a <ttl>Minimal length</ttl>
+Then <ttb>Lengths</ttb> was used to determine a <ttx>Minimal length</ttx>
 to enter on <ttp>symap</ttp> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
 <br>&nbsp;
 <li>NCBI Bemisia tabaci (whitefly): Only had scaffolds, so including <ttl>Scaffolds</ttl> was necessary.
-Then <ttb>Lengths</ttb> was used to determine a <ttl>Minimal length</ttl>
+Then <ttb>Lengths</ttb> was used to determine a <ttx>Minimal length</ttx>
 to enter on <ttp>symap</ttp> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
 <br>&nbsp;
 <li>NCBI Prunus yedoensis:
@@ -732,6 +736,58 @@ If not, you may want to edit the script to tailor it (see <a href="#edit">Edit</
 Alternatively,
    you can contact me (cas1@arizona.edu) and I will make the edit for you (it allows me to add the your variation to
    <ttp>xToSymap</ttp>).
+
+<a id="orig2"></a>
+<h4>Load original files</h4>
+<p>To <u>load the originals files</u> into SyMAP, the following was done:
+<ul>
+<li>Create <tt>/sequence</tt> and move the FASTA file into it.
+<li>Create <tt>/annotation</tt> and move the GFF file into it.
+<li>Run the <ttp>xToSymap</ttp> <ttb>Summarize</ttb> and <ttb>Lengths</ttb> functions.
+<ul><li>For Ensembl, a <ttx>Minimal length</ttx> was set to only load the sequence &gt;= the smallest chromosome length.
+<li>For NCBI, <ttx>Group prefix</ttx> to 'NC_' to only load the chromosomes.
+</ul>
+
+<p>For example, for species such as Homo Sapiens, if <ttx>Group prefix</ttx> or <ttx>Minimal length</ttx> were NOT specified,
+over 500 sequences were loaded.
+With Ensembl, it also had a problem
+with duplicate entries because it has scaffold names such as HSCHR19KIR_CA01-TB04_CTG3_1 and HSCHR19KIR_CA01-TB01_CTG3_1,
+where the name was truncated at the "-", hence, HSCHR19KIR_CA01 is a duplicate name.
+</ul>
+
+Problem during <ttb>Load</ttb> of originals:
+<ul>
+<li>Ensembl Danio rerio (zebrafish): It could not be loaded without conversion.
+It has 1922 sequences where most of them had prefix "ALT", the word 'chromosome' in their header line,
+and were the size of their REF chromosome,
+so setting a <ttx>Minimal length</ttx> did not exclude them. And there was no unique chromosome ID prefix to use as
+the <ttx>Group prefix</ttx> in <ttp>symap</ttp>.
+</ul>
+
+<p><ttb>A&S</ttb> with the originals:
+<ul>
+<li>Ensembl Oryza and NCBI Arabidopsis were aligned and synteny computed.
+There was no problem with the Synteny, but the Arabidopsis names cluttered the displays, and there were many attributes for each.
+<li>NCBI Mus musculus and Homo Sapiens were converted/split and their Chr17 successfully aligned.
+</ul>
+
+<!---------------------------------------------------------->
+<a id="edit"></a>
+<h3>Editing the convert scripts</h3>
+<ul>
+<li>The convert scripts are in the <tt>symap_5/scripts</tt> directory called
+<tt>convertNCBI.java</tt> and <tt>convertEnsembl.java</tt>.
+<p>
+<li>Move the one you want to change to the <tt>symap_5/data/seq</tt> directory, as
+it must be run from there.
+<p>
+<li>Once you make your changes, execute: <tt>javac ConvertNCBI.java</tt>
+<br>You will need to have JDK installed to use the <tt>javac</tt> command.
+<p>
+<li>To run your compiled script:
+<tt>java ConvertNCBI &lt;project directory name&gt;</tt>
+</ul>
+<p>These scripts are simply written, using only standard operations found in all major languages.
 
 <!---- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">

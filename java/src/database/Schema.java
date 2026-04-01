@@ -58,6 +58,7 @@ public class Schema {
 		    "proj_idx                INTEGER NOT NULL," +
 		    "name                    VARCHAR(40) NOT NULL," +
 		    "fullname                VARCHAR(40) NOT NULL," +
+		    "labname				 VARCHAR(40) NOT NULL," +  // CAS582 NCBI/Ens name; add in SeqLoadMain.loadSeqFiles()
 		    "sort_order              INTEGER UNSIGNED NOT NULL," +
 			"flipped				 BOOLEAN default 0," +
 		    "PRIMARY KEY (idx)," +

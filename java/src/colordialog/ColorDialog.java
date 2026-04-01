@@ -297,7 +297,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 			((ColorTab) c).setDefault();
 		}
 		catch (Exception e) {
-			ErrorReport.print(e, "This feature does not work on this machine. Setting all defaults. (Please email symap@agcol.arizona.edu)");
+			ErrorReport.print(e, "This feature does not work on this machine. Setting all defaults. Please email cas1@arizona.edu"); // CAS582
 			Component[] comps = tabbedPane.getComponents();
 			for (int i = 0; i < comps.length; i++) 
 				if (comps[i] instanceof ColorTab) 

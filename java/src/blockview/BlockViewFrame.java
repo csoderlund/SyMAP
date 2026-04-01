@@ -109,7 +109,7 @@ public class BlockViewFrame extends JFrame{
 				System.out.println("Warning: one of the genomes has >" + MAX_GRPS + " sequences");
 				System.out.println("   this causes the 'reverse' option to not work on the block view");
 				System.out.println("   use scripts/lenFasta.pl to find cutoff length for Minimum Length.");
-				System.out.println("   email symap@agcol.arizona.edu if you would like further instructions");
+				System.out.println("   email cas1@arizona.edu if you would like further instructions"); // CAS582
 			}
 			cRow.gridx++;
 			topRow.add(new JLabel("      "),cRow);

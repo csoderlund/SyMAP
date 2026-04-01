@@ -115,7 +115,7 @@ public class ProjParams extends JDialog {
 		boolean bReload=true, bReAlign=true;
 		
 		theFields = new Field[11]; // If change #fields, change!
-		theFields[i++] = new Field(mProj.sCategory, catArr, 1, 	!bReload, !bReAlign, true);// true -> add text field
+		theFields[i++] = new Field(mProj.sCategory, catArr, 0, 	!bReload, !bReAlign, true);// true -> add text field; CAS582 was '1' 
 		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
 		theFields[i++] = new Field(mProj.sAbbrev, 1, 	!bReload, !bReAlign); 
@@ -569,6 +569,10 @@ public class ProjParams extends JDialog {
 			
 			nMode = MODE_COMBO;
 			comboBox = new JComboBox <String> (options);
+			if (selection>=options.length) {
+				Globals.prt("Category options: " + options.length + " Selection: " + selection);
+				Globals.die("SyMAP error - cannot display SyMAP");
+			}
 			comboBox.setSelectedIndex(selection);
 			comboBox.setBackground(Color.WHITE);
 			comboBox.setMinimumSize(comboBox.getPreferredSize());
