@@ -479,7 +479,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         }        
         if (totalSizeShown == 0) {System.out.println("Nothing to show!");return;}
 
-        int curArc = 0, curColor = 0;				// increments through projects
+        int curArc = 0;				// increments through projects
         
     // Loop through projects draw name, arc, ribbons 
         for (Project prjObj : allProjVec) {
@@ -514,14 +514,14 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
         	int midArc = (curArc + nextArc)/2;
             paintProjName(g, prjObj, midArc, rOuter + sp); // Sets font for name and chromosome numbers
             
-        	prjObj.setGrpArc(curArc, nextArc-1, curColor); // set start/end of grps; this makes a 1 degree gap between projects
+        	prjObj.setGrpArc(curArc, nextArc-1); // set start/end of grps; this makes a 1 degree gap between projects
  
         	Font f = g.getFont();
         	
         	// Loop through chromosomes to draw chr# and chr outer arc
         	for (Group grpObj : prjObj.grps) {
         		if (!grpObj.isSel) continue;
-        		if (grpObj.colorIdx>=colorVec.size()) {
+        		if (grpObj.colorIdx>=colorVec.size()) { // set during initDS
         			dprt("Color out of range " + grpObj.colorIdx + " " + colorVec.size());
         			grpObj.colorIdx=colorVec.size()-1;
         		}
@@ -562,8 +562,6 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
     				g.drawString(grpObj.grpName, pX, pY);   
     			}
         	}
-        	
-        	curColor += prjObj.grps.size();
         	curArc = nextArc;
         } // end loop through projects
         
@@ -804,7 +802,7 @@ public class CircPanel extends JPanel implements HelpListener, MouseListener,Mou
 				if (g.isSel) projSizeShown += ((double)g.size);
 			}
 		}	
-		private void setGrpArc(int a1, int a2, int cidx){
+		private void setGrpArc(int a1, int a2){ // curArc, nextArc-1; CAS583 was not using cidx colorIdx
 			int cnt = 0, nShown = 0;
 			for (Group g : grps) 
 				if (g.isSel) nShown++;

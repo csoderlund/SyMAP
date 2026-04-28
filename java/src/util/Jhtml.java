@@ -44,7 +44,8 @@ public class Jhtml {
 	public static final String USER_GUIDE_URL =  BASE_HELP_URL + "UserGuide.html"; 
 	public static final String exp = 		"#explorer"; // CAS580 add for Link on Explorer left side
 	public static final String view =  		"#views";	// viewSymap right side of manager
-	public static final String circle =  	"#circle";				
+	public static final String circle =  	"#circle";	
+	public static final String linear =  	"#linear";	// CAS583 new
 	public static final String dotplot = 	"#dotplot_display";
 	public static final String align2d = 	"#alignment_display_2d";
 	public static final String colorIcon =  "#wheel";

@@ -23,6 +23,7 @@ import backend.DoAlignSynPair;
 
 import blockview.BlockViewFrame;
 import circview.CircFrame;
+import circflatview.FlatFrame;
 import dotplot.DotPlotFrame;
 import props.PropertiesReader;
 import symap.Ext;
@@ -56,7 +57,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 * Command line arguments; set in symapCE.SyMAPmanager main 
 	 */
 	protected static boolean inReadOnlyMode = false;// set from viewSymap script with -r
-	
+
 	// On ManagerFrame panel
 	public static int maxCPU=-1;			// SyMAPmanager -p; used in mummer and symapQuery
 	
@@ -101,7 +102,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private int totalCPUs=0;
 	
 	private JButton btnAllChrExp, btnSelDotplot, btnAllDotplot, btnSelClearPair,
-		btnSelBlockView, btnSelCircView, btnAllQueryView, btnSelReports, 
+		btnSelBlockView, btnSelCircView, btnSelFlatView, btnAllQueryView, btnSelReports, 
 	    btnAddProject = null, btnSelAlign, btnPairParams;
 	
 	private JSplitPane splitPane;
@@ -310,7 +311,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		return panel;
 	}
-	/***** Right panel of selected projects ***********************************************/
+	/***** XXX Right panel of selected projects ***********************************************/
 	private JPanel createSelectedPanel() { // CAS580 make look better on Linux and compress buttons
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout( new BoxLayout ( mainPanel, BoxLayout.Y_AXIS ) );
@@ -537,6 +538,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				showCircleView();
 			}
 		});
+		btnSelFlatView = Jcomp.createButton("Linear", "Display Linear View for selected pair"); 
+		btnSelFlatView.addActionListener( new ActionListener() {
+			public void actionPerformed(ActionEvent e) { 
+				showLinearView();
+			}
+		});
 		
 		btnSelReports = Jcomp.createButton("Reports...", "Select 'Summary' or 'Block Report'");
 		showReports(); // adds drop-down
@@ -591,7 +598,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		butPanel.add( Box.createRigidArea(new Dimension(0,15))); 
 		butPanel.add( Jcomp.createHorizPanel( new Component[] {lblSel, 
-				btnSelCircView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp, ex) );
+				btnSelCircView, btnSelFlatView, btnSelDotplot, btnSelBlockView, null, btnSelReports }, sp-2, ex) );
 
 		butPanel.add( Box.createRigidArea(new Dimension(0,15)));
 		butPanel.add( Jcomp.createHorizPanel( new Component[] {lblAll, 
@@ -726,14 +733,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Mproject[] projects = getSelectedPair();  // null if nothing selected
 		btnPairParams.setEnabled(projects!=null);  
 		
-		int numDone = getNumCompleted(false); 	// !ignore isSelf; 
-		btnAllChrExp.setEnabled(numDone>0);
-		btnAllQueryView.setEnabled(numDone>0); 	// allow for isSelf
+		int numDoneSelf = getNumCompleted(false); 	// !ignore isSelf; 
+		btnAllChrExp.setEnabled(numDoneSelf>0);
+		btnAllQueryView.setEnabled(numDoneSelf>0); 	// allow for isSelf
 		
-		numDone = getNumCompleted(true); 		// ignore isSelfs
-		btnAllDotplot.setEnabled(numDone>0);    // this does not work for isSelf
+		int numDone = getNumCompleted(true); 		// ignore isSelfs
+		btnAllDotplot.setEnabled(numDone>0);    	// this does not work for isSelf
 		
-		if ((projects!=null)) {
+		if ((projects!=null)) { // Something is selected
 			int nRow = pairTable.getSelectedRow();
 			int nCol = pairTable.getSelectedColumn();
 			String val = (String)pairTable.getValueAt(nRow, nCol);
@@ -760,15 +767,19 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelAlign.setEnabled(true);
 			btnSelClearPair.setEnabled(allDone || partDone);
 			btnSelDotplot.setEnabled( allDone ); 
-			btnSelCircView.setEnabled(allDone);  
+			btnSelCircView.setEnabled(allDone); 
 			btnSelReports.setEnabled(allDone);  
 			btnSelBlockView.setEnabled(allDone); 
+			
+			boolean isSelf = projects.length==2 && projects[0].getIdx()==projects[1].getIdx();
+			btnSelFlatView.setEnabled(!isSelf && allDone); // Linear not working for isSelf
 		}
 		else {
 			btnSelAlign.setEnabled(false);
 			btnSelClearPair.setEnabled(false);
 			btnSelDotplot.setEnabled(false); 
-			btnSelCircView.setEnabled(false);  
+			btnSelCircView.setEnabled(false); 
+			btnSelFlatView.setEnabled(false); 
 			btnSelReports.setEnabled(false);  
 			btnSelBlockView.setEnabled(false);
 		}
@@ -1269,6 +1280,22 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		CircFrame frame = new CircFrame(frameTitle + " - Circle", dbc2, projXIdx, projYIdx, hasSelf);
 		frame.setSize( new Dimension(MIN_CWIDTH, MIN_CHEIGHT) );
+		frame.setVisible(true);
+		
+		Jcomp.setCursorBusy(this, false);
+	}
+	/*****************************************************************/
+	private void showLinearView() { 
+		Jcomp.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		int projXIdx = p[0].getID();
+		int projYIdx = (p.length==1) ? projXIdx : p[1].getID();
+		
+		FlatFrame frame = new FlatFrame(frameTitle + " - Linear", dbc2, projXIdx, projYIdx);
+		frame.setSize(new Dimension(MIN_CWIDTH, MIN_CHEIGHT/2));
 		frame.setVisible(true);
 		
 		Jcomp.setCursorBusy(this, false);

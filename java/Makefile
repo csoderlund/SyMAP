@@ -1,14 +1,14 @@
 #JAVA_PATH=/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home
-#JAVA_PATH=/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home
 JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
 #JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-20.jdk/Contents/Home
+#JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-24.jdk/Contents/Home
 #JAVA_PATH=/usr
 
 JAVAC_FLAGS = -g -Xlint:deprecation #,vars #-Xlint:deprecation 
 
 JAVA_FILES= ./src/symapCE/*.java ./src/database/*.java ./src/backend/*.java \
 			./src/symap/*.java ./src/dotplot/*.java ./src/blockview/*.java \
-			./src/circview/*.java  ./src/symapQuery/*.java ./src/toSymap/*.java
+			./src/circview/*.java  ./src/circflatview/*.java ./src/symapQuery/*.java ./src/toSymap/*.java
 
 all: clean build standalone_jars 
 

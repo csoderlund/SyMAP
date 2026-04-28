@@ -17,7 +17,9 @@
 <a href="#mgr">Project Manager</a>
 <a href="#pair">Selected Pair<br>(Two-Genome)</a>
 <a href="#circle">&nbsp;&nbsp;&nbsp;Circle #1</a>
+<a href="#linear">&nbsp;&nbsp;&nbsp;Linear</a>
 <a href="#dotplot_display">&nbsp;&nbsp;&nbsp;Dot Plot #1</a>
+
 <a href="#block">&nbsp;&nbsp;&nbsp;Blocks</a>
 <a href="#report">&nbsp;&nbsp;&nbsp;Reports...</a>
 
@@ -80,8 +82,9 @@
 	<li><a href="#mgr">Project Manager</a>
 	<li><a href="#pair"><i>Selected Pair (Two-Genome Views)</i></a>
 		<ul>
-		<li><a href="#circle">Circle #1</a> - <span style="color:purple">details of Circle</span> <!-- # ref in code -->
-		<li><a href="#dotplot_display">Dot Plot #1</a> - <span style="color:purple">details of Dot plot</span> <!-- # ref in code -->
+		<li><a href="#circle">Circle #1</a> - <small>(details for #1 &amp; #2)</small> <!-- # ref in code -->
+		<li><a href="#linear">Linear</a>  <!-- # ref in code -->
+		<li><a href="#dotplot_display">Dot Plot #1</a> - <small>(details for #1 &amp; #2 &amp; #3)</small> <!-- # ref in code -->
 		<li><a href="#block">Blocks</a>
 		<li><a href="#report">Reports...</a>
 		</ul>
@@ -111,7 +114,6 @@
 			</ul>
 		<li><a href="#dot3">Dot Plot #3</a>
 		<li><a href="Query.html" target="_blank" class="ext">Queries</a>
-		<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Hit popup, 3-chr conserved</small>
 		</ul>
 	</ul>
 
@@ -121,6 +123,7 @@
 	<li><a href="#self">Self-synteny</a>
 	<li><a href="#data_download">Data Download</a>
 	<li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
+	<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Hit popup, 3-chr conserved</small>
 	</ul>
 	<i>All <a href="#wheel">colors</a> mentioned in this document are the defaults.</i>
 	<p>
@@ -128,7 +131,7 @@
 	<table>
 	<tr><td>&nbsp;
 	<tr><td>
-	    <small><i>The <ttp>Dot Plot</ttp> and <ttp>Circle </ttp> are available from various places.</i></small>
+	    <small><i>The <ttp>Circle </ttp> and <ttp>Dot Plot</ttp> are available from various places.</i></small>
 	<tr><td>
 		<small>Project Manager</small>
 		<br><a href="./img/view1.png">
@@ -260,6 +263,7 @@ Is it also available from <tt>./symap</tt>, which will include the commands to b
 <h1>Selected Pair (Two-genome views)</h1>
 <table class="tz"><tr>
 <td><a href="#circle">Circle</a>
+<td><a href="#linear">Linear</a>
 <td><a href="#dotplot_display">Dot Plot</a>
 <td><a href="#block">Blocks</a>
 <td><a href="#report">Report</a>
@@ -280,19 +284,19 @@ Is it also available from <tt>./symap</tt>, which will include the commands to b
 <p>The <ttp>Circle</ttp> can be viewed for two-genomes or <a href="UserGuide.html#explorer">multi-chromosomes</a>.
 This section described the two-genome <ttp>Circle</ttp>, which also applies to the multi-chromosomes <ttp>Circle</ttp>.
 <p>
-The <ttp>Circle</ttp> display shows the chromosomes arranged in a circle,
-	with synteny blocks shown as <u>colored blocks</u> between the chromosomes.
-	The color of a block comes from one of the two chromosomes it connects; for example,
-	in the image below, the A.thal Chr05 <u>color arc</u> is orange and the corresponding
-	blocks are orange.
+
 <table>
 	<tr><td style="vertical-align:text-top;">
-	<p><i>Project name</i>: Move the mouse over a project name and click once:
-	The project name will be in shown in bold italics
-	and the projects colors will be used for the blocks.
+	The <ttp>Circle</ttp> display shows the chromosomes arranged in a circle,
+	with synteny blocks shown as <u>colored blocks</u> between the chromosomes.
+	The color of a block comes from one of the two chromosomes it connects; for example,
+	in the image on the right, the A.thal Chr05 <u>color arc</u> is orange and the corresponding
+	blocks are orange.
+	<p><i>Project name</i>: Move the mouse over a project name and click once.
+	The project name will be shown in bold italics and the projects colors will be used for the blocks.
 	<p>For example, in the image on the right,
 		<i>A.thal</i> is in italics and all the block are colored with its arc colors;
-		click Cabbage and the block will be colored with its arc colors.
+		click Cabbage and the blocks will be colored with its arc colors.
 
 	<p><i>Chromosome color arc</i>: Move the mouse over an arc, followed by:
 	<table>
@@ -387,6 +391,51 @@ the group circle of ribbon colors to your desire.
 	</table>
 	<td><a href="img/circle-colors.png">
 		<img src="img/circle-colors.png" alt="circle-colors" style="border: 1px solid black; width: 320px"></a>
+</table>
+
+<!------------------------------------------------->
+<a id="linear"></a>
+<h2>Linear (Two Genome)</h2>
+<table class="tz"><tr>
+<td><a href="#lcp">Control Panel</a>
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>The <ttp>Linear</ttp> display is similar to the <ttp>Circle</ttp>, but stretched out linearly. It only works for two genomes
+and does not work for self-synteny.
+<p>As with <ttp>Circle</ttp>, synteny blocks are shown as colored blocks between the chromosomes.
+The color of a block comes from one of the two chromosomes it connects;
+for example, in the image below, the A.thal Chr05 to Cabbage blocks are all orange.
+
+<a href="img/linear-2g.png">
+		<img src="img/linear-2g.png" alt="circle-colors" style="border: 1px solid black; width: 700px"></a>
+
+<p><i>Project name</i>: Move the mouse over a project name and click once.
+The project name will be shown in bold italics and the projects colors will be used for the blocks.
+
+<p>Move the mouse over a chromosome bar, followed by:
+<ul>
+<li>Click: The blocks from the chromosome will be shown in front.
+<li>Double-click: Only the blocks of the selected chromosome will be shown.
+<br>To undo, click a bar or project name.
+</ul>
+<a id="lcp"></a>
+<h4>Linear Control Panel</h4>
+<a href="img/linear-control.png"><img src="img/linear-control.png"  alt="linear controls" style="border: 1px solid black;width: 650px"></a>
+<p>The Controls for the <ttp>Linear</ttp> display work the same as the <a href="#ccp">Circle Controls</a>,
+though it is missing some (e.g. the rotate buttons),
+and it has the following additional button.
+
+<table class="tx" style="width:95%">
+	<tr><td>
+	<table>
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N</ttl>
+	<td> A block will be shown if its length, <i>on both sides</i>, is &ge; N, where N= 0bp, 500k, 1M, 2M.
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N hits</ttl><td> A block will be shown if its number of hits is &ge; N, where N= 0, 50, 100, 200.
+	<tr><td><ttl>Invert</ttl><td> By default, inverted blocks are shown inverted (e.g. the purple block shown on the right);
+	clicking this toggle will show them un-inverted.
+	<tr><td colspan=2>All the remaining controls are the same as for the <ttp>Circle</ttp>, including the <a href= "circColors">Circle Colors</a>.
+	</table>
+	<td><a href="img/invert.png"><img src="img/invert.png"  alt="inverted block" style="border: 1px solid black;width: 80px"></a>
 </table>
 
 <!------------------------------------------------------------>
@@ -1578,6 +1627,7 @@ self-synteny selected in order to view its results.
 </table>
 
 <ul>
+<li><ttp>Linear</ttp>: Does not work for self-synteny.
 <li><ttp>Dot Plot</ttp>: For the self-chromosome, you <u>must</u> select a block from the lower diagonal.
 <li><ttp>Circle</ttp>: The <ttx>Scale</ttx> option makes no difference in the display with only
 one species.
@@ -1694,7 +1744,7 @@ that lets you change the color.
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-<p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
+<p class="trailer">  Email: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 </div>
 </body>
