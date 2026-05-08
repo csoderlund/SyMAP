@@ -45,38 +45,43 @@ import util.Popup;
  */
 public class ControlPanelFlat extends JPanel implements HelpListener  {
 	private static final long serialVersionUID = 1L;
+	private boolean bTest=false; // Outline inverted leaves residuals; slant text needs work
 	private FlatPanel flatPanel;
     private HelpBar helpPanel;
   
-    private JButton homeButton, plusButton, minusButton; 
+    private JButton homeButton, plusButton, minusButton, scaleToggle; 
     private JButton helpButton, saveButton, infoButton;		
-    private JButton scaleToggle, revToggle, invToggle; 
     
-    private JButton viewPopupButton;  	 // if change, change FlatPanel.paintGroupBlk					
-    private String[] viewOptions = {"All blocks","Inverted only","Non-inverted only","Two-color all blocks"};
-    private JRadioButtonMenuItem view0Radio	= new JRadioButtonMenuItem(viewOptions[0]);
-    private JRadioButtonMenuItem view1Radio	= new JRadioButtonMenuItem(viewOptions[1]);
-    private JRadioButtonMenuItem view2Radio	= new JRadioButtonMenuItem(viewOptions[2]);
-    private JRadioButtonMenuItem view3Radio	= new JRadioButtonMenuItem(viewOptions[3]);
-    
+    static protected final int [] lenCuts = {0,100000, 200000, 500000, 750000, 1000000,2000000}; // For FlatPanel; 
     private JButton lenPopupButton;   // if change, change FlatPanel.paintGroupBlk						
-    private String[] lenOptions = {"\u2265 0bp", "\u2265 500k", "\u2265 1M","\u2265 2M"}; 
+    private String[] lenOptions = {"\u2265 0bp", "\u2265 100k", "\u2265 250k", "\u2265 500k", 
+    		                      "\u2265 750k", "\u2265 1M","\u2265 2M"}; 
     private JRadioButtonMenuItem len0Radio	= new JRadioButtonMenuItem(lenOptions[0]);
     private JRadioButtonMenuItem len1Radio	= new JRadioButtonMenuItem(lenOptions[1]);
     private JRadioButtonMenuItem len2Radio	= new JRadioButtonMenuItem(lenOptions[2]);
     private JRadioButtonMenuItem len3Radio	= new JRadioButtonMenuItem(lenOptions[3]);
+    private JRadioButtonMenuItem len4Radio	= new JRadioButtonMenuItem(lenOptions[4]);
+    private JRadioButtonMenuItem len5Radio	= new JRadioButtonMenuItem(lenOptions[5]);
+    private JRadioButtonMenuItem len6Radio	= new JRadioButtonMenuItem(lenOptions[6]);
     
+    static protected final int [] numHits = {0,15,25,50,100,200};		// For FlatPanel
     private JButton hitPopupButton;   // if change, change FlatPanel.paintGroupBlk						
-    private String[] hitOptions = {"\u2265 0 hits", "\u2265 50 hits", "\u2265 100 hits","\u2265 200 hits"}; // >= as one char
+    private String[] hitOptions = {"\u2265 0 hits", "\u2265 15 hits", "\u2265 25 hits", 
+    		                      "\u2265 50 hits", "\u2265 100 hits","\u2265 200 hits"}; // >= as one char
     private JRadioButtonMenuItem hit0Radio	= new JRadioButtonMenuItem(hitOptions[0]);
     private JRadioButtonMenuItem hit1Radio	= new JRadioButtonMenuItem(hitOptions[1]);
     private JRadioButtonMenuItem hit2Radio	= new JRadioButtonMenuItem(hitOptions[2]);
     private JRadioButtonMenuItem hit3Radio	= new JRadioButtonMenuItem(hitOptions[3]);
+    private JRadioButtonMenuItem hit4Radio	= new JRadioButtonMenuItem(hitOptions[4]);
+    private JRadioButtonMenuItem hit5Radio	= new JRadioButtonMenuItem(hitOptions[5]);
     
     private JButton colorButton;  						
     private ColorDialogHandler cdh;
 	private PersistentProps    persistentProps;
-   
+	
+	private JButton displayButton;
+	private ChgDisplay disObj = null;
+	
     public ControlPanelFlat(FlatPanel cp, HelpBar hb) { 
     	helpPanel = hb;
     	flatPanel = cp;
@@ -103,23 +108,22 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
             }
         });
 		
-		viewPopupButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"View",
+		displayButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"Display",
 				"Options for display of blocks");
-		createViewPopup();
+		displayButton.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (disObj==null) disObj = new ChgDisplay();
+                else disObj.setVisible(true); 
+            }
+        });
 		
 		lenPopupButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"Length",
-				"Minimal length of a block to be shown");
+				"Minimal length of a block to be shown; if either end is < N, it will be filtered");
 		createLenPopup();
 		
 		hitPopupButton = Jcomp.createButton(this,helpPanel, null /*has own listener*/,"Hits",
 				"Minimal number of hits for a block to be shown");
 		createHitsPopup();
-		
-		revToggle =  Jcomp.createBorderButton(null,helpPanel,buttonListener,"Reverse",
-							"Toggle: Reverse reference, which re-assigns reference colors"); 
-		
-		invToggle =  Jcomp.createBorderButton(null,helpPanel,buttonListener,"Invert",
-				"Toggle: Show inverted blocks as inverted"); 
 		
 		saveButton = Jcomp.createIconButton(this,helpPanel,buttonListener,"/images/print.gif",
 							"Save image" );
@@ -145,14 +149,11 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		addToGrid(row, gbl,gbc,plusButton,	 sp1);					
 		addToGrid(row, gbl,gbc,minusButton,	 sp2);
 		addToGrid(row, gbl,gbc,scaleToggle,  sp2); // needs extra space between image for Linux
-		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
-		
 		addToGrid(row, gbl,gbc,lenPopupButton, sp1); 
 		addToGrid(row, gbl,gbc,hitPopupButton, sp1); 
-		addToGrid(row, gbl,gbc,invToggle, sp2);   
-		addToGrid(row, gbl,gbc,viewPopupButton, sp1);
-		addToGrid(row, gbl,gbc,revToggle, sp2);  
-		  
+		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
+		
+		addToGrid(row, gbl,gbc,displayButton, sp1); 
 		addToGrid(row, gbl,gbc,colorButton,  sp2); 
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // end alter display
 		
@@ -167,51 +168,16 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		cp.add(comp);
 		if (blank.length()>0) addToGrid(cp, gbl,gbc,new JLabel(blank), "");
     }
-    private void createViewPopup() {
-    	PopupListener listener = new PopupListener();
-		view0Radio.addActionListener(listener);
-		view1Radio.addActionListener(listener);
-		view2Radio.addActionListener(listener);
-		view3Radio.addActionListener(listener);
-		
-    	JPopupMenu popupMenu = new JPopupMenu();
-		popupMenu.setBackground(symap.Globals.white);
-		
-		JMenuItem popupTitle = new JMenuItem();
-		popupTitle.setText("Select View");
-		popupTitle.setEnabled(false);
-		popupMenu.add(popupTitle);
-		popupMenu.addSeparator();
-		
-		popupMenu.add(view0Radio);
-		popupMenu.add(view1Radio);
-		popupMenu.add(view2Radio);
-		popupMenu.add(view3Radio);
-		
-		ButtonGroup grp = new ButtonGroup();
-		grp.add(view0Radio); grp.add(view1Radio); grp.add(view2Radio); grp.add(view3Radio);
-		
-		viewPopupButton.setComponentPopupMenu(popupMenu); // zoomPopupButton create in main
-		viewPopupButton.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            }
-        });
-		
-		Dimension d = new Dimension(100, 25); // w,d
-		viewPopupButton.setPreferredSize(d); 
-		viewPopupButton.setMaximumSize(d);
-		viewPopupButton.setMinimumSize(d);
-		
-		viewPopupButton.setText(viewOptions[0]);
-		view0Radio.setSelected(true);
-    }
+  
     private void createLenPopup() {
     	PopupListener listener = new PopupListener();
 		len0Radio.addActionListener(listener);
 		len1Radio.addActionListener(listener);
 		len2Radio.addActionListener(listener);
 		len3Radio.addActionListener(listener);
+		len4Radio.addActionListener(listener);
+		len5Radio.addActionListener(listener);
+		len6Radio.addActionListener(listener);
 		
     	JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.setBackground(symap.Globals.white);
@@ -223,15 +189,14 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		popupMenu.add(popupTitle);
 		popupMenu.addSeparator();
 		
-		popupMenu.add(len0Radio);
-		popupMenu.add(len1Radio);
-		popupMenu.add(len2Radio);
-		popupMenu.add(len3Radio);
+		popupMenu.add(len0Radio); popupMenu.add(len1Radio); popupMenu.add(len2Radio);
+		popupMenu.add(len3Radio); popupMenu.add(len4Radio);	popupMenu.add(len5Radio); popupMenu.add(len6Radio);
 		
 		ButtonGroup grp = new ButtonGroup();
-		grp.add(len0Radio); grp.add(len1Radio); grp.add(len2Radio); grp.add(len3Radio);
+		grp.add(len0Radio); grp.add(len1Radio); grp.add(len2Radio); 
+		grp.add(len3Radio); grp.add(len4Radio); grp.add(len5Radio); grp.add(len6Radio);
 		
-		lenPopupButton.setComponentPopupMenu(popupMenu); // zoomPopupButton create in main
+		lenPopupButton.setComponentPopupMenu(popupMenu);  
 		lenPopupButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -252,6 +217,8 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		hit1Radio.addActionListener(listener);
 		hit2Radio.addActionListener(listener);
 		hit3Radio.addActionListener(listener);
+		hit4Radio.addActionListener(listener);
+		hit5Radio.addActionListener(listener);
 		
     	JPopupMenu popupMenu = new JPopupMenu();
 		popupMenu.setBackground(symap.Globals.white);
@@ -263,15 +230,14 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		popupMenu.add(popupTitle);
 		popupMenu.addSeparator();
 		
-		popupMenu.add(hit0Radio);
-		popupMenu.add(hit1Radio);
-		popupMenu.add(hit2Radio);
-		popupMenu.add(hit3Radio);
+		popupMenu.add(hit0Radio); popupMenu.add(hit1Radio); popupMenu.add(hit2Radio);
+		popupMenu.add(hit3Radio); popupMenu.add(hit4Radio); popupMenu.add(hit5Radio);
 		
 		ButtonGroup grp = new ButtonGroup();
-		grp.add(hit0Radio); grp.add(hit1Radio); grp.add(hit2Radio); grp.add(hit3Radio);
+		grp.add(hit0Radio); grp.add(hit1Radio); grp.add(hit2Radio); 
+		grp.add(hit3Radio); grp.add(hit4Radio); grp.add(hit5Radio);
 		
-		hitPopupButton.setComponentPopupMenu(popupMenu); // zoomPopupButton create in main
+		hitPopupButton.setComponentPopupMenu(popupMenu); 
 		hitPopupButton.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -295,22 +261,15 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			Object src = event.getSource();
 			int idx=-1;
 			
-			// View all blocks, etc
-			if (src==view0Radio) idx=0;
-			else if (src==view1Radio) idx=1;
-			else if (src==view2Radio) idx=2;
-			else if (src==view3Radio) idx=3;
-		
-			if (idx!=-1) {
-				flatPanel.invChoice = idx;
-				viewPopupButton.setText(viewOptions[idx]);
-			}
 			// View minimal size blocks
 			idx = -1;
-			if (src==len0Radio) idx=0;
+			if      (src==len0Radio) idx=0;
 			else if (src==len1Radio) idx=1;
 			else if (src==len2Radio) idx=2;
 			else if (src==len3Radio) idx=3;
+			else if (src==len4Radio) idx=4;
+			else if (src==len5Radio) idx=5;
+			else if (src==len6Radio) idx=6;
 			
 			if (idx!=-1) {
 				flatPanel.lenChoice = idx;
@@ -318,16 +277,18 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			}
 			// View minimal hits
 			idx = -1;
-			if (src==hit0Radio) idx=0;
+			if      (src==hit0Radio) idx=0;
 			else if (src==hit1Radio) idx=1;
 			else if (src==hit2Radio) idx=2;
 			else if (src==hit3Radio) idx=3;
+			else if (src==hit4Radio) idx=4;
+			else if (src==hit5Radio) idx=5;
 			
 			if (idx!=-1) {
 				flatPanel.hitChoice = idx;
 				hitPopupButton.setText(hitOptions[idx]);
-			}
-						
+			}	
+			setEnables();
 			flatPanel.makeRepaint();
 		}
     }
@@ -345,19 +306,6 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 				scaleToggle.setBackground(Jcomp.getBorderColor(flatPanel.bToScale));
 				flatPanel.makeRepaint();
 			}
-			else if (src == revToggle) {
-				flatPanel.bRevRef = !flatPanel.bRevRef;
-				revToggle.setBackground(Jcomp.getBorderColor(flatPanel.bRevRef));
-				
-				flatPanel.reverse();
-				flatPanel.makeRepaint();
-			}
-			else if (src == invToggle) {
-				flatPanel.bInvBlk = !flatPanel.bInvBlk; // checked when block is drawn
-				invToggle.setBackground(Jcomp.getBorderColor(flatPanel.bInvBlk));
-				
-				flatPanel.makeRepaint();
-			}
 			else if (src == saveButton) {
 				ImageViewer.showImage("Linear", flatPanel);
 			}
@@ -372,6 +320,8 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 	}
 	private void resetToHome() {
 		scaleToggle.setBackground(Jcomp.getBorderColor(false));
+		lenPopupButton.setText(lenOptions[0]);	// CAS584 add len/hit to home
+		hitPopupButton.setText(hitOptions[0]);
 		flatPanel.resetToHome(); // arc, zoom, rotate, scale
 	}
     
@@ -386,10 +336,22 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			     + "\n\nClick on a bar to bring its blocks to the top. "
 				 + "\nDouble-click a bar to only show its blocks. To undo, "
 			     + "\n   click a bar or a project name."
+				 + "\n\nThe first set of controls can be set to their defaults "
+				 + "\n   by clicking the Home Icon. "
+				 + "\n\nDisplay: Pops up a window with more ways to adjust the display."
+				 + "\n   These controls are not saved between sessions."
+				 + "\n\nColor palette: Pops up a window with ways to change the colors."
+				 + "\n   The color settings are the only settings saved between sessions."
 				 + "\n\nSee ? for details.\n";
 				
 		Popup.displayInfoMonoSpace(this, "Quick Linear Help", msg, false);
 	}
+	/*********************************************************************
+	 * XXX Copied from ControlPanelCirc
+	 * Setting are saved in .symap_saved_props under SyMAPlinear (FlatPanel.propName) 
+	 * plus ColorDialog write properties/linear.properties 
+	 * so the object is recreated every time
+	 */
 	private class ChgColor extends JDialog implements ActionListener {
 		private static final long serialVersionUID = 1L;
 		private JButton okButton, defButton, cancelButton, info2Button;
@@ -402,7 +364,7 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 		private ChgColor() {
 			super();
 			setModal(false);
-			setTitle("Linear/Circle Colors"); 
+			setTitle("Linear Colors"); 
 			setResizable(true);
 			
 			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
@@ -411,8 +373,9 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			});
 			JPanel optionPanel = Jcomp.createPagePanel();
 			
+			/*************************************************************************/
 			JPanel row0 = Jcomp.createRowPanel();
-			cdh.setCircle();
+			cdh.setLinear();
 			editColorButton = Jcomp.createBorderIconButton("/images/colorchooser.gif", "Edit the color settings");
 			editColorButton.addActionListener(this);
 			row0.add(new JLabel("Two-color all blocks: "));
@@ -459,17 +422,17 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			else noneRadio.setSelected(true);
 			
 			// Save, cancel, Default
-			okButton = Jcomp.createButton("Save", "Save and redisplay"); 
+			okButton = Jcomp.createButton("Save", "Save and close"); 
 			okButton.addActionListener(this);
 			
-			cancelButton = Jcomp.createButton("Cancel", "Cancel"); 
+			cancelButton = Jcomp.createButton("Cancel", "Cancel and close"); 
 			cancelButton.addActionListener(this);
 			
 			defButton = Jcomp.createButton("Defaults", "Set defaults"); 
 			defButton.addActionListener(this);
 			
 			info2Button = Jcomp.createIconButton(null,helpPanel,buttonListener,"/images/info.png",
-					"Quick Circle Color Help" );
+					"Quick Linear Color Help" );
 			info2Button.addMouseListener(new MouseAdapter() {
 	            public void mousePressed(MouseEvent e) {
 	                popupHelp2();
@@ -506,11 +469,7 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 			setLocationRelativeTo(null);	
 			setVisible(true);
 		}
-		private void addToGrid(Container c, GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i) {
-			gbc.gridwidth = i;
-			gbl.setConstraints(comp,gbc);
-			c.add(comp);
-		}
+		
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == editColorButton) {
 				cdh.showX();
@@ -594,5 +553,264 @@ public class ControlPanelFlat extends JPanel implements HelpListener  {
 					
 			Popup.displayInfoMonoSpace(this, "Quick Linear Help", msg, false);
 		}
+	}
+	/********************************************************************
+	 * XXX Display of blocks
+	 * Settings are not saved between sessions, so this is created once, and made visible after that
+		Chromosome Name: o No o Yes 
+		Chromosome Label: o Horizontal o Vertical
+	 */
+	private class ChgDisplay extends JDialog implements ActionListener {
+		private static final long serialVersionUID = 1L;
+
+		private JButton okButton, defButton, cancelButton, info3Button;
+		
+		private JCheckBox invBlkCheck, invStrokeCheck;
+		private JCheckBox revRefCheck, revColCheck;
+		private JCheckBox chrVertCheck;
+		private JRadioButton allBlkRadio, invBlkRadio, notInvBlkRadio, twoBlkRadio;
+		
+		private ChgDisplay () {
+			super();
+			setModal(false);
+			setTitle("Linear Display"); 
+			setResizable(true);
+			
+			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); 
+			addWindowListener(new WindowAdapter() {
+				public void windowClosed(WindowEvent e) {}
+			});
+			
+			/***********************************************************/
+			JPanel optionPanel = Jcomp.createPagePanel();
+			
+			JLabel xxx = Jcomp.createLabel("xxxxxxxxxxxxxxxxx");
+			int h=5, head=xxx.getPreferredSize().width;
+			
+			// Inverted blocks
+			JLabel invLab = Jcomp.createLabel("Inverted Blocks", "Reverse lower coordinates for inverted blocks");
+			JPanel row1 = Jcomp.createRowPanel();
+			row1.add(invLab);       row1.add(Box.createHorizontalStrut(Jcomp.getWidth(head, invLab)));
+			
+			invBlkCheck = Jcomp.createCheckBox("Reverse orientation", "Reverse orientation of the lower species", true); 
+			invBlkCheck.addActionListener(this);
+			row1.add(invBlkCheck);  row1.add(Box.createHorizontalStrut(h)); 
+			
+			invStrokeCheck = Jcomp.createCheckBox("Outline", "Inverted blocks are outlined", true); 
+			invStrokeCheck.addActionListener(this);
+			if (bTest) row1.add(invStrokeCheck); 
+			
+			optionPanel.add(row1); optionPanel.add(Box.createVerticalStrut(3));
+			optionPanel.add(Box.createVerticalStrut(3));
+			
+			// Display Blocks
+			JLabel blkLab = Jcomp.createLabel("Display Blocks", "Change the display of the blocks");
+			row1 = Jcomp.createRowPanel();
+			row1.add(blkLab); 			row1.add(Box.createHorizontalStrut(Jcomp.getWidth(head, blkLab)));
+			
+			allBlkRadio = 		Jcomp.createRadio("All", 		"Show all blocks"); 
+			notInvBlkRadio = 	Jcomp.createRadio("Non-Invert", "Show non-inverted blocks only");
+			invBlkRadio = 		Jcomp.createRadio("Invert", 	"Show inverted blocks only"); 
+			twoBlkRadio = 		Jcomp.createRadio("Two-color", 	"Show inverted/non-inverted in two colors");
+			allBlkRadio.addActionListener(this); notInvBlkRadio.addActionListener(this);
+			invBlkRadio.addActionListener(this); twoBlkRadio.addActionListener(this);
+			
+			ButtonGroup grp = new ButtonGroup ();
+			grp.add(allBlkRadio); grp.add(notInvBlkRadio); grp.add(invBlkRadio); grp.add(twoBlkRadio); 
+			allBlkRadio.setSelected(true); invChoiceSave=0;
+				
+			row1.add(allBlkRadio); 		row1.add(Box.createHorizontalStrut(h)); 
+			row1.add(notInvBlkRadio); 	row1.add(Box.createHorizontalStrut(h));
+			row1.add(invBlkRadio); 		row1.add(Box.createHorizontalStrut(h));
+			row1.add(twoBlkRadio); 		row1.add(Box.createHorizontalStrut(h));
+			optionPanel.add(row1); optionPanel.add(Box.createVerticalStrut(3));
+			optionPanel.add(Box.createVerticalStrut(3));
+	
+			// Reverse reference
+			JLabel refLab = Jcomp.createLabel("Swap Species", "Swap species or colors");
+			row1 = Jcomp.createRowPanel();
+			row1.add(refLab); row1.add(Box.createHorizontalStrut(Jcomp.getWidth(head, refLab)));
+			
+			revRefCheck = Jcomp.createCheckBox("Species", "Put 2nd species on top", false); 
+			revRefCheck.addActionListener(this);
+			revColCheck = Jcomp.createCheckBox("Species&Colors", "Put 2nd species with colors on top", false); 
+			revColCheck.addActionListener(this);
+			
+			row1.add(revRefCheck); row1.add(Box.createHorizontalStrut(h)); 
+			row1.add(revColCheck);
+			optionPanel.add(row1); optionPanel.add(Box.createVerticalStrut(3));
+			optionPanel.add(Box.createVerticalStrut(3));
+			
+			// Inverted blocks
+			JLabel txtLab = Jcomp.createLabel("Chr labels", "Switch chromosome labels from horizontal to vertical ");
+			row1 = Jcomp.createRowPanel();
+			row1.add(txtLab);       row1.add(Box.createHorizontalStrut(Jcomp.getWidth(head, txtLab)));
+			
+			chrVertCheck = Jcomp.createCheckBox("Vertical", "Display chromosome labels vertically", false); 
+			chrVertCheck.addActionListener(this);
+			row1.add(chrVertCheck);  row1.add(Box.createHorizontalStrut(h)); // Added in CAS854 but not working
+		
+			if (bTest) {
+				optionPanel.add(row1); optionPanel.add(Box.createVerticalStrut(3));
+				optionPanel.add(Box.createVerticalStrut(3));
+			}		
+			/**********************************************************/
+			// Save, cancel, Default
+			okButton = Jcomp.createButton("Save", "Save and close"); 
+			okButton.addActionListener(this);
+			
+			cancelButton = Jcomp.createButton("Cancel", "Cancel and close"); 
+			cancelButton.addActionListener(this);
+			
+			defButton = Jcomp.createButton("Defaults", "Set defaults"); 
+			defButton.addActionListener(this);
+			
+			info3Button = Jcomp.createIconButton(null,helpPanel,buttonListener,"/images/info.png",
+					"Quick Linear Display Help" );
+			info3Button.addMouseListener(new MouseAdapter() {
+	            public void mousePressed(MouseEvent e) {
+	                popupHelp3();
+	            }
+	        });
+			JPanel row = new JPanel(); row.setBackground(Color.white);
+			row.add(okButton);
+			row.add(cancelButton); 
+			row.add(defButton); 
+			row.add(info3Button);
+			
+			/******** Grid ********************************/
+			JPanel buttonPanel = new JPanel(new BorderLayout()); buttonPanel.setBackground(Color.white);
+			buttonPanel.add(new JSeparator(), "North");
+			buttonPanel.add(row, "Center");
+			
+			Container cp = getContentPane();
+			GridBagLayout gbl = new GridBagLayout();
+			GridBagConstraints gbc = new GridBagConstraints();
+			cp.setLayout(gbl);
+			gbc.fill = 2;
+			gbc.gridheight = 1;
+			gbc.ipadx = 5;
+			gbc.ipady = 8;
+			int rem = GridBagConstraints.REMAINDER;
+			
+			addToGrid(cp, gbl, gbc, optionPanel, rem);
+			addToGrid(cp, gbl, gbc, buttonPanel, rem);
+			pack();
+			
+			/***********************************************************/
+			setModal(true);
+			setBackground(Color.white);
+			setResizable(false);
+			setAlwaysOnTop(true); // doesn't work on Ubuntu
+			setLocationRelativeTo(null);	
+			setVisible(true);
+		}
+		public void actionPerformed(ActionEvent e) {
+			Object src = e.getSource();
+			
+			if (src == okButton) 			okAndCloseAction();
+			else if (src == cancelButton) 	cancelAndCloseAction();
+			else if (src == defButton) 		setDefaults();
+			
+			else if (src==invBlkCheck) 		flatPanel.bInvBlk 		= invBlkCheck.isSelected();
+			else if (src==invStrokeCheck) 	flatPanel.bInvStroke 	= invStrokeCheck.isSelected();
+			else if (src==chrVertCheck)		flatPanel.bChrVert 		= chrVertCheck.isSelected();
+			
+			else if (src==revRefCheck) 	{
+				flatPanel.reverseRef(revRefCheck.isSelected(), false); 		// ref, colors; 
+				revColCheck.setEnabled(!revRefCheck.isSelected());
+			}
+			else if (src==revColCheck) 	{
+				flatPanel.reverseRef(revColCheck.isSelected(), revColCheck.isSelected()); // both T or both F
+				revRefCheck.setEnabled(!revColCheck.isSelected());
+			}
+			
+			else if (src==allBlkRadio)		flatPanel.invChoice = 0;
+			else if (src==notInvBlkRadio) 	flatPanel.invChoice = 1;
+			else if (src==invBlkRadio)		flatPanel.invChoice = 2;
+			else if (src==twoBlkRadio)		flatPanel.invChoice = 3;
+		
+			else return;
+			
+			flatPanel.makeRepaint();
+		}
+		private void okAndCloseAction() { // action already done; save
+			bInvBlkSave 	= invBlkCheck.isSelected();
+			bInvStrokeSave 	= invStrokeCheck.isSelected();
+			bChrVertSave 	= chrVertCheck.isSelected();
+			
+			bRevRefSave = revRefCheck.isSelected(); 
+			bRevColSave = revColCheck.isSelected(); 
+			
+			if (allBlkRadio.isSelected()) 			invChoiceSave=0;
+			else if (notInvBlkRadio.isSelected()) 	invChoiceSave=1;
+			else if (invBlkRadio.isSelected()) 		invChoiceSave=2;
+			else if (twoBlkRadio.isSelected()) 		invChoiceSave=3;
+			
+			setVisible(false); 
+		}
+		private void cancelAndCloseAction() {
+			flatPanel.bInvBlk = bInvBlkSave;   	// Blocks
+			invBlkCheck.setSelected(bInvBlkSave);
+			
+			flatPanel.bInvStroke = bInvStrokeSave;
+			invStrokeCheck.setSelected(bInvStrokeSave);
+			
+			flatPanel.bChrVert = bChrVertSave;
+			chrVertCheck.setSelected(bChrVertSave);
+			
+			if (bRevColSave!=flatPanel.bRevCol) { // Swap
+				flatPanel.reverseRef(bRevColSave, bRevColSave); 
+				revColCheck.setSelected(bRevColSave); 
+				revRefCheck.setEnabled(!bRevColSave);
+			}
+			else if (bRevRefSave!=flatPanel.bRevRef) {
+				flatPanel.reverseRef(bRevRefSave, false); 
+				revRefCheck.setSelected(bRevRefSave); 
+				revColCheck.setEnabled(!bRevRefSave);
+			}
+				
+			flatPanel.invChoice = invChoiceSave;
+			if (invChoiceSave==0) 		allBlkRadio.setSelected(true);
+			else if (invChoiceSave==1) 	invBlkRadio.setSelected(true);
+			else if (invChoiceSave==2) 	notInvBlkRadio.setSelected(true);
+			else if (invChoiceSave==3) 	twoBlkRadio.setSelected(true);
+			
+			setVisible(false); 
+		}
+		private void setDefaults() {	
+			flatPanel.bInvBlk = true;  
+			invBlkCheck.setSelected(true);
+			
+			flatPanel.bChrVert = false;
+			chrVertCheck.setSelected(true);
+			
+			if (flatPanel.bRevRef || flatPanel.bRevCol) flatPanel.reverseRef(false, false); // flip
+			revRefCheck.setSelected(false); revColCheck.setSelected(false);
+			revRefCheck.setEnabled(true);   revColCheck.setEnabled(true);
+			
+			flatPanel.invChoice = 0; allBlkRadio.setSelected(true);
+		}
+		private void popupHelp3() {
+			String msg = "Inverted block: By default, the inverted blocks have reversed orientation.\n" 
+					   + "   If this is hard to view, uncheck reverse orientation --\n"
+					   + "   using Two-Color will show the inversions by color.\n\n"
+					   + "Display Blocks: Show all, inverted only, non-inverted only, or two-color, respectively.\n"
+					   + "   Two-color shows the inverted in one color and non-inverted in another.\n\n"
+					   + "Swap Reference: Only one of the two checkboxes can be checked.\n"
+					   + "   Species: Will swap the species name and chromosomes.\n"
+					   + "   Species&Colors: Will swap the species and colors.\n"
+					;
+			Popup.displayInfoMonoSpace(this, "Quick Linear Help", msg, false);
+		}
+		// These are set on Save only; used in Cancel
+		private boolean bInvBlkSave=true, bInvStrokeSave=false;
+		private boolean bRevRefSave=false, bRevColSave=false, bChrVertSave=false;;
+		private int invChoiceSave=0;
+	}
+	private void addToGrid(Container c, GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i) {
+		gbc.gridwidth = i;
+		gbl.setConstraints(comp,gbc);
+		c.add(comp);
 	}
 }

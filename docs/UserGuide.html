@@ -398,6 +398,7 @@ the group circle of ribbon colors to your desire.
 <h2>Linear (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#lcp">Control Panel</a>
+<td><a href="#ldisplay">Display</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 <p>The <ttp>Linear</ttp> display is similar to the <ttp>Circle</ttp>, but stretched out linearly. It only works for two genomes
@@ -421,23 +422,56 @@ The project name will be shown in bold italics and the projects colors will be u
 <a id="lcp"></a>
 <h4>Linear Control Panel</h4>
 <a href="img/linear-control.png"><img src="img/linear-control.png"  alt="linear controls" style="border: 1px solid black;width: 650px"></a>
-<p>The Controls for the <ttp>Linear</ttp> display work the same as the <a href="#ccp">Circle Controls</a>,
-though it is missing some (e.g. the rotate buttons),
-and it has the following additional button.
 
+<table class="tx">
+	<tr><td><img src="img/home.gif" alt="Home" style="width: 20px;">
+     <td>Takes the display back to its original display settings, i.e. for all buttons up to the
+     the 1st "|".
+	<tr><td><img src="img/plus.gif" alt="Plus" style="width: 20px;">
+	<td>Increase the vertical size.
+<tr><td><img src="img/minus.gif" alt="Minus" style="width: 20px;">
+	<td>Decrease the vertical size.
+<tr><td style="vertical-align:text-top;"><img src="img/scale.gif" alt="Scale" style="width: 20px;">
+	<td>Toggle: Draw the chromosomes proportionately to their actual length in basepairs.
+	<br>Un-toggled: Each species is allocated the same amount of space.
+
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N</ttl>
+	<td> A block will be shown if its length <i>on both sides</i>
+	    is &ge; N, where N= 0bp, 100k, 250k, 500k, 750k, 1M, 2M.
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N hits</ttl>
+	<td> A block will be shown if its number of hits is &ge; N, where N= 0, 15, 25, 50, 100, 200.
+
+	<tr><td colspan=2><ttp>Display</ttp> pops up a menu as described below.
+	<tr><td colspan=2>The 'Color Palette' pops up a menu as described in
+	<a href= "#circColors">Circle Colors</a>.
+	The <ttp>Circle</ttp> colors are saved separately from the <ttp>Linear</ttp> colors.
+</table>
+
+<a id="ldisplay"></a>
+<p><ttp>Display</ttp>
+<table class="tx">
+<tr>
+<td><a href="img/linear-display.png"><img src="img/linear-display.png"  alt="Display button" style="border: 1px solid black;width: 330px"></a>
+<td>
+The window on the left will popup when the <ttl>Display</ttl> button is selected.
+<p>Selecting a checkbox or radio button will instantly change the display, but <ttl>Save</ttl>
+must be selected to keep the changes when close the <ttp>Display</ttp> window.
+</table>
 <table class="tx" style="width:95%">
 	<tr><td>
 	<table>
-	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N</ttl>
-	<td> A block will be shown if its length, <i>on both sides</i>, is &ge; N, where N= 0bp, 500k, 1M, 2M.
-	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N hits</ttl><td> A block will be shown if its number of hits is &ge; N, where N= 0, 50, 100, 200.
-	<tr><td><ttl>Invert</ttl><td> By default, inverted blocks are shown inverted (e.g. the purple block shown on the right);
-	clicking this toggle will show them un-inverted.
-	<tr><td colspan=2>All the remaining controls are the same as for the <ttp>Circle</ttp>, including the <a href= "circColors">Circle Colors</a>.
+	<tr><td><ttl>Inverted</ttl><br><ttl>Blocks</ttl><td> By default, inverted blocks are shown in reverse orientation
+	(e.g. the purple block shown on the right); clicking this toggle will show them un-reversed.
+	<tr><td><ttl>Display</ttl><br><ttl>Blocks</ttl>
+	<td>Show all blocks, inverted only, non-inverted only, or two-color, respectively.
+		<br>Two-color shows the inverted blocks in one color and non-inverted in another.
+	<tr><td style="vertical-align: text-top;"><ttl>Swap</ttl><br><ttl>Reference</ttl><td>
+		Only one of the two checkboxes can be checked.
+   		<br><ttl>Species</ttl>: Swap the species locations.
+   		<br><ttl>Species & Colors</ttl>: Swap the species and their colors.
 	</table>
 	<td><a href="img/invert.png"><img src="img/invert.png"  alt="inverted block" style="border: 1px solid black;width: 80px"></a>
 </table>
-
 <!------------------------------------------------------------>
 <a id="dotplot_display"></a>
 <h2>Dot Plot #1 (Two Genome)</h2>

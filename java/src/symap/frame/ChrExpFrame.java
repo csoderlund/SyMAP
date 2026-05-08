@@ -23,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
@@ -96,7 +97,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
         setLayout(new BorderLayout());
         add(splitPane, BorderLayout.CENTER);
         
-        helpBar = new HelpBar(425, 130); 					
+        helpBar = new HelpBar(425, 130); 	// CAS584 change to screenWidth * 1/4 with scrollbar		
         helpBar.setBorder( BorderFactory.createLineBorder(Color.LIGHT_GRAY) );
         
         createControlPanel(); // adds to Left side of splitPane;
@@ -116,6 +117,76 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		super.dispose();
 	}
 	
+	/********************************************
+	 * Left side
+	 */
+	private void createControlPanel() {
+        JPanel projPanel = new JPanel();
+        projPanel.setLayout(new BoxLayout(projPanel, BoxLayout.Y_AXIS));
+    
+		Mproject[] projects = mapper.getProjects();
+		
+		// First figure out which groups have synteny in this set
+		TreeSet<Integer> grpIdxWithSynteny = new TreeSet<Integer>();
+		for (Mproject p : projects) {
+			Block[] blks = mapper.getBlocksForProject(p.getID());
+			for (Block blk : blks) {
+				grpIdxWithSynteny.add(blk.getGroup1Idx());
+				grpIdxWithSynteny.add(blk.getGroup2Idx());
+			}
+		}
+		
+		for (Mproject p : projects) {
+			ProjIcons pd = new ProjIcons(mapper, p, projectChange, grpIdxWithSynteny);
+			helpBar.addHelpListener(pd,this);
+			
+			CollapsiblePanel cp = new CollapsiblePanel(p.getDisplayName(), null, false);
+			cp.add(pd);
+			cp.expand();
+			
+			projPanel.add(cp);
+		}
+
+		// Create instructions panel
+        LinkLabel infoLink = new LinkLabel("Click for online help");
+        infoLink.setFont(new Font(infoLink.getFont().getName(), Font.PLAIN, infoLink.getFont().getSize()));
+        infoLink.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				Jcomp.setCursorBusy(ChrExpFrame.this, true);
+				String url = Jhtml.USER_GUIDE_URL + Jhtml.exp; // CAS579 go to Explorer; was going to top of UserGuide
+				if ( !Jhtml.tryOpenURL(url)) 
+					System.err.println("Error opening URL: " + url);
+				Jcomp.setCursorBusy(ChrExpFrame.this, false);
+			}
+		});
+        
+		CollapsiblePanel infoCollapsiblePanel = new CollapsiblePanel("Information", null, false); 
+		infoCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+		infoCollapsiblePanel.add( helpBar );
+		infoCollapsiblePanel.add( infoLink );
+		infoCollapsiblePanel.expand();
+		
+		// Setup top-level panel
+		
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+        controlPanel.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0) );
+		controlPanel.add( projPanel );
+		controlPanel.add( createViewControlBar() );	controlPanel.add( Box.createVerticalStrut(10) ); // CAS584 swap with info
+		controlPanel.add( infoCollapsiblePanel ); 	controlPanel.add( Box.createVerticalStrut(10) );
+		
+		controlPanel.add( Box.createVerticalGlue() );
+		
+		JScrollPane scroller = new JScrollPane(controlPanel); // CAS584 added scrollbar
+		scroller.setBackground(Color.white);				  // This works, but the 2D only display half
+		scroller.getViewport().setBackground(Color.white);	  // Display Dotplot, then 2D works
+		scroller.getVerticalScrollBar().setUnitIncrement(10); // More java voodoo....
+		
+		splitPane.setLeftComponent(controlPanel);
+	}
+	/**********************************************
+	 * View: Circle 2D Dotplot
+	 */
 	private JPanel createViewControlBar() {
 		viewControlBar = new MutexButtonPanel("Views:", 5);
 		viewControlBar.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -198,65 +269,6 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			}
 		}
 	};
-	
-	private void createControlPanel() {
-		// Create project graphical menus
-        JPanel projPanel = new JPanel();
-        projPanel.setLayout(new BoxLayout(projPanel, BoxLayout.Y_AXIS));
-    
-		Mproject[] projects = mapper.getProjects();
-		
-		// First figure out which groups have synteny in this set
-		TreeSet<Integer> grpIdxWithSynteny = new TreeSet<Integer>();
-		for (Mproject p : projects) {
-			Block[] blks = mapper.getBlocksForProject(p.getID());
-			for (Block blk : blks) {
-				grpIdxWithSynteny.add(blk.getGroup1Idx());
-				grpIdxWithSynteny.add(blk.getGroup2Idx());
-			}
-		}
-		
-		for (Mproject p : projects) {
-			ProjIcons pd = new ProjIcons(mapper, p, projectChange, grpIdxWithSynteny);
-			helpBar.addHelpListener(pd,this);
-			
-			CollapsiblePanel cp = new CollapsiblePanel(p.getDisplayName(), null, false);
-			cp.add(pd);
-			cp.expand();
-			
-			projPanel.add(cp);
-		}
-
-		// Create instructions panel
-        LinkLabel infoLink = new LinkLabel("Click for online help");
-        infoLink.setFont(new Font(infoLink.getFont().getName(), Font.PLAIN, infoLink.getFont().getSize()));
-        infoLink.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				Jcomp.setCursorBusy(ChrExpFrame.this, true);
-				String url = Jhtml.USER_GUIDE_URL + Jhtml.exp; // CAS579 go to Explorer; was going to top of UserGuide
-				if ( !Jhtml.tryOpenURL(url)) 
-					System.err.println("Error opening URL: " + url);
-				Jcomp.setCursorBusy(ChrExpFrame.this, false);
-			}
-		});
-        
-		CollapsiblePanel infoCollapsiblePanel = new CollapsiblePanel("Information", null, false); 
-		infoCollapsiblePanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-		infoCollapsiblePanel.add( helpBar );
-		infoCollapsiblePanel.add( infoLink );
-		infoCollapsiblePanel.expand();
-		
-		// Setup top-level panel
-        controlPanel = new JPanel();
-        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
-        controlPanel.setBorder( BorderFactory.createEmptyBorder(0, 5, 0, 0) );
-		controlPanel.add( projPanel );
-		controlPanel.add( infoCollapsiblePanel ); 	controlPanel.add( Box.createVerticalStrut(20) );
-		controlPanel.add( createViewControlBar() );	controlPanel.add( Box.createVerticalStrut(10) );
-		controlPanel.add( Box.createVerticalGlue() );
-		
-		splitPane.setLeftComponent(controlPanel);
-	}
 	///////////////////////////////////////////////////////////////////
 	private void showCircleView(){
 		double [] lastParams = (circframe!=null) ? circframe.getLastParams() : null; // reuse settings
@@ -287,6 +299,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 		cardPanel.add(circframe.getContentPane(), Integer.toString(VIEW_CIRC)); // ok to add more than once
 		((CardLayout)cardPanel.getLayout()).show(cardPanel, Integer.toString(VIEW_CIRC));
 	}
+	
 	///////////////////////////////////////////////////////////////////
 	private void showDotplotView() {
 		// Get selected projects/groups

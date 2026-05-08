@@ -33,7 +33,7 @@ import util.ErrorReport;
  * 			add pseudoLineColorPP as a public static variable and read it value
  * 		/properties/mapper.properties
  * 			add it to this file
- * 		Add to appropriate code to use value, in this case, it was in PseudoPseudoHits.java
+ * 		Add to appropriate code to use value
  * 
  * Tabs are ordered by giving the variable name tab#, where # starts at 1, with the value of the tab name (i.e. tab1=Title on Tab).
  * 
@@ -52,7 +52,7 @@ public class ColorDialog extends JDialog implements ActionListener {
 	private JButton okButton, cancelButton, defaultButton;
 	
 	private final String propsFile = "/properties/colors.properties"; 
-	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot", "circle"}; 
+	private String [] pFiles = {"annotation", "closeup","mapper", "sequence", "dotplot", "circle", "linear"}; // CAS584 add linear  
 	
 	static private HashMap <String, Color> colorDefs = new HashMap <String, Color> (); 
 		
@@ -102,6 +102,9 @@ public class ColorDialog extends JDialog implements ActionListener {
 	}
 	public void setCircle() { 
 		tabbedPane.setSelectedIndex(4);
+	}
+	public void setLinear() { // CAS584 add
+		tabbedPane.setSelectedIndex(5);
 	}
 
 	// read colors.properties

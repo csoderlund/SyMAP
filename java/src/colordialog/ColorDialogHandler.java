@@ -17,7 +17,7 @@ public class ColorDialogHandler {
 	private ColorDialog dialog = null;
 	
 	/**
-	 * Created in circview.ControlPanelCirc, dotplot.DotPlotFrame, drawingPanel.SyMAP2d
+	 * Created in circview.ControlPanelCirc, circflatview.ControlPanelFlat, dotplot.DotPlotFrame, drawingPanel.SyMAP2d
 	 * cookie - in user's directory file .symap_saved_props
 	 */
 	public ColorDialogHandler(PersistentProps cookie)  { 
@@ -37,6 +37,9 @@ public class ColorDialogHandler {
 	}
 	public void setCircle() {
 		dialog.setCircle();
+	}
+	public void setLinear() { // CAS584 add
+		dialog.setLinear();
 	}
 	private void setColors() {
 		if (dialog != null) {

@@ -410,6 +410,7 @@ public class Jcomp {
 		return comboBox;
 	}
 	// XXX Width
+	// int width = Jcomp.createLabel("xxxxxxxxxxxxxxxxxxxx").getPreferredSize().width;
 	public static boolean isWidth(int width, JLabel lab) {
 		return (width > lab.getPreferredSize().width);
 	}

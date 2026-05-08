@@ -16,7 +16,6 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-
 import java.util.Vector;
 import java.util.TreeMap;
 
@@ -40,30 +39,35 @@ import util.Utilities;
  */
 public class FlatPanel extends JPanel implements HelpListener, MouseListener,MouseMotionListener {
 	private static final long serialVersionUID = -1711255873365895293L;
-	private final boolean bTrace=false;
+	private static boolean bTrace=false;
 	
 	static private String propName="SyMAPlinear"; // Does not share saved colors with Circle
-	static private final int projWidth=740,    // total length of the project*zoom; screen is >800
+	static private final int dispProjWidth=740,    // total length of the project*zoom; screen is >800
 							 projX=40, 		   // starting point of each project,
 							 projY=70,		   // Y for first project
 							 projIncY=200,     // inc Y for subsequent projects
 							 barHeight = 15,   // chr bar height
-							 barGap = 2; 	   // gap between grp-grp && grp-blk
+							 barGap = 1; 	   // gap between bar and block
 	
 	// ControlPanelCirc has Info popup with this 
-	private final String helpText = "Click a project name to use its colors.\n" +
-									"Click a bar to bring its blocks to the top."; 			
+	private int cntBlks=0, cntInvBlks=0;
+	  		
 	private final String helpName = "Click a project name to use its colors for the blocks.";
 	private final String helpBar =  "Click a bar to bring its blocks to the top."
 								+ "\nDouble click a bar to only show its blocks.\n";
 	protected final double ZOOM_DEFAULT = 1.0; 		
 	
-	 // set from ControlPanelCirc;  these defaults are also set in ControlPanelCirc
-    protected int invChoice = 0, lenChoice = 0, hitChoice = 0;
-    protected boolean bRevRef = false, bInvBlk = false; // Switch the ref if true; do not show blocks inverted if true
+	 // set from ControlPanelFlat 
+    protected int lenChoice = 0, hitChoice = 0;  // len 0, 50k, 1M, 2M; hits 0, 50, 100, 200
     protected boolean bToScale = false;			// genome size
     protected double zoom = ZOOM_DEFAULT;		// +/- icons
     
+    // set from ControlPanelFlat.Display
+    protected boolean bRevRef = false, bRevCol = false; // reverse ref, or reverse ref and colors
+    protected boolean bInvBlk = true, bInvStroke=false; // Invert orientation of inverted; outline the inverted - not working, leaves residue
+    protected boolean bChrVert = false; // vertical chr labels; not working yet
+    protected int invChoice = 0; 
+    		
     // ControlPanelFlat color popup; default values, if changed, changed in Default button; saved in .symap_props
     protected int colorSet=1;					// ColorSet 1 or 2;
     protected boolean bOrder=false, bRevOrder=false, bShuffle=false, bScaleColors=false;				
@@ -74,9 +78,10 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	
 	private Vector<Integer> colorVec;
 	
-	private Vector<Project> allProjVec;
-	private TreeMap <Integer,Group> idx2GrpMap;
-	private Vector<Integer> priorityVec;
+	private Vector<Project> allProjVec = new Vector <Project> ();			// 2 projects
+	private Vector<Project> savProjVec = new Vector <Project> ();			// 2 projects - original order
+	private TreeMap <Integer,Group> idx2GrpMap = new TreeMap <Integer,Group> (); // all groups
+	private Vector<Integer> priorityVec = new Vector<Integer> ();		// The selected project, can be on top or bottom; only changes text
 	
     private JScrollPane scroller;		
     private HelpBar helpPanel = null;
@@ -139,15 +144,27 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	    makeRepaint();  
 	}
 	
-	protected void reverse() {     // reverse reference; only available for 2 WG view
+	protected void reverseRef(boolean bSwapRef, boolean bCol) {     // reverse reference (+ colors)
 	try {
-		Project p1 = allProjVec.get(0);
-		Project p2 = allProjVec.get(1);
-		allProjVec.clear();
-		allProjVec.add(p2);
-		allProjVec.add(p1);
+		if (bSwapRef == bRevRef && bCol == bRevCol) return;
+		bRevRef = bSwapRef;				// T flipped, F put back
+		bRevCol = bCol;
 		
-		initObj.setChrColorIdx();
+		Project p1=null, p2=null;
+		if (bSwapRef && allProjVec.get(0).idx==savProjVec.get(0).idx) {
+			p1 = savProjVec.get(1);
+			p2 = savProjVec.get(0);
+		}
+		else if (!bSwapRef && allProjVec.get(0).idx!=savProjVec.get(0).idx){
+			p1 = savProjVec.get(0);
+			p2 = savProjVec.get(1);
+		}
+		if (p1!=null) {
+			allProjVec.clear();
+			allProjVec.add(p1);
+			allProjVec.add(p2);
+		}
+		if (!bRevCol) initObj.setChrColorIdx();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Reverse projects");}
 	}	
@@ -212,8 +229,8 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 				helpPanel.setHelp(helpName, this);
 			}
 			else{
-				setCursor( Cursor.getDefaultCursor() );
-				helpPanel.setHelp(helpText, this);
+				//setCursor( Cursor.getDefaultCursor() ); // CAS584 replaced with counts
+				//helpPanel.setHelp(helpText, this);
 			}
 		}	
 	}
@@ -243,15 +260,12 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	/************************************************************************************
 	 * XXX Painting methods
 	 ********************************************************************************/
-	
 	protected void makeRepaint() {repaint();} // ControlPanelFlat
-	
-	// Note that circle angles are measured from the middle-right of the circle, going around counterclockwise. 
-	// Hence, the right side of the circle is angle 0-90, plus angle 270-360.   
+	 
 	public void paintComponent(Graphics g)  {
 		super.paintComponent(g); 
-		
-		dprt("Paint");
+		cntBlks=cntInvBlks=0;
+	
 	// Setup 
 		Dimension d = new Dimension((int)(scroller.getWidth()*zoom), (int)(scroller.getHeight()*zoom)); //  d 825 819
 		
@@ -265,11 +279,11 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         
         int curProjY = projY;				// increments through projects
-        int projW = (int) ((double) projWidth * zoom);
+        int projW = (int) ((double) dispProjWidth * zoom);
         double scale = 1.0;
         if (bToScale) {
         	long max = Math.max(allProjVec.get(0).projLen, allProjVec.get(1).projLen);
-        	scale = (double) projWidth/ (double) max;
+        	scale = (double) dispProjWidth/ (double) max;
         }
         
     // Loop through projects draw name, grps, blocks 
@@ -277,7 +291,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
         for (Project prjObj : allProjVec) {
         	int curProjW = projW;
         	if (bToScale) {
-        		curProjW = (int) ((double) prjObj.projLen * scale);
+        		curProjW = (int) ((double) prjObj.projLen * scale); // ??? overflow integer
         		curProjW *= zoom;
         	}
         	
@@ -291,12 +305,18 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
         	off = (isTop) ? -8 : 30;
         	
         	for (Group go : prjObj.grps) {
+        		if (go.colorIdx<0 || go.colorIdx>colorVec.size()) {
+        			Globals.prt("ColorIdx " + go.colorIdx + " " + colorVec.size());
+        			go.colorIdx = 0;
+        		}
         		g.setColor(new Color(colorVec.get(go.colorIdx)));
         		g.fillRect(go.x, go.y, go.w, go.h);// x,y,w,h
         		g.setColor(Color.black);	
         		
         		int tx = (go.x+(go.x+go.w))/2 - fm.stringWidth(go.grpName)/2;
+  
                 g.drawString(go.grpName, tx, go.y+off); 
+               
         	}
         	curProjY += projIncY;
         	isTop=false;  
@@ -353,21 +373,31 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	}
 	// Paint Block
 	private void paintGroupBlk(Graphics g, Graphics2D g2, Group grp1, Group grp2, Block blk) {
-		if (lenChoice==1 && blk.len<500000) return;
-		if (lenChoice==2 && blk.len<1000000) return;
-		if (lenChoice==3 && blk.len<2000000) return;
+		// filter
+		for (int i=1; i<ControlPanelFlat.lenCuts.length; i++) { // index[0] is 0
+			if (lenChoice==i && blk.lenMin<ControlPanelFlat.lenCuts[i]) return;
+		}
+		for (int i=1; i<ControlPanelFlat.numHits.length; i++) {// index[0] is 0
+			if (hitChoice==i && blk.hits<ControlPanelFlat.numHits[i]) return;
+		}
 		
-		if (hitChoice==1 && blk.hits<50) return;
-		if (hitChoice==2 && blk.hits<100) return;
-		if (hitChoice==3 && blk.hits<200) return;
-		
-		if (invChoice == 1 && !blk.inverted) return;
-		if (invChoice == 2 && blk.inverted) return;
+		if (invChoice == 1 &&  blk.inverted) return;// inverted, not-inverted, two color
+		if (invChoice == 2 && !blk.inverted) return;
 
-		int cidx = (colorFirstPriority(grp1.proj_idx, grp2.proj_idx) ? grp1.colorIdx : grp2.colorIdx);
-		if (invChoice != 3) g.setColor(new Color(colorVec.get(cidx)));
-		else                g.setColor(blk.inverted ? blockN : blockP);
+		// inits
+		cntBlks++;
+		if (blk.inverted) cntInvBlks++;
+		
+		Color cfill;
+		if (invChoice != 3) {
+			int cidx = (colorFirstPriority(grp1.proj_idx, grp2.proj_idx) ? grp1.colorIdx : grp2.colorIdx);
+			cfill = new Color(colorVec.get(cidx));
+		}
+		else cfill = blk.inverted ? blockN : blockP;
 	    
+		g2.setColor(cfill);	
+		
+		// draw
 		int s1 = grp1.blkLoc(blk.s1);
 		int e1 = grp1.blkLoc(blk.e1);
 		int s2 = grp2.blkLoc(blk.s2);
@@ -375,16 +405,15 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 		
 		int y1 = grp1.y + grp1.h + barGap;
 		int y2 = grp2.y - barGap;
-		if (bRevRef) {
+		if (bRevRef) {							// see reverseRef
 			y1 = grp1.y - barGap;
 			y2 = grp2.y + grp1.h + barGap;
 		}
 		
 		GeneralPath gp = new GeneralPath();
-		
 		gp.moveTo((double)s1, (double) y1);
 		
-		if (blk.inverted && !bInvBlk) {
+		if (blk.inverted && bInvBlk) {
 			gp.lineTo((double)e2, (double) y2);
 			gp.lineTo((double)s2, (double) y2);
 		}
@@ -394,6 +423,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 		gp.lineTo((double)e1, (double) y1);
 		gp.closePath();
+		
 		g2.fill(gp);
 	}
 	
@@ -448,11 +478,14 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	protected void resetToHome() { 
 		zoom = ZOOM_DEFAULT;
 		bToScale =  false;
+		lenChoice = hitChoice = 0;
 	}
 	protected boolean isHome() { 
-		return zoom==ZOOM_DEFAULT && !bToScale;
+		return zoom==ZOOM_DEFAULT && !bToScale && lenChoice==0 && hitChoice==0;
 	}
-	public String getHelpText(MouseEvent event) { return helpText;} // frame.HelpBar
+	public String getHelpText(MouseEvent event) { 
+		return "  #Blocks " + cntBlks + "  #Inverse " + cntInvBlks; 
+	} 
 	/************************************************************************
 	 * Classes
 	 **********************************************************************/
@@ -501,7 +534,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 				g.y = y;
 				g.h = barHeight;
 				
-				nextx = (g.x + g.w + barGap);
+				nextx = (g.x + g.w + barGap); 
 			}
 		}
 	}// end project class
@@ -511,7 +544,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 		private int grpLen;
 		private int idx, proj_idx;
 		private String grpName;
-		private int x, w, y, h;		 	// Assigned values in setGrpBar during paintComponent
+		private int x, w, y, h;		 	// Assigned values in Project.setGrpBar during paintComponent
 		private int colorIdx = -1; 		// index into color vector
 		private boolean onTop = false, onlyShow = false; // click, double click
 		private Vector <Block> blocks = new Vector <Block> ();
@@ -531,7 +564,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 		}
 	}
 	private class Block {
-		private int s1, e1, s2, e2, len, hits;
+		private int s1, e1, s2, e2, lenMin, hits;
 		private int gidx1, gidx2;
 		private boolean inverted;
 		
@@ -540,7 +573,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 			this.s1 = s1; 		this.e1 = e1;
 			this.s2 = s2; 		this.e2 = e2;
 			this.inverted = inv;
-			len = Math.min(e1-s1+1, e2-s2+1);
+			lenMin = Math.min(e1-s1+1, e2-s2+1);
 			this.hits = hits;
 		}
 	}
@@ -555,10 +588,6 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 			this.dbc2 = dbc2;
 			
 		// Projects and groups
-			allProjVec = new Vector<Project>();
-			idx2GrpMap = new TreeMap<Integer,Group> ();
-			priorityVec = new Vector<Integer>();
-			
 			for (int i = 0; i < projIdxList.length; i++){ //allProjVec, allGrpsVec,idx2GrpMap
 				loadProjects(projIdxList[i]);
 			}
@@ -573,9 +602,9 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 				if (p.idx!=refIdx) priorityVec.add(p.idx);
 			}
 			
-			makeNewColorVec();							// create colorVec, use allGrpVec;
 			setChrColorIdx(); 							// does not need colorVec, only allProjVec
 			if (!initColorsFromProps()) return false; 	// color params are saved in .symap_props
+			makeNewColorVec();							// create colorVec, use allGrpVec;
 				
 			return true;
 		}
@@ -593,6 +622,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 
 				Project proj = new Project(idx, rs.getString(1), dbc2); // loads groups
 				allProjVec.add(proj);
+				savProjVec.add(proj);
 				
 				for (Group g : proj.grps) idx2GrpMap.put(g.idx, g);	
 			}
@@ -641,11 +671,12 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 				for (Group g : p.grps) {
 					dprt(String.format("   g%2d  p%2d  %10s #Blocks %,d", g.idx, g.proj_idx, g.grpName, g.blocks.size()));
 					for (Block b : g.blocks) {
-						dprt(String.format("      g%2d  g%2d   Len %,10d   1: %,10d %,10d  2: %,10d %,10d", b.gidx1, b.gidx2, b.len, b.s1, b.e1, b.s2, b.e2 ));
+						dprt(String.format("      g%2d  g%2d   Len %,10d   1: %,10d %,10d  2: %,10d %,10d", b.gidx1, b.gidx2, b.lenMin, b.s1, b.e1, b.s2, b.e2 ));
 					}
 				}
 			}
 		}
+		
 		/*****************************************************
 		 * Load/Save colors
 		 */
@@ -687,35 +718,19 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 				int maxGrps=0;
 				for (Project p : allProjVec) maxGrps = Math.max(maxGrps, p.grps.size());
 				
-				boolean bad=false;
-				if (allProjVec.size() <=4 && maxGrps<=25) {
+				if (allProjVec.size()<=4 && maxGrps<=25) {
 					int i=0;
 					int [] start = {0,24,49,74};
 					for (Project p : allProjVec) {
 						int inc = start[i];
-						for (Group g : p.grps) {
-							g.colorIdx = inc++;
-							if (g.colorIdx>=colorVec.size()) bad=true; 	
-						}
+						for (Group g : p.grps) g.colorIdx = inc++;
 						i++;
 					}
 				}
 				else {
 					int inc=0;
 					for (Project p : allProjVec) {
-						for (Group g : p.grps) {
-							g.colorIdx = inc++;
-							if (g.colorIdx>=colorVec.size()) bad=true;
-						}
-					}
-				}
-				if (bad) { // to fix properly, do this per project and start over on coloring
-					String msg = "Not enough colors (" + colorVec.size() + ") for all chromosomes";
-					Globals.prt(msg);
-					for (Project p : allProjVec) {
-						for (Group g : p.grps) {
-							if (g.colorIdx>=colorVec.size()) g.colorIdx=colorVec.size()-1;
-						}
+						for (Group g : p.grps) g.colorIdx = inc++;
 					}
 				}
 			}
@@ -735,7 +750,7 @@ public class FlatPanel extends JPanel implements HelpListener, MouseListener,Mou
 	public static Color blockP; 		
 	public static Color blockN;
 	static {
-		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/circle.properties"));
+		PropertiesReader props = new PropertiesReader(Globals.class.getResource("/properties/linear.properties"));
 		blockP = props.getColor("blockP"); 
 		blockN = props.getColor("blockN"); 
 	}
