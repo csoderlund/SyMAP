@@ -154,7 +154,7 @@ public class Filter extends JDialog  {
 		showBlocksBox = Jcomp.createCheckBoxGray("Boundary", "Show boundary of block", true);
 		showBlocksBox.addItemListener(listener);
 
-		showEmptyBox = Jcomp.createCheckBoxGray("Show Empty Regions", "Show regions with no hits", false);
+		showEmptyBox = Jcomp.createCheckBoxGray("Show all chromosomes", "Include chromosomes that have no blocks", false);
 		showEmptyBox.addItemListener(listener);
 		
 		Container cp = getContentPane();

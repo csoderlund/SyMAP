@@ -80,13 +80,15 @@ p    {margin-bottom: 0; }
     
 .tz {width: 90%; background-color:#f1f1f1; margin-left: auto; margin-right: auto;} /* contents table */
   
-.tx td {padding: 5px; }				/* table without border */
+.tx td {padding: 5px; border: none;}				/* table without border */
 
 .ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}/* table with border */
 .ty td {border: 1px  solid black; padding: 8px; }
 
-.center {margin-left: auto; margin-right: auto;}
+.tq table {border: 1px  solid black; border-spacing: 1px; border-collapse: collapse; width: 100%;}
+.tq td {padding-top: 1px; padding-bottom: 1px; padding-left: 10px; padding-right: 10px;} /* reduce spacing */
 
+.center {margin-left: auto; margin-right: auto;}
 .colrt {text-align: right;}
 .coltop {vertical-align: text-top;}
 .colnp {white-space: nowrap;}

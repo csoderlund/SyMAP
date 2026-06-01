@@ -271,7 +271,7 @@ public class Jcomp {
 			else return UIManager.getColor("Button.background");
 		}
 		else {
-			if (isSelect) return Color.gray;
+			if (isSelect) return Color.black; // CAS585 was gray, this is more obvious
 			else return Color.white;
 		}
 	}

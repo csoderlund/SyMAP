@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<!------ left side index - customize ----------------------------------------------------->
+<!-- left side index customize -->
 <div class="sidenav">
 <a href="https://csoderlund.github.io">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
@@ -31,11 +31,13 @@
 <a href="#dot3">Dot Plot #3<br>(Multi-Genome)</a>
 
 <a href="#gen">General</a>
+<a href="#self">&nbsp;&nbsp;&nbsp;Self-synteny</a>
+<a href="#exncl">&nbsp;&nbsp;&nbsp;Export&amp;Color</a>
 
 <a href="#top">Go to top</a>
 </div>
 
-<!------ right side header and body ----------------------------------------------------->
+<!-- right side header and body -->
 <div class="rightSide">
 <a id="top"></a>
 
@@ -61,10 +63,10 @@
 	</table>
  </div>
 
-<!---------------------------- bulk of page ------------------------------------------->
+<!-- ************ bulk of page ***************** -->
 <div class="main">
 
-<p>This guide is for the <ttp>viewSymap</ttp> user interface;
+<p>&nbsp;This guide is for the <ttp>viewSymap</ttp> user interface;
 <a href="Query.html" target="_blank" class="ext">Queries</a> user guide is a separate HTML page.
 <p>
 <ul>
@@ -72,7 +74,7 @@
 	<li>The documentation always applies to the latest release.
 </ul>
 
-<!------ See SyMAP code util.Jhtml for refs in code; see all 'ref in code' -->
+<!-- See SyMAP code util.Jhtml for refs in code; see all 'ref in code' -->
 <b>Contents</b>
 <table>
 <tr>
@@ -121,7 +123,7 @@
 	&bull; <a href="#gen">General</a>
 	<ul>
 	<li><a href="#self">Self-synteny</a>
-	<li><a href="#data_download">Data Download</a>
+	<li><a href="#data_export">Export</a>
 	<li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
 	<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Hit popup, 3-chr conserved</small>
 	</ul>
@@ -276,6 +278,7 @@ Is it also available from <tt>./symap</tt>, which will include the commands to b
 <h2>Circle #1 (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#ccp">Control Panel</a>
+<td><a href="#cdisplay">Display options</a>
 <td><a href="#circColors">Colors</a>
 <td><a href="#"></a>
 <td><a href="#"></a>
@@ -290,8 +293,8 @@ This section described the two-genome <ttp>Circle</ttp>, which also applies to t
 	The <ttp>Circle</ttp> display shows the chromosomes arranged in a circle,
 	with synteny blocks shown as <u>colored blocks</u> between the chromosomes.
 	The color of a block comes from one of the two chromosomes it connects; for example,
-	in the image on the right, the A.thal Chr05 <u>color arc</u> is orange and the corresponding
-	blocks are orange.
+	in the image on the right, the A.thal Chr05 <u>color arc</u> is gold and the corresponding
+	blocks are gold.
 	<p><i>Project name</i>: Move the mouse over a project name and click once.
 	The project name will be shown in bold italics and the projects colors will be used for the blocks.
 	<p>For example, in the image on the right,
@@ -299,11 +302,14 @@ This section described the two-genome <ttp>Circle</ttp>, which also applies to t
 		click Cabbage and the blocks will be colored with its arc colors.
 
 	<p><i>Chromosome color arc</i>: Move the mouse over an arc, followed by:
+
 	<table>
-	<tr><td style="vertical-align:text-top;">1.<td>Click: The blocks from the chromosome will be shown in front.
-	<tr><td style="vertical-align:text-top;">2.<td>Double-click: Only the blocks of the selected
-	chromosome will be shown. To undo, click an arc or a project name.
+		<tr><td style="vertical-align:text-top;">1.<td>Click: The blocks from the chromosome will be shown in front.
+		<tr><td style="vertical-align:text-top;">2.<td>Double-click: Only the blocks of the selected
+		chromosome will be shown. To undo, click an arc or a project name.
 	</table>
+
+	<p>&nbsp;<p>This can also be used to view self-synteny as described in <a href="#cself">Self-synteny</a>.
 
 	<td><a href="img/circle-2g.png">
 		<img src="img/circle-2g.png" alt="circle-two-genome" style="border: 1px solid black; width: 450px"></a>
@@ -326,44 +332,72 @@ This section described the two-genome <ttp>Circle</ttp>, which also applies to t
 	<td>Rotate the circle clock-wise.
 <tr><td><img src="img/rotate-left.png" alt="Rotate Left" style="width: 20px;">
 	<td>Rotate the circle counter-clock-wise.
-<tr><td style="vertical-align:text-top;"><ttl>Rotate</ttl>
-	<td>Toggle: Rotate the text to face the circle. Un-toggled: As shown in the above image.
 <tr><td style="vertical-align:text-top;"><img src="img/scale.gif" alt="Scale" style="width: 20px;">
 	<td>Toggle: Draw the chromosomes proportionately to their actual length in basepairs.
 <br>Un-toggled: Each species is allocated the same amount of space,
 e.g. for two species each one gets exactly half the circle.
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N bp</ttl>
+	<td> A block will be shown if its length <i>on both sides</i>
+	    is &ge; N, where N= 0bp, 100k, 250k, 500k, 750k, 1M, 2M.
+	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>&ge; N hits</ttl>
+	<td> A block will be shown if its number of hits is &ge; N, where N= 0, 15, 25, 50, 100, 200.
+
+	<tr><td colspan=2><ttp>Display</ttp> pops up a menu as described below.
+	<tr><td colspan=2>The 'Color Palette' pops up a menu as described in
+	<a href= "#circColors">Circle Colors</a>.
+	The <ttp>Circle</ttp> colors are saved separately from the <ttp>Linear</ttp> colors.
 </table>
 
-<p>The <ttl>All blocks</ttl> (default) popup menu has:
+<a id="cdisplay"></a>
+<h4>Circle Display Options</h4>
 <table class="tx">
-	<tr><td><ttl>All blocks</ttl><td>Show all blocks
-	<tr><td><ttl>Inverted</ttl><td>Only show the inverted blocks
-	<tr><td><ttl>Non-inverted</ttl><td>Only show the non-inverted blocks
-	<tr><td><ttl>Two-color</ttl><td>Color the blocks as inverted=green, non-inverted=red.
+<tr>
+<td><a href="img/circle-display.png"><img src="img/circle-display.png"  alt="Display button" style="border: 1px solid black;width: 330px"></a>
+<td>
+The window on the left will popup when the <ttl>Display</ttl> button is selected.
+<p>Selecting a checkbox or radio button will instantly change the display, but <ttl>Save</ttl>
+must be selected to keep the changes when the <ttp>Display</ttp> window is closed.
 </table>
 
-<p>Remaining buttons:
-<table class="tx">
-	<tr><td style="white-space: nowrap; vertical-align:text-top;"><ttl>Self-align</ttl>
-	<td>(If self-synteny has been computed) When toggled, the self-synteny blocks are shown.
-<tr><td style="vertical-align:text-top;"><ttl>Reverse</ttl>
-	<td>(Only available for 2-genome display) When toggled,
-	the reference will be reversed, i.e. the bottom project is shown on top and uses the reference colors
-	(you may need to click the top projects name to use its colors).
-
-<tr><td><img src="img/colorPalette.png" alt="Color" style="width: 20px;">
-	<td>Change the colors of the chromosome blocks, as described below.<td>
-<tr><td><img src="img/print.gif" alt="Print" style="width: 20px;">
-	<td>Prints the circle graphics as displayed.<td>
-<tr><td><img src="img/helpSm.png" alt="Help" style="width: 20px;">
-	<td>Displays the online help.<td>
-<tr><td><img src="img/info.png" alt="Info" style="width: 20px;">
-	<td>A popup window of quick help.<td>
+<table class="tq"">
+	<tr><td colspan=2><ttl>Blocks</ttl></td>
+	<tr><td>&nbsp;&nbsp;<ttl>Display</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>All blocks</ttl><td>Show all blocks
+		<tr><td><ttl>Two-color</ttl><td>Show all blocks colored inverted=burgundy and non-inverted=blue.
+		<tr><td><ttl>Non-inverted</ttl><td>Only show the non-inverted blocks
+		<tr><td><ttl>Inverted</ttl><td>Only show the inverted blocks
+		</table>
+	<tr><td colspan=2><ttl>Chromosomes</tl></td>
+<tr><td>&nbsp;&nbsp;<ttl>Display</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>All</ttl><td>Show all chromosomes
+		<tr><td><ttl>With blocks</ttl><td>Show all chromosomes that have at least one block, even if it is not displayed,
+		e.g. filtered by &ge; N hits.
+		<tr><td><ttl>With displayed blocks</ttl><td>Show only chromosomes that display at least one block.
+		</table>
+	<tr><td>&nbsp;&nbsp;<ttl>Label</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>Display</ttl> <td>Uncheck a species will remove it chromosome labels.
+		<tr><td><ttl>Slant</ttl><td>Rotate all text to face the circle.
+		</table>
+	<tr><td colspan=2><ttl>Species<ttl>
+	<tr><td>&nbsp;&nbsp;<ttl>Swap</ttl>
+		<td>
+	   	<table class="ty">
+   		<tr><td><ttl>Species</ttl><td>Swap the species locations.
+   		</table>
+	</table>
 </table>
+<table>
+<p>
 
 <a id="circColors"></a>
-<h4>Circle Colors</h4>
-<img src="img/colorPalette.png" alt="Color" style="width: 20px;"> Circle Colors :
+<h4>Circle and Linear Colors</h4>
+<img src="img/colorPalette.png" alt="Color" style="width: 20px;">Colors:
 On <ttl>Save</ttl>, the color settings are saved and will be reused on subsequent circle displays.
 Since it is not reasonable to set colors for each ribbon, this panel gives options to tailor
 the group circle of ribbon colors to your desire.
@@ -398,14 +432,14 @@ the group circle of ribbon colors to your desire.
 <h2>Linear (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#lcp">Control Panel</a>
-<td><a href="#ldisplay">Display</a>
+<td><a href="#ldisplay">Display Options</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 <p>The <ttp>Linear</ttp> display is similar to the <ttp>Circle</ttp>, but stretched out linearly. It only works for two genomes
 and does not work for self-synteny.
 <p>As with <ttp>Circle</ttp>, synteny blocks are shown as colored blocks between the chromosomes.
 The color of a block comes from one of the two chromosomes it connects;
-for example, in the image below, the A.thal Chr05 to Cabbage blocks are all orange.
+for example, in the image below, the A.thal Chr05 to Cabbage blocks are all gold.
 
 <a href="img/linear-2g.png">
 		<img src="img/linear-2g.png" alt="circle-colors" style="border: 1px solid black; width: 700px"></a>
@@ -448,29 +482,74 @@ The project name will be shown in bold italics and the projects colors will be u
 </table>
 
 <a id="ldisplay"></a>
-<p><ttp>Display</ttp>
+<p><ttp>Linear Display Options</ttp>
 <table class="tx">
 <tr>
 <td><a href="img/linear-display.png"><img src="img/linear-display.png"  alt="Display button" style="border: 1px solid black;width: 330px"></a>
 <td>
 The window on the left will popup when the <ttl>Display</ttl> button is selected.
 <p>Selecting a checkbox or radio button will instantly change the display, but <ttl>Save</ttl>
-must be selected to keep the changes when close the <ttp>Display</ttp> window.
+must be selected to keep the changes when the <ttp>Display</ttp> window is closed.
+<p><td><a href="img/invert.png"><img src="img/invert.png"  alt="inverted block" style="border: 1px solid black;width: 80px"></a>
 </table>
-<table class="tx" style="width:95%">
-	<tr><td>
-	<table>
-	<tr><td><ttl>Inverted</ttl><br><ttl>Blocks</ttl><td> By default, inverted blocks are shown in reverse orientation
-	(e.g. the purple block shown on the right); clicking this toggle will show them un-reversed.
-	<tr><td><ttl>Display</ttl><br><ttl>Blocks</ttl>
-	<td>Show all blocks, inverted only, non-inverted only, or two-color, respectively.
-		<br>Two-color shows the inverted blocks in one color and non-inverted in another.
-	<tr><td style="vertical-align: text-top;"><ttl>Swap</ttl><br><ttl>Reference</ttl><td>
-		Only one of the two checkboxes can be checked.
-   		<br><ttl>Species</ttl>: Swap the species locations.
-   		<br><ttl>Species & Colors</ttl>: Swap the species and their colors.
+
+<table class="tq">
+	<tr><td colspan=2><ttl>Blocks</ttl></td>
+	<tr><td>&nbsp;&nbsp;<ttl>Display</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>All blocks</ttl><td>Show all blocks
+		<tr><td><ttl>Two-color</ttl><td>Show all blocks colored inverted=burgundy and non-inverted=blue.
+		<tr><td><ttl>Non-inverted</ttl><td>Only show the non-inverted blocks
+		<tr><td><ttl>Inverted</ttl><td>Only show the inverted blocks
+		</table>
+
+	<tr><td>&nbsp;&nbsp;<ttl>Inverted</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>Reverse orientation</ttl> <td>By default, inverted blocks are shown in reverse orientation
+		(e.g. the burgundy block shown on the upper right); uncheck this will show them un-reversed.
+		<tr><td><ttl>Outline</ttl><td>This outlines the inverted blocks. It is occasionally useful to see tiny inversions.
+		</table>
+
+	<tr><td colspan=2><ttl>Chromosomes</tl></td>
+
+<tr><td>&nbsp;&nbsp;<ttl>Display</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>All</ttl><td>Show all chromosomes
+		<tr><td><ttl>With blocks</ttl><td>Show all chromosomes that have at least one block, even if it is not displayed,
+		e.g. filtered by &ge; N hits.
+		<tr><td><ttl>With displayed blocks</ttl><td>Show only chromosomes that display at least one block.
+		</table>
+
+	<tr><td>&nbsp;&nbsp;<ttl>Label</ttl>
+		<td>
+		<table class="ty">
+		<tr><td><ttl>Display</ttl> <td>Uncheck a species will remove it chromosome labels.
+		<tr><td><ttl>Slant</ttl><td>The chromosome labels will be slanted.
+		Selecting 90 angle will make them vertical. The upper right
+		images shows the labels at 65 angle.
+		</table>
+
+	<tr><td colspan=2><ttl>Species<ttl>
+	<tr><td>&nbsp;&nbsp;<ttl>Swap</ttl>
+		<td>
+	   	<table class="ty">
+		<tr><td><ttl>None</ttl><td>The default view.
+   		<tr><td><ttl>Species</ttl><td>Swap the species locations.
+   		<tr><td><ttl>Colors</ttl><td>Swap the colors from the lower species to the upper species.
+   		<tr><td><ttl>Both</ttl><td>Swap both the colors and the species.
+   		</table>
 	</table>
-	<td><a href="img/invert.png"><img src="img/invert.png"  alt="inverted block" style="border: 1px solid black;width: 80px"></a>
+</table>
+<table>
+<tr><td>The benefit of the <ttl>Swap</ttl> is that you can put together a multi-species image in the way
+you want. This is illustrated on the right, where humans are compared to both mouse and chimpanzee.
+<p>The top and bottom images were dragged into a powerpoint, which was used to create the picture.
+The area capture keys were used to snapshot the image.
+
+<td><a href="img/linearHsa.png"><img src="img/linearHsa.png"  alt="Mus-Hsa-Pan" style="border: 1px solid black;width: 530px"></a>
 </table>
 <!------------------------------------------------------------>
 <a id="dotplot_display"></a>
@@ -587,46 +666,48 @@ the <ttx>Color Icon</ttx> settings are stored for subsequent <ttp>Dot Plot</ttp>
 	<img src="img/dotplot-filter.png" alt="dotplot filter" style="border: 1px solid black; width: 350px"></a>
 </table>
 
-<table  class="ty">
+<table  class="tq">
 	<tr><td style="white-space: nowrap;"><ttl>Hit %Identity</ttl>
-		<td>Show all hits that have &gt;N% identity.
+		<td><table class="ty"><tr><td>Show all hits that have &gt;N% identity.
 		The default label on the left starts at the lowest %Id in the plot (in this case 23%).
+		</table>
 	<tr><td><ttl>Dot Size</ttl><sup>a</sup>
-		<td>Increase the size of the dots in the plot.
+		<td><table class="ty"><tr><td>Increase the size of the dots in the plot.</table>
 	<tr><td style="white-space: nowrap;"><ttl>Scale dot by hit</ttl><sup>a</sup>
 		<td>
-		<table class="ty txy">
-			<tr><td><ttx>Length</ttx><td>The dot is a rectangle relative to the hit's length.
-			<tr><td><ttx>%Id</ttx><td> The dot is scaled by the hit's %Id (Identity).
-			<tr><td><ttx>None</ttx><td> All dots are the same size.
+		<table class="ty">
+			<tr><td><ttl>Length</ttl><td>The dot is a rectangle relative to the hit's length.
+			<tr><td><ttl>%Id</ttl><td> The dot is scaled by the hit's %Id (Identity).
+			<tr><td><ttl>None</ttl><td> All dots are the same size.
 		</table>
 	<tr><td><ttl>Show Hits</ttl>
 		<td>
-		<table class="ty txy">
-			<tr><td><ttx>All</ttx><td>Show all hits.
-			<tr><td><ttx>Mix</ttx><td>Show all hits, but non-blocks hits will be displayed as a small dot.
-			<tr><td><ttx>Block</ttx><td>Show only block hits.
+		<table class="ty">
+			<tr><td><ttl>All</ttl><td>Show all hits.
+			<tr><td><ttl>Mix</ttl><td>Show all hits, but non-blocks hits will be displayed as a small dot.
+			<tr><td><ttl>Block</ttl><td>Show only block hits.
 		</table>
 	<tr><td><ttl>Gene Only</ttl>
 		<td>
-		<table class="ty txy">
-			<tr><td><ttx>Ignore</ttx><td>Show all.
-			<tr><td><ttx>Both</ttx><td>Only show hits that have a gene on both ends to the hit (g2).
-			<tr><td><ttx>One</ttx><td>Only show hits that have a gene on one end of hit (g1).
-			<tr><td><ttx>None</ttx><td>Only show hits that do not have a gene on either end (g0).
+		<table class="ty">
+			<tr><td><ttl>Ignore</ttl><td>Show all.
+			<tr><td><ttl>Both</ttl><td>Only show hits that have a gene on both ends to the hit (g2).
+			<tr><td><ttl>One</ttl><td>Only show hits that have a gene on one end of hit (g1).
+			<tr><td><ttl>None</ttl><td>Only show hits that do not have a gene on either end (g0).
 		</table>
 	<tr><td><ttl>Show Block</ttl>
 		<td>
-		<table class="ty txy">
-			<tr><td><ttx>Boundary</ttx><td>Draw a blue rectangle around each block of hits.
+		<table class="ty">
+			<tr><td><ttl>Boundary</ttl><td>Draw a blue rectangle around each block of hits.
 			<i>This must be shown in order to select a block for <ttp>2D</ttp> display.</i>
-			<tr><td><ttx>Number</ttx><td>Draw the block number in or near the block.
+			<tr><td><ttl>Number</ttl><td>Draw the block number in or near the block.
 		</table>
 </table>
 <small><sup>a</sup> These options can make the dots flow over the borders,
 see <u>Size of dots</u> below.</small>
 
-<p><ttl>Show Empty Regions</ttl> (Not shown in above <ttb>Filter</ttb> image) This option is only present
+<p><ttl>Show all chromosomes</ttl> (Not shown in above <ttb>Filter</ttb> image)
+This option is only present
 if at least one of the genomes displayed has &gt;=20 chromosomes or scaffolds; this is most relevant
 when one genome is draft sequence, as there can be rows or columns with no blocks.
 When the option is deselected, it hides rows or columns that do not contain any synteny blocks.
@@ -836,10 +917,20 @@ to the basepair level.
 <a id="alignment_display_circ"></a>
 <h3>Circle #2 (Multi-chromosome)</h3>
 
+
+<table><tr><td>
 This view is illustrated in the above <a href="#explorer">Chromosome Explorer</a> image.
 All features are described in the first <a href="#circle">Circle section</a>,
-except it is chromosome-based instead of genome-based.
-
+except it is chromosome-based instead of genome-based. Plus:
+<ul>
+<li>If multiple species are shown, and one or more have self-synteny, those blocks can also be displayed
+by toggling the <ttl>Self-synteny</ttl> button on the <ttb>Control</ttb> bar..
+<p>
+<li>Only a subset of the <ttl>Display</ttl> options are available, as shown on the right.
+</ul>
+<td><a href="img/circle-ce.png">
+	<img src="img/circle-ce.png" alt="CE circle display" style="border: 1px solid black; width: 360px"></a>
+</table>
 <!----------------------------------------------------------------->
 <a id="alignment_display_dot"></a>
 <h3>Dot Plot #2 (Multi-chromosome)</h3>
@@ -1639,7 +1730,7 @@ below shows three genomes; A.thal is the reference, which can be changed with th
 
 <table class="tz">
 <tr><td><a href="#self">Self-synteny</a>
-	<td><a href="#data_download">Data Download</a>
+	<td><a href="#data_export">Data Download</a>
 	<td><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
@@ -1659,17 +1750,26 @@ self-synteny selected in order to view its results.
 (e.g. <a href="Demo.html#self" class="ext" target="_blank">Demo Dot Plot</a>), with the following exception:
 <td><a href="img/viewSelf.png"><img src="img/viewSelf.png" alt="" style="border: 1px solid black; width: 120px"></a>
 </table>
-
+<u>Displays</u>
 <ul>
 <li><ttp>Linear</ttp>: Does not work for self-synteny.
 <li><ttp>Dot Plot</ttp>: For the self-chromosome, you <u>must</u> select a block from the lower diagonal.
-<li><ttp>Circle</ttp>: The <ttx>Scale</ttx> option makes no difference in the display with only
+<a id="cself"></a>
+<li><ttp>Circle</ttp>:
+<ul>
+<li><a href="#circle">Whole genome</a>: Self-synteny can be viewed.
+<li><a href="#all">Chromosome Explorer</a>:
+<ul>
+<li>If multiple species are being viewed and at least one has self-synteny, then there will be a <ttl>Self-synteny</ttl>
+toggled, which can be toggled to view the self-synteny blocks.
+<li>A single species can be viewed.
+</ul>
+<li> The <ttx>Scale</ttx> option makes no difference in the display with only
 one species.
-<p>
-<li><ttp>2D</ttp>: From the <ttp>Chromosome Explorer</ttp>, it does not directly work for a self-chromosome.
-However, by going through the <ttp>Dot Plot</ttp> or <ttp>Blocks view</ttp>, you can click on a self-chromosome block and view it in
-the <ttp>2D</ttp> view. Also, the <ttp>Queries</ttp> <ttp>2D</ttp> option can show self-chromosomes.
-<p>
+</ul>
+</ul>
+<p><u>Queries</u>
+<ul>
 <li><ttp>Queries</ttp> works for self-synteny (as of v5.7.5), but it has multiple problems:
 <ul>
 <li>Minor hits: <i>There is no good way to see all the minor hits.</i>
@@ -1697,8 +1797,9 @@ displayed;
 </ul>
 </ul>
 
-<a id="data_download"></a>
-<h3>Data Download</h3>
+<a id="exncl"></a>
+<a id="data_export"></a>
+<h3>Export (download data)</h3>
 
 There are three ways to download data for SyMAP synteny blocks, individual hits, and annotations:
 <p><ttp>Manager</ttp>:
