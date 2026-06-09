@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP Trouble Shoot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<!------ left side index - customize ----------------------------------------------------->
+<!-- left side index - customize -->
 <div class="sidenav">
 <a href="https://csoderlund.github.io">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
@@ -23,7 +23,7 @@
 <a href="#top">Go to top</a>
 </div>
 
-<!------ right side header and body ----------------------------------------------------->
+<!-- right side header and body -->
 <div class="rightSide">
 <a id="top"></a>
 
@@ -49,11 +49,11 @@
 	</table>
  </div>
 
-<!---------------------------- bulk of page ------------------------------------------->
+<!--   bulk of page    -->
 <div class="main">
 
 <p><i>Please send questions and suggestions to cas1@arizona.edu.</i><br>
-<font color=green>SyMAP cannot be improved or problems fixed without user feedback!</font>
+<span class="green">SyMAP cannot be improved or problems fixed without user feedback!</span>
 <p>
 <table class="center"><tr>
 <td><table>
@@ -89,7 +89,7 @@
 <a id="memory"></a>
 <h2>Not enough memory</h2>
 
-If SyMAP gives an out-of-memory error, you need to increase the memory. The <tt>symap</tt>
+If SyMAP gives an out-of-memory error, you need to increase the memory. The <span class="ttt">symap</span>
 script has the following lines:
 <pre>
   #!/bin/sh
@@ -97,7 +97,7 @@ script has the following lines:
   echo "&gt;&gt;&gt;&gt; SyMAP build, query and view ($mem)     `date` &lt;&lt;&lt;&lt;"
   java -Xmx$mem -classpath java/jar/symap.jar symapCE.SyMAPmanager $@
 </pre>
-Change the number after <tt>mem=</tt>. The <tt>viewSymap</tt> script also requests 8192m memory,
+Change the number after <span class="ttt">mem=</span>. The <span class="ttt">viewSymap</span> script also requests 8192m memory,
 which you can also edit.
 <p>
 If your machine does not have much memory,
@@ -106,7 +106,7 @@ to process large genomes.
 <p>
 For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
 <p>
-<!--------------------------------------------------------->
+<!-- ************************************************** -->
 <hr>
 <a id="sug"></a>
 <h2>MySQL suggested settings</h2>
@@ -118,7 +118,7 @@ For memory issues related to running MUMmer, see <a href="MUMmer.html" class="ex
 </table>
 
 <p>SyMAP prints out the values the important MySQL variables when a symap database is created.
-<br>Additionally, they will be printed if the following is executed: <tt>./symap -sql</tt>
+<br>Additionally, they will be printed if the following is executed: <span class="ttt">./symap -sql</span>
 
 <a id="msqslow"></a>
 <h3>Slow to load sequence and annotation</h3>
@@ -128,14 +128,14 @@ performance).
 <p>
 <table class="ty" style="width:750px;">
 	<tr>
-		<td><tt>innodb_buffer_pool_size</tt></td>
+		<td><span class="ttt">innodb_buffer_pool_size</span></td>
 		<td>
 The default is too low for most purposes. You should set this to around 1Gb if possible (note that
 the units are bytes).
 		</td>
 	</tr>
 	<tr>
-		<td><tt>innodb_flush_log_at_trx_commit=0</tt></td>
+		<td><span class="ttt">innodb_flush_log_at_trx_commit=0</span></td>
 		<td>
 The default setting is 1, which results in <i><b>very slow</b></i> loading of data to the database.
 		</td>
@@ -152,18 +152,18 @@ To change the variables, then type:
 set global innodb_buffer_pool_size=1073741824;
 set global innodb_flush_log_at_trx_commit=0;
 </pre>
-Alternatively, you can set these in the MySQL configuration file <tt>my.cnf</tt> and restart MySQL.
-Note that <tt>my.cnf</tt> is typically located at <tt>/etc/my.cnf</tt>, on both Linux and Mac.
+Alternatively, you can set these in the MySQL configuration file <span class="ttt">my.cnf</span> and restart MySQL.
+Note that <span class="ttt">my.cnf</span> is typically located at <span class="ttt">/etc/my.cnf</span>, on both Linux and Mac.
 
 <p>Different machines and MySQL installations can produce different results with these variables.
-If the SyMAP <ttx>demo-seq</ttx> to <ttx>demo-seq2</ttx> load and synteny computations seem slow,
+If the SyMAP <span class="ttx">demo-seq</span> to <span class="ttx">demo-seq2</span> load and synteny computations seem slow,
 try different combinations of these two variables to see what performs the fastest inserts.
 
 <a id="slow"></a>
 <h3>Slow queries</h3>
 <table  class="ty" style="width:650px;">
 	<tr>
-		<td><tt>max_allowed_packet</tt></td>
+		<td><span class="ttt">max_allowed_packet</span></td>
 		<td>
 This should be at least 500M if possible (the units are bytes).
 		</td>
@@ -175,7 +175,7 @@ To check the value, start mysql and type:
 To change this variable, then type:
 <pre>set global max_allowed_packet=1073741824;</pre>
 
-<!--------------------------------------------------------->
+<!-- ************************************************** -->
 <hr>
 <a id="sql"></a>
 <h2>MySQL Problems</h2>
@@ -196,32 +196,31 @@ To change this variable, then type:
 <p>
 On startup, error messages mentioning the database or SQL probably mean that the database connection
 could not be established or was lost. First, make sure
-your <tt>db_adminuser</tt> and <tt>db_adminpasswd</tt> are correct in the <tt>symap.config</tt> file.
+your <span class="ttt">db_adminuser</span> and <span class="ttt">db_adminpasswd</span> are correct in the <span class="ttt">symap.config</span> file.
 
 <p>These days, the best way to find the MySQL problems is to search the internet. However,
 the following are some things to check for connection problems on SyMAP startup:
 
 <p><u>Check the database privileges</u>:
-The database user specified in <tt>symap.config</tt> may not have necessary access to the database.
+The database user specified in <span class="ttt">symap.config</span> may not have necessary access to the database.
 <ul>
-<li>If you running the read/write <ttp>symap</ttp>, then <tt>db_adminuser</tt> is used.
-<li>If you are running a read-only <ttp>viewSymap</ttp>, it will use the
-read-only <tt>db_clientuser</tt>
-<br>or read-write <tt>db-adminuser</tt>.
+<li>If you running the read/write <span class="ttp">symap</span>, then <span class="ttt">db_adminuser</span> is used.
+<li>If you are running a read-only <span class="ttp">viewSymap</span>, it will use the
+read-only <span class="ttt">db_clientuser</span>
+<br>or read-write <span class="ttt">db-adminuser</span>.
 </ul>
 In either case the user needs to have database access privileges <i>from the machine where you are working</i>.
 
 <p>MySQL privileges are granted specifically to certain users on certain machines. You can check these by
-starting the <tt>mysql</tt> from the command line, and then using <pre>SELECT User, Host FROM mysql.user;</pre>
+starting the <span class="ttt">mysql</span> from the command line, and then using <pre>SELECT User, Host FROM mysql.user;</pre>
 
 <p><u>Check the MySQL configuration</u>:
-The MySQL configuration file (<tt>/etc/my.cnf</tt>) should <b>not</b> contain any
+The MySQL configuration file (<span class="ttt">/etc/my.cnf</span>) should <b>not</b> contain any
 of the following lines that prevent remote access to the database.
-<tt>
 <pre>
 	bind_address=127.0.0.1
 	skip_networking
-</pre></tt>
+</pre>
 
 <p><u>Make sure the port is visible</u>:
 If the database is on a different computer, test that its port 3306 is visible
@@ -232,9 +231,9 @@ from your computer:
 If it does not make a connection then either the server is not running, or
 it is set to run on a non-standard port, or the
 port is blocked by a firewall. Contact a system administrator. (Note,
-to get out of telnet type "<tt>^]</tt>".)
+to get out of telnet type "<span class="ttt">^]</span>".)
 <p>
-If <ttp>symap</ttp> has been running and you get this message to the terminal:
+If <span class="ttp">symap</span> has been running and you get this message to the terminal:
 <pre>
 com.mysql.jdbc.CommunicationsException: Communications link failure due to underlying exception:
 
@@ -250,12 +249,12 @@ If you are using MariaDB (post version 10.4.12) and get the error:
 <pre>
 Unable to connect to the mysql database on localhost; are username and password correct?
 </pre>
-Try adding the following lines to the <tt>/etc/my.cnf</tt>:
+Try adding the following lines to the <span class="ttt">/etc/my.cnf</span>:
 <pre>
 [mysqld]
 character-set-server=utf8mb4
 </pre>
-And restart MariaDB with <tt>systemctl restart mariadb</tt>.
+And restart MariaDB with <span class="ttt">systemctl restart mariadb</span>.
 <p>Thanks to Lori for this solution!
 
 <a id="innodb"></a>
@@ -281,12 +280,12 @@ case from an existing database, e.g. "symapTest" when "symaptest" already exists
 
 <a id="index"></a>
 <h3>MySQL indices</h3>
-Most records in MySQL have an index. The <tt>Hit#</tt> shown in SyMAP (queries and 2d) is one
+Most records in MySQL have an index. The <span class="ttt">Hit#</span> shown in SyMAP (queries and 2d) is one
 such index. If you have many alignments in the database, this number will get very large. Also,
 if you add alignments and delete them, the index can keep growing. Solution: once you determine the
 set of alignments you want, delete the database and just reload what you want for the final database.
 
-<!----------------------------------------------------------------------->
+<!-- *********************************************************** -->
 <a id="gen"></a>
 <h2>General</h2>
 <table class="tz"><tr>
@@ -305,10 +304,10 @@ When Bartender was removed, SyMAP no longer hung on load.
 <p>2. It occasionally hangs for no discernible reason (especially if I have been doing
 testing on MacOS, where I remove projects and reload over and over). If this happens, Cntl-C to
 stop the program (or kill it some other way). Restart
-<tt>./symap</tt>, <ttb>Remove project from database</ttb> and <ttb>Load Project</ttb> again.
+<span class="ttt">./symap</span>, <span class="ttb">Remove project from database</span> and <span class="ttb">Load Project</span> again.
 
-<p>3. If in the middle of a <ttb>Load Project</ttb>, any of the following
-actions: <ttb>Cancel</ttb>, or Cntl-C to stop the program, or killing it from the command line,
+<p>3. If in the middle of a <span class="ttb">Load Project</span>, any of the following
+actions: <span class="ttb">Cancel</span>, or Cntl-C to stop the program, or killing it from the command line,
 can leave the database in a non-repairable state. Unfortunately, it has be removed and rebuilt.
 (22-June-2025) I have not had this happen in a very long time.
 
@@ -319,36 +318,36 @@ Clicking the top of the project manager sometimes
 brings it back. Otherwise, just check the output to the terminal,
 which tells you when it is done.
 
-<!----------------------------------------------------------------------->
+<!-- *********************************************************** -->
 <a id="macos"></a> <!--- ref in symap -->
 <h2>MacOS</h2>
 <table class="tz"><tr>
 <td><a href="#ext">Running external programs</a>
-<td><a href="#fonts">MacOS Fonts</a>
+<td><a href="#font">MacOS Fonts</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <a id="ext"></a>
 <h3>Running external programs</h3>
 
-MacOS will run <ttp>symap</ttp> but not MUMmer, MAFFT or MUSCLE until they have been authenticated by you.
+MacOS will run <span class="ttp">symap</span> but not MUMmer, MAFFT or MUSCLE until they have been authenticated by you.
 
-The following instructions use <ttp>Sequoia v15.7.3</ttp> and MUMmer program <ttx>mgaps</ttx>:
+The following instructions use <span class="ttp">Sequoia v15.7.3</span> and MUMmer program <span class="ttx">mgaps</span>:
 <ol>
-<li>Click the apple icon in the upper left, click <ttl>System Settings</ttl>, click <ttl>Privacy &amp; Security</ttl>. Scroll
-down until you see <ttb>Security</ttb>. Leave this window open (see left image below).
-<li>Using the Finder, go to the <ttx>symap_5/ext/mummer/mac</ttx> directory.
-<br>Click <ttx>mgaps</ttx>. You will get a pop-up that will say:
-<br>&nbsp;&nbsp;&nbsp;<tt>"mgaps" Not Opened</tt>.
-<br>&nbsp;&nbsp;&nbsp;Select <ttl>Done</ttl>.
+<li>Click the apple icon in the upper left, click <span class="ttl">System Settings</span>, click <span class="ttl">Privacy &amp; Security</span>. Scroll
+down until you see <span class="ttb">Security</span>. Leave this window open (see left image below).
+<li>Using the Finder, go to the <span class="ttx">symap_5/ext/mummer/mac</span> directory.
+<br>Click <span class="ttx">mgaps</span>. You will get a pop-up that will say:
+<br>&nbsp;&nbsp;&nbsp;<span class="ttt">"mgaps" Not Opened</span>.
+<br>&nbsp;&nbsp;&nbsp;Select <span class="ttl">Done</span>.
 
-<li>Back on the <ttl>Privacy &amp; Security</ttl> window, you will see under <ttb>Security</ttb>:
-<br>&nbsp;&nbsp;&nbsp;<tt>"mgaps" was blocked to protect your Mac</tt>
-<br>&nbsp;&nbsp;&nbsp;Select <ttl>Open Anyway</ttl>
+<li>Back on the <span class="ttl">Privacy &amp; Security</span> window, you will see under <span class="ttb">Security</span>:
+<br>&nbsp;&nbsp;&nbsp;<span class="ttt">"mgaps" was blocked to protect your Mac</span>
+<br>&nbsp;&nbsp;&nbsp;Select <span class="ttl">Open Anyway</span>
 
 <li>Then you will get another popup saying (see right image below):
-<br>&nbsp;&nbsp;&nbsp;<tt>Open "mgaps"</tt>
-<br>&nbsp;&nbsp;&nbsp;Select <ttl>Open Anyway</ttl>.
+<br>&nbsp;&nbsp;&nbsp;<span class="ttt">Open "mgaps"</span>
+<br>&nbsp;&nbsp;&nbsp;Select <span class="ttl">Open Anyway</span>.
 
 <li>Then you will get another popup asking for your password;
 <br>Enter your Mac password.
@@ -362,12 +361,12 @@ down until you see <ttb>Security</ttb>. Leave this window open (see left image b
 	<img src="img/macSecurity.png" alt="Mac Verify" style="border: 1px solid black; width: 350px"></a>
 <td>&nbsp;&nbsp;
 <td>
-<td>Referring to the image on the left, the <tt>mummer</tt> near the bottom will change to <tt>mgaps</tt> on <ttl>Done</ttl> (step 2).
+<td>Referring to the image on the left, the <span class="ttt">mummer</span> near the bottom will change to <span class="ttt">mgaps</span> on <span class="ttl">Done</span> (step 2).
 <p><a href="img/macOpen.png">
 	<img src="img/macOpen.png" alt="Mac Open" style="border: 1px solid black; width: 150px"></a>
 </table>
 
-For running MUMmer, perform this on the following  in <tt>symap_5/ext/mummer/mac</tt>:
+For running MUMmer, perform this on the following  in <span class="ttt">symap_5/ext/mummer/mac</span>:
 <pre>
   mummer
   mgaps
@@ -377,14 +376,14 @@ For running MUMmer, perform this on the following  in <tt>symap_5/ext/mummer/mac
   aux_bin/prenuc
   aux_bin/postnuc
 </pre>
-For running MUSCLE, perform this on <ttx>symap_5/ext/muscle/mac/muscle</ttx>:
+For running MUSCLE, perform this on <span class="ttx">symap_5/ext/muscle/mac/muscle</span>:
 <p>
-After that, you should be able to run these via SyMAP, even if you move the <ttx>symap_5</ttx> directory.
-In fact, it still worked even after downloading a new <ttx>symap_5.tar.gz</ttx>. So, even though this is a pain to do,
+After that, you should be able to run these via SyMAP, even if you move the <span class="ttx">symap_5</span> directory.
+In fact, it still worked even after downloading a new <span class="ttx">symap_5.tar.gz</span>. So, even though this is a pain to do,
 its only necessary once (at least with Sonoma).
-<p>Update 27-Jan-26: I updated to Sequoia, and at first, <ttp>symap</ttp> would try to run <ttp>mummer</ttp>, which would give an
-error. I downloaded the latest <tt>symap_5.tar.gz</tt>, went through the above steps to verify the MUMmer programs, and was then
-able to move the <tt>/ext</tt> directory to other symap directories and have it work.
+<p>Update 27-Jan-26: I updated to Sequoia, and at first, <span class="ttp">symap</span> would try to run <span class="ttp">mummer</span>, which would give an
+error. I downloaded the latest <span class="ttt">symap_5.tar.gz</span>, went through the above steps to verify the MUMmer programs, and was then
+able to move the <span class="ttt">/ext</span> directory to other symap directories and have it work.
 
 <p>Versions of this worked with my previous Catalina, Monterey, and Sonoma.
 If it does not work for you, see
@@ -399,9 +398,9 @@ Warning: the fonts "Times" and "Lucida Bright" are not available for the Java lo
 </pre>
 It does not hurt anything, but its tiresome. Do the following:
 <ul>
-<li>Download <tt>Lucida Bright.zip</tt> and <tt>Times.zip</tt> from <a href="http://legionfonts.com">LengionFonts</a>.
-<li>Double click to unzip into <tt>Times.tff</tt>. Double click <tt>Times.tff</tt>, which brings up the <ttb>FontBook</ttb>, then install.
-<li>Do the same for <tt>Lucida Bright.zip</tt>.
+<li>Download <span class="ttt">Lucida Bright.zip</span> and <span class="ttt">Times.zip</span> from <a href="http://legionfonts.com">LengionFonts</a>.
+<li>Double click to unzip into <span class="ttt">Times.tff</span>. Double click <span class="ttt">Times.tff</span>, which brings up the <span class="ttb">FontBook</span>, then install.
+<li>Do the same for <span class="ttt">Lucida Bright.zip</span>.
 <li>Note: after OS updates, you may have to install again.
 </ul>
 <a id="java"></a>
@@ -418,9 +417,9 @@ When searching online for this problem, it says:
 "This fatal error occurs when the Java Virtual Machine (JVM) crashes,
 typically due to issues in native code (outside the JVM), memory corruption, or hardware instability".
 <p>Searching native code, it says: "When a 'fatal error' occurs in native code, it means the crash happened in a non-Java component such as a shared library (.dll, .so), a system driver".
-<p>This was happening to me recently. I used <ttp>CleanMyMac</ttp> app to remove old files, then rebooted; it has not
+<p>This was happening to me recently. I used <span class="ttp">CleanMyMac</span> app to remove old files, then rebooted; it has not
 happened since.
-<!---- END BODY -->
+<!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 

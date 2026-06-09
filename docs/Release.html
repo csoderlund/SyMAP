@@ -1,24 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP Release Notes</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-	tt   {font-size:13px}
-	pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}
-	ul   {margin-top: 0; }
-	p    {margin-bottom: 0; }
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style1st.css">
 </head>
 
 <body>
@@ -54,36 +39,38 @@
 		</table>
 
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+	<!-- START BODY -->
 For existing databases, there are no database or build changes since <a href="#v575">v5.7.5</a> for self-synteny.
 
 <h3>Summary of recent major releases</h3>
 <table>
+<tr><td><a href="#v585">v5.8.3</a><td>(28-Apr-26)<td>New <span class="ttp">Linear</span> display.
 <tr><td><a href="#v575">v5.7.5</a><td>(15-Oct-25)<td>Self-synteny has almost complete support.
-<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improve synteny algorithm using new <ttx>Strict</ttx> option.
-<tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>New <ttx>Cluster Hit</ttx> algorithm <ttx>Algo2</ttx>,
+<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improve synteny algorithm using new <span class="ttx">Strict</span> option.
+<tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>New <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo2</span>,
 which is aware of the exon-intron structure.
-<tr><td><a href="#v557">v5.5.7</a><td>(08-Aug-24)<td>Add <ttl>xToSymap</ttl> and improve ease of input.
+<tr><td><a href="#v557">v5.5.7</a><td>(08-Aug-24)<td>Add <span class="ttl">xToSymap</span> and improve ease of input.
 <tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm.
-<tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <ttx>Cluster Hit</ttx> algorithm <ttx>Algo1</ttx> for the detection of gene homology.
+<tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
 </table>
 
+<a id="v585"></a>
 <h3>Release: v5.8.5 (1-June-2026)</h3>
-More changes to the <ttp>Linear</ttp> and <ttp>Circle</ttp> control of displays.
+More changes to the <span class="ttp">Linear</span> and <span class="ttp">Circle</span> control of displays.
 <p>
 <ul>
-<li><ttp>Linear</ttp>:
+<li><span class="ttp">Linear</span>:
 <ul>
-<li><ttl>Display</ttl>: New controls have been added.
+<li><span class="ttl">Display</span>: New controls have been added.
 See <a href="./UserGuide.html#ldisplay" target="_blank" class="ext">Linear Display</a>.
 
 </ul>
-<li><ttp>Circle</ttp>:
+<li><span class="ttp">Circle</span>:
 <ul>
-<li><ttp>Circle</ttp> controls have been updated to be similar to <ttp>Linear</ttp>.
+<li><span class="ttp">Circle</span> controls have been updated to be similar to <span class="ttp">Linear</span>.
 See <a href="./UserGuide.html#ccp" target="_blank" class="ext">Circle Control</a>.
-<li><ttl>Display</ttl>: Has been added. See <a href="./UserGuide.html#cdisplay" target="_blank" class="ext">Circle Display</a>.
-<li>The <ttl>Self-align</ttl> option has been removed from the two genomes view.
+<li><span class="ttl">Display</span>: Has been added. See <a href="./UserGuide.html#cdisplay" target="_blank" class="ext">Circle Display</a>.
+<li>The <span class="ttl">Self-align</span> option has been removed from the two genomes view.
 <li>For self-synteny, clicking a chromosome bar now shows the blocks in that group's colors.
 </ul>
 <li>Some of the colors for the 1st species have been changed.
@@ -92,53 +79,53 @@ The top/bottom color sets, regardless of number of chromosomes, will remain the 
 </ul>
 
 <h3>Release: v5.8.4 (8-May-2026)</h3>
-Bug fixes and added features for the new <ttp>Linear</ttp> whole genome display for two species.
+Bug fixes and added features for the new <span class="ttp">Linear</span> whole genome display for two species.
 
 <ul>
-<li><ttp>Linear</ttp>:
+<li><span class="ttp">Linear</span>:
 <ul>
 <li>Bug Fix: the Color panel (to changed chromosome/block colors) was buggy.
-<li>Added a <ttl>Control</ttl> section with the existing <ttb>Inverse Blocks</ttb>,
-<ttb>Display Blocks</ttb> and <ttb>Swap references</ttb> options,
+<li>Added a <span class="ttl">Control</span> section with the existing <span class="ttb">Inverse Blocks</span>,
+<span class="ttb">Display Blocks</span> and <span class="ttb">Swap references</span> options,
 where this last option has an added option to swap colors.
 </ul>
-<li><ttp>Chromosome Explorer</ttp>: Slight change to put the <ttl>Views:</ttl>
-right above the <ttp>Information</ttp> instead of under it.
+<li><span class="ttp">Chromosome Explorer</span>: Slight change to put the <span class="ttl">Views:</span>
+right above the <span class="ttp">Information</span> instead of under it.
 </ul>
-
+<a id="v583"></a>
 <h3>Release: v5.8.3 (28-Apr-2026)</h3>
-New <ttp>Linear</ttp> whole genome display for two species.
+New <span class="ttp">Linear</span> whole genome display for two species.
 
 <h3>Release: v5.8.2 (1-Apr-2026)</h3>
 <p>Small changes for the input.
 <ul>
-<li>Bug fix: If no category had been previously defined, <ttp>symap</ttp> would not
-bring up the <ttl>Project Parameters</ttl> window.
+<li>Bug fix: If no category had been previously defined, <span class="ttp">symap</span> would not
+bring up the <span class="ttl">Project Parameters</span> window.
 <p><li>Input files:
 	<ul>
-	<li><ttp>xToSymap</ttp>: For NCBI files, an input sequence is considered a
-	chromosome if the header line <tt>seqid</tt> starts with NC_. Now it will also be considered a chromosome
+	<li><span class="ttp">xToSymap</span>: For NCBI files, an input sequence is considered a
+	chromosome if the header line <span class="ttt">seqid</span> starts with NC_. Now it will also be considered a chromosome
 	if the header line contains the word "chromosome".
-	<p><li><ttl>Load Project</ttl>:
+	<p><li><span class="ttl">Load Project</span>:
 		<ul><li>A sequence identifier was restricted to letters and numbers; now it can also include
 		"_", "-" and ".".
 		<li>A secondary name can now be associated with the
 		sequence identifier, see <a href="./input/index.html#seqprep">Sequence files</a>.
-		Both identifiers will be shown in <ttl>View</ttl>. This requires a small database
-		change, but it is done on <ttl>Load Project</ttl>.
+		Both identifiers will be shown in <span class="ttl">View</span>. This requires a small database
+		change, but it is done on <span class="ttl">Load Project</span>.
 		</ul>
 	</ul>
 <p>
-<li><ttp>Dot Plot</ttp>: When the mouse is over a chr-chr cell in the whole genome view, the Chromosome names will be shown.
+<li><span class="ttp">Dot Plot</span>: When the mouse is over a chr-chr cell in the whole genome view, the Chromosome names will be shown.
 If either has a secondary name, it will be shown too.
 </ul>
 
 <h3>Release: v5.8.1 (11-Mar-2026)</h3>
-Two small improvements to the <ttl>Alignment&amp;Synteny</ttl>.
+Two small improvements to the <span class="ttl">Alignment&amp;Synteny</span>.
 <p><ul>
 <li>When large genomes, e.g. &gt;3G,  were concatenated into one large file, MUMmer
 would fail on a Mac M4 with 48G. This has been changed so that no file for input into MUMmer is &gt;1G.
-<p><li>If there was an incorrect character in the MUMmer result file, the Clustering algorithm (both <ttl>Algo1</ttl> and <ttl>Algo2</ttl>)
+<p><li>If there was an incorrect character in the MUMmer result file, the Clustering algorithm (both <span class="ttl">Algo1</span> and <span class="ttl">Algo2</span>)
 would fail without an indication of where the problem was; now they both will print and skip the bad line.
 This incorrect character occurred when I transferred MUMmer alignments via a USB flash drive.
 </ul>
@@ -149,10 +136,10 @@ Improved the Linux interface and a few other small improvements.
 <ul>
 <li>Improve a few links to the web documentation.
 <li>If CPU was changed, some actions set it back to previous value.
-<li><ttp>2D</ttp>:
+<li><span class="ttp">2D</span>:
 <ul>
-<li>The <ttb>Sequence Filter</ttb> <ttx>Gene#</ttx> search was not clearing properly when the associated checkbox was unselected.
-<li>Place the <ttx>Gene#</ttx> on top of the exons.
+<li>The <span class="ttb">Sequence Filter</span> <span class="ttx">Gene#</span> search was not clearing properly when the associated checkbox was unselected.
+<li>Place the <span class="ttx">Gene#</span> on top of the exons.
 <li>Self-synteny self-chr: the hit popup now lists the correct genes on the end.
 </ul>
 <li><small>Really tiny stuff:
@@ -165,39 +152,39 @@ Queries 2D Group-chr leaves extra space at top and bottom.
 <a id="v579"></a>
 <h3>Release: v5.7.8-v5.7.9c (4-Jan-2026)</h3>
 <p>
-<p><ttp>Queries</ttp>:  New features, improvements and bug fixes.
-<br>Since there were 4 releases improving <ttp>Queries</ttp>, their release notes are condensed.
+<p><span class="ttp">Queries</span>:  New features, improvements and bug fixes.
+<br>Since there were 4 releases improving <span class="ttp">Queries</span>, their release notes are condensed.
 <p>
 <ul>
-<li><ttp>Queries</ttp>:
+<li><span class="ttp">Queries</span>:
 	<ul>
 	<li>New features:
 	<ul>
 
-	<li><ttx>Annotation Description</ttx>: has a check mark, and the species disables works for it.
+	<li><span class="ttx">Annotation Description</span>: has a check mark, and the species disables works for it.
 	<br>Minors are now always included except for self-synteny self-chromosomes.
-	<li><ttx>%Olap</ttx>: has a <ttx>Both</ttx> or <ttx>Either</ttx> choice.
-	<li><ttl>Cluster genes &gt;= N</ttl>: There is a new option to apply the N to each species instead of number of hits.
+	<li><span class="ttx">%Olap</span>: has a <span class="ttx">Both</span> or <span class="ttx">Either</span> choice.
+	<li><span class="ttl">Cluster genes &gt;= N</span>: There is a new option to apply the N to each species instead of number of hits.
 	The group are numbered by size, where group #1 is the largest group.
-	<li>New filters on the <ttx>%Id</ttx>, <ttx>%Sim</ttx>, <ttx>Cov</ttx> and <ttx>%Olap</ttx> columns.
+	<li>New filters on the <span class="ttx">%Id</span>, <span class="ttx">%Sim</span>, <span class="ttx">Cov</span> and <span class="ttx">%Olap</span> columns.
 	</ul>
 <p>
 <li>Improved features:
 <ul>
-<li><ttl>Search</ttl>: Was updated to not include numeric columns, be case-insensitive,
-	state how many instances were found, have a <ttx>Next</ttx> button, stays open until manually closed.
+<li><span class="ttl">Search</span>: Was updated to not include numeric columns, be case-insensitive,
+	state how many instances were found, have a <span class="ttx">Next</span> button, stays open until manually closed.
 <li>If all projects are un-annotated, filters are not shown if they require gene annotation.
-<br>Ditto for project pairs without <ttx>Numbered Pseudo</ttx>.
-<li><ttl>Overview</ttl>: Renamed from <ttl>Instructions</ttl>.
+<br>Ditto for project pairs without <span class="ttx">Numbered Pseudo</span>.
+<li><span class="ttl">Overview</span>: Renamed from <span class="ttl">Instructions</span>.
 It includes numbered pseudos for un-annotated projects, and what projects do not have synteny or numbered pseudos.
-The <ttx>Notes</ttx> are clearer.
+The <span class="ttx">Notes</span> are clearer.
 </ul>
 <p>
 <li>Small things:
 <ul>
-<li><small><ttl>Report</ttl>: Disable un-annotated species from showing annotation.
+<li><small><span class="ttl">Report</span>: Disable un-annotated species from showing annotation.
 Changed the way the information at the top is formatted.</small>
-<li><small><ttl>View 2D</ttl> for <ttx>Groups-chr</ttx>: Do not highlight blocks. State in the information box the number of selected
+<li><small><span class="ttl">View 2D</span> for <span class="ttx">Groups-chr</span>: Do not highlight blocks. State in the information box the number of selected
 	hits, which are the group hits.</small>
 <li><small>If there is no value for a species annotation keyword, the table shows "---" instead of ".".</small>
 </ul>
@@ -207,28 +194,28 @@ Changed the way the information at the top is formatted.</small>
 	<li><small>Location search for 2 species: Broke in release 5.7.5 - locations were ignored.
 	When querying 2 species, selecting specific chromosome did not always work.
 	From/To were being used, even if disabled.</small>
-	<li><small>The <ttx>Anno</ttx> columns were wrong if all the following were true:
+	<li><small>The <span class="ttx">Anno</span> columns were wrong if all the following were true:
 	Not all selected projects had synteny, a few were annotated but at least one was not, the unannotated was
 	not at the end of species list.</small>
-	<li><small>If <ttx>Gene#</ttx> or <ttx>%Olap</ttx> were set, it would mess up subsequent result tables.</small>
-	<li><small><ttx>Gene#</ttx>, <ttx>Multi</ttx> and <ttx>Cluster</ttx> work right with one chromosome selected,
+	<li><small>If <span class="ttx">Gene#</span> or <span class="ttx">%Olap</span> were set, it would mess up subsequent result tables.</small>
+	<li><small><span class="ttx">Gene#</span>, <span class="ttx">Multi</span> and <span class="ttx">Cluster</span> work right with one chromosome selected,
 	but not two; selecting more than one is not allowed now.</small>
-	<li><small><ttl>Cluster genes</ttl>: The clusters were not complete. Now they may be much larger. There is an internal cutoff on size;
+	<li><small><span class="ttl">Cluster genes</span>: The clusters were not complete. Now they may be much larger. There is an internal cutoff on size;
 the user will be notified if some are rejected for being too large.</small>
-	<li><small><ttl>Singles</ttl>: The <ttl>Annotation Description</ttl> did not work.</small>
+	<li><small><span class="ttl">Singles</span>: The <span class="ttl">Annotation Description</span> did not work.</small>
 	</ul>
 </ul>
 <p>
-<li><ttp>Project Manager</ttp>:
+<li><span class="ttp">Project Manager</span>:
 <ul>
-<li><ttl>Project Parameters</ttl>: The <ttx>Abbreviation</ttx> no longer needs to be exactly 4 characters; it can be &lt;=5 characters.
+<li><span class="ttl">Project Parameters</span>: The <span class="ttx">Abbreviation</span> no longer needs to be exactly 4 characters; it can be &lt;=5 characters.
 Better error checking and messages on duplicate display names and abbreviations.
-<li><ttx>NumHits</ttx> column can now be &gt;255. Execute <tt>symap -nh</tt> to update.
-<li><ttl>Add Project</ttl>: Linux allows case-sensitive names, which SyMAP does not like;
+<li><span class="ttx">NumHits</span> column can now be &gt;255. Execute <span class="ttt">symap -nh</span> to update.
+<li><span class="ttl">Add Project</span>: Linux allows case-sensitive names, which SyMAP does not like;
 case-sensitive is now check for. Illegal project names were being added regardless, which no longer happens.
-<li>Removed <ttl>All Pairs</ttl> button from the <ttp>Manager</ttp>.
-Starting <ttp>symap</ttp> or <ttp>viewSymap</ttp> checks input arguments.
-Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) no longer recreates the summary.
+<li>Removed <span class="ttl">All Pairs</span> button from the <span class="ttp">Manager</span>.
+Starting <span class="ttp">symap</span> or <span class="ttp">viewSymap</span> checks input arguments.
+Running <span class="ttx">Number Pseudo</span> (set on <span class="ttl">Pair Parameters</span>) no longer recreates the summary.
 </ul>
 </ul>
 
@@ -237,24 +224,24 @@ Running <ttx>Number Pseudo</ttx> (set on <ttl>Pair Parameters</ttl>) no longer r
 <h3>Release: v5.7.7 (15-Nov-25)</h3>
 Some small changes to collinear set computation and display.
 <br>For an existing SyMAP database, to update collinear sets:
-<br>&nbsp;&nbsp;&nbsp;Run: <tt>./symap -cs</tt>, then
-select the <ttl>Collinear</ttl> button on the <ttp>Manager</ttp>
+<br>&nbsp;&nbsp;&nbsp;Run: <span class="ttt">./symap -cs</span>, then
+select the <span class="ttl">Collinear</span> button on the <span class="ttp">Manager</span>
 <br>This does not take long to execute.
 <p>
 <ul>
 
-<li><ttp>A&S</ttp> <ttx>Collinear Sets:</ttx>
+<li><span class="ttp">A&S</span> <span class="ttx">Collinear Sets:</span>
 <ul>
 <li>The sets were numbered weird. Now they are numbered by the size, with the largest size set being #1. For
-sets of the same size, they are numbered by the first <ttx>hitNum</tt>.
+sets of the same size, they are numbered by the first <span class="ttx">hitNum</span>.
 <li>Self-synteny self-chromosome bug fix: Was sometimes using hit and it's mirrored hit for a collinear set.
 </ul>
-<li><ttp>Query</ttp>:
+<li><span class="ttp">Query</span>:
 <ul>
-<li>If <ttx>Collinear size</ttx> was selected, the resulting table will be sorted on collinear sets and the <ttl>View 2D</ttl>
-will default to <ttx>Collinear</ttx>. Similarly for blocks and groups, where the precedence is groups, collinear sets, blocks.
-<li><ttl>View 2D</ttl>: The default value of the pulldown will depend on whether groups, collinear sets, or blocks was queried on.
-<li><ttp>2D</ttp> tiny bug fix: The hover hit-wire would not show information in lower bar if the selected hit was below it.
+<li>If <span class="ttx">Collinear size</span> was selected, the resulting table will be sorted on collinear sets and the <span class="ttl">View 2D</span>
+will default to <span class="ttx">Collinear</span>. Similarly for blocks and groups, where the precedence is groups, collinear sets, blocks.
+<li><span class="ttl">View 2D</span>: The default value of the pulldown will depend on whether groups, collinear sets, or blocks was queried on.
+<li><span class="ttp">2D</span> tiny bug fix: The hover hit-wire would not show information in lower bar if the selected hit was below it.
 </ul>
 </ul>
 <a id="v576"></a>
@@ -262,26 +249,26 @@ will default to <ttx>Collinear</ttx>. Similarly for blocks and groups, where the
 Some small interface changes and tiny bug fixes.
 <p>
 <ul>
-<li><ttl>Cluster&amp;Synteny</ttl> Defaults:
-<ul><li><ttx>Cluster Algo2</ttx> is the default if both projects have annotation and is not self-synteny.
-<li><ttx>Synteny Strict</ttx> is the default unless it appears to be draft sequence (&gt;25 sequences
+<li><span class="ttl">Cluster&amp;Synteny</span> Defaults:
+<ul><li><span class="ttx">Cluster Algo2</span> is the default if both projects have annotation and is not self-synteny.
+<li><span class="ttx">Synteny Strict</span> is the default unless it appears to be draft sequence (&gt;25 sequences
 with &lt;1,000,000 bases).
 </ul>
 
 <p>
 <li>Tiny bug fixes:
 <ul>
-<li><ttp>A&amp;S</ttp>: Self-synteny blocks whose borders overlapped the diagonal were removed;
+<li><span class="ttp">A&amp;S</span>: Self-synteny blocks whose borders overlapped the diagonal were removed;
 now they are only removed if they are strictly along the diagonal with few gene hits.
-<br>Fixed a incorrect <ttx>Verbose</ttx> <ttl>Algo2</ttl> Filter count.
+<br>Fixed a incorrect <span class="ttx">Verbose</span> <span class="ttl">Algo2</span> Filter count.
 <br>The methods to read the .mum files were not ignoring hidden files.
-<li><ttp>Summary</ttp>: The summary could get a negative <ttx>Cover</ttx> on large genomes.
-<br>The <ttx>CHwGN</ttx> was wrong when <ttx>Numbered Pseudo</ttx> had been run. The <ttx>GNwCHB</ttx> was off
+<li><span class="ttp">Summary</span>: The summary could get a negative <span class="ttx">Cover</span> on large genomes.
+<br>The <span class="ttx">CHwGN</span> was wrong when <span class="ttx">Numbered Pseudo</span> had been run. The <span class="ttx">GNwCHB</span> was off
 if a project was in more that one synteny pair.
-<li><ttp>DotPlot</ttp>: Fixed a bug in <ttl>Color Wheel</ttl>. On self-synteny, a blank <ttp>2D</ttp> would
+<li><span class="ttp">DotPlot</span>: Fixed a bug in <span class="ttl">Color Wheel</span>. On self-synteny, a blank <span class="ttp">2D</span> would
 result from selecting a block above the diagonal of a self-chromosome.
-<li><ttp>Queries</ttp>: If <ttl>Singles</ttl> was run, buttons could become enabled that should not be.
-<br>For self-synteny, when <ttx>Numbered Pseudo</ttx> had been run, the summary was wrong.
+<li><span class="ttp">Queries</span>: If <span class="ttl">Singles</span> was run, buttons could become enabled that should not be.
+<br>For self-synteny, when <span class="ttx">Numbered Pseudo</span> had been run, the summary was wrong.
 </ul>
 <p>
 <li><small>Cleanup code: this touched almost every file.</small>
@@ -301,11 +288,11 @@ For Hit Filters, use g2, g1, g0 for info.
 <a id="v575"></a>
 <h3>Release: v5.7.5 (25-Oct-25)</h3>
 <i>Self-synteny</i>: This release has improved support for self-synteny (see <a href="UserGuide.html#self" target="_blank" class="ext">Self-synteny</a>).
-<p>For existing self-synteny databases: Re-run the full <ttp>A&S</ttp> algorithm.
+<p>For existing self-synteny databases: Re-run the full <span class="ttp">A&S</span> algorithm.
 <p>
 <ul>
 <li>Self-synteny algorithm and display. In summary, the updates are:
-<ttp>Queries</ttp> works for self-synteny, the summaries are all correct now, the <ttx>Block#</ttx> and <ttx>Hit#</ttx>
+<span class="ttp">Queries</span> works for self-synteny, the summaries are all correct now, the <span class="ttx">Block#</span> and <span class="ttx">Hit#</span>
 are consistent now, and a few tiny display bug fixes. For more detail:
 <ul>
 <li>Algorithm:
@@ -314,76 +301,76 @@ are consistent now, and a few tiny display bug fixes. For more detail:
 the demo self-synteny is different, but all the blocks were iffy to start with.
 <li>The numbering of blocks and hits will be different.
 <li>The self-chromsomes no longer have hits representing the diagonal which reduces the number of hits. However,
-the diagonal is still shown on the <ttp>Dotplot</ttp>.
-<li><ttx>NumHits</ttx> (<ttp>Query</ttp> <ttl>Single</ttl> column) now includes self-synteny hits.
-<li><ttx>Collinear sets</ttx> results were not very useable because it did not mirror sets or work for
+the diagonal is still shown on the <span class="ttp">Dotplot</span>.
+<li><span class="ttx">NumHits</span> (<span class="ttp">Query</span> <span class="ttl">Single</span> column) now includes self-synteny hits.
+<li><span class="ttx">Collinear sets</span> results were not very useable because it did not mirror sets or work for
 self-chromosomes; both of these issues have been fixed.
 </ul>
-<li><ttx>Block#</ttx> of mirrored blocks (same above and below the diagonal) now have the same number;
-this is most obvious in <ttp>Dotplot</ttp>.
-<li><ttx>Hit#</ttx> two mirrored hits now have the same number; this is most obvious in <ttp>2D</ttp>.
-<li><ttp>2D</ttp>: The following are fixed: For the <ttl>Sequence Filter</ttl>, the <ttx>Gene# Hit</ttx> did not work.
+<li><span class="ttx">Block#</span> of mirrored blocks (same above and below the diagonal) now have the same number;
+this is most obvious in <span class="ttp">Dotplot</span>.
+<li><span class="ttx">Hit#</span> two mirrored hits now have the same number; this is most obvious in <span class="ttp">2D</span>.
+<li><span class="ttp">2D</span>: The following are fixed: For the <span class="ttl">Sequence Filter</span>, the <span class="ttx">Gene# Hit</span> did not work.
 For the hit popup, when the two chromsomes were the same, a 2g hit would show the same
 gene for both ends of hit.
-<li><ttp>Reports...</ttp>: both <ttl>Summary</ttl> and <ttl>Block Report</ttl> only report
+<li><span class="ttp">Reports...</span>: both <span class="ttl">Summary</span> and <span class="ttl">Block Report</span> only report
 blocks and hits for one side of the diagonal (they no longer double the blocks and hits).
-<li><ttp>Query</ttp>: Now works for self-synteny with a few exceptions (see <a href="UserGuide.html#self" target="_blank" class="ext">Self-synteny</a>).
+<li><span class="ttp">Query</span>: Now works for self-synteny with a few exceptions (see <a href="UserGuide.html#self" target="_blank" class="ext">Self-synteny</a>).
 </ul>
 
-<li><ttp>Reports:</ttp>
-<ul><li>The <tt>Species</tt> columns have been removed and the name is now
+<li><span class="ttp">Reports:</span>
+<ul><li>The <span class="ttt">Species</span> columns have been removed and the name is now
 over species specific columns. See <a href="UserGuide.html#breport" target="_blank" class="ext">Report</a>.
 </ul>
 <li>Small things:
 <ul>
-<li><ttp>Project Manager</ttp>:
+<li><span class="ttp">Project Manager</span>:
 <ul>
 <li>All computations that read files sorts them before processing; this is not necessary, but more logical for the output.
-For <ttx>Cluster Algo1</ttx>, this can slightly change the hits found.
-<li>If only one project is selected, the <ttx>Selected Pair</ttx> cell will be shown as selected.
-<li>The lower <ttl>All Pairs</ttl> is now <ttl>All &#10003; Pairs</ttl>.
-<li><ttl>Verbose</ttl> did not work for the synteny algorithm if not set the first time
+For <span class="ttx">Cluster Algo1</span>, this can slightly change the hits found.
+<li>If only one project is selected, the <span class="ttx">Selected Pair</span> cell will be shown as selected.
+<li>The lower <span class="ttl">All Pairs</span> is now <span class="ttl">All &#10003; Pairs</span>.
+<li><span class="ttl">Verbose</span> did not work for the synteny algorithm if not set the first time
 it was run.
-<li><ttl>Pseudo Genes</ttl> uses <ttx>Directory</ttx> name in comment instead of <ttx>Abbreviation</ttx> since it does not change.
-<li><ttx>Align PROmer</ttx> or <ttx>Align NUCmer</ttx> have been added to the <ttp>Summary</ttp>.
+<li><span class="ttl">Pseudo Genes</span> uses <span class="ttx">Directory</span> name in comment instead of <span class="ttx">Abbreviation</span> since it does not change.
+<li><span class="ttx">Align PROmer</span> or <span class="ttx">Align NUCmer</span> have been added to the <span class="ttp">Summary</span>.
 </ul>
-<li><ttp>2D</ttp>: <ttl>Sequence Filter</ttl> has a few labels changed and re-ordered.
-<li><ttp>Queries</ttp>: The number of blocks and collinear sets was wrong, plus unclear what the numbers were.
+<li><span class="ttp">2D</span>: <span class="ttl">Sequence Filter</span> has a few labels changed and re-ordered.
+<li><span class="ttp">Queries</span>: The number of blocks and collinear sets was wrong, plus unclear what the numbers were.
 Also, it did not work right if there was two abbreviations the same; now it warns the user.
 </ul>
 <li><small>Developers:</small>
 <ul>
 <li><small>AnchorMain1 self-synteny save to database methods have been re-written to not be
 dependent on the exact Schema. The diagonal hits are no longer loaded in database as they are only used
-in the Dotplot, which creates the diagonal on the fly. The <tt>stddev</tt> database column was removed and some columns moved around.
-Remove <tt>AnchorMain1.BinStats.java</tt></small>.
+in the Dotplot, which creates the diagonal on the fly. The <span class="ttt">stddev</span> database column was removed and some columns moved around.
+Remove <span class="ttt">AnchorMain1.BinStats.java</span></small>.
 
 </ul>
 </ul>
 
 <a id="v574"></a>
 <h3>Release: v5.7.4 (30-Sept-25)</h3>
-Small <ttp>Synteny</ttp> <ttx>Strict</ttx> and interface improvements.
+Small <span class="ttp">Synteny</span> <span class="ttx">Strict</span> and interface improvements.
 <p>
 <ul>
-<li><ttp>Synteny</ttp>
+<li><span class="ttp">Synteny</span>
 <ul>
-<li><ttx>Strict</ttx>: It was blindly merging embedded collinear sets without checking to see if it maintained
+<li><span class="ttx">Strict</span>: It was blindly merging embedded collinear sets without checking to see if it maintained
 reasonable order; now it checks.
-For existing SyMAP databases: if you used the <ttx>Strict</ttx> option and you noticed this
+For existing SyMAP databases: if you used the <span class="ttx">Strict</span> option and you noticed this
 problem, rerun the Synteny algorithm with
 <a href="SystemHelp.html#save2" target="_blank" class="ext">Synteny Only</a>.
-<li>Tiny things like the number <ttx>Merge</ttx> was incorrect.
+<li>Tiny things like the number <span class="ttx">Merge</span> was incorrect.
 </ul>
 
-<li><ttp>2D</ttp>
+<li><span class="ttp">2D</span>
 <ul>
-<li>If text is shown along the chromosome (e.g <ttx>Hit#</ttx>), the code will not display a text item
+<li>If text is shown along the chromosome (e.g <span class="ttx">Hit#</span>), the code will not display a text item
 if it will overlap another; <a href="UserGuide.html#sfhit" target="_blank" class="ext">Hit Text</a>.
 <li>A Popup or Query selected hit-wire is drawn thicker than that other hit-wires.
 </ul>
-<li><ttp>Report</ttp>
-<ul><li>The computation of <ttx>avgGap</ttx> was slightly changed and <ttx>stdDev</ttx> removed.
+<li><span class="ttp">Report</span>
+<ul><li>The computation of <span class="ttx">avgGap</span> was slightly changed and <span class="ttx">stdDev</span> removed.
 </ul>
 </ul>
 
@@ -392,18 +379,18 @@ if it will overlap another; <a href="UserGuide.html#sfhit" target="_blank" class
 <h3>Release: v5.7.3 (18-Sept-25)</h3>
 Small interface improvements.
 <ul>
-<li><ttp>Dot plot</ttp>:
+<li><span class="ttp">Dot plot</span>:
 	<ul>
 	<li>New user-input to allow setting the amount of + (increase) and - (decrease) dot plot.
 	<li>Highlight a block or region and it will stay in view when using + (increase) or - (decrease).
-	<li>The <ttx>Mix</ttx> option now shows non-blocks as tiny dots; previously, they
-	only 'looked' different if the <ttx>Length</ttx> option was used.
+	<li>The <span class="ttx">Mix</span> option now shows non-blocks as tiny dots; previously, they
+	only 'looked' different if the <span class="ttx">Length</span> option was used.
 	</ul>
-<li><ttp>Chromosome Explorer 2D</ttp>:
+<li><span class="ttp">Chromosome Explorer 2D</span>:
 	<ul><li>Draw text (e.g. Block#) on top of lines.
-	<li>When a <ttx>Block</ttx> is viewed from <ttp>Queries</ttp>, <ttp>Dot plot</ttp> or <ttp>Block View</ttp>, only
+	<li>When a <span class="ttx">Block</span> is viewed from <span class="ttp">Queries</span>, <span class="ttp">Dot plot</span> or <span class="ttp">Block View</span>, only
 	the hits from the selected block will be shown.
-	<li>When viewed using <ttp>Queries</ttp> <ttx>Region</ttx> option,
+	<li>When viewed using <span class="ttp">Queries</span> <span class="ttx">Region</span> option,
 	all hits are shown and the block hits are highlighted.
 	</ul>
 <li><small>Little things:</small>
@@ -422,87 +409,87 @@ available from Queries.</small>
 
 <a id="v572"></a>
 <h3>Release: v5.7.2 (2-Sept-25)</h3>
-The synteny algorithm has new <ttx>Strict</ttx> that greatly improves
+The synteny algorithm has new <span class="ttx">Strict</span> that greatly improves
 synteny blocks for two complete genome sequence synteny.
 <p>
 <ul>
-<li><ttp>Synteny</ttp> computation: See <a href="SystemHelp.html#over2" class="ext" target="_blank">Pair parameters</a>.
+<li><span class="ttp">Synteny</span> computation: See <a href="SystemHelp.html#over2" class="ext" target="_blank">Pair parameters</a>.
 	<ul>
-	<li><ttx>Strict</ttx> <font color="green">New</font>: This option provides the following changes to the original
+	<li><span class="ttx">Strict</span> <b>New</b>: This option provides the following changes to the original
 	algorithm:
 	<ul>
 	<li>The gap size is smaller and the PCC (pearson correlation coefficient) is larger.
 	<li>It first creates blocks with the same orientation, but then will merge contained blocks.
 	</ul>
-	<li><ttx>Merge</ttx>: This now has three options: None, Overlap, Close.
-	<li><ttx>Original</ttx>: If <ttx>Strict</ttx> is not selected, the algorithm is referred to as
-	<ttx>Original</ttx> and gives the exact same results as before. However, the <ttx>Merge</ttx> requires
+	<li><span class="ttx">Merge</span>: This now has three options: None, Overlap, Close.
+	<li><span class="ttx">Original</span>: If <span class="ttx">Strict</span> is not selected, the algorithm is referred to as
+	<span class="ttx">Original</span> and gives the exact same results as before. However, the <span class="ttx">Merge</span> requires
 	the blocks to be closer than before in order to be merged.
 	</ul>
-<li><ttp>A&S</ttp>:
+<li><span class="ttp">A&S</span>:
 <ul>
-<li><ttl>Self-synteny:</ttl> <font color="red">Bug fixes</font>  (1) v570 Bug fix: the chrN-chrN was broken. (2) Forever Bug:
+<li><span class="ttl">Self-synteny:</span> Bug fixes (1) v570 Bug fix: the chrN-chrN was broken. (2) Forever Bug:
 When running self-synteny, it could on rare occasion exit with error; this has been fixed.
-<li>If <ttl>Verbose</ttl>, the number of collinear sets not in blocks is part of the terminal/log output now.
-<li>Stop writing files <tt>anchors.txt</tt> and <tt>blocks.txt</tt> since this info is available from <ttp>Queries</ttp> and <ttp>Report</ttp>.
-<li><ttl>Clear pair</ttl>: The button become deselected when clearing and there is output to the terminal when done.
+<li>If <span class="ttl">Verbose</span>, the number of collinear sets not in blocks is part of the terminal/log output now.
+<li>Stop writing files <span class="ttt">anchors.txt</span> and <span class="ttt">blocks.txt</span> since this info is available from <span class="ttp">Queries</span> and <span class="ttp">Report</span>.
+<li><span class="ttl">Clear pair</span>: The button become deselected when clearing and there is output to the terminal when done.
 </ul>
 
-<li><ttp>Report</ttp>: See <a href="UserGuide.html#breport" class="ext" target="_blank">Report</a>.
+<li><span class="ttp">Report</span>: See <a href="UserGuide.html#breport" class="ext" target="_blank">Report</a>.
 <ul>
-	<li><ttl>Blocks plus</ttl> now shows the <ttx>AvgGap1, AvgGap2, StdDev1, StdDev2</ttx>.
-	Release v5.7.1 had an approximation for <ttx>AvgGap1, AvgGap2</ttx>, where now it is exact.
+	<li><span class="ttl">Blocks plus</span> now shows the <span class="ttx">AvgGap1, AvgGap2, StdDev1, StdDev2</span>.
+	Release v5.7.1 had an approximation for <span class="ttx">AvgGap1, AvgGap2</span>, where now it is exact.
 	It is necessary to run the synteny algorithm again to get these changes.
-	<li>The <ttx>Corr</ttx> (correlation coefficient) column was sometimes a little off if a block merge had occurred.
+	<li>The <span class="ttx">Corr</span> (correlation coefficient) column was sometimes a little off if a block merge had occurred.
 	<li>For self-synteny, the blocks will be from one side of the diagonal so as not to be repeated.
 </ul>
 <li>Small display changes:
 <ul>
-<li><ttp>Queries</ttp>: The table will show the hit <ttx>St</ttx> signs column as "==" or "!=".
-<li><ttp>2D</ttp>: The <ttb>Sequence filter</ttb> has a new option <ttx>Block# 1st</ttx>, which
-will only place the <ttx>Block#</ttx> near the first hit of the block.
-<li><ttp>Dot plot</ttp> (Minor): The <ttp>2D</ttp> problem of not displaying - I thought I fixed in v571 but did not. Now
+<li><span class="ttp">Queries</span>: The table will show the hit <span class="ttx">St</span> signs column as "==" or "!=".
+<li><span class="ttp">2D</span>: The <span class="ttb">Sequence filter</span> has a new option <span class="ttx">Block# 1st</span>, which
+will only place the <span class="ttx">Block#</span> near the first hit of the block.
+<li><span class="ttp">Dot plot</span> (Minor): The <span class="ttp">2D</span> problem of not displaying - I thought I fixed in v571 but did not. Now
 it is 'sort of' fixed as the panel displays and then disappears if the block was not correctly selected.
-<li><ttp>Summary</ttp>: Could get a negative number for a percentage.
+<li><span class="ttp">Summary</span>: Could get a negative number for a percentage.
 </ul>
-<li><small>Developers: <ul><li>Added 4 fields to the blocks schema.</ul></small>
+<li><small>Developers: Added 4 fields to the blocks schema.</small>
 </ul>
 
 <a id="v571"></a>
 <h3>Release: v5.7.1 (17-Aug-25)</h3>
-An updated <ttb>Blocks Report</ttb> and small interface enhancements.
+An updated <span class="ttb">Blocks Report</span> and small interface enhancements.
 <p>
 <ul>
-<li><ttp>Manager</ttp>:
+<li><span class="ttp">Manager</span>:
 <ul>
-<li><ttb>Pair Parameters</ttb>:
+<li><span class="ttb">Pair Parameters</span>:
 A new <a href="SystemHelp.html#drop" class="ext" target="_blank">Drop-down</a>:
 in the lower left corner provides the following options:
-If A&S has been run, the user can request to only run <ttx>Number Pseudo</ttx>
-or <ttx>Synteny Only</ttx>
+If A&S has been run, the user can request to only run <span class="ttx">Number Pseudo</span>
+or <span class="ttx">Synteny Only</span>
 <li><a href="UserGuide.html#breport" class="ext" target="_blank">Report</a>:
-The <ttl>Download Blocks</ttl> has been moved from the
-<ttp>Chromosome Explorer</ttp> to the <ttp>Manager</ttp>, and a few changes in the output.
+The <span class="ttl">Download Blocks</span> has been moved from the
+<span class="ttp">Chromosome Explorer</span> to the <span class="ttp">Manager</span>, and a few changes in the output.
 </ul>
-<li><ttp>2D</ttp>:
+<li><span class="ttp">2D</span>:
 <ul>
 <li>When block hits are highlighted, the blocks are colored by one of 4 colors instead of 2.
 <li><a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filter</a>:
-There are two new <ttb>Sequence Filter</ttb> options to only show the <ttx>Annotation</ttx> or <ttx>Gene#</ttx> if the gene has
+There are two new <span class="ttb">Sequence Filter</span> options to only show the <span class="ttx">Annotation</span> or <span class="ttx">Gene#</span> if the gene has
 a hit.
 </ul>
 <li>Minor:
 <ul>
-<li><ttp>Align&amp;Synteny</ttp>: This produced an error in <ttx>error.log</ttx> on the first time;
+<li><span class="ttp">Align&amp;Synteny</span>: This produced an error in <span class="ttx">error.log</span> on the first time;
 it was harmless, but was mis-leading.
-<li><ttp>viewSymap</ttp>: Will not create directories for projects in the database but not in <tt>/data/seq</tt>.
-<li><ttp>Dot plot</ttp>: Double clicking a block to show the <ttp>2D</ttp> sometimes could not display the
-<ttp>2D</ttp>, this has been fixed. The <ttx>#Blocks</ttx> has been added to
-the popup statistics (<b>S</b> on <ttl>Control panel</ttl>). The <ttx>Block Number</ttx> can now be viewed
-when the the <ttx>Boundary</ttx> is not shown.
-<li><ttp>Queries</ttp> showing <ttp>2D</ttp> <ttx>Collinear</ttx> had defaults to only show hits
+<li><span class="ttp">viewSymap</span>: Will not create directories for projects in the database but not in <span class="ttt">/data/seq</span>.
+<li><span class="ttp">Dot plot</span>: Double clicking a block to show the <span class="ttp">2D</span> sometimes could not display the
+<span class="ttp">2D</span>, this has been fixed. The <span class="ttx">#Blocks</span> has been added to
+the popup statistics (<b>S</b> on <span class="ttl">Control panel</span>). The <span class="ttx">Block Number</span> can now be viewed
+when the the <span class="ttx">Boundary</span> is not shown.
+<li><span class="ttp">Queries</span> showing <span class="ttp">2D</span> <span class="ttx">Collinear</span> had defaults to only show hits
 from blocks; not all collinear hits are in blocks.
-The <ttp>Queries</ttp> table <ttx>Export</ttx> of the .csv file includes a comment with the filter.
+The <span class="ttp">Queries</span> table <span class="ttx">Export</span> of the .csv file includes a comment with the filter.
 </ul>
 </ul>
 
@@ -510,19 +497,19 @@ The <ttp>Queries</ttp> table <ttx>Export</ttx> of the .csv file includes a comme
 <h3>Release: v5.7.0 (20-July-25)</h3>
 Small improvements.
 <ul>
-<li><ttb>Manager</ttb>: (1) For the <ttx>Selected</ttx> on the <ttb>Manager</ttb>, the <ttx>#Annotated</ttx> was
-wrong if pseudo genes were assigned; it has been changed to show <ttx>Exons</ttx> instead. (2) The <ttb>View</ttb> now has a <ttx>Gap</ttx> column (if any exists)
-and a <ttx>Totals</ttx> row.
-<li><ttb>2D</ttb>: The 3-track g2x2 (shared) and g2x1 (unique) was confusing because it only worked on visible hits;
+<li><span class="ttb">Manager</span>: (1) For the <span class="ttx">Selected</span> on the <span class="ttb">Manager</span>, the <span class="ttx">#Annotated</span> was
+wrong if pseudo genes were assigned; it has been changed to show <span class="ttx">Exons</span> instead. (2) The <span class="ttb">View</span> now has a <span class="ttx">Gap</span> column (if any exists)
+and a <span class="ttx">Totals</span> row.
+<li><span class="ttb">2D</span>: The 3-track g2x2 (shared) and g2x1 (unique) was confusing because it only worked on visible hits;
 see <a href="Details.html#2dg2" class="ext" target="_blank">3-chr conserved</a> for the way it works now.
 <li>Tiny changes:
 <ul>
-<li><ttb>A&S</ttb> <ttl>Number Pseudo</ttl>: This option could duplicate pseudo <ttx>Gene#</ttx> for different synteny pairs;
+<li><span class="ttb">A&S</span> <span class="ttl">Number Pseudo</span>: This option could duplicate pseudo <span class="ttx">Gene#</span> for different synteny pairs;
 this worked but may be confusing when querying &gt;2 synteny pairs. This has been corrected. An existing SyMAP database can be updated
-using the <ttb>Pair Parameter</ttb> <ttx>Number Pseudo (Only)</ttx> option (upper right corner).
-<li><ttb>2D</ttb>: Slight change in hit-wire information and popup (see <a href="UserGuide.html#info" class="ext" target="_blank">Hit popup</a>).
-<li><ttb>Queries</ttb>: Pseudo message in <ttx>Instructions</ttx> has been redone.
-<li>If a <ttl>Display Name</ttl> is re-used, it provides more information about the duplicate.
+using the <span class="ttb">Pair Parameter</span> <span class="ttx">Number Pseudo (Only)</span> option (upper right corner).
+<li><span class="ttb">2D</span>: Slight change in hit-wire information and popup (see <a href="UserGuide.html#info" class="ext" target="_blank">Hit popup</a>).
+<li><span class="ttb">Queries</span>: Pseudo message in <span class="ttx">Instructions</span> has been redone.
+<li>If a <span class="ttl">Display Name</span> is re-used, it provides more information about the duplicate.
 </ul>
 </ul>
 
@@ -530,38 +517,38 @@ using the <ttb>Pair Parameter</ttb> <ttx>Number Pseudo (Only)</ttx> option (uppe
 <h3>Release: v5.6.9 (19-June-25)</h3>
 
 <ul>
-<li>From a recent release, the <ttl>Pair Parameters Algo2</ttl> parameters were in the wrong order.
+<li>From a recent release, the <span class="ttl">Pair Parameters Algo2</span> parameters were in the wrong order.
 <li>Rename "params" to "params.txt"; this happens automatically
-the first time <tt>symap</tt> is run with existing data directories.
+the first time <span class="ttt">symap</span> is run with existing data directories.
 <li>Quit checking the Java version because there are non-standard formats.
 <li>Docs: Removed some obsolete rules in the System Guide set of docs, fix some typos and some links.
 </ul>
 
 <a id="v568"></a>
 <h3>Release: v5.6.8 (1-June-25)</h3>
-Improvements to the <ttl>Project parameters</ttl> and <ttl>Pair parameters</ttl>, and v567 bug fix for linux /ext access.
+Improvements to the <span class="ttl">Project parameters</span> and <span class="ttl">Pair parameters</span>, and v567 bug fix for linux /ext access.
 <ul>
-<li><ttl>Aligment&Synteny:</ttl>
+<li><span class="ttl">Aligment&Synteny:</span>
 <ul>
-<li><i>Mask genes</i>: The parameter to mask all but the genes in a genome sequence was in the <ttl>Project Parameter</ttl>; but this feature
-occurs right before the alignment, so has been moved to the <ttl>Pair Parameter</ttl> so it can be set per pair.
+<li><i>Mask genes</i>: The parameter to mask all but the genes in a genome sequence was in the <span class="ttl">Project Parameter</span>; but this feature
+occurs right before the alignment, so has been moved to the <span class="ttl">Pair Parameter</span> so it can be set per pair.
 See <a href="SystemHelp.html#mask" class="ext" target="_blank">Mask</a>.
 
-<li><i>Order against</i>: The parameter to order one project against another was in <ttl>Project Parameter</ttl>; but this feature
-occurs right after the synteny computation, so has been moved to the <ttl>Pair Parameter</ttl> so it can be set per pair.
+<li><i>Order against</i>: The parameter to order one project against another was in <span class="ttl">Project Parameter</span>; but this feature
+occurs right after the synteny computation, so has been moved to the <span class="ttl">Pair Parameter</span> so it can be set per pair.
 See <a href="SystemHelp.html#order" class="ext" target="_blank">Order against</a>.
 
-<li><ttx>params_align_used</ttx>: This is a new file created by symap in the <ttx>data/seq_results/&lt;project-name&gt;</ttx> directory that tells what parameters were set for the alignment. The
-contents of this file is listed on the <ttl>Summary</ttl>. In this way, if an alignment is reused, this knowledge is kept with it.
-<li>Improved the output to the terminal and <ttx>symap.log</ttx> file. Improved
+<li><span class="ttx">params_align_used</span>: This is a new file created by symap in the <span class="ttx">data/seq_results/&lt;project-name&gt;</span> directory that tells what parameters were set for the alignment. The
+contents of this file is listed on the <span class="ttl">Summary</span>. In this way, if an alignment is reused, this knowledge is kept with it.
+<li>Improved the output to the terminal and <span class="ttx">symap.log</span> file. Improved
 the popup that showed the selected parameters.
 <li><i>Remove</i>: The popup questions for removing the project from the database and project/alignments from disk are more accurate now.
-The removal is recorded in the <ttx>logs/&lt;database-name&gt;_load.log</ttx> file.
+The removal is recorded in the <span class="ttx">logs/&lt;database-name&gt;_load.log</span> file.
 <li>Bug fix from v567: The code to find MUMmer was using linux64 instead of lintel64, causing it to not find MUMmer on linux.
-<br>Bug fix: The <ttl>Pair Parameters</ttl> <ttx>Promer_only</ttx> and <ttx>Nucmer_only</ttx>  were not working.
+<br>Bug fix: The <span class="ttl">Pair Parameters</span> <span class="ttx">Promer_only</span> and <span class="ttx">Nucmer_only</span>  were not working.
 </ul>
 <p>
-<li><ttb>Docs:</ttb> added timing results.
+<li><span class="ttb">Docs:</span> added timing results.
 <p>
 <li><small>Developers: Standardized the remove methods and removed using threads.</small>
 </ul>
@@ -569,18 +556,18 @@ The removal is recorded in the <ttx>logs/&lt;database-name&gt;_load.log</ttx> fi
 <h3>Release: v5.6.7 (22-May-25)</h3>
 The synteny algorithm has a new option that each block must have all hits in the same orientation.
 <ul>
-<li><ttb>Alignment&Synteny</ttb>
+<li><span class="ttb">Alignment&Synteny</span>
 <ul>
 <li>Synteny algorithm:
 <ul>
-<li><ttl>Same orient</ttl>: a new option has been added to the pairs <ttl>Parameter</ttl> window
+<li><span class="ttl">Same orient</span>: a new option has been added to the pairs <span class="ttl">Parameter</span> window
 to have each block have hits in the same orientation.
 See <a href="SystemHelp.html#syn" class="ext" target="_blank">Synteny parameters</a>.
 <li>The blocks are numbers with ascending start coordinates.
 </ul>
-<li><ttl>Verbose</ttl> has been moved from the pairs parameter window to the main window, and
-<ttl>Concat</ttl> has been moved from the main window to the pairs parameters.
-<li>Project <ttl>Parameters</ttl>:
+<li><span class="ttl">Verbose</span> has been moved from the pairs parameter window to the main window, and
+<span class="ttl">Concat</span> has been moved from the main window to the pairs parameters.
+<li>Project <span class="ttl">Parameters</span>:
 <ul>
 <li>A drop-down of existing categories is provided to select from,
 or a new category can be entered.
@@ -589,13 +576,13 @@ or a new category can be entered.
 </ul>
 </ul>
 <p>
-<li><ttb>Chromosome Explorer</ttb> <ttl>Hit Filter</ttl>: (1) A new filter has been added to show all hits.
+<li><span class="ttb">Chromosome Explorer</span> <span class="ttl">Hit Filter</span>: (1) A new filter has been added to show all hits.
 (2) A new filter to shows one block based on an user entered block#.
 See <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit filter</a>.
 <p>
-<li>Tiny bug fixes: (1) <ttl>Load Project</ttl> cancel would show blank window and hang.
-(2) <ttl>A&S</ttl> cancel could produce many stack traces.
-(3) Projects would show in <ttl>Queries</ttl> that did not have synteny with any of the other selected projects.
+<li>Tiny bug fixes: (1) <span class="ttl">Load Project</span> cancel would show blank window and hang.
+(2) <span class="ttl">A&S</span> cancel could produce many stack traces.
+(3) Projects would show in <span class="ttl">Queries</span> that did not have synteny with any of the other selected projects.
 (4) Project display parameters can be changed regardless of what database is being viewed; it could get out of sync in some weird naming
 situations.
 <p>
@@ -605,14 +592,14 @@ Any java file I looked at, I took out old CASddd comments.</small>
 
 <a id="v566"></a>
 <h3>Release: v5.6.6 (6-May-25)</h3>
-The MacOS M4 silicon executables have been added to the <tt>/ext</tt> directory.
+The MacOS M4 silicon executables have been added to the <span class="ttt">/ext</span> directory.
 The code has been updated to use them when running on MacOS M4.
 
 <ul>
-<li><tt>symap.config</tt>: There is a new setting called 'arch' that allows the user to specify
+<li><span class="ttt">symap.config</span>: There is a new setting called 'arch' that allows the user to specify
 a different machine architecture to use for the external executables; the user will need to provide
 the executables. See <a href="SystemGuide.html#ext" class="ext" target="_blank">External Executables</a>.
-<li><ttl>A&S</ttl>: MUMmer takes a while and can fail in one or more of the alignments. Its important to be clear
+<li><span class="ttl">A&S</span>: MUMmer takes a while and can fail in one or more of the alignments. Its important to be clear
 what is happening, so the following was added:
 <ul>
 <li>If there is a ? in the Manager table cell for a pair, A&S will
@@ -628,37 +615,37 @@ write to the terminal how many were finished and how many it has left to do.
 Updates for Queries: Support for non-annotated hit ends (pseudo genes) bug fixes
 for display of minor genes and a few other little things.
 
-<p>For existing databases: (1) Run <tt>./symap -pseudo</tt>.
+<p>For existing databases: (1) Run <span class="ttt">./symap -pseudo</span>.
 (2) Select the project pair and run A&S.
 <p>Updates:
 <ul>
-<li><ttl>A&S</ttl>
+<li><span class="ttl">A&S</span>
 <ul>
-	<li><ttl>Number Pseudo</ttl>: A new option to number the non-annotated hit ends.
+	<li><span class="ttl">Number Pseudo</span>: A new option to number the non-annotated hit ends.
 	This will created 'pseudo genes' that will be numbered sequentially and end with a "~".
-	This is only useful in <ttl>Queries</ttl>.
+	This is only useful in <span class="ttl">Queries</span>.
 	See <a href="SystemHelp.html#pseudo" class="ext" target="_blank">System Help</a>
 	and <a href="Query.html#pseudo" class="ext" target="_blank">Queries</a>.
-	<li>Small change: If '<tt>Remove alignments from disk</tt>' is to be performed, it prompts the user
+	<li>Small change: If '<span class="ttt">Remove alignments from disk</span>' is to be performed, it prompts the user
 	a second time to be sure.
-	<li>The <ttl>Algo2</ttl> -wsp option to print the wrong strand hits had quit working.
+	<li>The <span class="ttl">Algo2</span> -wsp option to print the wrong strand hits had quit working.
 </ul>
-<li><ttl>Queries</ttl>
+<li><span class="ttl">Queries</span>
 <ul>
-	<li><ttl>Cluster Genes:</ttl>
-	If <ttx>Number Pseudo</ttx> was used, un-annotated will be included in the clusters.
+	<li><span class="ttl">Cluster Genes:</span>
+	If <span class="ttx">Number Pseudo</span> was used, un-annotated will be included in the clusters.
 	<br>Updated to make the resulting cluster have at least one gene from each
 	included species.
-	<li><ttl>Gene Report</ttl>: If <ttx>Number Pseudo</ttx> was used, un-annotated  will be included
+	<li><span class="ttl">Gene Report</span>: If <span class="ttx">Number Pseudo</span> was used, un-annotated  will be included
 	for the non-reference genes.
 	<li>Shorten query summary: Use species abbreviations instead of full display name.
 	The Cluster will use 'Inc(All)' instead of listing all species.
 	<li>Bug fixes for displaying <i>minor</i> genes: Two minor genes could be incorrectly paired in the table.
 	<br>From v5.6.4: (1) A gene could be paired with what appeared
 	to be an unannotated end, i.e. there would be no gene information, but the minor hit information
-	was correct. (2) The <ttx>Every+</ttx> would not work with the <ttx>Multi-hit</ttx> option.
+	was correct. (2) The <span class="ttx">Every+</span> would not work with the <span class="ttx">Multi-hit</span> option.
 	<li>Bug fix from v5.6.4: If the user input was incorrect, it was stuck in "Running" mode.
-	The <ttx>Multi-gene</ttx> report would show rows that were not reference if the report was run,
+	The <span class="ttx">Multi-gene</span> report would show rows that were not reference if the report was run,
 	another query was done and the user came back to this one.
 </ul>
 </ul>
@@ -667,16 +654,16 @@ for display of minor genes and a few other little things.
 <h3>Release: v5.6.4 (10-Apr-25)</h3>
 Minor release for Queries: two new small features, one bug fix (from v563), and few other small things.
 <ul>
-<li><ttl>Queries</ttl>
+<li><span class="ttl">Queries</span>
 	<ul>
-	<li><ttl>Export</ttl>: Bug fix from v5.6.3 - the <ttx>Export</ttx> button on
+	<li><span class="ttl">Export</span>: Bug fix from v5.6.3 - the <span class="ttx">Export</span> button on
 	the popup was not visible.
 	<li>When the columns are changed by selection, the table stayed scrolled to the same row.
 	<li><a href="Query.html#search" class="ext" target="_blank">Search</a>.
 	New feature to search on string for a selected column.
 	<li>Table Panel:
 	<ul>
-		<li>The <ttl>Stop</ttl> did nothing; it works now.
+		<li>The <span class="ttl">Stop</span> did nothing; it works now.
 		<li>If multiple queries are running at once, they will fail;
 		see <a href="Query.html#stop" class="ext" target="_blank">Wait/Stop Query</a>.
 		<li>If a different table tab was clicked while one was building, it produced an error message though
@@ -684,7 +671,7 @@ Minor release for Queries: two new small features, one bug fix (from v563), and 
 	</ul>
 	<li>MSA panel:
 	<ul>
-		<li>The <ttl>Cancel Alignment</ttl> did nothing; it works now and is called <ttl>Stop</ttl>.
+		<li>The <span class="ttl">Cancel Alignment</span> did nothing; it works now and is called <span class="ttl">Stop</span>.
 		<li>If multiple MSA are running at once, they will fail;
 		see <a href="Query.html#msaMultP" class="ext" target="_blank">MSA General Notes</a>.
 		<li>It would appear in whatever panel was being shown; now that does not happen.
@@ -700,19 +687,19 @@ Rename SyMAPQueryFrame -&gt; QueryFrame; New file UtilSearch. Put 2D methods in 
 
 <a id="v563"></a>
 <h3>Release: v5.6.3 (5-Apr-25)</h3>
-Improvements to the <ttb>Queries</ttb>: <ttl>MSA Align</ttl>,
-<ttl>Gene Pair Report...</ttl> and replaced <ttl>PgeneF</ttl> with a <ttl>Cluster hits</ttl> algorithm.
+Improvements to the <span class="ttb">Queries</span>: <span class="ttl">MSA Align</span>,
+<span class="ttl">Gene Pair Report...</span> and replaced <span class="ttl">PgeneF</span> with a <span class="ttl">Cluster hits</span> algorithm.
 Two bug fixes.
-<p>If you are currently using SyMAP, you only need to download <ttx>symap.jar</ttx>.
-However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</ttx>, extract the
-<ttx>ext/mafft</ttx> directory and move it to your <ttx>ext</ttx> directory.
+<p>If you are currently using SyMAP, you only need to download <span class="ttx">symap.jar</span>.
+However, if you want to run MAFFT, you need to  download <span class="ttx">symap_5.tar.gz</span>, extract the
+<span class="ttx">ext/mafft</span> directory and move it to your <span class="ttx">ext</span> directory.
 
 <ul>
 
-<li><ttl>Queries</ttl>
+<li><span class="ttl">Queries</span>
 <ul>
 <li>Bug fix on Linux: crashed on searching for a given collinear set.
-<li><ttl>MSA</ttl>: See <a href="Query.html#msaAlign" class="ext" target="_blank">MSA</a>.
+<li><span class="ttl">MSA</span>: See <a href="Query.html#msaAlign" class="ext" target="_blank">MSA</a>.
 	<ul>
 	<li>MUSCLE is very slow, so MAFFT has been added which is many times faster.
 	<li>Bug fix: negative strand hits were not reversed complemented.
@@ -722,50 +709,53 @@ However, if you want to run MAFFT, you need to  download <ttx>symap_5.tar.gz</tt
 		(3) Option to trim aligned sequence.
 	<li>The consensus sequences now uses a 'n' if there are multiple different bases in the
 	column and no majority. The consensus is lowercase if there is any mismatch in the column.
-	<li>The source files and resulting alignment are written in sub-directory <tt>queryAlign</tt>.
+	<li>The source files and resulting alignment are written in sub-directory <span class="ttt">queryAlign</span>.
 	The results are sorted according to the lower table of information. The results are
 	in a split pane.
 	</ul>
-<li><ttl>Cluster genes</ttl>: See <a href="Query.html#clhit" class="ext" target="_blank">Cluster genes</a>.
+<li><span class="ttl">Cluster genes</span>: See <a href="Query.html#clhit" class="ext" target="_blank">Cluster genes</a>.
 	<ul>
-	<li>A new filter called <ttl>Cluster hits</ttl> has replaced <ttl>PgeneF</ttl> (which can still
-	be run using <tt>viewSymap -g</tt>).
+	<li>A new filter called <span class="ttl">Cluster hits</span> has replaced <span class="ttl">PgeneF</span> (which can still
+	be run using <span class="ttt">viewSymap -g</span>).
 	</ul>
-<li><ttl>Gene Pair Report...</ttl> See <a href="Query.html#report" class="ext" target="_blank">Report</a>.
+<li><span class="ttl">Gene Pair Report...</span> See <a href="Query.html#report" class="ext" target="_blank">Report</a>.
 <ul>
-	<li><ttl>Multi-Hit Gene Report</ttl>:
+	<li><span class="ttl">Multi-Hit Gene Report</span>:
 	(1) This was confusing because groups can be created from non-gene hits,
 	but the report only works with gene hits. This has been made more obvious.
-	(2) The report is now sorted by <ttx>Gene#</ttx> instead of <ttx>Group</ttx>.
-	<li><ttl>Cluster Hit Report</ttl>: This works for the <ttl>Cluster Hits</ttl> (formally <ttx>PgeneF</ttx>) query.
-	<li>Values are saved for subsequent uses of a <ttl>Gene Report</ttl> for its respective <ttx>Query Results table</ttx>.
+	(2) The report is now sorted by <span class="ttx">Gene#</span> instead of <span class="ttx">Group</span>.
+	<li><span class="ttl">Cluster Hit Report</span>: This works for the <span class="ttl">Cluster Hits</span> (formally <span class="ttx">PgeneF</span>) query.
+	<li>Values are saved for subsequent uses of a <span class="ttl">Gene Report</span> for its respective <span class="ttx">Query Results table</span>.
 	This fixed an issue where the last query settings would be used for any report.
-	<li>The length of the <ttx>Gene Annotation Columns</ttx> wrap-around length can be set,
-	or truncated (relevant to <tt>Desc, Product</tt>). There is an option <ttl>Gene#</ttl> to
+	<li>The length of the <span class="ttx">Gene Annotation Columns</span> wrap-around length can be set,
+	or truncated (relevant to <span class="ttt">Desc, Product</span>). There is an option <span class="ttl">Gene#</span> to
 	prefix annotation with the Gene#. There is an option to not put borders around each cell.
-	<li>The reference <tt>Gene#</tt> column is in italics for the HTML report.
-	If there are duplicate <tt>Gene#</tt>, the 2nd has is followed by a "+".
+	<li>The reference <span class="ttt">Gene#</span> column is in italics for the HTML report.
+	If there are duplicate <span class="ttt">Gene#</span>, the 2nd has is followed by a "+".
 </ul>
-<li>The <ttl>Grp#</ttl> and <ttl>Grp Size</ttl> have been merged into one column:
-<tt>Size-Grp#</tt>.
+<li>The <span class="ttl">Grp#</span> and <span class="ttl">Grp Size</span> have been merged into one column:
+<span class="ttt">Size-Grp#</span>.
 <li>Other:
-<small>
-<ul>
-<li>Rewrote the Instruction page since its HTML was obsolete in Java20.
-Formatted the table Statistics better. If a chromosome was selected, the statistics did not show the Groups counts; it does now.
-<li>The Hit Strand was changed from "=" and "!=" to the actual strands separated by "/".
-The empty row/column value was changed from "-" to "." so as not to be confused with negative strand "-".
-<li>The column <ttx>Defaults</ttx> have changed. <tt>Block</tt> and <tt>Collinear</tt> columns sort in the reverse direction.
-<li>The <ttx>2D Group</ttx> only works for hits on the same two chromosomes as the selected hit; hence, it is renamed <tt>Group(chr)</tt>.
-<ttx>2D 3-chromosomes</ttx>: There was an erroneous popup message if the 2nd of 3 chromosomes has start coordinate close to zero.
-<li>Disabled Collinear when either Multi or Clust is selected.
-</ul>
-</small>
 
-</ul>
-<br>
-<li><small><ttl>Developers:</ttl> Changes to <ttl>Queries</ttl>.
 <ul>
+
+<li><small>Rewrote the Instruction page since its HTML was obsolete in Java20.
+Formatted the table Statistics better.
+If a chromosome was selected, the statistics did not show the Groups counts; it does now.</small>
+<li><small>The Hit Strand was changed from "=" and "!=" to the actual strands separated by "/".</small>
+The empty row/column value was changed from "-" to "." so as not to be confused with negative strand "-".
+<li><small>The column <span class="ttx">Defaults</span> have changed.
+<span class="ttt">Block</span> and <span class="ttt">Collinear</span> columns sort in the reverse direction.</small>
+<li><small>The <span class="ttx">2D Group</span> only works for hits on the same two chromosomes as the selected hit;
+hence, it is renamed <span class="ttt">Group(chr)</span>. <span class="ttx">2D 3-chromosomes</span>:
+There was an erroneous popup message if the 2nd of 3 chromosomes has start coordinate close to zero.</small>
+<li><small>Disabled Collinear when either Multi or Clust is selected.</small>
+</ul>
+</ul>
+
+<br>
+<li><small><span class="ttl">Developers:</span> Changes to <span class="ttl">Queries</span>.</small>
+<ul class="small">
 <li> Removed most hard-coded symbols.
 <li>Gene Pair Report: Allowed various length project names in the Report menu.
 Major changes to UtilReport.java.
@@ -783,109 +773,107 @@ symapMultiAlign package deleted and files moved to symap.closeup.
 TableReport-&gt;UtilReport; TableExport-&gt;UtilExport; SpeciesSelectPanel-&gt;SpeciesPanel;
 ResultSummaryPanel->ResultsPanel.
 New UtilSelect, UtilReportNR, ComputeClust.
-
 <li>Non-queries changes: Manager: add extra info if the Display Name has been used.
-</small>
+</ul>
 </ul>
 <a id="v562"></a>
 <h3>Release: v5.6.2 (24-Feb-25)</h3>
-New <ttl>Queries</ttl> features for 3 species.
+New <span class="ttl">Queries</span> features for 3 species.
 
 <ul>
-<li><ttl>Queries</ttl>
+<li><span class="ttl">Queries</span>
 	<ul>
-	<li><ttl>View 2D</ttl>:
+	<li><span class="ttl">View 2D</span>:
 		<ul>
-		<li>It will display <ttl>View 2D</ttl> with 3-tracks (chromosomes) if two rows are selected which have a common reference gene,
-		and has 'both' genes in both rows. This works with the <ttx>Region</ttx> or <ttx>Collinear Set</ttx> options.
-		See <a href="Query.html#q3" class="ext" target="_blank">3-chromosome 2D</a>.
-		<li>A new <ttx>Gene#</ttx> checkbox for <ttl>View 2D</ttl> which shows the <ttx>Gene#</ttx> instead of the <ttx>Annotation</ttx>.
+		<li>It will display <span class="ttl">View 2D</span> with 3-tracks (chromosomes) if two rows are selected which have a common reference gene,
+		and has 'both' genes in both rows. This works with the <span class="ttx">Region</span> or <span class="ttx">Collinear Set</span> options.
+		See <a href="Query.html" class="ext" target="_blank">3-chromosome 2D</a>.
+		<li>A new <span class="ttx">Gene#</span> checkbox for <span class="ttl">View 2D</span> which shows the <span class="ttx">Gene#</span> instead of the <span class="ttx">Annotation</span>.
 		</ul>
-	<li><ttl>Report...</ttl>:
+	<li><span class="ttl">Report...</span>:
 		<ul>
 		<li>Add export to TSV.
-		<li>Add <ttl>Row all</ttl> and <ttl>Collinear all</ttl> for when
+		<li>Add <span class="ttl">Row all</span> and <span class="ttl">Collinear all</span> for when
 		there is &gt;2 species, it requires all species to be present
 		(see <a href="Query.html#report" class="ext" target="_blank">Report...</a>).
 		<li>Many small improvements.
 		</ul>
 	</ul>
 <br>
-<li><small><ttl>Developers:</ttl> (1) Rewrote part of Query.tableReport.java.
+<li><small><span class="ttl">Developers:</span> (1) Rewrote part of Query.tableReport.java.
 (2) Small changes to the Query Result tab.</small>
 </ul>
 <a id="v561"></a>
 <h3>Release: v5.6.1 (12-Feb-25)</h3>
-Bug fixes, minor updates to A&S output, and improved <ttl>Queries</ttl>.
+Bug fixes, minor updates to A&S output, and improved <span class="ttl">Queries</span>.
 <ul>
-<li><ttp>xToSymap</ttp>:
-<ul><li>Bug fix: <ttl>NCBI convert</ttl>: if the gene did not have a description, it was suppose to use the first mRNA 'product', which
+<li><span class="ttp">xToSymap</span>:
+<ul><li>Bug fix: <span class="ttl">NCBI convert</span>: if the gene did not have a description, it was suppose to use the first mRNA 'product', which
 it was not doing.
 </ul>
 <br>
-<li><ttl>A&S (Alignment&Synteny)</ttl>:
+<li><span class="ttl">A&S (Alignment&Synteny)</span>:
 <ul>
-<li>The default is to surpress output to the terminal and <tt>logs/{proj-to-proj}/symap.log</tt> except final summaries.
-To show the verbose output, use <ttx>./symap -v</ttx> or use the parameters
-<a href="SystemHelp#over2" class="ext" target="_blank">Verbose</a> checkbox.
+<li>The default is to surpress output to the terminal and <span class="ttt">logs/{proj-to-proj}/symap.log</span> except final summaries.
+To show the verbose output, use <span class="ttx">./symap -v</span> or use the parameters
+<a href="SystemHelp" class="ext" target="_blank">Verbose</a> checkbox.
 See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
 <li>Status lines, which repeatedly use the same line, are written to stderr instead of stdout.
-<li>The <ttx>symap</ttx> or <ttx>viewSymap</ttx> flag to show settings for the important MySQL variables is now "-sql".
-<li><ttl>Algo2</ttl> no longer quits if it encounters a sequence name not loaded when reading MUMmer.
+<li>The <span class="ttx">symap</span> or <span class="ttx">viewSymap</span> flag to show settings for the important MySQL variables is now "-sql".
+<li><span class="ttl">Algo2</span> no longer quits if it encounters a sequence name not loaded when reading MUMmer.
 </ul>
 <br>
 
-<li><ttl>Query</ttl>:
+<li><span class="ttl">Query</span>:
 <ul>
-<li>New <ttl>Arrange</ttl> button: When the column panel is being displayed, the new <ttl>Arrange</ttl> button groups similar
+<li>New <span class="ttl">Arrange</span> button: When the column panel is being displayed, the new <span class="ttl">Arrange</span> button groups similar
 columns, putting the gene columns first.  See <a href="Query.html#col" class="ext" target="_blank">Arrange</a> option.
-<li>The <ttx>Singles</ttx> query allowed a species to be selected; this has been replaced with a species-specific check mark
-beside each species name. This query no longer allows <ttl>From</ttl> and <ttl>To</ttl> to be entered.
+<li>The <span class="ttx">Singles</span> query allowed a species to be selected; this has been replaced with a species-specific check mark
+beside each species name. This query no longer allows <span class="ttl">From</span> and <span class="ttl">To</span> to be entered.
 See <a href="Query.html#query" class="ext" target="_blank">Query</a>.
-<li><ttx>Gene#</ttx> search:
+<li><span class="ttx">Gene#</span> search:
 <ul>
 <li>The new species-specific check can be used for this search also.
 <li>Search speedup.
 <li>The search will now match genes with minor hits, e.g. 5.b.
-<li>The <ttx>Grp#</ttx> column computation has been changed as follows: for a given gene that
+<li>The <span class="ttx">Grp#</span> column computation has been changed as follows: for a given gene that
 hits multiple places on the same opposite chromosome, they are put in a group so that they can all be
 viewed at once with the <a href="Query.html#view2D" class="ext" target="_blank">2D Group</a> option.
 </ul>
-<li><ttx>Multi</ttx>: removed the <ttx>Exon</ttx> option and make the <ttx>Opposite</ttx> options radio buttons.
+<li><span class="ttx">Multi</span>: removed the <span class="ttx">Exon</span> option and make the <span class="ttx">Opposite</span> options radio buttons.
 <li>Better error checking.
 </ul>
-<li><ttl>2D</ttl>: Better positioning of <ttx>Gene#</ttx> when the <ttl>Gene#</ttl> sequence option is selected.
+<li><span class="ttl">2D</span>: Better positioning of <span class="ttx">Gene#</span> when the <span class="ttl">Gene#</span> sequence option is selected.
 
 <br>&nbsp;
-<small>
-<li>Little changes: (1) Query title does not use 'Chr' if number has a prefix. (2) Query Summary replaced Category with #Genes.
+
+<li class="small">Little changes: (1) Query title does not use 'Chr' if number has a prefix. (2) Query Summary replaced Category with #Genes.
 (3) In 2D, 'Set' changed to 'CoSet'. (4) For A&S, rename 'Aligning Projects' to 'Synteny'.
 
-<li>Minor bug fixes:
-<ol>
-<li>If "NUCmer only" had been set, it was not showing in <ttx>Pair Parameters</ttx> on restart.
-<li>For the <ttx>Singles</ttx> <tt>numHits</tt> column, it was not being updated
+<li class="small">Minor bug fixes:
+<ol class="small">
+<li>If "NUCmer only" had been set, it was not showing in <span class="ttx">Pair Parameters</span> on restart.
+<li>For the <span class="ttx">Singles</span> <span class="ttt">numHits</span> column, it was not being updated
 if a project was removed from the database.
-<li> The <ttl>Queries</ttl> <ttx>Summary</ttx> had the incorrect <ttx>Genes</ttx> count (error introduced v560)
+<li> The <span class="ttl">Queries</span> <span class="ttx">Summary</span> had the incorrect <span class="ttx">Genes</span> count (error introduced v560)
 </ol>
 <br>
-<li>Developers: Changed TableDataPanel, TableExport, QueryPanel, SpeciesSelectPanel, PairParams to use Jcomp and have button tips.
-</small>
+<li class="small">Developers: Changed TableDataPanel, TableExport, QueryPanel, SpeciesSelectPanel, PairParams to use Jcomp and have button tips.
 </ul>
-<!---------------------------------------------------->
+<!--  -->
 <a id="v560"></a>
 <h3>Release: v5.6.0 (23-Jan-25)</h3>
-There were some major changes made to <ttl>Algo2</ttl> (first released <a href="#v546">v5.4.6</a>) and other minor changes.
+There were some major changes made to <span class="ttl">Algo2</span> (first released <a href="#v546">v5.4.6</a>) and other minor changes.
 <br>For existing databases, see <i>Update</i> in the items below.
 <ul>
-<li><ttb>A&S</ttb> <ttl>Algo2</ttl>:
+<li><span class="ttb">A&S</span> <span class="ttl">Algo2</span>:
 <ul>
 <li>The improved algorithm reduces:
 <ol>
 <li>the number of long clustered hits with huge gaps (happens with mammalian genomes),
 <li>short hits,
 <li>hits with little overlap to connected genes (this last change causes much smaller
-<ttl>Summary</ttl> <ttx>GNwCH</ttx> and <ttx>GNwCHB</ttx> numbers).
+<span class="ttl">Summary</span> <span class="ttx">GNwCH</span> and <span class="ttx">GNwCHB</span> numbers).
 </ol>
 <li>G2 assignments do much better at assigning the hit's genes.
 <br>G2 no longer allows wrong strand hits,
@@ -893,67 +881,67 @@ but the "-wsp" remains to print the wrong strand hits.
 <br>G1 and G0 assignments now require less gaps between hits and a 'Hit len' ratio of &gt; 0.5.
 <br>G1 no longer has minor assignments.
 <li>Internal parameters are mostly set by automatic analysis of the gene models.
-The user parameters have been changed from <ttx>Minimal matched bases</ttx> to <ttx>Scale</ttx>,
+The user parameters have been changed from <span class="ttx">Minimal matched bases</span> to <span class="ttx">Scale</span>,
 which is more intuitive to change, i.e. increase filters more, decrease filters less.
 See <a href="SystemHelp.html#hint" class="ext" target="_blank">Algo2 Hints</a> for tested datasets and parameter changes.
 <li>The gene overlap score (shown on the Gene popup) has been changed to be the
-overlap between the hit and the gene without subtracting gaps (same as <ttl>Algo1</ttl>).
+overlap between the hit and the gene without subtracting gaps (same as <span class="ttl">Algo1</span>).
 <li>The changes do not change the synteny blocks very much, however,
 the reduction in short F+ hits can result in slightly better synteny blocks and less tiny blocks.
 </ul>
-<i>Update</i>: The <ttb>A&S</ttb> needs to be re-run to get this update.
+<i>Update</i>: The <span class="ttb">A&S</span> needs to be re-run to get this update.
 
 <br>&nbsp;
-<li><ttb>Queries</ttb>:
+<li><span class="ttb">Queries</span>:
 <ul>
 <li>If the columns have been re-ordered in the last table that was created or had a column added/removed, the re-ordered
 columns will be applied to the next created table.
-<li>When sorting on <ttl>Gene#</ttl>, hits without a gene annotation will sort to the bottom.
-<li>For a singles table: (1) Bug fix: the gene length (<ttx>glen</ttx>) column would not sort.
-(2) The <ttx>NumHits</ttx> column has been moved to the 2nd column slot.
-<li><ttx>Export</ttx>: Writes the SyMAP version and database name as a comment in the first line of the CSV and FASTA file,
+<li>When sorting on <span class="ttl">Gene#</span>, hits without a gene annotation will sort to the bottom.
+<li>For a singles table: (1) Bug fix: the gene length (<span class="ttx">glen</span>) column would not sort.
+(2) The <span class="ttx">NumHits</span> column has been moved to the 2nd column slot.
+<li><span class="ttx">Export</span>: Writes the SyMAP version and database name as a comment in the first line of the CSV and FASTA file,
 and the title for the HTML file. The default for CSV and HTML is no row#.
-<li>Start <ttx>viewSymap -q</ttx> to see the gene overlap scores instead of the exon scores for <ttx>Algo2</ttx>.
+<li>Start <span class="ttx">viewSymap -q</span> to see the gene overlap scores instead of the exon scores for <span class="ttx">Algo2</span>.
 </ul>
 
 <br>
-<li><ttb>2D</ttb>
+<li><span class="ttb">2D</span>
 <ul>
 <li>Scroll wheel: The scroll wheel had to be scrolled in the opposite direction for a flipped sequence.
 Now it scrolls consistently regardless of flipped state.
 <li>The algorithm for placing overlapping genes is slightly improved.
-<li><ttl>Hit Filter</ttl>: An <ttx>And</ttx> and <ttx>Or</ttx> radio button has been added
-next to the <ttx>Synteny Blocks</ttx> (see <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit Filter</a>).
-<li><ttl>Download Blocks</ttl>: See <a href="UserGuide.html#data_download" target="_blank" class="ext">Download</a>.
+<li><span class="ttl">Hit Filter</span>: An <span class="ttx">And</span> and <span class="ttx">Or</span> radio button has been added
+next to the <span class="ttx">Synteny Blocks</span> (see <a href="UserGuide.html#hitfilter" class="ext" target="_blank">Hit Filter</a>).
+<li><span class="ttl">Download Blocks</span>: See <a href="UserGuide.html" target="_blank" class="ext">Download</a>.
 <ul>
-<li>Has three options: the original <ttl>Blocks with gene info</ttl>, a new <ttl>Blocks only</ttl> and a new <ttl>Blocks summary</ttl>.
+<li>Has three options: the original <span class="ttl">Blocks with gene info</span>, a new <span class="ttl">Blocks only</span> and a new <span class="ttl">Blocks summary</span>.
 <li>The output is now sorted by the two chromosome numbers followed by the block number.
 
 </ul>
 <li>Hit popup: Two new conditional options have been added. (See <a href="Details.html#hit" class="ext" target="_blank">Hit popup</a>.)
 <ol>
-<li><ttl>Merge</ttl>: If there are negative overlaps, it will merge the hits.
-<li><ttl>Order</ttl>: The target hits are listed by the query sorted order;
+<li><span class="ttl">Merge</span>: If there are negative overlaps, it will merge the hits.
+<li><span class="ttl">Order</span>: The target hits are listed by the query sorted order;
 if the target hits are not strictly in sequential order, they will be sorted.
 </ol>
 The gap column was one off, which has been fixed.
 </ul>
 <p>
-<li><ttb>Summary</ttb>: Added <ttx>#Genes</ttx> to the <ttx>Collinear set</ttx> row.
+<li><span class="ttb">Summary</span>: Added <span class="ttx">#Genes</span> to the <span class="ttx">Collinear set</span> row.
 <br>&nbsp;&nbsp;&nbsp;Bug fix: "GNwCHB" was slightly off when a project is in multiple synteny pairs.
-<br><i>Update</i>: Start up "<tt>symap -s</tt>"", then select <ttl>Summary</ttl>; the -s will cause it to regenerate the summary.
+<br><i>Update</i>: Start up "<span class="ttt">symap -s</span>"", then select <span class="ttl">Summary</span>; the -s will cause it to regenerate the summary.
 
 <p>
-<li><ttb>Dotplot</ttb> and its <ttx>Summary</ttx>:
+<li><span class="ttb">Dotplot</span> and its <span class="ttx">Summary</span>:
 The stats showed 0% if &lt; 1%, now shows "&lt;1%"; and a few other little adjustments.
 
 <p>
-<li><ttx>Demo_seq</ttx>: 4 duplicates were removed from the <tt>data/seq/demo_seq/annotation/anno.gff</tt> file. SyMAP
+<li><span class="ttx">Demo_seq</span>: 4 duplicates were removed from the <span class="ttt">data/seq/demo_seq/annotation/anno.gff</span> file. SyMAP
 works fine with duplicates, but they can result in non-deterministic results (i.e. sometimes the .a is selected
 as the major gene and other times the .b is selected).
 
 <br>&nbsp;
-<li><ttx>JDBC</ttx>: The java-mySQL interface was updated to the latest v9.1.0. This fixed a bug on
+<li><span class="ttx">JDBC</span>: The java-mySQL interface was updated to the latest v9.1.0. This fixed a bug on
 Ubuntu that only allowed 'root' to be used as the username (db_adminuser).
 
 <br>&nbsp;
@@ -1007,26 +995,26 @@ This is mostly a documentation update, with a few tiny code updates.
 
 <a id="v558"></a>
 <h3>Release: v5.5.8 (1-Sept-24)</h3>
-Small changes to <ttp>xToSymap</ttp> and some small <ttp>symap</ttp> interfaces changes.
+Small changes to <span class="ttp">xToSymap</span> and some small <span class="ttp">symap</span> interfaces changes.
 <ol>
-<li><ttp>xToSymap</ttp>:
+<li><span class="ttp">xToSymap</span>:
 <ol type='a'>
-<li><ttl>Summarize</ttl>: Added output:
+<li><span class="ttl">Summarize</span>: Added output:
 <ul>
 <li>Output all attributes for gene. Compress the summary lengths counts.
-If not <ttl>Verbose</ttl>, remark if the sequence appears to be hard masked.
-<li>If <ttl>Verbose</ttl>, output base count; print header lines of &lt;=10 unique prefixes; print lengths of first 5 input sequences.
+If not <span class="ttl">Verbose</span>, remark if the sequence appears to be hard masked.
+<li>If <span class="ttl">Verbose</span>, output base count; print header lines of &lt;=10 unique prefixes; print lengths of first 5 input sequences.
 </ul>
-<li><ttl>Split</ttl>: A new feature that will split the converted output into chromosome files.
-<li><ttl>Summary</ttl>: Improved determining ">ID" prefixes.
-<li><ttl>ConvertNCBI</ttl>: The mRNA <ttx>products</ttx> are no longer merged;
-either the gene <ttx>description</ttx> is used or the 1st mRNA  <ttx>product</ttx>.
+<li><span class="ttl">Split</span>: A new feature that will split the converted output into chromosome files.
+<li><span class="ttl">Summary</span>: Improved determining ">ID" prefixes.
+<li><span class="ttl">ConvertNCBI</span>: The mRNA <span class="ttx">products</span> are no longer merged;
+either the gene <span class="ttx">description</span> is used or the 1st mRNA  <span class="ttx">product</span>.
 The 1st mRNA was a gene attributed with keyword "ID=", now it is a separate keyword "rnaID=".
 The text "gene-" and "rna-" are removed from their respective IDs (to make name shorter).
 The option for assigning a list of protein IDs corresponding to all mRNAs for the gene has been removed;
 now only the 1st protein-id is listed.
 See <a href="input/ncbi.html">NCBI</a> convert.
-<li><ttl>ConvertEnsembl</ttl>: The gene has a new attribute of "rnaID=" with the 1st mRNA ID which
+<li><span class="ttl">ConvertEnsembl</span>: The gene has a new attribute of "rnaID=" with the 1st mRNA ID which
 corresponds to the input exons. It now shares the option of having a gene attribute called "proteinID"
 which is equal to the "protein=id" of the 1st CDS for the 1st mRNA.
 See <a href="input/ensembl.html">Ensembl</a> convert.
@@ -1034,22 +1022,22 @@ Fixed a rare bug: This script removes the "[Source:..." text, but it would incor
 
 </ol>
 <br>
-<li><ttp>symap</ttp>: Small interface changes:
+<li><span class="ttp">symap</span>: Small interface changes:
 <ul>
-<li><ttl>Project Parameters</ttl>: Allow comma's in minimal length cutoff.
+<li><span class="ttl">Project Parameters</span>: Allow comma's in minimal length cutoff.
 <li>The display name is checked for duplicates.
-<li>The abbreviation is shown on the <ttl>Selected</ttl> summary and "Project" renamed to "Directory".
-<li>Fixed a rare sort bug in <ttx>Algo2</ttx>.
+<li>The abbreviation is shown on the <span class="ttl">Selected</span> summary and "Project" renamed to "Directory".
+<li>Fixed a rare sort bug in <span class="ttx">Algo2</span>.
 </ul>
 <br>
-<li><ttp>viewSymap</ttp>:
+<li><span class="ttp">viewSymap</span>:
 <ul>
-<li><ttl>Query</ttl>: Allow comma's in <ttx>Chr:</ttx> start or end.
-The <ttx>Show</ttx> popup of a row's content has comma's in large numbers,
-and breaks up long <ttx>All-Anno</ttx> lines.
+<li><span class="ttl">Query</span>: Allow comma's in <span class="ttx">Chr:</span> start or end.
+The <span class="ttx">Show</span> popup of a row's content has comma's in large numbers,
+and breaks up long <span class="ttx">All-Anno</span> lines.
 </ul>
 <br>
-<li>Developers: Most of the <ttp>xToSymap</ttp> methods were simplified.
+<li>Developers: Most of the <span class="ttp">xToSymap</span> methods were simplified.
 </ol>
 <a id="v557"></a>
 <h3>Release: v5.5.7 (8-Aug-24)</h3>
@@ -1057,33 +1045,33 @@ This release has added clarity and ease to loading the input files.
 <ol>
 <li>NCBI and Ensembl files
 <ul>
-<li><ttl>xToSymap</ttl>: A new <a href="./input/index.html" class="ext" target="_blank">interface</a> for the convert NCBI and Ensembl scripts,
-and to replace the <tt>scripts/getLengths.pl</tt> script.
-<li>The <ttl>Ensembl</ttl> conversion now recognizes a chromosome sequence if the word
+<li><span class="ttl">xToSymap</span>: A new <a href="./input/index.html" class="ext" target="_blank">interface</a> for the convert NCBI and Ensembl scripts,
+and to replace the <span class="ttt">scripts/getLengths.pl</span> script.
+<li>The <span class="ttl">Ensembl</span> conversion now recognizes a chromosome sequence if the word
 'chromosome' is on the header line. It has different rules on what is output.
-<li>The <ttl>NCBI</ttl> conversion now checks for "NT_", "NW_" and "NC_" prefixes (is
+<li>The <span class="ttl">NCBI</span> conversion now checks for "NT_", "NW_" and "NC_" prefixes (is
 was just checking for word 'chromosome' or 'scaffold'). It has different rules on what is output.
 </ul>
-<li><ttl>Load Project</ttl>:
+<li><span class="ttl">Load Project</span>:
 <ul>
-<li>This will now load most NCBI and Ensembl files directly, though it is strongly recommended to convert them with <ttl>xToSymap</ttl>.
+<li>This will now load most NCBI and Ensembl files directly, though it is strongly recommended to convert them with <span class="ttl">xToSymap</span>.
 <li>The fasta file(s) are checked for a suffix of .fsa, .fa, .fna, .fasta, or .seq.
 The gff file(s) must have a suffix of .gff or .gff3.
 <li>In the GFF file, there must be a mRNA line for the following exons. The mRNA parent must match the gene ID, and
 the exon parent must match the mRNA ID.
 </ul>
-<li><ttl>A&S</ttl>: <ttx>Algo 2</ttx> would crash on a rare case when sorting exons, which has been fixed.
+<li><span class="ttl">A&S</span>: <span class="ttx">Algo 2</span> would crash on a rare case when sorting exons, which has been fixed.
 <li>Demo: was updated to have correct GFF3 files.
 <li>Documentation: has been improved for the input and build process.
-<li>Developers: a new package called <ttl>xToSymap</ttl> has been added.
+<li>Developers: a new package called <span class="ttl">xToSymap</span> has been added.
 </ol>
 
 <a id="v556"></a>
 <h3>Release: v5.5.6 (15-July-24)</h3>
-For existing databases, re-run the collinear algorithm as follows: Start <ttx>./symap -acs</ttx>, then select the pair and run
-<ttb>Selected Pair (Redo)</ttb>; a popup will have you confirm "Collinear only" indicating that only this algorithm will be run.
+For existing databases, re-run the collinear algorithm as follows: Start <span class="ttx">./symap -acs</span>, then select the pair and run
+<span class="ttb">Selected Pair (Redo)</span>; a popup will have you confirm "Collinear only" indicating that only this algorithm will be run.
 <ul>
-<li><ttl>A&S Collinear algorithm</ttl>: V5.5.6 finds more collinear sets and longer ones.
+<li><span class="ttl">A&S Collinear algorithm</span>: V5.5.6 finds more collinear sets and longer ones.
 
 Pre-v5.5.6 gave obviously wrong results if a gene from the hit numbered project
 (the hits are numbered along the alphabetically lesser project name) was part of two different collinear sets.
@@ -1091,125 +1079,125 @@ In my test sets, this happened a few times between Arabidopsis, Brassica rapa, a
 mammalian test set of humans, chimps, mouse and rabbit.
 
 <br>&nbsp;
-<li><ttl>Query</ttl>
+<li><span class="ttl">Query</span>
 <ul>
-<li>New: A new <ttb>Report</ttb> button is at the top of the results table.
+<li>New: A new <span class="ttb">Report</span> button is at the top of the results table.
 See <a href="Query.html#report" class="ext" target="_blank">Query Report</a>.
 
-<li>Bug fix for <ttx>Multi-hit gene</ttx>: it would crash if there was no hits for a pair of
+<li>Bug fix for <span class="ttx">Multi-hit gene</span>: it would crash if there was no hits for a pair of
 species.
-<li>The results table was sorted by <ttx>Hit#</ttx>; now it is sorted by <ttx>Block</ttx> or <ttx>Collinear</ttx>
-or <ttx>Chr</ttx>, and by <ttx>Hit#</ttx> within each group.
+<li>The results table was sorted by <span class="ttx">Hit#</span>; now it is sorted by <span class="ttx">Block</span> or <span class="ttx">Collinear</span>
+or <span class="ttx">Chr</span>, and by <span class="ttx">Hit#</span> within each group.
 </ul>
 <br>
-<li>Developers: <ttx>TableExport.java</ttx>, <ttx>TableReport.java</ttx>
-and <ttx>TmpRowData.java</ttx> are new files. The output of Load Annotation is clearer if there is
+<li>Developers: <span class="ttx">TableExport.java</span>, <span class="ttx">TableReport.java</span>
+and <span class="ttx">TmpRowData.java</span> are new files. The output of Load Annotation is clearer if there is
 no annotation files.
 </ul>
 
 <a id="v555"></a>
 <h3>Release: v5.5.5 (19-June-24)</h3>
-For existing databases, if you ran <ttx>Algo2</ttx> on mammalian genomes, you may want to re-execute
-the <ttl>Synteny</ttl> step to get better clustering of hits for very long genes.
-<p>This release is mainly with upgrades for <ttb>Query</ttb> with an option to view tandem genes.
+For existing databases, if you ran <span class="ttx">Algo2</span> on mammalian genomes, you may want to re-execute
+the <span class="ttl">Synteny</span> step to get better clustering of hits for very long genes.
+<p>This release is mainly with upgrades for <span class="ttb">Query</span> with an option to view tandem genes.
 <ul>
-<li><ttl>Alignment & Synteny</ttl>:
+<li><span class="ttl">Alignment & Synteny</span>:
 <ul>
-<li><ttx>Algo2</ttx> for gene-to-gene hits, it was keeping hits separate when there was a very long gene with tiny exons;
+<li><span class="ttx">Algo2</span> for gene-to-gene hits, it was keeping hits separate when there was a very long gene with tiny exons;
 it will now cluster them into one. For gene-to-non-gene, it is clustering hits into bigger clusters.
-<li><ttx>Algo2</ttx> can take as input NUCmer files, but still does not do self-alignments. I tried
+<li><span class="ttx">Algo2</span> can take as input NUCmer files, but still does not do self-alignments. I tried
 humans and chimpansee with PROmer vs NUCmer, and PROmer identified more genes.
 </ul>
 
-<li><ttl>Query</ttl>
+<li><span class="ttl">Query</span>
 <ul>
 <li>Columns:
 <ul>
-<li>If the hit is not to a gene, the chromosome# will be shown for the <ttx>Gene#</ttx> column instead
+<li>If the hit is not to a gene, the chromosome# will be shown for the <span class="ttx">Gene#</span> column instead
 of '-' (e.g. '3.-' indicates the hit is on chromosome 3).
-<li>Columns <ttx>PgeneF</ttx> and <ttx>PgFSize</ttx> have been renamed <ttx>Grp#</ttx> and <ttx>GrpSize</ttx>,
-respectively. These are assigned values by the queries <ttl>Gene#</ttl>,  <ttl>Multi-hit Gene</ttl>
-and <ttl>PgeneF</ttl>.
+<li>Columns <span class="ttx">PgeneF</span> and <span class="ttx">PgFSize</span> have been renamed <span class="ttx">Grp#</span> and <span class="ttx">GrpSize</span>,
+respectively. These are assigned values by the queries <span class="ttl">Gene#</span>,  <span class="ttl">Multi-hit Gene</span>
+and <span class="ttl">PgeneF</span>.
 </ul>
 
 <li>New:
 <ul>
-<li>The <ttl>Gene#</ttl> filter results have assigned values for the columns <ttx>Grp#</ttx> and <ttx>GrpSize</ttx>,
+<li>The <span class="ttl">Gene#</span> filter results have assigned values for the columns <span class="ttx">Grp#</span> and <span class="ttx">GrpSize</span>,
 where a group is associated with the species+chromosome.
-<li>For the <ttl>Multi-hits</ttl> query (see <a href="Query.html#multi">Mulit-hit</a>):
+<li>For the <span class="ttl">Multi-hits</span> query (see <a href="Query.html#multi">Mulit-hit</a>):
 <ol><li>New options:
-<br><ttl>Exon</ttl>: only show hits if they overlap an exon in the target gene.
-<br><ttl>Same chr</ttl>: the n hits for the target gene must be to the same opposite chromosome.
-<br><ttl>Tandem</ttl>: the n hits for the target gene must be to tandem genes on the opposite chromosome.
-<br><li>The columns <ttx>Grp#</ttx> and <ttx>GrpSize</ttx> are assigned values.
+<br><span class="ttl">Exon</span>: only show hits if they overlap an exon in the target gene.
+<br><span class="ttl">Same chr</span>: the n hits for the target gene must be to the same opposite chromosome.
+<br><span class="ttl">Tandem</span>: the n hits for the target gene must be to tandem genes on the opposite chromosome.
+<br><li>The columns <span class="ttx">Grp#</span> and <span class="ttx">GrpSize</span> are assigned values.
 <li>Small change: If a chromosome is selected for all species, the hits must be on both chromosome (it was an 'either', now
 its a 'both).
 </ol>
-<li>On the results table, the <ttl>View 2D</ttl> feature has a new option of <ttx>Group</ttx>
+<li>On the results table, the <span class="ttl">View 2D</span> feature has a new option of <span class="ttx">Group</span>
 (see <a href="Query.html#group">View 2D</a>).
 <ul>
-<li>When the 2D is shown, all rows with the selected row <ttx>Grp#</ttx> and <ttx>Chr</ttx> will be highlighted.
+<li>When the 2D is shown, all rows with the selected row <span class="ttx">Grp#</span> and <span class="ttx">Chr</span> will be highlighted.
 <li>The selected hit (and group hits) are highlighted in a new "Special" color; this can be turned off
-by selecting <ttl>High</ttl> on the <ttb>Query</ttb> interface before display; this release added the ability to turn the highlighting off by
-de-selecting the <ttl>Hit Filter</ttl> <ttx>High popup</ttx> option.
+by selecting <span class="ttl">High</span> on the <span class="ttb">Query</span> interface before display; this release added the ability to turn the highlighting off by
+de-selecting the <span class="ttl">Hit Filter</span> <span class="ttx">High popup</span> option.
 </ul>
 </ul>
 
 <li>Interface:
 <ul>
-<li>The <ttl>Multi-hits</ttl> option has been grouped with the <ttl>PgeneF</ttl> option, and
+<li>The <span class="ttl">Multi-hits</span> option has been grouped with the <span class="ttl">PgeneF</span> option, and
 now has a check mark in order to run.
-<li><ttl>Collinear size</ttl> now has an <tt>Ignore</tt> so it does not depend on having a number in the
+<li><span class="ttl">Collinear size</span> now has an <span class="ttt">Ignore</span> so it does not depend on having a number in the
 associated text box set to blank in order to ignore.
 </ul>
-<li>Small change: <ttl>Annotation Description</ttl> no longer automatically includes minor genes since this
-can be used in conjunction with <ttl>Every*</ttl> to get that result.
+<li>Small change: <span class="ttl">Annotation Description</span> no longer automatically includes minor genes since this
+can be used in conjunction with <span class="ttl">Every*</span> to get that result.
 <li>Bug fixes:
 <ul>
-<li>If a hit was to two minor genes (<ttx>Every*</ttx> option), the MUSCLE command would not work.
-<li>If one of the genomes was not annotated, the <ttl>View 2D</ttl> did not work.
+<li>If a hit was to two minor genes (<span class="ttx">Every*</span> option), the MUSCLE command would not work.
+<li>If one of the genomes was not annotated, the <span class="ttl">View 2D</span> did not work.
 </ul>
 </ul>
-<li><ttl>Chromosome Explorer</ttl>:
-<ul><li>New option: The <ttl>2D</ttl> display has a <ttl>Sequence Filter</ttl> of <ttx>Conserved</ttx>
-for the reference chromosome, which was renamed to <ttx>g2x2</ttx> and option <ttx>g2x1</ttx> added, where the first highlights
+<li><span class="ttl">Chromosome Explorer</span>:
+<ul><li>New option: The <span class="ttl">2D</span> display has a <span class="ttl">Sequence Filter</span> of <span class="ttx">Conserved</span>
+for the reference chromosome, which was renamed to <span class="ttx">g2x2</span> and option <span class="ttx">g2x1</span> added, where the first highlights
 all hit-wires and corresponding genes that are conserved across all 3 chromosomes, and the second highlights
 the hit-wires and corresponding genes that are only found on one pair.
-<li>The <ttx>Gene popup</ttx> coloring of the hit-wire has changed from the "hover" color to the
+<li>The <span class="ttx">Gene popup</span> coloring of the hit-wire has changed from the "hover" color to the
 new "special" color.
 </ul>
-<li>Developers: <ttx>ComputeMulti.java</ttx> is a new file.
+<li>Developers: <span class="ttx">ComputeMulti.java</span> is a new file.
 </ul>
 
 <a id="v554"></a>
 <h3>Release: v5.5.4 (7-May-24)</h3>
 
 <ul>
-<li><ttb>2D</ttb>
+<li><span class="ttb">2D</span>
 <ul>
-<li><ttl>Show Annotation</ttl>: (1) This used a constant that was appropriate for
+<li><span class="ttl">Show Annotation</span>: (1) This used a constant that was appropriate for
 plant genes, but not mammalian; the constant is now computed based on the average
 length of genes for each chromosome. (2) The boxes now have background light-gray and
 border in the exon +/- color. (3) If the last line of the annotation is long, it
 is now truncated.
 </ul>
-<li><ttb>Circle</ttb>
+<li><span class="ttb">Circle</span>
 <ul>
-<li>The <ttx>Two-color all blocks</ttx> option, which colors the inverted and non-inverted
+<li>The <span class="ttx">Two-color all blocks</span> option, which colors the inverted and non-inverted
 blocks two different colors, can now have its colors changes via the color palette icon.
 </ul>
-<li><ttb>View</ttb>
+<li><span class="ttb">View</span>
 <ul>
-<li>Add <ttx>AvgGeneLen</ttx> and <ttx>AvgExonLen</ttx> for the average gene and exon
+<li>Add <span class="ttx">AvgGeneLen</span> and <span class="ttx">AvgExonLen</span> for the average gene and exon
 length of each chromosome.
 </ul>
 </ul>
 <a id="v553"></a>
 <h3>Release: v5.5.3 (28-Apr-24)</h3>
-Interface changes for the <ttb>Circle</ttb> display.
+Interface changes for the <span class="ttb">Circle</span> display.
 <br>Previous bug fixes: v5.5.1 had bug in 2D when no annotation. v5.5.2 had bug when genome&gt;2000M.
 <br>This release has been very well tested (using these <a href="./SystemGuide.html#machine">datasets and machines</a>)!
-<p><ttb>Circle</ttb> display
+<p><span class="ttb">Circle</span> display
 <ul>
 <li>New color options so that they can be changed; see <a href="./UserGuide.html#circColors">Colors</a>.
 <li>The circle now remains the same size between different datasets and options.
@@ -1230,105 +1218,100 @@ supported, but I failed to test this on large genomes (big thanks to Ricardo for
 15-Apr-24 bug fix release: A bug that caused 2D to crash when displaying
 a sequence track with no annotation. This release still has date 31-Mar-24.
 <p>
-The control bars for <ttl>Circle</ttl>, <ttl>DotPlot</ttl> and <ttl>2D</ttl> have been made to
+The control bars for <span class="ttl">Circle</span>, <span class="ttl">DotPlot</span> and <span class="ttl">2D</span> have been made to
 look and act in similar fashion. There are other small interface changes for clarity and new function.
 <ul>
 
-<li><ttb>Circle</ttb>
+<li><span class="ttb">Circle</span>
 <ul>
-<li><ttl>Control bar</ttl>: new icon buttons for rotate counter-clock-wise, Home
-and <ttx><big>(i)</big></ttx> quick help.
+<li><span class="ttl">Control bar</span>: new icon buttons for rotate counter-clock-wise, Home
+and <span class="ttx">(i)</span> quick help.
 <li>The scroll bar now works. The initial frame is smaller.
 </ul>
 
-<li><ttb>2D-display</ttb>
+<li><span class="ttb">2D-display</span>
 <ul>
-<li><ttl>Control bar</ttl>: <ttx>Zoom</ttx> and <ttx>Show</ttx> buttons with popup menus replaced the
-one <ttx>Selected</ttx> drop-down. The <ttx>Scale</ttx> icon is now a toggle.
-<li><ttl>Sequence Filter and Popup</ttl>
+<li><span class="ttl">Control bar</span>: <span class="ttx">Zoom</span> and <span class="ttx">Show</span> buttons with popup menus replaced the
+one <span class="ttx">Selected</span> drop-down. The <span class="ttx">Scale</span> icon is now a toggle.
+<li><span class="ttl">Sequence Filter and Popup</span>
 	<ul>
-	<li>New <ttx>Full</ttx> popup option to show the full sequence.
-	<li>New <ttx>Info (i)</ttx> and gene <ttx>Clear</ttx> filter buttons; and tooltip on mono-texted items.
+	<li>New <span class="ttx">Full</span> popup option to show the full sequence.
+	<li>New <span class="ttx">Info (i)</span> and gene <span class="ttx">Clear</span> filter buttons; and tooltip on mono-texted items.
 	<li>Instead of any change creating a history event, only a change to the coordinates does.
 	</ul>
-<li><ttl>Hit Filter Popup</ttl>: New <ttx>All Hits</ttx> popup option to show all hits.
-<li><ttl>Gene Popup</ttl>: Now lists minor gene hits along with the major; add the block number for the hits.
+<li><span class="ttl">Hit Filter Popup</span>: New <span class="ttx">All Hits</span> popup option to show all hits.
+<li><span class="ttl">Gene Popup</span>: Now lists minor gene hits along with the major; add the block number for the hits.
 </ul>
 <p>
 <li>Small changes:
-<small>
-<ul>
-<li>Put <tt>Circle</tt> first on Manager.
-<li><tt>Circle Control bar</tt>:
-The <tt>Self-synteny</tt>, <tt>Reverse</tt> and <tt>Rotate</tt> are now toggle buttons,
-and <tt>Scale</tt> is a toggle icon.
-The <tt>Self-synteny</tt> option is only displayed if self-synteny has been
-computed for at least one project displayed. The <tt>Rotate</tt> text button is moved next to the
+<ul class="small">
+<li>Put <span class="ttt">Circle</span> first on Manager.
+<li><span class="ttt">Circle Control bar</span>:
+The <span class="ttt">Self-synteny</span>, <span class="ttt">Reverse</span> and <span class="ttt">Rotate</span> are now toggle buttons,
+and <span class="ttt">Scale</span> is a toggle icon.
+The <span class="ttt">Self-synteny</span> option is only displayed if self-synteny has been
+computed for at least one project displayed. The <span class="ttt">Rotate</span> text button is moved next to the
 rotate circle buttons.
 The view drop-down has been changed to a popup menu.
-<li><tt>Dot plot Control bar</tt>: The Scale option is now a toggle icon.
+<li><span class="ttt">Dot plot Control bar</span>: The Scale option is now a toggle icon.
 The Home button now includes scale, and disables when it is home.
-<li><tt>2D</tt>: Information shows number of histories for &gt; and &lt;. The toggle shows on/off status.
-<br>If a <tt>Hit Text</tt> option is selected, a prefix or suffix is added to the displayed number
+<li><span class="ttt">2D</span>: Information shows number of histories for &gt; and &lt;. The toggle shows on/off status.
+<br>If a <span class="ttt">Hit Text</span> option is selected, a prefix or suffix is added to the displayed number
 indicating its meaning.
-<br><tt>Hit Popup and Information</tt>: The first line has been reordered for clarity.
-<br><tt>Hit filter</tt> did not have default None checked.
-<br><tt>Sequence filter</tt> flipped option now waits until Save to flip (for consistency).
+<br><span class="ttt">Hit Popup and Information</span>: The first line has been reordered for clarity.
+<br><span class="ttt">Hit filter</span> did not have default None checked.
+<br><span class="ttt">Sequence filter</span> flipped option now waits until Save to flip (for consistency).
 </ul>
-</small>
 <p>
 <li>Developer
-<small>
-<ul>
+<ul class="small">
 <li>Removed props.ProjectPairs; renamed ProjectPool to be PropsDB and cleaned it up. It returns
 isAlgo1 so that the gene popup knows whether to show the exon score.
-<li><tt>sequence/Sfilter.java</tt> now contains all filter code. The KB drop-down were not sized; hence,
+<li><span class="ttt">sequence/Sfilter.java</span> now contains all filter code. The KB drop-down were not sized; hence,
 big on Linux.
-<tt>history/History.java</tt> has all un-used code removed. All control bars are created as a row,
+<span class="ttt">history/History.java</span> has all un-used code removed. All control bars are created as a row,
 which makes the delimiter full depth.
 </ul>
 </ul>
-</small>
 
 <a id="v551"></a>
 <h3>Release: v5.5.1 (14-Mar-24)</h3>
 <p>This release has multiple small interface changes, as follows:
 <ul>
-<li><ttb>2D-display</ttb>
+<li><span class="ttb">2D-display</span>
 <ul>
-<li><ttl>Control panel</ttl>: Has a new option to shrink the area between the tracks.
-<li><ttl>Sequence Filter</ttl>:
+<li><span class="ttl">Control panel</span>: Has a new option to shrink the area between the tracks.
+<li><span class="ttl">Sequence Filter</span>:
 <ol>
 
-<li><ttx>Gene#</ttx>: There is a new filter to show the <ttx>Gene#</ttx> beside each gene.
-<li><ttx>Hit %Id</ttx>: When the <ttx>Hit %Id</ttx> option is off, the length of the vertical
-line is constant; when it is on, it is proportional to the %ID. When the <ttx>Hit Length</ttx>
+<li><span class="ttx">Gene#</span>: There is a new filter to show the <span class="ttx">Gene#</span> beside each gene.
+<li><span class="ttx">Hit %Id</span>: When the <span class="ttx">Hit %Id</span> option is off, the length of the vertical
+line is constant; when it is on, it is proportional to the %ID. When the <span class="ttx">Hit Length</span>
 is off, this line is not shown.
 
 <li>(1) The filter window has been re-organized and the track number has been added to the title.
 (2) Fixed a bug in setting the start and end coordinates, which occasionally did not work.
-(3) If there was more than 3 tracks, the <ttx>Conserved</ttx> option was only available
+(3) If there was more than 3 tracks, the <span class="ttx">Conserved</span> option was only available
 for the first occurrence of the reference track; it is now present for all occurrences.
 (4)
 </ol>
 <li>Small changes and fixes:
 (1) When a 2D display was initiated from the dotplot, one track could be longer than the other;
 this has been fixed (problem introduced in v5.5.0).
-(2) The <ttl>Hit Filter</ttl> <ttx>Highlight Hit popup</ttx>, when turned off,
+(2) The <span class="ttl">Hit Filter</span> <span class="ttx">Highlight Hit popup</span>, when turned off,
 was still highlighting the hit gene(s); it no longer does.
 
 </ul>
 <br>
-<li><ttb>Dot plot</ttb>
+<li><span class="ttb">Dot plot</span>
 <ul>
-<li>The <ttl>Stats</ttl> pull-down has been changed to an "i" icon button for the help, and
+<li>The <span class="ttl">Stats</span> pull-down has been changed to an "i" icon button for the help, and
 an "s" icon button for the statistics. Instead of writing the statistics to the terminal,
 they are written to a popup (where the text can be copied).
 </ul>
 <br>
 <li>Developer
-<small>
-<ul>
+<ul class="small">
 <li>Changed most 'long' to integers (there were still 32-bit machines when this was 1st developed).
 <li>2D merge overlapping hits for display; it smooths out the hit length display a little for
 highly conserved genomes.
@@ -1337,8 +1320,6 @@ highly conserved genomes.
 The display from the Dot plot is back to pre-v550 length. On gene popup, was not suppose to
 show exon score for Algo1, but was showing 0.
 </ul>
-</small>
-
 </ul>
 
 <a id="v550"></a>
@@ -1347,25 +1328,24 @@ For existing databases, there are no changes (though there are for <a href="#v54
 <br>To use SyMAP v5.5.0, you must have Java v17 or later.
 <p>
 <ul>
-<li>The <tt>symap.jar</tt> was compiled with Java version 1.8 (8); it is now compiled with Java 17, which
+<li>The <span class="ttt">symap.jar</span> was compiled with Java version 1.8 (8); it is now compiled with Java 17, which
 is more secure, faster and was released Sept 2021.
-<li><ttb>2D display</ttb>
+<li><span class="ttb">2D display</span>
 <ol>
 <li>This display is much faster (really noticeable on slow machines or big chromosomes).
-<li>The <ttl>Hit Length</ttl> line was only shown if the hit-wire
+<li>The <span class="ttl">Hit Length</span> line was only shown if the hit-wire
 was shown; this is no longer the case.
-<li>The <ttl>Stats</ttl> button was removed, and the <ttl>Help</ttl> was moved to a little "i" button,
+<li>The <span class="ttl">Stats</span> button was removed, and the <span class="ttl">Help</span> was moved to a little "i" button,
 which provides a popup of quick information.
 </ol>
-<li><ttb>Cluster Hits Algo1</ttb>
+<li><span class="ttb">Cluster Hits Algo1</span>
 <ol>
 <li>It no longer splits large genes since #2 above handles them better.
-<li>The <ttl>Summary</ttl> now refers to this algorithm as <ttx>Algo1 (modified original)</ttx> and the alternative
-as <ttx>Algo2 (exon-intron)</ttx>.
+<li>The <span class="ttl">Summary</span> now refers to this algorithm as <span class="ttx">Algo1 (modified original)</span> and the alternative
+as <span class="ttx">Algo2 (exon-intron)</span>.
 </ol>
 <li>Developers: Lots of cleanup to remove OO spagetti code in 2d.
-<small>
-<ul>
+<ul class="small">
 <li>Recreate tracks on new display instead of trying to reuse.
 <li>Move number.GenomeNumber to Sequence; remove the number class.
 Changed all numbers in DrawingPanel from objects to long.
@@ -1374,139 +1354,139 @@ Changed all numbers in DrawingPanel from objects to long.
 <li>Merge abstract Track.java with Sequence.java. Merge FSized2d.java with Frame2d.java.
 Rename frame.TrackInfo to ChrInfo and frame.Mapper to LeftMap
 </ul>
-</small>
 </ul>
 
 <a id="v549"></a>
 <h3>Release: v5.4.9 (20-Feb-24)</h3>
 For existing databases, there are no changes (though there are for <a href="#v548">v5.4.8</a>).
 <ul>
-<li>v5.4.8 little fixes: (1) The new <ttl>Query</ttl> <ttx>Multi</ttx> option had a small bug due to it using ">" instead of ">=".
-(2) The <ttl>Query</ttl> <ttx>Every*</ttx> option works for <ttx>Algo1</ttx> as of v5.4.8, but was still disabled.
-(3) The <ttl>Summary</ttl> gave wrong message if <ttl>EI</ttl> or <ttl>En</ttl> were unchecked.
-<li>The <ttl>Query</ttl> for selected chromosomes and locations was confusing. It is now consistent and properly documented.
+<li>v5.4.8 little fixes: (1) The new <span class="ttl">Query</span> <span class="ttx">Multi</span> option had a small bug due to it using ">" instead of ">=".
+(2) The <span class="ttl">Query</span> <span class="ttx">Every*</span> option works for <span class="ttx">Algo1</span> as of v5.4.8, but was still disabled.
+(3) The <span class="ttl">Summary</span> gave wrong message if <span class="ttl">EI</span> or <span class="ttl">En</span> were unchecked.
+<li>The <span class="ttl">Query</span> for selected chromosomes and locations was confusing. It is now consistent and properly documented.
 <li>Improved documentation.
 </ul>
 
 <a id="v548"></a>
 <h3>Release: v5.4.8 (13-Feb-24)</h3>
-For existing databases, rerun the <ttb>Synteny</ttb> algorithm.
+For existing databases, rerun the <span class="ttb">Synteny</span> algorithm.
 
-<p>This release fine tuned the <ttx>Cluster Hit Algo2</ttx> (first released in <a href="#v546">v5.4.6</a>)
-and made some adjustments to <ttx>Cluster Hit Algo1</ttx> for new interface feature.
+<p>This release fine tuned the <span class="ttx">Cluster Hit Algo2</span> (first released in <a href="#v546">v5.4.6</a>)
+and made some adjustments to <span class="ttx">Cluster Hit Algo1</span> for new interface feature.
 
 <ul>
-<li><ttb>Synteny Clustering Algo2</ttb>:  See <a href="SystemHelp.html#clust">Cluster hits</a>.
+<li><span class="ttb">Synteny Clustering Algo2</span>:  See <a href="SystemHelp.html#clust">Cluster hits</a>.
 <ol>
 <li>The algorithm better differentiates between overlapping genes which have the same aligned hits;
-one will be the <tt><u>major</u></tt> assignment and displayed for the hit,
-and others will be <tt><u>minor</u></tt> assignments.
+one will be the <span class="ttt"><u>major</u></span> assignment and displayed for the hit,
+and others will be <span class="ttt"><u>minor</u></span> assignments.
 There is slight improvements to the assignments of clustered gene hits.
-<li>The <ttx>Cluster Hit Algo2 Parameter</ttx> defaults check EI and En, along with EE.
+<li>The <span class="ttx">Cluster Hit Algo2 Parameter</span> defaults check EI and En, along with EE.
 <li>The g1 (one gene) and g0 (no genes) have improved assignments.
 The rules for filtering have been fine-tuned.
 <li>The algorithm for finding piles and selecting what clusters to retain has been improved.
 <li>Two scores are computed, which are the percent of the clustered hit that aligns to exons and to the genes.
 
-<li>The hit strands could be different from the two gene strands; these can be printed out with <tt>symap -wsp</tt>
-or excluded with <tt>symap -wse</tt> .
+<li>The hit strands could be different from the two gene strands; these can be printed out with <span class="ttt">symap -wsp</span>
+or excluded with <span class="ttt">symap -wse</span> .
 <li>Previously, the hit strands could be assign "+/-" when it should be "-/+" and vice versa;
 this resulted in the wrong sequence being
 reversed in the <a href="UserGuide.html#align">2D-Align</a>; this has been fixed.
 </ol>
-<li><ttb>Synteny Clustering Algo1</ttb>:
+<li><span class="ttb">Synteny Clustering Algo1</span>:
 <ol>
 <li>Compute the percent of the clustered hit that aligns to the gene.
-<li>Make an addition so that it works with the <ttl>Query</ttl> <ttx>Multi</ttx> command (otherwise,
+<li>Make an addition so that it works with the <span class="ttl">Query</span> <span class="ttx">Multi</span> command (otherwise,
 all results will be shown twice).
-<li>The same problem as shown in 7 above happens with <ttx>Algo1</ttx>. It is mostly fixed, though a few
+<li>The same problem as shown in 7 above happens with <span class="ttx">Algo1</span>. It is mostly fixed, though a few
 slip through. See <a href="UserGuide.html#strand">Strand</a>.
 </ol>
-<li><ttl>2d-display</ttl>:
+<li><span class="ttl">2d-display</span>:
 <ul>
-<li>The <ttx>Annotation</ttx> (yellow boxes of text) have less information so more boxes can be viewed at a time.
+<li>The <span class="ttx">Annotation</span> (yellow boxes of text) have less information so more boxes can be viewed at a time.
 <li>The gene popup text shows the start/end of each hit on the opposite chromosome in place of the subhits; it shows ALL hits
 for the gene between the two chromosomes even if they are not visible;
-it shows the gene overlap (and exon overlap for <ttx>Cluster Hit Algo2</ttx>). Both the hit and gene popups have some minor formatting changes for clarity.
+it shows the gene overlap (and exon overlap for <span class="ttx">Cluster Hit Algo2</span>). Both the hit and gene popups have some minor formatting changes for clarity.
 See <a href="UserGuide.html#info">Gene and Hit Information</a>.
-<li>The <ttl>Align</ttl> display has the <ttx>Gene#</ttx> along with the <ttx>Id</ttx> and <ttx>product (Desc)</ttx>.
+<li>The <span class="ttl">Align</span> display has the <span class="ttx">Gene#</span> along with the <span class="ttx">Id</span> and <span class="ttx">product (Desc)</span>.
 </ul>
 
-<li><ttl>Query</ttl>:
+<li><span class="ttl">Query</span>:
 <ul>
-<li>Add a column to show the percent exon overlap of the hit (<ttx>Cluster Hit Algo2</ttx>) or
-the percent gene overlap (<ttx>Cluster Hit Algo1</ttx>).
+<li>Add a column to show the percent exon overlap of the hit (<span class="ttx">Cluster Hit Algo2</span>) or
+the percent gene overlap (<span class="ttx">Cluster Hit Algo1</span>).
 <li>Search changes:
 <ul>
-<li>A new <ttx>Multi</ttx> gene annotation option has been added, which lists all genes with multiple hits.
-<li>The <ttx>Every*</ttx> now works for both <ttx>Algo1</ttx> and <ttx>Algo2</ttx>, and the '+' was replaced with a '*' (so would
+<li>A new <span class="ttx">Multi</span> gene annotation option has been added, which lists all genes with multiple hits.
+<li>The <span class="ttx">Every*</span> now works for both <span class="ttx">Algo1</span> and <span class="ttx">Algo2</span>, and the '+' was replaced with a '*' (so would
 not be confused with strand).
-<li>The <ttx>Hit#</ttx> query option shows all major and minor genes that overlap the hit, where the minor are suffixed
+<li>The <span class="ttx">Hit#</span> query option shows all major and minor genes that overlap the hit, where the minor are suffixed
 with an '*'.
-<li>The <ttx>Gene#</ttx> query now allows a chromosome to be selected for each species, and shows
+<li>The <span class="ttx">Gene#</span> query now allows a chromosome to be selected for each species, and shows
 all major and minor hits.
-<li>The <ttx>Annotation</ttx> search with one chromosome selected has been changed so that the annotation has to be on that chromosome
+<li>The <span class="ttx">Annotation</span> search with one chromosome selected has been changed so that the annotation has to be on that chromosome
 (it was allowing the annotation to be on the paired chromosome).
-<li>The <ttx>Export</ttx> for .csv and .fasta allow appending to an existing file.
+<li>The <span class="ttx">Export</span> for .csv and .fasta allow appending to an existing file.
 </ul>
 </ul>
 
-<li><ttl>ConvertEnsembl</ttl>: Was not replacing special characters, which has been added.
+<li><span class="ttl">ConvertEnsembl</span>: Was not replacing special characters, which has been added.
 <li>Developers
-<ul>
-<li><small>The formatter for the yellow annotation box was re-written.</small>
-<li><small>The Synteny clustering Algo2 was rewritten to be clearer.
+<ul class="small">
+<li>The formatter for the yellow annotation box was re-written.
+<li>The Synteny clustering Algo2 was rewritten to be clearer.
 The amount that a cluster hit overlaps the exon of a gene was an approximation, now it takes into account overlapping
-subhits and removes the overlap from the calculation.</small>
+subhits and removes the overlap from the calculation.
 </ul>
 </ul>
 <a id="v547"></a>
 <h3>Release: v5.4.7 (14-Nov-23)</h3>
-For existing databases: if using <ttx>Cluster Hit Algo 2</ttx>, rerun the <ttb>Synteny</ttb>.
+For existing databases: if using <span class="ttx">Cluster Hit Algo 2</span>, rerun the <span class="ttb">Synteny</span>.
 <ul>
-<li><ttl>Query</ttl>: A new <ttx>Every+</ttx> option for databases build with <ttx>Cluster Hit Algo 2</ttx> post-v546.
+<li><span class="ttl">Query</span>: A new <span class="ttx">Every+</span> option for databases build with <span class="ttx">Cluster Hit Algo 2</span> post-v546.
 It shows all genes with a hit aligned to it, even the overlapping ones.
-This also is used for the <ttx>Annotation</ttx> search.
-<li><ttl>Alignment&amp;Synteny</ttl>: Fixed a bug in the new <ttx>Cluster Hit</ttx> algorithm; the bug did not effect the visible
-results except to have a slight fractional difference in the <ttl>Summary</ttl> <ttx>GNwCH</ttx> statistics,
-and the <ttl>Query</ttl> <ttx>NumHits</ttx> column on a few genes. The new <ttx>Every+</ttx> option is
+This also is used for the <span class="ttx">Annotation</span> search.
+<li><span class="ttl">Alignment&amp;Synteny</span>: Fixed a bug in the new <span class="ttx">Cluster Hit</span> algorithm; the bug did not effect the visible
+results except to have a slight fractional difference in the <span class="ttl">Summary</span> <span class="ttx">GNwCH</span> statistics,
+and the <span class="ttl">Query</span> <span class="ttx">NumHits</span> column on a few genes. The new <span class="ttx">Every+</span> option is
 disabled for pre-v5.6.7 database, as that shows this problem.
 <li>Developers
-<ul>
-<li><small>Removed deprecated for Java v20: "exec(String) in Runtime has been deprecated" and "URL(String) in URL has been deprecated".
-All export routines call Globals.getExport(). Set some gray buttons to white for linux.</small>
+<ul class="small">
+<li>Removed deprecated for Java v20: "exec(String) in Runtime has been deprecated" and "URL(String) in URL has been deprecated".
+All export routines call Globals.getExport(). Set some gray buttons to white for linux.
 </ul>
 </ul>
 
 <a id="v546"></a>
 <h3>Release: v5.4.6 (22-Oct-23)</h3>
 <p>For existing databases: There will be a small database update on the first viewing.
-For the new cluster hit algorithm, change the <a href="SystemHelp.html#clust">Cluster parameters</a> and rerun the <ttb>Synteny</ttb>.
+For the new cluster hit algorithm, change the <a href="SystemHelp.html#clust">Cluster parameters</a> and rerun the <span class="ttb">Synteny</span>.
 
 <ul>
-<li><ttl>Alignment &amp; Synteny</ttl>: A new <ttx>Cluster Hit</ttx> algorithm has been written to filter and cluster MUMmer hits;
+<li><span class="ttl">Alignment &amp; Synteny</span>: A new <span class="ttx">Cluster Hit</span> algorithm has been written to filter and cluster MUMmer hits;
 the improvement over the original algorithm is that it has knowledge of the exon-intron structure and
 identifies all gene pairs. See <a href="SystemHelp.html#clust">Cluster parameters</a>.
 
-<li><ttl>Query</ttl> has a new column that states if a hit is to an exon-exon, exon-intron, etc. This is works
-with the new cluster hit algorithm. This information is also on the <ttx>Hit Information</ttx>.
+<li><span class="ttl">Query</span> has a new column that states if a hit is to an exon-exon, exon-intron, etc. This is works
+with the new cluster hit algorithm. This information is also on the <span class="ttx">Hit Information</span>.
 <li>Minor stuff
 <ul>
-<li><ttb>2D Sequence Filter</ttb> <ttl>Gene#</ttl> The full gene is highlighted instead of just the introns.
-<li><ttb>Summary</ttb> The <ttx>Explain</ttx> did not format right with Java v20, which has
+<li><span class="ttb">2D Sequence Filter</span> <span class="ttl">Gene#</span> The full gene is highlighted instead of just the introns.
+<li><span class="ttb">Summary</span> The <span class="ttx">Explain</span> did not format right with Java v20, which has
 been fixed. The date at the top had "Oct" swapped with "Nov".
-<li><ttb>A&S Cancel</ttb>: SyMAP was automatically removing any added hits or blocks, but for big databases, the removal
+<li><span class="ttb">A&S Cancel</span>: SyMAP was automatically removing any added hits or blocks, but for big databases, the removal
 can take a long time, hence, there is a popup to request whether the user wants this done; otherwise, they may
 prefer to just remove the database and start over.
-<li><ttb>Summary</ttb> contains the number of MUMmer files read when using previous alignments (this provides a clue
-as to whether <ttx>Concat</ttx> was used).
+<li><span class="ttb">Summary</span> contains the number of MUMmer files read when using previous alignments (this provides a clue
+as to whether <span class="ttx">Concat</span> was used).
 <li>The documentation stated that all genes with a hit could be shown in the query, which was not true; the documentation
 has been updated.
 </ul>
 <li>Developers
-<ul>
-<li><small>The original <ttx>Cluster Hit</ttx> code has been moved to backend.anchor1. The SyProj was renamed to backend.anchor1.Proj, and now
-only used by the <ttx>Cluster Hit</ttx> code. The new <ttx>Cluster Hit</ttx> code is in backend.anchor2.</small>
+<ul class="small">
+<li>The original <span class="ttx">Cluster Hit</span> code has been moved to backend.anchor1. The SyProj was renamed to backend.anchor1.Proj, and now
+only used by the <span class="ttx">Cluster Hit</span> code.
+The new <span class="ttx">Cluster Hit</span> code is in backend.anchor2.
 </ul>
 </ul>
 
@@ -1514,118 +1494,112 @@ only used by the <ttx>Cluster Hit</ttx> code. The new <ttx>Cluster Hit</ttx> cod
 <h3>Release: v5.4.5 (4-Aug-23)</h3>
 <ul>
 <li>Tested on <a href="SystemGuide.html#machine">Linode Ubuntu</a>.
-<li><ttb>Chromosome Explorer 2D</ttb>
+<li><span class="ttb">Chromosome Explorer 2D</span>
 <ul>
-<li><ttl>Sequence Filter</ttl>: See <a href="UserGuide.html#sequence_filter">Sequence Filter</a>
+<li><span class="ttl">Sequence Filter</span>: See <a href="UserGuide.html#sequence_filter">Sequence Filter</a>
 <ul>
-<li><ttl>Gene#</ttl>: A new option of <ttl>Gene#</ttl> has been added, which will set the coordinates
+<li><span class="ttl">Gene#</span>: A new option of <span class="ttl">Gene#</span> has been added, which will set the coordinates
 of a 50kb region around the gene and highlights the gene's introns.
-<li><ttl>Block#</ttl>, <ttl>Collinear#</ttl>: There are new options to show the <ttl>Block#</ttl> or <ttl>Collinear#</ttl> in the same way
-as the  <ttl>Hit#</ttl> and <ttl>Hit %Id</ttl> are shown.
-<li><ttl>Highlight Conserved Genes</ttl>: There is a new option to  <ttl>Highlight Conserved Genes</ttl>.
-See <a href="UserGuide.html#conserved">Conserved</a>.
+<li><span class="ttl">Block#</span>, <span class="ttl">Collinear#</span>: There are new options to show the <span class="ttl">Block#</span> or <span class="ttl">Collinear#</span> in the same way
+as the  <span class="ttl">Hit#</span> and <span class="ttl">Hit %Id</span> are shown.
+<li><span class="ttl">Highlight Conserved Genes</span>: There is a new option to  <span class="ttl">Highlight Conserved Genes</span>.
+See <a href="UserGuide.html">Conserved</a>.
 </ul>
-<li><ttb>Hit Filter</ttb>
+<li><span class="ttb">Hit Filter</span>
 <ul>
-<li>The <ttl>Highlight hit popup</ttl> can be on all the time (i.e.
+<li>The <span class="ttl">Highlight hit popup</span> can be on all the time (i.e.
 it is not turned off if another highlight is turned on), and is highlighted in the hover color.
 <li>When the hit popup highlights the hit-wire, it will also highlight the genes
 assigned to it.
-<li>The hit popup provides the <ttx>Gene#</ttx> of the genes that are being highlighted.
+<li>The hit popup provides the <span class="ttx">Gene#</span> of the genes that are being highlighted.
 </ul>
 </ul>
 
 <li>Minor stuff
-<small>
-<ul>
-<li><ttb>Query Table</ttb> Fixed tiny bug from v5.4.2 where the <ttl>Glen</ttl> column would not sort.
-<li><ttb>Query Align</ttb> with MUSCLE, the <ttl>Cancel Alignment</ttl> button does not work, but now, it
+<ul class="small">
+<li><span class="ttb">Query Table</span> Fixed tiny bug from v5.4.2 where the <span class="ttl">Glen</span> column would not sort.
+<li><span class="ttb">Query Align</span> with MUSCLE, the <span class="ttl">Cancel Alignment</span> button does not work, but now, it
 gives a message on how the user can cancel the alignment.
-<li><ttb>Block View</ttb> A clock shows when bringing up the 2D view (necessary for slow machines).
-<li><ttb>2D Sequence Filter</ttb> (1) The highlighted popup gene now highlights the whole gene
+<li><span class="ttb">Block View</span> A clock shows when bringing up the 2D view (necessary for slow machines).
+<li><span class="ttb">2D Sequence Filter</span> (1) The highlighted popup gene now highlights the whole gene
 (it was just the intron area and delimiter). (2) Setting sequence filters could cause consecutive duplicate views in History, i.e.
 forward/back buttons, this has been fixed. (3) Old bug: when a track was reused with a different sequence,
 the conditional checkboxes could be incorrectly disabled (still one problem left but need to rewrite masses of code
 to fix).
 </ul>
-</small>
 
 <li>Developer
-<small>
-<ul>
+<ul class="small">
 <li>Rename frame.TrackCom to frame.TrackInfo;
 </ul>
-</small>
 </ul>
 
 <a id="v544"></a>
 <h3>Release: v5.4.4 (18-July-23)</h3>
 <ul>
-<li><ttb>Chromosome Explorer 2D</ttb>
+<li><span class="ttb">Chromosome Explorer 2D</span>
 <ul>
-<li><ttl>Sequence Filter</ttl>: There is a new option for highlighting a gene called <ttl>Popup</ttl>;
+<li><span class="ttl">Sequence Filter</span>: There is a new option for highlighting a gene called <span class="ttl">Popup</span>;
 when this option is on, every time a gene popup window is created, the gene stays selected. The filter popup has
 reduced number of options.
-See <a href="UserGuide.html#popup">Popups</a> and <a href="UserGuide.html#sequence_filter">Sequence Filters</a>.
-<li>The highlight <ttl>Hit popup</ttl> and <ttl>Gene popup</ttl> options are on by default.
+See <a href="UserGuide.html">Popups</a> and <a href="UserGuide.html#sequence_filter">Sequence Filters</a>.
+<li>The highlight <span class="ttl">Hit popup</span> and <span class="ttl">Gene popup</span> options are on by default.
 </ul>
 <li>Developers
-<ul>
-<li><small>Remove CloseupListener and DrawingPanelListener. Remove
+<ul class="small">
+<li>Remove CloseupListener and DrawingPanelListener. Remove
 DrawingPanelData (merge with DrawingPanel). Move TextData from util to sequence directory.  Moved frame SyMAP2d,
 Frame2D, FSized2d, ControlPanel to drawingpanel because used exclusively by 2d. Rename AlignMain to AlgSynMain.
-</small>
 </ul>
 </ul>
 
 <a id="v543"></a>
 <h3>Release: v5.4.3 (12-July-23)</h3>
 There are numerous tiny changes, fixes, and two small new features.
-<p>For existing databases: (1) View the database with <tt>./symap</tt> and okay the database update.
-(2) Though it is not necessary to rerun the <ttb>Synteny</ttb> algorithm, there is a small improvement
+<p>For existing databases: (1) View the database with <span class="ttt">./symap</span> and okay the database update.
+(2) Though it is not necessary to rerun the <span class="ttb">Synteny</span> algorithm, there is a small improvement
 for assigning hits to embedded genes.
 <ul>
-<li><ttb>Manager</ttb>
+<li><span class="ttb">Manager</span>
 <ul>
-<li><ttl>Synteny</ttl> For embedded genes, the algorithm was assigning the hit to the outer gene,
+<li><span class="ttl">Synteny</span> For embedded genes, the algorithm was assigning the hit to the outer gene,
 now it assigns it to the closest fit gene.
-<li><small><i>Minor</i>: When <ttl>All Pairs</ttl> or <ttl>Selected Pair</ttl> is selected, the user will be asked to confirm
+<li><i>Minor</i>: When <span class="ttl">All Pairs</span> or <span class="ttl">Selected Pair</span> is selected, the user will be asked to confirm
 the processing. The panel is a little smaller. All frames show the database name.
-Allow blank lines on annotation input. Add "Prefix" on manager summary.</small>
+Allow blank lines on annotation input. Add "Prefix" on manager summary.
 </ul>
 
-<li><ttb>Chromosome Explorer 2D</ttb>
+<li><span class="ttb">Chromosome Explorer 2D</span>
 <ul>
-<li><ttl>Hit Filter</ttl>: There is a new option for highlighting a hit-wire called <ttl>Popup</ttl>;
+<li><span class="ttl">Hit Filter</span>: There is a new option for highlighting a hit-wire called <span class="ttl">Popup</span>;
 when this option is on, every time a hit-wire popup window is created, the hit-wire stays selected.
-See <a href="UserGuide.html#popup">Popups</a> and <a href="UserGuide.html#hitfilter">Hit Filters</a>.
+See <a href="UserGuide.html">Popups</a> and <a href="UserGuide.html#hitfilter">Hit Filters</a>.
 <li>When more than two sequence tracks are shown, the middle one now knows the hits on both
-sides and can list them in the <ttl>Gene Popup</ttl> and <ttl>Align (Max 30kb)</ttl>.
-<li><small><i>Minor</i>: The <ttl>Sequence Filter</ttl> options of <ttl>Show Text</ttl> now shows the
+sides and can list them in the <span class="ttl">Gene Popup</span> and <span class="ttl">Align (Max 30kb)</span>.
+<li><i>Minor</i>: The <span class="ttl">Sequence Filter</span> options of <span class="ttl">Show Text</span> now shows the
 text on the outside of the sequence track rectangle. The panel is a little smaller.
-The "Id %" is now shown on the <ttl>Hit Information</ttl>. Put <ttl>Info:</ttl> at beginning of controls.
-Text popups stay in front, i.e. will not be buried behind panel. Improve the 2D information help. </small>
-<li><small><i>Tiny bug fixes</i>: The end coordinate on this filter window always showed the end of the sequence
-instead of the displayed end. If the <ttl>Dot Plot</ttl> was changed multiple times during
-a given session of <ttl>ChrExp</ttl>, it sometimes messed up. The <ttl>Dot Plot</ttl> filters
-could not be changed after the first view.</small>
-
+The "Id %" is now shown on the <span class="ttl">Hit Information</span>. Put <span class="ttl">Info:</span> at beginning of controls.
+Text popups stay in front, i.e. will not be buried behind panel. Improve the 2D information help.
+<li class="small"><i>Tiny bug fixes</i>: The end coordinate on this filter window always showed the end of the sequence
+instead of the displayed end. If the <span class="ttl">Dot Plot</span> was changed multiple times during
+a given session of <span class="ttl">ChrExp</span>, it sometimes messed up. The <span class="ttl">Dot Plot</span> filters
+could not be changed after the first view.
 </ul>
-<li><ttb>Query</ttb>
+<li><span class="ttb">Query</span>
 <ul>
-<li>The <ttl>Gene#</ttl> query option now allows a suffix; i.e. '100' will return all genes with this number
+<li>The <span class="ttl">Gene#</span> query option now allows a suffix; i.e. '100' will return all genes with this number
 and any suffix, '100.b' will only return this gene.
 <li>Bug fix: if an annotation query was performed that had a hit to a gene with embedded genes,
 the gene and the overlapping genes would be returned.
-<li><small><i>Minor</i>: Has a new button <ttl>Defaults</ttl> which sets the selected columns
-to the defaults. In the result table, the <ttl>Gene#</ttl> is now the
-first column.</small>
+<li><i>Minor</i>: Has a new button <span class="ttl">Defaults</span> which sets the selected columns
+to the defaults. In the result table, the <span class="ttl">Gene#</span> is now the
+first column.
 </ul>
-<li><ttb>DotPlot</ttb>: <small><i>Minor</i>: The <ttl>Filters Defaults</ttl> option no longer closes
-the window (behaves like the <ttb>2D</ttb> filters).</small>
+<li><span class="ttb">DotPlot</span>: <i>Minor</i>: The <span class="ttl">Filters Defaults</span> option no longer closes
+the window (behaves like the <span class="ttb">2D</span> filters).
 
 <li>Developer
-<ul><small>
+<ul class="small">
 <li>
 The database 'props' table now keeps track of initial database version and updates.
 The file util.Utilities has all the methods for
@@ -1637,7 +1611,6 @@ ShowContinue put 'Cancel' as the end button. Remove [Uniprot ID: xxx] from demo_
 Removed AnnotationData and PseudoData (was just moving data around). Rename PseudoPool to SeqPool.
 Remove GroupSorter (code moved to SeqLoadMain) and improved. Change database field pseudo_hits.evalue to 'htype'
 and rearrange the fields to be more logical.
-</small>
 </ul>
 </ul>
 
@@ -1645,9 +1618,9 @@ and rearrange the fields to be more logical.
 <a id="v542"></a>
 <h3>Release: v5.4.2 (28-June-23)</h3>
 <ul>
-<li><ttb>2D</ttb>
+<li><span class="ttb">2D</span>
 <ul>
-<li>Redesigned the <ttl>Sequence Filter</ttl>.
+<li>Redesigned the <span class="ttl">Sequence Filter</span>.
 <li>History only kept 10 places, now it keeps 50.
 <li>Fixed bugs:
 <br><small>(1) when the 2D was initiated from the DotPlot or Query, changing highlight
@@ -1655,7 +1628,7 @@ could change "Show" option. (2) Recent v541 DotPlot to 2d bug:
 If a second block was selected for 2D, the genes would not be shown; with this fix, multiple 2D from Dotplot can be shown again.
 </small>
 </ul>
-<li><ttb>Query</ttb>
+<li><span class="ttb">Query</span>
 <ul>
 <li>Added an export option of HTML.
 </ul>
@@ -1668,47 +1641,47 @@ Changed number of tracks from 100 to 30.</small>
 
 <a id="v541"></a>
 <h3>Release: v5.4.1 (22-June-23)</h3>
-For existing SyMAP databases: there is a new column in <ttb>Query</ttb> called <ttl>NumHits</ttl>;
-run <tt>symap -y</tt> to update all projects in the database.
+For existing SyMAP databases: there is a new column in <span class="ttb">Query</span> called <span class="ttl">NumHits</span>;
+run <span class="ttt">symap -y</span> to update all projects in the database.
 
 <ul>
-<li><ttb>Manager</ttb>
+<li><span class="ttb">Manager</span>
 <ul>
 <li>Bad bug fix for v5.4.0: Loading the hits would get a memory crash
 if some chromosomes in a project had genes and other chromosomes did not.
 <li>If only two projects are selected from the left, then their joint cell is automatically selected.
 </ul>
 
-<li><ttb>Dot Plot</ttb>
+<li><span class="ttb">Dot Plot</span>
 <ul>
-<li><ttl>Info</ttl>: (see <a href="UserGuide.html#dotplot_display">Control Panel</a>)
+<li><span class="ttl">Info</span>: (see <a href="UserGuide.html#dotplot_display">Control Panel</a>)
 A new pull down with options:
-(1) <ttl>Stats</ttl>: in the <ttl>Information</ttl> area (short form),
-(2) <ttl>Print</ttl>: printed to the terminal (long form), (3) <ttl>Help</ttl>.
+(1) <span class="ttl">Stats</span>: in the <span class="ttl">Information</span> area (short form),
+(2) <span class="ttl">Print</span>: printed to the terminal (long form), (3) <span class="ttl">Help</span>.
 <li>The dot colors can be changed with the Color Wheel (see <a href="UserGuide.html#image">Color Wheel</a>).
 
 <li>Dotplot can no longer display multiple 2d from the same dotplot display. (v542 allows many again)
 </ul>
 
-<li><ttb>2D</ttb>
+<li><span class="ttb">2D</span>
 <ul>
-<li><ttl>Info</ttl>: A new pull-down with options:
-(1) <ttl>Stats</ttl>: Hovering in the gene space but not on a gene will
+<li><span class="ttl">Info</span>: A new pull-down with options:
+(1) <span class="ttl">Stats</span>: Hovering in the gene space but not on a gene will
 show summary info; hovering in the hit space but not a on hit will show hit summary
-info. (2) <ttl>Help</ttl> Help will be shown instead of summary information.
+info. (2) <span class="ttl">Help</span> Help will be shown instead of summary information.
 <li>Display bug fix: If the "Show" filter was changed to show more hits, then changed back to show less,
 the right click in hit empty space would keep showing hit-wire information.
 </ul>
 
-<li><ttb>Query</ttb>
+<li><span class="ttb">Query</span>
 <ul>
-<li><ttl>Gene#</ttl> in the <ttl>Pair Hits</ttl> section: This query now works exactly like the other 3 in this row, i.e. you can set the
+<li><span class="ttl">Gene#</span> in the <span class="ttl">Pair Hits</span> section: This query now works exactly like the other 3 in this row, i.e. you can set the
 chromosome, and it returns full hits. NOTE: there will be no rows returned if there is no hit to
 the gene.
-<li><ttl>Single NumHits</ttl>: A column has been added to indicate whether there are any hits to the gene
+<li><span class="ttl">Single NumHits</span>: A column has been added to indicate whether there are any hits to the gene
 in the entire database (not just those queried).
 <li>Column Description: This was being shown on the bottom of display; it is now a tool tip.
-<li><ttl>Clear Column</ttl>: This button has been added. It replaces the <ttl>Show Stats</ttl> button
+<li><span class="ttl">Clear Column</span>: This button has been added. It replaces the <span class="ttl">Show Stats</span> button
 when the columns are being shown.
 </ul>
 
@@ -1724,10 +1697,10 @@ these were removed. However, removing this only occurrence does not get rid of t
 
 <a id="v540"></a>
 <h3>Release: v5.4.0 (6-Apr-23)</h3>
-This release focuses on improving the detection of gene homology in the <ttb>Synteny</ttb> computation.
-<br>For existing databases, rerun <ttl>Alignment&Synteny</ttl> using existing MUMmer files.
+This release focuses on improving the detection of gene homology in the <span class="ttb">Synteny</span> computation.
+<br>For existing databases, rerun <span class="ttl">Alignment&Synteny</span> using existing MUMmer files.
 <ul>
-<li><ttb>Synteny</ttb>:
+<li><span class="ttb">Synteny</span>:
 <ul>
 <li>Creating clustered hits has been improved for long genes.
 <li>Filtering hits has been updated to give preference when at least one end is a gene.
@@ -1754,34 +1727,34 @@ When A&amp;S is executed, the non-default parameters are printed to the terminal
 <li>Note, these changes cause more hits to be saved, and hence, the synteny takes
 a little longer. It may also remove or add small blocks due to additional intervening hits.
 </ul>
-<li><ttb>Summary</ttb>: See <a href="UserGuide.html#sum" class="ext" target="_blank">Summary</a>.
+<li><span class="ttb">Summary</span>: See <a href="UserGuide.html#sum" class="ext" target="_blank">Summary</a>.
 <ul>
 <li>The summary has been rewritten in a textual format which can be copied with copy & paste.
 <li>All hit and block statistics were computed in terms of <i>clustered hits</i>, which may have
 gaps and overlaps between the subhits. Now many of the statistics are in terms of the subhits, and it is
 clear as to whether clustered hits or their subhits are being used.
 <li>Collinear sets have been added to the summary.
-<li>The Project summary has exon stats, which have been removed from the <ttl>View</ttl>; the gene size ranges have
+<li>The Project summary has exon stats, which have been removed from the <span class="ttl">View</span>; the gene size ranges have
 been removed.
-<li>It states whether either input project had <ttl>Order Against</ttl> or <ttl>Mask genes</ttl> set.
+<li>It states whether either input project had <span class="ttl">Order Against</span> or <span class="ttl">Mask genes</span> set.
 </ul>
 
-<li><ttb>Query</ttb>:
+<li><span class="ttb">Query</span>:
 <ul>
-<li><ttl>Hit Cov</ttl> is a new hit column, which is the maximum subhit coverage
-between the two species connected by the clustered hit. The <ttl>Hit Cov</ttl> is computed by summing
+<li><span class="ttl">Hit Cov</span> is a new hit column, which is the maximum subhit coverage
+between the two species connected by the clustered hit. The <span class="ttl">Hit Cov</span> is computed by summing
 the subhits and removing any overlap.
-<li><ttl>Annotated (Gene Hit)</ttl> has an additional option of <ttl>Either</ttl>.
-<li><ttl>Collinear size</ttl> now has the options of <ttl>&gt;=</ttl>, <ttl>=</ttl>, <ttl>&lt;=</ttl>.
-<li><ttl>Export CSV</ttl> has an option to not include row number column. This is useful for comparing two
+<li><span class="ttl">Annotated (Gene Hit)</span> has an additional option of <span class="ttl">Either</span>.
+<li><span class="ttl">Collinear size</span> now has the options of <span class="ttl">&gt;=</span>, <span class="ttl">=</span>, <span class="ttl">&lt;=</span>.
+<li><span class="ttl">Export CSV</span> has an option to not include row number column. This is useful for comparing two
 lists, where the row number can cause most rows to appear different. The quotes around columns have been
 removed; any comma's in the descriptions are replaced with ";".
 
-<li>The <ttl>Show</ttl> was disabled for singles; it has been enabled.
+<li>The <span class="ttl">Show</span> was disabled for singles; it has been enabled.
 </ul>
-<li><ttb>Chromosome Explorer</ttb>:
+<li><span class="ttb">Chromosome Explorer</span>:
 <ul><li>The text of the Hit popup has been slightly changed and the Subhit
-coverage has been added (see <a href="UserGuide.html#popup" class="ext" target="_blank">Hit Popup</a>).
+coverage has been added (see <a href="UserGuide.html" class="ext" target="_blank">Hit Popup</a>).
 </ul>
 <li>Developer:
 <ul><li><small>The Hit assignment algorithm has been restructured.</small></ul>
@@ -1790,20 +1763,20 @@ coverage has been added (see <a href="UserGuide.html#popup" class="ext" target="
 <h3>Release: v5.3.5 (3-Mar-23)</h3>
 
 <ul>
-<li><ttl>Cancel</ttl>
+<li><span class="ttl">Cancel</span>
 <ul>
-<li>The <ttl>Cancel</ttl> button did not always work well, now it does.
+<li>The <span class="ttl">Cancel</span> button did not always work well, now it does.
 See <a href="SystemGuide.html#cancel" class="ext" target="_blank">Cancel</a>.
-<li>From v5.3.4, if the <ttl>A&S</ttl> was cancelled or interrupted, it was not possible to restart the <ttl>A&S</ttl>
+<li>From v5.3.4, if the <span class="ttl">A&S</span> was cancelled or interrupted, it was not possible to restart the <span class="ttl">A&S</span>
 without reloading the projects.
 </ul>
-<li><ttl>Load project</ttl>
+<li><span class="ttl">Load project</span>
 <ul>
-<li>Any sequences that do not have the <ttl>Group prefix</ttl> will be ignored.
-<li>The <ttl>Group prefix</ttl> is case-insensitive.
+<li>Any sequences that do not have the <span class="ttl">Group prefix</span> will be ignored.
+<li>The <span class="ttl">Group prefix</span> is case-insensitive.
 </ul>
 
-<li><ttl>Align (Max 30000)</ttl>
+<li><span class="ttl">Align (Max 30000)</span>
 <ul>
 <li>The selected region was extended to the whole genes within it; now it just extends to the ends of the last overlapping exon of the selected region.
 <li>The exons are labeled, e.g. Exon #11. If the end of the gene is not shown, a left or right arrow will be displayed
@@ -1822,17 +1795,17 @@ The debug statements were cleaned up.
 <a id="v534"></a>
 <h3>Release: v5.3.4 (19-Feb-23)</h3>
 Existing SyMAP databases: if the project parameters seem wrong, bring up the <u>Parameters</u> window
-and <ttl>Save</ttl>.
+and <span class="ttl">Save</span>.
 <ul>
-<li>All "Help" in the SyMAP <ttb>Project Manager</ttb> has changed to <big>?</big> for online help.
+<li>All "Help" in the SyMAP <span class="ttb">Project Manager</span> has changed to <b>?</b> for online help.
 The online has been improved for the parameters explanation;
 see <a href="./SystemHelp.html" class="ext" target="_blank">Quick Guide and Parameters</a>.
 <p>
-<li>The <ttb>Project Parameters</ttb> window is clearer;
+<li>The <span class="ttb">Project Parameters</span> window is clearer;
 see <a href="./SystemHelp.html#projParams" class="ext" target="_blank">Project Parameters</a>.
 Since parameters are written to file and database, they can get out of sync; this problem is reduced.
 The popup messages are more concise.
-<li>The <ttb>Pair Parameters</ttb> window is clearer;
+<li>The <span class="ttb">Pair Parameters</span> window is clearer;
 see <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a>.
 The parameters used to only be applied if A&S was run right after setting them; now they are
 maintained across symap sessions.
@@ -1850,70 +1823,70 @@ created for the database specific classes. The project and pair parameter code h
 <h3>Release: v5.3.3 (24-Jan-23)</h3>
 This release has various minor changes and additions.
 <ul>
-<li><ttb>Synteny&Alignment</ttb>
+<li><span class="ttb">Synteny&Alignment</span>
 <ul>
 <li>Synteny algorithm: The block start and end was assigned coordinates at the mid-point
 of the first and last hit; this has been changed to the start of the first hit and end of
 the last hit.
-<li><ttl>Selected Pair Parameters</ttl>: The <ttl>No Overlapping Blocks</ttl> was removed because it does not work.
-The <ttl>Summary</ttl> shows changes from defaults for the <ttl>MinDots</ttl>, <ttl>TopN</ttl> and <ttl>Merge Blocks</ttl> parameters.
+<li><span class="ttl">Selected Pair Parameters</span>: The <span class="ttl">No Overlapping Blocks</span> was removed because it does not work.
+The <span class="ttl">Summary</span> shows changes from defaults for the <span class="ttl">MinDots</span>, <span class="ttl">TopN</span> and <span class="ttl">Merge Blocks</span> parameters.
 </ul>
-<li><ttb>Print Image</ttb>
+<li><span class="ttb">Print Image</span>
 <ul>
 <li>Most SyMAP graphics have a print image icon, which was
 not working for post Java V8; it now works for any version.
 </ul>
-<li><ttb>Dotplot</ttb>
+<li><span class="ttb">Dotplot</span>
 <ul>
-<li><ttl>Filter</ttl> - see <a href="UserGuide.html#dotplot_filter">DotPlot Filter</a>.
+<li><span class="ttl">Filter</span> - see <a href="UserGuide.html#dotplot_filter">DotPlot Filter</a>.
 <ul>
 <li>
-New <ttl>Green</ttl>, <ttl>ID%</ttl>, <ttl>Mix</ttl> and <ttl>Show Block Numbers</ttl> options.
-The dot size was moved from the main display to the filter. Add  <ttl><big>?</big></ttl> button.
+New <span class="ttl">Green</span>, <span class="ttl">ID%</span>, <span class="ttl">Mix</span> and <span class="ttl">Show Block Numbers</span> options.
+The dot size was moved from the main display to the filter. Add  <span class="ttl"><b>?</b></span> button.
 <li>The filter display now freezes the other panels.
 It no longer resets to default Filters on Home or selecting a cell.
 </ul>
 
 <li>The cells display all at once; before they were added one at a time.
-<li><ttl>Home</ttl> now works for the 2-chromosome dotplot, which goes back to full view.
+<li><span class="ttl">Home</span> now works for the 2-chromosome dotplot, which goes back to full view.
 </ul>
 
 <li>Developer:
 <ul>
 <li>Compiles under Java 17 with no warnings (removed Observable). Massively reduced and cleaned
 Dotplot code. Removed many un-used files from the util package and moved some others to the package of
-their sole use. Removed arrow from the end of the gene in the CloseUp. The <tt>classes_ext</tt> have
+their sole use. Removed arrow from the end of the gene in the CloseUp. The <span class="ttt">classes_ext</span> have
 been cleaned of most unused classes and files.
 </ul>
 </ul>
 
-<!----------------------------------------------------------->
+<!-- ==================================== -->
 <a id="v532"></a>
 <h3>Release: v5.3.2 (14-Jan-23)</h3>
-This release added <ttl><big>?</big></ttl> buttons for online help, and has some small <ttl>Query</ttl> and
-<ttl>2D Color Icon</ttl> updates.
+This release added <span class="ttl"><b>?</b></span> buttons for online help, and has some small <span class="ttl">Query</span> and
+<span class="ttl">2D Color Icon</span> updates.
 <ul>
-<li>Load and synteny: <ttl>View</ttl> will show the sequence and annotation paths used along with their date.
-If an existing alignment is used, then <ttl>Summary</ttl> will show the date that the alignment was run.
-<li><ttl>Chromosome Explorer 2D</ttl>
+<li>Load and synteny: <span class="ttl">View</span> will show the sequence and annotation paths used along with their date.
+If an existing alignment is used, then <span class="ttl">Summary</span> will show the date that the alignment was run.
+<li><span class="ttl">Chromosome Explorer 2D</span>
 <ul>
 <li>Color Icon
 <ul>
-<li><ttl>Default</ttl>: Changed from resetting all colors to just resetting the colors for the current tab.
-<li><ttl><big>?</big></ttl>: a new button that links to the online user guide for instructions.
-<li>Fixed an old bug where the <ttl>Default</ttl> did not always work until <ttl>viewSymap</ttl> was restarted.
+<li><span class="ttl">Default</span>: Changed from resetting all colors to just resetting the colors for the current tab.
+<li><span class="ttl"><b>?</b></span>: a new button that links to the online user guide for instructions.
+<li>Fixed an old bug where the <span class="ttl">Default</span> did not always work until <span class="ttl">viewSymap</span> was restarted.
 </ul>
-<li>The <ttl>Sequence</ttl> and <ttl>Hit filter</ttl>, and the <ttl>Selected</ttl> pull-down,
-have <ttl><big>?</big></ttl> links to their online help.
+<li>The <span class="ttl">Sequence</span> and <span class="ttl">Hit filter</span>, and the <span class="ttl">Selected</span> pull-down,
+have <span class="ttl"><b>?</b></span> links to their online help.
 </ul>
-<li><ttl>Queries</ttl>
+<li><span class="ttl">Queries</span>
 <ul>
 <li>The selected columns will be saved, as detailed in <a href="Query.html#save">Save Columns</a>.
-<li>The <ttl>Help</ttl> has been changed to <ttl><big>?</big></ttl> for online documentation.
-<li>A new html page has been created for the <ttl>Queries</ttl> at <a href="Query.html">Query</a>
+<li>The <span class="ttl">Help</span> has been changed to <span class="ttl"><b>?</b></span> for online documentation.
+<li>A new html page has been created for the <span class="ttl">Queries</span> at <a href="Query.html">Query</a>
 <li>The columns would sometimes be displayed in a weird order, which has been fixed.
 </ul>
-<li>Developers: Created <tt>utils/Jhtml.java</tt> that has all html links and code in one place. The <tt>/properties</tt>
+<li>Developers: Created <span class="ttt">utils/Jhtml.java</span> that has all html links and code in one place. The <span class="ttt">/properties</span>
 only contains colors and mainly those that can be changed by user.
 </ul>
 
@@ -1923,7 +1896,7 @@ Improvements to viewing the alignments of hits; see <a href="UserGuide.html#alig
 <ol>
 <li>2D
 <ul>
-<li><ttl>Align (Max 30,000)</ttl>
+<li><span class="ttl">Align (Max 30,000)</span>
 <ul>
 <li>Each MUMmer subhit is now shown at the bottom as a full dynamic programming alignment (it was broken up
 at each gap).
@@ -1932,19 +1905,19 @@ at each gap).
 <li>The hit color can be set in the color wheel.
 </ul>
 
-<li><ttl>Hit Information</ttl>:
+<li><span class="ttl">Hit Information</span>:
 <ol>
-<li><ttl>Align Hit</ttl> <font color=green>New</font> :  When hover over a hit-wire and right-click, an information box pops up; that box now has
-an <ttl>Align Hit</ttl> button that shows a text alignment in blast-style format.
+<li><span class="ttl">Align Hit</span> New:  When hover over a hit-wire and right-click, an information box pops up; that box now has
+an <span class="ttl">Align Hit</span> button that shows a text alignment in blast-style format.
 <li>The Hits for each track are listed in descending start order, and the gap is negative if it overlaps with the previous.
 </ol>
 
-<li><ttl>Show Seq Options</ttl> <font color=green>New</font>: The <ttl>Show Sequence</ttl> is now <ttl>Show Seq Options</ttl> which has a popup menu that allows the user
+<li><span class="ttl">Show Seq Options</span> New: The <span class="ttl">Show Sequence</span> is now <span class="ttl">Show Seq Options</span> which has a popup menu that allows the user
 to select whether to show the hit sequence, reverse hit, or region from the selected area.
-<li><ttl>Sequence Filter</ttl>: Has a <font color=green>New</font> option <ttl>Show Hit#</ttl> which shows the hit# in the same location as the <ttl>%Id Value</ttl>
+<li><span class="ttl">Sequence Filter</span>: Has a New option <span class="ttl">Show Hit#</span> which shows the hit# in the same location as the <span class="ttl">%Id Value</span>
 (only one of these two option can be active at a time).
 <li>Tiny problems fixed:
-(1) Fixed a problem where a sequence could not be selected for <ttl>Align</ttl> or <ttl>Show Sequence</ttl> if the zoom region was small.
+(1) Fixed a problem where a sequence could not be selected for <span class="ttl">Align</span> or <span class="ttl">Show Sequence</span> if the zoom region was small.
 (2) When the view went from 2D->Circle->2D, the "Selected:" would not be reset to "Zoom All".
 (3) The arrow has been removed from the graphical align hit because it meaning was not clear.
 (4) The term 'merged hits' was changed to 'clustered hits', where the cluster has sub-hits; the term
@@ -1969,9 +1942,9 @@ For existing SyMAP databases: the database schema will be updated on the first v
 <i>Typically the SyMAP software can view an earlier or later version SyMAP database, but that is
 not the case with this release.</i>
 <ol>
-<li><ttl>Queries</ttl>: fixed a v5.1.9 bug in location filtering.
-<li><ttl>Dotplot</ttl>: fixed a v5.1.9 bug; if a region was selected, the Hit Filter was set to show no hits.
-<li><ttl>Github</ttl>:
+<li><span class="ttl">Queries</span>: fixed a v5.1.9 bug in location filtering.
+<li><span class="ttl">Dotplot</span>: fixed a v5.1.9 bug; if a region was selected, the Hit Filter was set to show no hits.
+<li><span class="ttl">Github</span>:
 <ul>
 <li>Removed most of FPC from the code and Schema.
 <br>
@@ -1983,28 +1956,28 @@ not the case with this release.</i>
 <h3>Release: v5.2.1 (1-Dec-22)</h3>
 For existing SyMAP databases: The colors in the circle view will be different for the 2nd project.
 <ol>
-<li><ttl>Circle view</ttl>
+<li><span class="ttl">Circle view</span>
 <ul>
-<li>Whole genome:  <ttl>Reverse</ttl>: A new function that allows the reference to be reversed.
+<li>Whole genome:  <span class="ttl">Reverse</span>: A new function that allows the reference to be reversed.
 Also, the colors of a project's blocks stays consistent if compared to projects with different number of chromosomes (n&lt;=25).
 <li>Chromosome view: The selected reference will have its colors shown by default.
 <li>The project name that is reference is in bold italics.
 </ul>
 
-<li><ttl>Queries</ttl>:
+<li><span class="ttl">Queries</span>:
 <ul>
-<li><ttl>High</ttl>: Added check box to unselect if the user does not want the selected hit highlighted.
-<li>Improved the information for the MUSCLE alignment. See <a href="UserGuide.html#qview">Query Align</a>.
-<li>Fixed <ttl>Clear Filters</ttl> to leave <ttl>Chr:</ttl> enabled.
+<li><span class="ttl">High</span>: Added check box to unselect if the user does not want the selected hit highlighted.
+<li>Improved the information for the MUSCLE alignment. See <a href="UserGuide.html">Query Align</a>.
+<li>Fixed <span class="ttl">Clear Filters</span> to leave <span class="ttl">Chr:</span> enabled.
 </ul>
-<li><ttl>SyMAP manager</ttl>:
+<li><span class="ttl">SyMAP manager</span>:
 <ul>
-<li><ttl>View</ttl>: A new  link that brings up the chromosome information for a project.
+<li><span class="ttl">View</span>: A new  link that brings up the chromosome information for a project.
 <li>Collinear computation bug fixes: (1) self-chromosome can cause error so disabled. (2) If
 a chromosome had no hits (can happen with small scaffolds), collinear was not computed.
 </ul>
 
-<li><ttl>2D Sequence Filter</ttl> bug: "Apply" could perform an unwanted change of boundaries on sequence.
+<li><span class="ttl">2D Sequence Filter</span> bug: "Apply" could perform an unwanted change of boundaries on sequence.
 
 <li>Developers: Removed 3D from code, classes_ext.tar.gz, Makefile.
 Put in a check for no projects, as a user's trace showed it can happen.
@@ -2012,19 +1985,19 @@ Remove the Filtered interface. Removed more FPC code (Drawing Panel, Mapper Pool
 Changed 2 Observers to PropertyChangeEvent. Reduce /props from 4 to 1 file.
 </ol>
 
-<!----------------------------------------------------------------->
+<!-- =========================================== -->
 <a id=v520></a>
 <h3>Release: v5.2.0 (20-Nov-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>; the synteny
 algorithm needs to be rerun to get the collinear changes.
 <p>This release is concentrated on improving the algorithm and display of <u>collinear sets</u>;
-see <a href="./Collinear.html">details</a>.
+see <a href="./Details.html">details</a>.
 There is new viewing support for Collinear sets: see <a href="./UserGuide.html#hitfilter">2D Hit Filter</a>
-and <a href="./UserGuide.html#qview">Queries</a>.
+and <a href="./Query.html">Queries</a>.
 
 <ol>
-<li>The <tt>symap</tt> and <tt>viewSymap</tt> scripts have been changed to access
-<tt>SyMAPmanager</tt> instead of <tt>ProjectManagerFrame</tt>. NOTE: if you are updating, make sure you
+<li>The <span class="ttt">symap</span> and <span class="ttt">viewSymap</span> scripts have been changed to access
+<span class="ttt">SyMAPmanager</span> instead of <span class="ttt">ProjectManagerFrame</span>. NOTE: if you are updating, make sure you
 get these new scripts!!
 
 <li>Processing
@@ -2032,57 +2005,57 @@ get these new scripts!!
 <li><u>Collinear sets</u>:
 <ul>
 <li>The collinear sets algorithm has been greatly improved for more accurate results.
-The <tt>Alignment&Synteny</tt> needs to be rerun to compute the updated sets.
+The <span class="ttt">Alignment&Synteny</span> needs to be rerun to compute the updated sets.
 <li>Each collinear set has a unique number for the chromosome pair.
 </ul>
-<li>The <ttl>Hit#</ttl> used in Queries and the 2D display was the index into the database and could get very large.
-A <tt>hit number</tt> is now computed during processing, which is a sequential number for the chromosome pair (e.g. there will be
+<li>The <span class="ttl">Hit#</span> used in Queries and the 2D display was the index into the database and could get very large.
+A <span class="ttt">hit number</span> is now computed during processing, which is a sequential number for the chromosome pair (e.g. there will be
 a Hit#1 for each chromosome pair with hits).
 </ul>
 
 <li>Chromosome Explorer 2D display:
 <ol>
-<li><ttl>Hit Filter</ttl>:
+<li><span class="ttl">Hit Filter</span>:
 <ol type="a">
 <li>Has many new options, see <a href="./UserGuide.html#hitfilter">Hit Filters</a>
-<li>The <tt>Cancel</tt> and <tt>Defaults</tt> buttons never did work right; they do now.
+<li>The <span class="ttt">Cancel</span> and <span class="ttt">Defaults</span> buttons never did work right; they do now.
 </ol>
 
-<li><ttl>Color wheel</ttl>, for <ttl>Hits</ttl>, there are two new options:
+<li><span class="ttl">Color wheel</span>, for <span class="ttl">Hits</span>, there are two new options:
 <ol type="a">
-<li><ttl>Hover</ttl> provides the color the hit-wire turns when the mouse hovers over it.
-<li><ttl>Highlight1</ttl>  and <ttl>Highlight2</ttl> provides the highlight colors, which alternate
+<li><span class="ttl">Hover</span> provides the color the hit-wire turns when the mouse hovers over it.
+<li><span class="ttl">Highlight1</span>  and <span class="ttl">Highlight2</span> provides the highlight colors, which alternate
 when Collinear sets or Synteny blocks are shown.
 </ol>
 
-<li><ttl>Sequence Filter</ttl>:
+<li><span class="ttl">Sequence Filter</span>:
 <ol type="a">
-<li><ttl>Gene Delimiter</ttl>: This is a new option, which draws a black line over the top exon of each gene when
+<li><span class="ttl">Gene Delimiter</span>: This is a new option, which draws a black line over the top exon of each gene when
 they are zoomed enough to see the exons. See <a href="./UserGuide.html#ex2d">2D view</a>.
 </ol>
 </ol>
 
 <li>Queries
 <ol>
-<li>The <ttl>Show Synteny</ttl> has been changed to <ttl>View 2D</ttl> with the options (2nd two are new):
-<br>(1) Region (kb), (2) Synteny Block, (3) Collinear Set. See <a href="./UserGuide.html#qview">Results</a>.
-<li><ttl>Show</ttl>: This is a new option which produces a popup of all data for the selected row.
+<li>The <span class="ttl">Show Synteny</span> has been changed to <span class="ttl">View 2D</span> with the options (2nd two are new):
+<br>(1) Region (kb), (2) Synteny Block, (3) Collinear Set. See <a href="./Query.html">Results</a>.
+<li><span class="ttl">Show</span>: This is a new option which produces a popup of all data for the selected row.
 This allows copying any text.
 <li>The collinear column displays the set as N.M, where N is the size and M is the unique set number.
-<li><ttl>Gene#</ttl>: This is a new query, where one gene number can be entered (no suffix). This is
+<li><span class="ttl">Gene#</span>: This is a new query, where one gene number can be entered (no suffix). This is
 a good way to view all hits for a given gene.
-<li><ttl>Hit St</ttl>: There is a new column, which is "=" if the two hit ends are equals, else it is "!=".
+<li><span class="ttl">Hit St</span>: There is a new column, which is "=" if the two hit ends are equals, else it is "!=".
 <li>A hit may align to overlapping genes, but only one hit pair is shown; now the best overlap for each
 side is shown (before it was random).
 </ol>
 
 <li>Assorted minor stuff
 <ul>
-<li><tt>ConvertNCBI</tt> script has a new "-p" and "-pa" options to include as attributes the first protein or all protein names for the gene.
+<li><span class="ttt">ConvertNCBI</span> script has a new "-p" and "-pa" options to include as attributes the first protein or all protein names for the gene.
 <li>Schema update: there is an schema update that occurs the first time an existing database is read.
-<li>The <ttl>SyMAP Queries</ttl> button has been moved and renamed <ttl>Queries</ttl>.
+<li>The <span class="ttl">SyMAP Queries</span> button has been moved and renamed <span class="ttl">Queries</span>.
 The 2D Filter and Color Wheel panels will be displayed in the middle of screen.
-The 2D <ttl>Information</ttl> box now shows the <ttl>Hit Filter</ttl> settings.
+The 2D <span class="ttl">Information</span> box now shows the <span class="ttl">Hit Filter</span> settings.
 <li>The SyMAP version of running synteny is on the summary panel.
 <li> All visible traces of FPC have been removed. From this release forward, FPC will no longer be supported.
 However, there are still releases from AGCoL and Github that support it;
@@ -2096,14 +2069,14 @@ been added to the hits table, which provided the set number for collinear pairs.
 stored in the projects and pairs table. The annotation table contains a new column for the number of hits.
 (3) FPC code is all mixed in with the seq-to-seq; but it is no longer consistent with changes.
 </ol>
-<!--------------------------------------------------------------------->
+<!-- ================================================== -->
 <a id="v519"></a>
 <h3>Release: v5.1.9 (26-Oct-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 
 <p>Release v5.1.7 to v5.1.9 greatly improved the <u>Gene# assignment algorithm</u> and the <u>2D gene placement</u>.
-<p>Added -z option (obsolete): To execute the latest Gene# assignment algorithm, execute <tt>./symap -z</tt>,
-then select <ttl>Reload Annotation</ttl>; the synteny algorithm does NOT need
+<p>Added -z option (obsolete): To execute the latest Gene# assignment algorithm, execute <span class="ttt">./symap -z</span>,
+then select <span class="ttl">Reload Annotation</span>; the synteny algorithm does NOT need
 to be rerun.
 
 <h4>(25-Oct-22)</h4>
@@ -2111,12 +2084,12 @@ This release has some interface improvements to SyMAP Query and the 2D gene plac
 <ul>
 <li>SyMAP Project Parameters
 <ul>
-<li>The <ttl>Parameters</ttl> display has a new parameter
-called <tt>abbrev_name</tt> which must be a 4 character abbreviation. This is used in the SyMAP Query
-column headings. If one is not entered, then the last 4 characters of the <tt>display_name</tt>
+<li>The <span class="ttl">Parameters</span> display has a new parameter
+called <span class="ttt">abbrev_name</span> which must be a 4 character abbreviation. This is used in the SyMAP Query
+column headings. If one is not entered, then the last 4 characters of the <span class="ttt">display_name</span>
 is used.
-<li>Bug fix: A <ttl>Save</ttl> after annotation was loaded would zero out the counts for annotation keywords, which
-resulted in no annotation keywords (only All_anno) being shown in the <ttl>Query Columns</ttl>; this no longer happens.
+<li>Bug fix: A <span class="ttl">Save</span> after annotation was loaded would zero out the counts for annotation keywords, which
+resulted in no annotation keywords (only All_anno) being shown in the <span class="ttl">Query Columns</span>; this no longer happens.
 </ul>
 <li>2D display
 <ul>
@@ -2124,7 +2097,7 @@ resulted in no annotation keywords (only All_anno) being shown in the <ttl>Query
 </ul>
 <li>SyMAP Query
 <ul>
-<li>Hit Pairs Table: The <ttl>Location</ttl> columns now include the Gene start/end/len and the strand assigned to the gene in the GFF file.
+<li>Hit Pairs Table: The <span class="ttl">Location</span> columns now include the Gene start/end/len and the strand assigned to the gene in the GFF file.
 <li>Single Genes Table: Only shows the columns that are relevant to genes.
 <li>Hover over column: the description is shown at the bottom.
 </ul>
@@ -2133,7 +2106,7 @@ this has been changed to 0.
 <li>Demos: A few small changes to the annotation files. Params updated.
 <li>Developers: Cleaned-up trace and debug flags.
 </ul>
-<!--------------------------------------------------------------------->
+<!-- =========================================== -->
 <h3>Release: v5.1.8 (17-Oct-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 
@@ -2153,7 +2126,7 @@ the a-z; e.g. Gene #100a, #100z,  #100a1, #100b1, ...
 <ul>
 <li>The placement of overlapping is greatly improved; the improvements depend on reloading the annotation for v518
 (though it works as before without reloading).
-<li>When the mouse is in the gene space, it will only provide <ttl>Information</ttl> if the mouse is over a gene;
+<li>When the mouse is in the gene space, it will only provide <span class="ttl">Information</span> if the mouse is over a gene;
 this makes it easier to run the mouse down the gene space to find a given gene number.
 <li>The length of the exons is included in the gene tag, e.g. Gene #100a (Exons 3 2123bp)
 <li>Right click in the yellow annotation box was not working for 2D from Dotplot or SyMAP Query,
@@ -2161,13 +2134,13 @@ so it has disabled since the right click on gene annotation works fine from ever
 </ul>
 <li>SyMAP Query
 <ul>
-<li>The <ttl>Gene#</ttl> column now shows the number and suffix; it is of format chr.genenum.suffix.
+<li>The <span class="ttl">Gene#</span> column now shows the number and suffix; it is of format chr.genenum.suffix.
 For older databases, this does not provide useful information as it expect v5.1.7 format or later.
 <li>Single: The logic has been changed so that if you select a project, then you can select a chromosome.
 </ul>
 
 </ul>
-<!--------------------------------------------------------------------->
+<!-- ============================================================ -->
 <h3>Release: v5.1.7 (12-Oct-22)</h3>
 For existing databases, see <a href="SystemGuide.html#update" class="ext" target="_blank">Update</a>.
 <p>This release concentrates on making the 2D display provide more information with different colors for
@@ -2179,7 +2152,7 @@ genes and hits.
 <li>Gene# assignment: have been numbered with the same gene number; now they are given a suffix, e.g.
 Gene #1011a, Gene #1011b. For existing databases, the annotation must be re-loaded to get this feature; then
 the synteny needs to be recomputed (existing MUMmer files will be used).
-<li><ttc>ConvertEnsembl</ttc> has a new option "-u" to use the sequence names from the FASTA file.
+<li><span class="ttc">ConvertEnsembl</span> has a new option "-u" to use the sequence names from the FASTA file.
 </ul>
 
 <li>Chromosome Explorer:
@@ -2211,7 +2184,7 @@ pair of chromosomes (e.g. 3.1.9).
 </ul>
 </ul>
 
-<!--------------------------------------------------------------------->
+<!-- ========================================================== -->
 <a id="v516"></a>
 <h3>Release: v5.1.6 (20-Sept-22)</h3>
 This release has improvements to the Block display, 2D display and SyMAP Query.
@@ -2225,30 +2198,30 @@ This release has improvements to the Block display, 2D display and SyMAP Query.
 <li>2D Display
 <ul>
 <li>The full gene description can be viewed by right clicking on a gene annotation in the track;
-see <a href="UserGuide.html#view" target="_blank" class="ext">UserGuide</a>.
+see <a href="UserGuide.html" target="_blank" class="ext">UserGuide</a>.
 <li>Hover over a hit may include "Inv" (inverted block) and will include "gNrM" (N exon hits, M colinear run size);
-see <a href="UserGuide.html#view" target="_blank" class="ext">UserGuide</a>;
+see <a href="UserGuide.html" target="_blank" class="ext">UserGuide</a>;
 </ul>
 <li>SyMAP Query
 <ul>
-<li>Add general columns <ttl>Hit %Id</ttl>, <ttl>Hit %Sim</ttl>, <ttl>Hit #Merge</ttl>
-<li>Add species column <ttl>Len</ttl> which is the length of the hit (or merged hit).
-<li>Bug Fix: <ttl>Show Synteny</ttl>: the hover over the hit only showed the correct hit <ttl>Information</ttl>
+<li>Add general columns <span class="ttl">Hit %Id</span>, <span class="ttl">Hit %Sim</span>, <span class="ttl">Hit #Merge</span>
+<li>Add species column <span class="ttl">Len</span> which is the length of the hit (or merged hit).
+<li>Bug Fix: <span class="ttl">Show Synteny</span>: the hover over the hit only showed the correct hit <span class="ttl">Information</span>
 for those below the selected hit - that is fixed.
 <li>Gene# of 0 will sort to bottom of table with a '-'.
-<li>MUSCLE alignment: (1) Fixed rare bug. (2) The alignment files will be left in the <ttl>muscle</ttl>
+<li>MUSCLE alignment: (1) Fixed rare bug. (2) The alignment files will be left in the <span class="ttl">muscle</span>
 directory, but over-written with each new alignment.
 </ul>
 <li>Alignment&Synteny: (2 tiny things)
 <ul>
-<li>If promer or nucmer are over-rided in the <ttl>Parameters</ttl>, it will say on the Summary page (unless the
+<li>If promer or nucmer are over-rided in the <span class="ttl">Parameters</span>, it will say on the Summary page (unless the
 alignment is re-used).
-<li>Fixed rare bug: if the <ttl>Parameters</ttl> are changed before <i>any</i> alignment has been done, there is an error
-because the <ttl>data/seq_results</ttl> directory has not been created.
+<li>Fixed rare bug: if the <span class="ttl">Parameters</span> are changed before <i>any</i> alignment has been done, there is an error
+because the <span class="ttl">data/seq_results</span> directory has not been created.
 </ul>
 </ul>
 
-<!--------------------------------------------------------------------->
+<!-- ======================================================== -->
 <h3>Release: v5.1.5 (13-Sept-22)</h3>
 <ul>
 <li>Online Docs - the biggest change of this release is an updating of the documentation.
@@ -2275,7 +2248,7 @@ that starts at 1.
 <li>Removed some dead tables from Schema and changed a few datatypes.
 </ul>
 </ul>
-<!--------------------------------------------------------------------->
+<!-- =========================================================== -->
 <h3>Release: v5.1.4 (4-Sept-22)</h3>
 
 <ul>
@@ -2302,7 +2275,7 @@ and is shown on the Chromosome Explorer Annotation and the hover of the gene.
 <li>Alignment Bug Fix: only the first part of the alignment was working (fairly recent bug).
 </ul>
 </ul>
-<!--------------------------------------------------------------------->
+<!-- ============================================================= -->
 <h3>Release: v5.1.3 (30-Aug-22)</h3>
 There is no major new development, but small interface improvements and SyMAP Query has a small bug fix.
 <ul>
@@ -2353,7 +2326,7 @@ if a start or stop was entered, it gave an error. This is fully functional now.
 </ul>
 </ul>
 
-<!--------------------------------------------------------------------->
+<!-- ==================================================================== -->
 <h3>Release: v5.1.2 (19Aug22)</h3>
 This release associates Exons with their genes; hence, your database needs to be
 <a href="SystemGuide.html#update" class="ext" target="_blank">updated</a>.
@@ -2363,10 +2336,10 @@ This release associates Exons with their genes; hence, your database needs to be
 <ul>
 <li>Input format:
 <ol type='i'>
-<li>The <tt>ConvertNCBI</tt> and <tt>ConvertEnsembl</tt> scripts created separate <tt>gene.gff</tt> and <tt>exon.gff</tt> files; now they
-create one file. The <tt>ConvertEnsembl</tt> was not producing a <tt>gap.gff</tt> file, and now it is. Both have been
-updated to be aware of more input variations and provide a better summary. See <a href=convert class="ext" target="_blank">Convert</a> for details.
-<li>The Demo_seq has separate <tt>gene.gff</tt> and <tt>exon.gff</tt> files; now it has one file.
+<li>The <span class="ttt">ConvertNCBI</span> and <span class="ttt">ConvertEnsembl</span> scripts created separate <span class="ttt">gene.gff</span> and <span class="ttt">exon.gff</span> files; now they
+create one file. The <span class="ttt">ConvertEnsembl</span> was not producing a <span class="ttt">gap.gff</span> file, and now it is. Both have been
+updated to be aware of more input variations and provide a better summary.
+<li>The Demo_seq has separate <span class="ttt">gene.gff</span> and <span class="ttt">exon.gff</span> files; now it has one file.
 <li>SyMAP can still load separate gene and exon files, but its association of exon to gene is not as accurate.
 </ol>
 
@@ -2415,16 +2388,16 @@ These changes are to 'tidy up' things; nothing major.
 
 <li>Scripts:
 <ul>
-<li>The <tt>symap</tt> and <tt>viewSymap</tt> scripts have been changed from Perl to shell.
-<li>The <tt>viewSymap3D</tt> script has been removed; 3D is no longer available.
+<li>The <span class="ttt">symap</span> and <span class="ttt">viewSymap</span> scripts have been changed from Perl to shell.
+<li>The <span class="ttt">viewSymap3D</span> script has been removed; 3D is no longer available.
 </ul>
 <li>Data directory
 <ul>
-<li>The <tt>data/fpc</tt> has been tarred and zipped (<tt>fpc.tar.gz</tt>) since it is rarely used anymore.
-If the <tt>data/fpc</tt> directory does not exist, then the BLAT args are not shown on
+<li>The <span class="ttt">data/fpc</span> has been tarred and zipped (<span class="ttt">fpc.tar.gz</span>) since it is rarely used anymore.
+If the <span class="ttt">data/fpc</span> directory does not exist, then the BLAT args are not shown on
 the "Param" window. The FPC-Seq alignments still work.
-<li>If the <tt>data</tt> directory does not exist, it is created: (1) on "Add Project",
-(2) when redoing an alignment in the database. (The directory will exist if using <tt>symap_5.tar.gz</tt>,
+<li>If the <span class="ttt">data</span> directory does not exist, it is created: (1) on "Add Project",
+(2) when redoing an alignment in the database. (The directory will exist if using <span class="ttt">symap_5.tar.gz</span>,
 but it will not exist if starting from the code base).
 </ul>
 <li>Slight display change
@@ -2436,13 +2409,13 @@ running the synteny.
 </ul>
 <li>Small changes
 <ul>
-<li><tt>symap -v</tt> will display important MySQL variables and make suggestions.
+<li><span class="ttt">symap -v</span> will display important MySQL variables and make suggestions.
 <li>It does not try to load hidden files.
 <li>It does not allow "cancel" on remove operations.
 <li>It displays length of log files (they are appended to, so can become large).
-<li>The project parameters <tt>annot_keywords</tt> and <tt>annot_kwy_mincount</tt> are now being saved to the database
+<li>The project parameters <span class="ttt">annot_keywords</span> and <span class="ttt">annot_kwy_mincount</span> are now being saved to the database
 so their values are shown correctly in the project parameters window on re-display.
-<li>A proper message is given when <tt>viewSymap</tt> tries to read a databases (<tt>symap.config</tt>) that does not exist.
+<li>A proper message is given when <span class="ttt">viewSymap</span> tries to read a databases (<span class="ttt">symap.config</span>) that does not exist.
 <li>A stacktrace will not be printed to the terminal, only to the error.log (the e.getMessage() sometimes includes a partial
 stack).
 <li>Developers: removed more dead code.
@@ -2488,7 +2461,7 @@ approach for Mac was becoming obsolete, so it was changed. For Linux, more suppo
 <li>Developers: Removed all Applet code (was disabled previously, but code was in everything).
 </ol>
 
-<!----------------------------------------------------------->
+<!-- ============================================================= -->
 <h3>Release: v5.0.6 (2June20)</h3>
 <ol>
 <li>Some changes were necessary for SyMAP to run with MySQL v8.
@@ -2513,7 +2486,7 @@ be obtained at <a href="https://github.com/csoderlund/SyMAP">github</a>).
 <li>Ordering algorithm: The main change is a rewrite of the ordering algorithm, which orders draft contigs
 against a completed sequence closely related genome. The previous algorithm sometimes
 would put many of the placed contigs incorrectly into 'chrUNK', though the
-ordering in the <tt>anchored.csv</tt> file was correct.
+ordering in the <span class="ttt">anchored.csv</span> file was correct.
 
 <li>SyMAP Manager:
 <ul>
@@ -2653,10 +2626,10 @@ work with this new release as shown further under <a href="#ds">Directory struct
 	with less flags, as follows:
 	<table>
 	<tr><td><i>Script</i><td><i>Build</i><td><i>View</i><td><i>Has 3D view</i>
-	<tr><td><tt>./symap</tt> <td>Yes<td>Yes<td>No
-	<tr><td><tt>./symap3D</tt> <td>Yes<td>Yes<td>Yes
-	<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>No
-	<tr><td><tt>./viewSymap</tt> <td>No<td>Yes<td>Yes
+	<tr><td><span class="ttt">./symap</span> <td>Yes<td>Yes<td>No
+	<tr><td><span class="ttt">./symap3D</span> <td>Yes<td>Yes<td>Yes
+	<tr><td><span class="ttt">./viewSymap</span> <td>No<td>Yes<td>No
+	<tr><td><span class="ttt">./viewSymap</span> <td>No<td>Yes<td>Yes
 	</table>
 	<li>The symap -c command line parameter can be used to
 	specify a configuration file other than 'symap.config'
@@ -2671,12 +2644,12 @@ work with this new release as shown further under <a href="#ds">Directory struct
 <li>Build database
 	<ul>
 	<li>Log files: The log files are no longer in the results directories, instead they are in
-	the top level <tt>/logs</tt> directory, as follows:
+	the top level <span class="ttt">/logs</span> directory, as follows:
 		<ol>
-		<li>The output from the loads are concatenated to the file <tt>/logs/LOAD.log</tt>.
-		<li>The output during alignment is in the <tt>/logs/&lt;proj1-to-proj2&gt;</tt> directory.
+		<li>The output from the loads are concatenated to the file <span class="ttt">/logs/LOAD.log</span>.
+		<li>The output during alignment is in the <span class="ttt">/logs/&lt;proj1-to-proj2&gt;</span> directory.
 		<li>The output to the terminal from the alignment and synteny computation is
-written in the <tt>/logs/&lt;proj1-to-proj2&gt;symap.log</tt> file.
+written in the <span class="ttt">/logs/&lt;proj1-to-proj2&gt;symap.log</span> file.
 		</ol>
 	</ul>
 <li>Load project
@@ -2694,8 +2667,8 @@ written in the <tt>/logs/&lt;proj1-to-proj2&gt;symap.log</tt> file.
   it had none).
 	<li>The number of CPUs can be set in the interface, or either of the following:
 		<ol>
-		<li>Use the -p command line parameter, e.g. <tt>./symap -p 12</tt>.
-		<li>Set the 'nCPUs' configuration parameter in the symap.config file, e.g. <tt>nCPUs=12</tt>.
+		<li>Use the -p command line parameter, e.g. <span class="ttt">./symap -p 12</span>.
+		<li>Set the 'nCPUs' configuration parameter in the symap.config file, e.g. <span class="ttt">nCPUs=12</span>.
 		</ol>
 
 	<li>Much of the code for building the syntenies has been re-written, but the results
@@ -2704,7 +2677,7 @@ written in the <tt>/logs/&lt;proj1-to-proj2&gt;symap.log</tt> file.
 
 <a id="ds"></a>
 <li>Directory structure: The following are the directory changes, where they
-are under <tt>/data</tt>.
+are under <span class="ttt">/data</span>.
 	<table>
 	<tr><td><i>New</i><td><i>Old</i><td><i>Description</i>
 	<tr><td>/seq
@@ -2743,7 +2716,7 @@ are under <tt>/data</tt>.
 <li>Improved the Help on the parameters page.
 <li>Fixed a rare memory bug (occured on a self-synteny; requires the database to be re-created).
 <li>The Image button does not work for Java v9, so a popup tells the user.
-<li>Added a Java script called ConvertNCBI.java, as documented in <a href=ncbi target="_blank">NCBI to SyMAP</a>.
+<li>Added a Java script called ConvertNCBI.java, as documented in <a href="input/ncbi.html" target="_blank">NCBI to SyMAP</a>.
 </ul>
 <b>Release date: 12/28/17 (build 119)</b>
 <ul>
@@ -2826,16 +2799,16 @@ Release date:  7/15/2012<br>
 <li>Additional Features
 <ul>
 <li>Script 3track_figure.pl makes 3-genome figure for publication (see online
-<a href="Tour.html#svg">Tour</a>;
+<a href="Tour.html">Tour</a>;
 script added to 4.0 package post-release)
 </ul>
 </ul>
 <p>
 <b>Modified Features:</b>
 <ul>
-<li> Write contig anchoring information to a file (<tt>order_against</tt> mode)
-<li> No longer creates the "_ordered" project output from <tt>order_against</tt>
-<li><tt>grp_prefix</tt> parameter now optional (but recommended). <tt>grp_sort</tt> eliminated.
+<li> Write contig anchoring information to a file (<span class="ttt">order_against</span> mode)
+<li> No longer creates the "_ordered" project output from <span class="ttt">order_against</span>
+<li><span class="ttt">grp_prefix</span> parameter now optional (but recommended). <span class="ttt">grp_sort</span> eliminated.
 <li> Self-alignments improved by using -maxmatch option of MUMmer for individual chromsome self-alignments
 <li> Top-2 filtering modified to accept also hits within 80% of the 2nd best score, in order to
 retain gene-family hits and allow identification of families through the query interface.
@@ -2854,11 +2827,11 @@ Release date:  1/24/12<br>
 <li> Annotation query interface (Java-based, upgrades the web CGI version)
 <li> Project parameters editing window
 <li> Unsigned web applet (no approval popups, if database and webserver have same host)
-<li> For draft sequence using <tt>order_against</tt>, create ordered and anchored versions of the project
+<li> For draft sequence using <span class="ttt">order_against</span>, create ordered and anchored versions of the project
 </ul>
 <p><b>Modified Features:</b>
 <ul>
-<li> Added contig-flipping to draft sequence <tt>order_against</tt> function
+<li> Added contig-flipping to draft sequence <span class="ttt">order_against</span> function
 <li> Added draft sequence ordering demo
 <li> Improved command-line launch script
 </ul>
@@ -2908,8 +2881,7 @@ Release date:  6/9/10<br>
 <li>The whole genome dot plot is available from the project manager.
 <li>When running an alignment, a summary is listed to the terminal and to a log file.
 <li>A lot of error checking has been added. However, every platform can have variations, which
-we may not have accounted for. <font color=green>So PLEASE, let us know if you have any problems and we will
-work with you to it.</font>
+we may not have accounted for.
 </ul>
 
 <h3>Version 3.1</h3>
@@ -3015,14 +2987,13 @@ display includes all the chromosomes that the contig hits.
 <li> Filtering optimized in anchors.pl to reduce memory use in loading large blat outputs
 </ul>
 
-
 <h3>Version 1.0</h3>
 Release date:  9/1/06<br>
 First full public release.
 
 <p><a href="#top">Go to top</a>
 
-<!---- END BODY -->
+<!-- END BODY -->
 	</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>

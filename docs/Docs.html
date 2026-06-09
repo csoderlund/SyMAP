@@ -1,23 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP Docs</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	.center {margin-left: auto; margin-right: auto;}
-	ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-	ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-	ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-	ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-    ttt {font-family: Verdana, Arial, Helvetica, sans-serif; color="#000000"; font-size: 13px;}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style1st.css">
 </head>
 
 <body>
@@ -61,12 +47,12 @@
 		</table>
 	</td></tr>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
-
+<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+<!-- START BODY -->
 <p>
 <table class="center" style="width:70%;"><tr><td>
 &nbsp;&nbsp;&nbsp;&nbsp;<b>Documentation</b>
+<p>
 <ul>
 <li><a href=index.html class="ext" target="_blank">Main page</a>
 <br>&nbsp;
@@ -76,7 +62,7 @@
 <li><a href="input/ensembl.html" class="ext" target="_blank">Ensembl to SyMAP input</a>
 </ul>
 <br>
-<li><a href=SystemGuide.html class="ext" target="_blank">System Guide</a> (<ttp>symap</ttp>)
+<li><a href=SystemGuide.html class="ext" target="_blank">System Guide</a> (<span class="ttp">symap</span>)
 <ul>
 <li><a href=SystemHelp.html class="ext" target="_blank">Parameters and Interface</a>
 <li><a href=MUMmer.html class="ext" target="_blank">MUMmer with SyMAP</a>
@@ -86,7 +72,7 @@
 
 </ul>
 <br>
-<li><a href=UserGuide.html class="ext" target="_blank">User Guide</a> (<ttp>symap</ttp> or <ttp>viewSymap</ttp>)
+<li><a href=UserGuide.html class="ext" target="_blank">User Guide</a> (<span class="ttp">symap</span> or <span class="ttp">viewSymap</span>)
 <ul>
 <li><a href="Query.html" class="ext" target="_blank">Queries</a>
 <li><a href="Details.html" class="ext" target="_blank">Details</a> - collinear sets, conserved genes, hits.
@@ -101,23 +87,22 @@
 </td></tr></table>
 
 <h4>Publications</h4>
-<ttt>
-<i>All upgrades since 7-Nov-2016 (pre-v5) have been developed by CAS without funding or updated publication.</i>
 
-
-<p>C. Soderlund, M. Bomhoff, and W. Nelson (2011) SyMAP v3.4: a turnkey synteny system with application to plant genomes <i>Nucleic Acids Research</i> 39(10):e68
+<span class="ttt"><i>All upgrades since 7-Nov-2016 have been developed by Cari Soderlund without funding or an updated publication.</i>
+</span>
+<p><span class="ttt">C. Soderlund, M. Bomhoff, and W. Nelson (2011) SyMAP v3.4: a turnkey synteny system with application to plant genomes <i>Nucleic Acids Research</i> 39(10):e68
  <a href="http://nar.oxfordjournals.org/content/39/10/e68" class="ext" target="_blank">Link</a>
-
-<p>C. Soderlund, W. Nelson, A. Shoemaker and A. Paterson (2006)
+</span>
+<p><span class="ttt">C. Soderlund, W. Nelson, A. Shoemaker and A. Paterson (2006)
    SyMAP: A system for discovering and viewing syntenic regions of FPC maps. Genome Research 16:1159-1168.
     <a href="http://genome.cshlp.org/content/16/9/1159.abstract"  class="ext" target="_blank">Link</a>
-
-<p>SyMAP uses <a href="SystemGuide.html#refs" class="ext" target="_blank">MUMmer</a><sup>1,2</sup> for computing the
+</span>
+<p><span class="ttt">SyMAP uses <a href="SystemGuide.html#refs" class="ext" target="_blank">MUMmer</a><sup>1,2</sup> for computing the
 alignment between two genomes.
- </ttt>
+ </span>
 
 <h4>History of SyMAP</h4>
-<ttt>FPC (FingerPrinted Contig, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC310962/" class="ext" target="_blank">
+<span class="ttt">FPC (FingerPrinted Contig, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC310962/" class="ext" target="_blank">
 Soderlund et al. (2000) Genome Research</a>)
 was written to build physical maps from fingerprinted clones, but is obsolete now.
 SyMAP was originally written for FPC maps-to-sequence synteny
@@ -125,8 +110,8 @@ SyMAP was originally written for FPC maps-to-sequence synteny
 then was upgraded for sequence-to-sequence synteny. FPC was removed from SyMAP in v5.0.9,
 but v5.0.8 is still available from Github downloads; if it does not work with latest Java and MySQL,
 email me and I will update it for you.
-</ttt>
-<!---- END BODY -->
+</span>
+<!-- END BODY -->
 	</td></tr>
 	<tr><td>&nbsp;</td></tr>
 	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">

@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP Demo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<!------ left side index - customize ----------------------------------------------------->
+<!-- left side index - customize -->
 <div class="sidenav">
 <a href="https://csoderlund.github.io">
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
@@ -22,7 +22,7 @@
 <a href="#top">Go to top</a>
 </div>
 
-<!------ right side header and body ----------------------------------------------------->
+<!-- right side header and body -->
 <div class="rightSide">
 <a id="top"></a>
 
@@ -48,7 +48,7 @@
 	</table>
  </div>
 
-<!---------------------------- bulk of page ------------------------------------------->
+<!-- =================== bulk of page ======================== -->
 <div class="main">
 
 <p>This webpage provides results from the supplied demo, which
@@ -69,85 +69,84 @@ is used by <a href="SystemGuide.html#demo" target="_blank" class="ext">System Gu
 <table class="tx">
 	<tr><td>&nbsp;<td><small>Click an image to view a closeup.</small>
 	<tr><td style="vertical-align: text-top;">
-	The demo that is provided with the SyMAP tarball has the projects <ttx>demo_seq</ttx>, <ttx>demo_seq2</ttx>
-	and <ttx>demo_draft</ttx>.
-	<p>The project <ttx>demo_draft..demo_seq2</ttx> is created with ordered contigs,
+	The demo that is provided with the SyMAP tarball has the projects <span class="ttx">demo_seq</span>, <span class="ttx">demo_seq2</span>
+	and <span class="ttx">demo_draft</span>.
+	<p>The project <span class="ttx">demo_draft..demo_seq2</span> is created with ordered contigs,
 	as described in <a href="#draft">Draft</a>.
 	<p>This section discusses the
-	<ttx>demo_seq</ttx> to <ttx>demo_seq2</ttx> synteny, which represent complete genome sequences.
+	<span class="ttx">demo_seq</span> to <span class="ttx">demo_seq2</span> synteny, which represent complete genome sequences.
 	<td><a href="img/demoProjects.png">
     	<img src="img/demoProjects.png" alt="demo projects" style="border: 1px solid black; width: 450px"></a>
 </table>
 
 <p>There are a variety of options, as discussed in
 <a href="SystemHelp.html" class="ext" target="_blank">Pair Parameters</a>.
-The following shows the <ttp>Dot Plot</ttp> and <ttp>Summary</ttp> using the following:
+The following shows the <span class="ttp">Dot Plot</span> and <span class="ttp">Summary</span> using the following:
 <p>
 <ul>
-<li><ttl>Cluster Algo1 (original modified)</ttl> or <ttl>Cluster Algo2 (exon-intron)</ttl>: The second
+<li><span class="ttl">Cluster Algo1 (original modified)</span> or <span class="ttl">Cluster Algo2 (exon-intron)</span>: The second
 is recommended when there is good gene annotation provided.
 <p>
-<li><ttl>Synteny Original</ttl> or <ttl>Synteny Strict</ttl>:
+<li><span class="ttl">Synteny Original</span> or <span class="ttl">Synteny Strict</span>:
 The second is recommended for complete genome sequence; it does not perform well for draft.
 </ul>
 <p>
 
 <a id="dot"></a>
 <table class="tx">
-<tr><td colspan="2"><ttl>Cluster Algo1 (original modified)</ttl> and <ttl>Synteny Original</ttl>
+<tr><td colspan="2"><span class="ttl">Cluster Algo1 (original modified)</span> and <span class="ttl">Synteny Original</span>
 <tr><td style="vertical-align: text-top;"><a href="img/demoSum.png">
        <img src="img/demoSum.png" alt="demoSum" style="border: 1px solid black; width: 350px"></a>
      <td style="vertical-align: text-top;"><a href="img/demoDotplot.png">
 	     <img src="img/demoDotplot.png" alt="demoDotplot" style="border: 1px solid black; width: 400px"></a>
 
-<tr><td colspan="2"><ttl>Cluster Algo2 (exon-intron)</ttl> and <ttl>Synteny Strict</ttl>
+<tr><td colspan="2"><span class="ttl">Cluster Algo2 (exon-intron)</span> and <span class="ttl">Synteny Strict</span>
 <tr><td style="vertical-align: text-top;"><a href="img/demoSum2.png">
        <img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 350px"></a>
      <td style="vertical-align: text-top;"><a href="img/demoDotplot2.png">
 	     <img src="img/demoDotplot2.png" alt="demoDotplot2" style="border: 1px solid black; width: 400px"></a>
-<tr><td colspan="2">There is very little difference between the <ttp>Dot Plots</ttp>. The
+<tr><td colspan="2">There is very little difference between the <span class="ttp">Dot Plots</span>. The
 difference in the synteny algorithm are obvious on the more complicated examples, as shown in
 <a href="SystemHelp.html#synResults" target="_blank" class="ext">Synteny Results</a>.
 </table>
 
-<!----------------------------------------------------------->
+<!-- ============================================ -->
 <p>
 <a id="draft"></a> <!-- ref -->
 <h3>Draft: Demo-Draft to Demo-Seq2</h3>
 
 <table style="width: 800px;">
-<tr><td colspan="2">The <tt>Demo-draft</tt> was run against
-the <tt>Demo-Seq2</tt> with its <ttx>order_against</ttx> parameter set to <tt>Demo_Seq2</tt>;
+<tr><td colspan="2">The <span class="ttt">Demo-draft</span> was run against
+the <span class="ttt">Demo-Seq2</span> with its <span class="ttx">order_against</span> parameter set to <span class="ttt">Demo_Seq2</span>;
 this is explained in detail in the <a href="SystemGuide.html#draft" target="_blank" class="ext">System Guide</a>.
 The resulting dot plot is shown on the right. Note that the 43 contigs
 are ordered, but still fragmented.
 <p>
 <tr><td style="vertical-align: text-top;">
-<a href="img/demoSumDraft.png">
+	<a href="img/demoSumDraft.png">
     <img src="img/demoSumDraft.png" alt="demoSumDraft" style="border: 1px solid black; width: 340px"></a>
-<td><a href="img/demoDraft2.png">
+	<td><a href="img/demoDraft2.png">
     <img src="img/demoDraft2.png" alt="demoDraft2" style="border: 1px solid black; width: 400px"></a>
-<tr><td>&nbsp;
-<tr><td colspan=2>When the ordering algorithm is run, it creates a new project called <tt>Demo-Draft.Demo_Seq2</tt>,
+<tr><td>&nbsp;<td>&nbsp;
+<tr><td colspan=2>When the ordering algorithm is run, it creates a new project called
+<span class="ttt">Demo-Draft.Demo_Seq2</span>,
 where the 43 contigs are written into three chromosomes; the first two correspond
-to chr1 and chr3 of <tt>Demo_Seq2</tt>, and chr0 contains the contigs that do not align.
-
-<p>The new project <tt>Demo-Draft.Demo_Seq2</tt>
-was aligned with <tt>Demo_Seq2</tt>, resulting in the dot plot shown on the right.
+to chr1 and chr3 of <span class="ttt">Demo_Seq2</span>, and chr0 contains the contigs that do not align.
+<p>The new project <span class="ttt">Demo-Draft.Demo_Seq2</span>
+was aligned with <span class="ttt">Demo_Seq2</span>, resulting in the dot plot shown on the right.
 <tr><td style="vertical-align: text-top;">
-<a href="img/demoSumOrd.png">
+	<a href="img/demoSumOrd.png">
     <img src="img/demoSumOrd.png" alt="demoSumOrd" style="border: 1px solid black; width: 340px"></a>
-<td><a href="img/demoDraftOrd.png">
+	<td><a href="img/demoDraftOrd.png">
     <img src="img/demoDraftOrd.png" alt="demoDraftOrd" style="border: 1px solid black; width: 400px"></a>
 </table>
 
-<!-------------------------------------------------------------------->
-<!----------------------------------------------------------->
+<!-- ===================================================== -->
 <a id="self"></a> <!-- ref -->
 <h3>Self-synteny: Demo-Seq</h3>
 
 <table class="tx">
-<tr><td colspan="2"><tt>Demo-Seq</tt> has been run against itself.
+<tr><td colspan="2"><span class="ttt">Demo-Seq</span> has been run against itself.
 There are a few blocks, but these blocks are probably too small to be meaningful.
 The blocks below the diagonal are mirrored above
 the diagonal, e.g. 3.5.1 and 5.3.1 are the same.
@@ -157,12 +156,12 @@ the diagonal, e.g. 3.5.1 and 5.3.1 are the same.
 <td><a href="img/demoSelf.png">
     <img src="img/demoSelf.png" alt="demoSelf" style="border: 1px solid black; width: 400px"></a>
 </table>
-<!-------------------------------------------------------------------->
-<!---slog ref'ed----------------------------------------------------------------->
+<!-- ============================================================ -->
+<!---slog ref'ed -->
 <a id="slog"></a>
 <h2>symap.log</h2>
 
-The following 4 sections show the contents of the <ttx>logs/&lt;proj-to-proj&gt;/symap.log</ttx> file:
+The following 4 sections show the contents of the <span class="ttx">logs/&lt;proj-to-proj&gt;/symap.log</span> file:
 <table class="tz"><tr>
 <td><a href="#algo1off">Algo1 !verbose</a>
 <td><a href="#algo1on">Algo1 verbose</a>
@@ -177,11 +176,11 @@ The following 4 sections show the contents of the <ttx>logs/&lt;proj-to-proj&gt;
  Cluster Algo1 (modified original) or Cluster Algo2 (exon-intron)
   Synteny Strict
 </pre>
-The 2 MUMmer files indicates the chromosome were not split and <ttx>Concat</ttx> was
+The 2 MUMmer files indicates the chromosome were not split and <span class="ttx">Concat</span> was
 used. These two facts along with the number of CPUs can make subtle differences in
 the output.
 <p>
-<!-------------------------------------------------------------------->
+<!-- ========================================================== -->
 <a id="algo1off"></a>
 <b>Algo1 !verbose</b>
 
@@ -202,7 +201,7 @@ Finding synteny for demo_seq and demo_seq2
 Finish Synteny                       2s
 </small></pre>
 
-<!-------------------------------------------------------------------->
+<!-- ============================================================== -->
 <a id="algo1on"></a>
 <b>Algo1 verbose</b>
 
@@ -246,7 +245,7 @@ Finding synteny for demo_seq and demo_seq2
            10 Collinear Sets not in blocks (20 total hits)
 Finish Synteny                       2s
 </small></pre>
-<!-------------------------------------------------------------------->
+<!-- =========================================================== -->
 <a id="algo2off"></a>
 <b>Algo2 !verbose</b>
 <pre><small>
@@ -264,7 +263,7 @@ Finding synteny for demo_seq and demo_seq2
 Finish Synteny                       1s
 </small></pre>
 
-<!-------------------------------------------------------------------->
+<!-- =========================================================== -->
 <a id="algo2on"></a>
 <b>Algo2 verbose</b>
 
@@ -303,7 +302,7 @@ Finish Synteny                       1s
 
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
-<!---- END BODY -->
+<!-- END BODY -->
 <p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
 

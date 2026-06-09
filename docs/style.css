@@ -26,8 +26,8 @@
   border-style: solid; border-width: 4px; border-color: #f1f1f1;
   top: 0;
 }
-@media screen and (max-width: 920px) { /* on smallest screens, hide when need scroll bar to see left side */
-  .rightSide {margin-left: 0px}
+@media screen and (max-width: 920px;) { /* on smallest screens, hide when need scroll bar to see left side */
+  .rightSide {margin-left: 0px;}
   .sidenav {width: 0px;}
   .sidenav a {font-size: 0px;}
 }
@@ -51,7 +51,6 @@
 
 /* right side bulk of the text */
 .main {
-
  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px;
 }
 .main a {
@@ -59,45 +58,46 @@
 }
 .main a:hover {
  color: #00008B; 
- 
 }
 .trailer {
 	background-color:#DDDDDD;
 	text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 14px; 
 }
+a.ext {font-weight: bold;} /* class for external html */
 
-a.ext {font-weight: bold;}
+/* <span class="ttp">xxxxx</span> */
+.ttp  {font-family: Arial,    monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
+.ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
+.ttl  {font-family: Serif,    monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
+.ttlb {font-family: Serif,    monospace; font-size: 16px; font-weight: 600; color: DarkSlateGrey;}
+.ttx  {font-family: courier,  monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
+.ttt  {font-family: courier, monospace; font-size: 13px;}
+.small {font-size: 10px;} /* <ol class="small"> */
+.green {color : Green;}   /* <span style="color: Green"> </span> */
+.blue {color : Blue;}
+.red {color : Red;}
 
-ttp  {font-family: Arial, monospace; font-size: 14px; font-weight: 600; color: #556B2F; }
-ttb  {font-family: SanSerif, monospace; font-size: 14px; font-weight: 600; color: #454545;}
-ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
-ttlb  {font-family: Serif, monospace; font-size: 16px; font-weight: 600; color: DarkSlateGrey;}
-ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
-tt   {font-size:13px; }
-pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}
-ul   {margin-top: 0; }
-p    {margin-bottom: 0; }
+pre  {font-size: 13px; margin-top: 0;padding: 0px 12px 0px 12px;}  /* top, right, bottom, left */
+p    {margin-bottom: 0;}
+
+ul   {margin-top: 0; } 				/* can use <ul style="margin-bottom: 0.25rem"> works better */
+.tight li {margin-bottom: 0.25rem;} /* <ul class="tight"> */
+.left  li {padding-left: 30px;} 	/* browsers use 40px by default */
+
+.tz {width: 90%; background-color:#f1f1f1; margin-left: auto; margin-right: auto;} /* vertical contents table; <table class="tz"> */
     
-.tz {width: 90%; background-color:#f1f1f1; margin-left: auto; margin-right: auto;} /* contents table */
-  
-.tx td {padding: 5px; border: none;}				/* table without border */
+table {border-collapse: collapse}   /* all tables have collapse border */  
+.tx td {border: none; padding: 5px; }				    /* table without border */
+.ty td {border: 1px solid black; padding: 4px; border-spacing: 1px; } /* table with border */
+.tq td {padding-top: 2px; padding-bottom: 2px; padding-left: 10px; padding-right: 10px;} /* reduce spacing */
 
-.ty    {border: 1px  solid black; border-spacing: 1px;  border-collapse: collapse;}/* table with border */
-.ty td {border: 1px  solid black; padding: 8px; }
-
-.tq table {border: 1px  solid black; border-spacing: 1px; border-collapse: collapse; width: 100%;}
-.tq td {padding-top: 1px; padding-bottom: 1px; padding-left: 10px; padding-right: 10px;} /* reduce spacing */
-
-.center {margin-left: auto; margin-right: auto;}
-.colrt {text-align: right;}
+.center {margin-left: auto; margin-right: auto;} /* or <td style="text-align: center">, also <p>,<div>; <table class="center">*/
+.colrt  {text-align: right;}
 .coltop {vertical-align: text-top;}
-.colnp {white-space: nowrap;}
+.colnp  {white-space: nowrap;}
 
 .hanging-indent {
-  /* Indent all lines by 2em first */
-  text-indent: -2em;
-  /* Then pull the first line back by the same amount */
-  margin-left: 2em;
-  /* Add margin to the container so the text is not flush with the edge */
-  padding-left: 1em;
+  text-indent: -2em; /* Indent all lines by 2em first */
+  margin-left: 2em;  /* Then pull the first line back by the same amount */
+  padding-left: 1em; /* Add margin to the container so the text is not flush with the edge */
 }

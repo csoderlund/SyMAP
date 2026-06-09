@@ -1,20 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP Seq-FPC</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	.ty    {border: 1px  solid black; border-spacing: 0px;  border-collapse: collapse;}
-    .ty td {border: 1px  solid black; padding: 3px; }
-    tt {font-size:13px}
-	pre {font-size:13px}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../style1st.css">
 </head>
 
 <body>
@@ -56,13 +45,12 @@
 		</table>
 	</td></tr>
 
-	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-	<!---- START BODY -->
+<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
+<!-- START BODY -->
 This guide provides detailed FPC-to-Seq instructions for the SyMAP <b>2D</b> user interface, which
-overlaps with information from <a href=../UserGuide.html class="ext" target="_blank">User Guide</a> .
+overlaps with information from <a href="../UserGuide.html" class="ext" target="_blank">User Guide</a> .
 It is suggested you use release v5.0.8 from
-<a href="https://github.com/csoderlund/SyMAP/releases">SyMAP releases</a>, which is the last release to support FPC.
-
+<a href="../Release.html"  class="ext" target="_blank">SyMAP releases</a>, which is the last release to support FPC.
 
 <h2>Contents</h2>
 <ul>
@@ -80,8 +68,7 @@ It is suggested you use release v5.0.8 from
 <h2>2D Display</h2>
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 
-The 2D display is activated from the Explorer by<a href=UserGuideFPC.html>FPC User Guide</a>
-clicking the <b>2D</b> button,
+The 2D display is activated from the Explorer by  clicking the <b>2D</b> button,
 or by selecting a block in the Dot Plot.
 <p>
 
@@ -116,25 +103,24 @@ The control panel provides buttons that allow for navigation between views, scal
 <p>
 
 <b>History (Home, &lt;, &gt;)</b> SyMAP retains a record of the prior views (like a web browser).
-The history navigation back (<b><big>&lt;</big></b>) and
-forward (<b><big>&gt;</big></b>) buttons allow you to
+The history navigation back (<span class="ttb">&lt;</span>) and
+forward (<b><span class="ttb">&gt;</span></b>) buttons allow you to
 move back and forth through the previous views.
 The <b>Home</b> button returns to the initial view.
 <p>
 
 <b>Zoom Buttons (-, +)</b>
 The zoom buttons allow for quickly expanding and narrowing the view region.
- The minus (<b><big>-</big></b>) button shrinks the view region by 50%, keeping
-the same center, while the plus (<b><big>+</big></b>) button doubles the view region,
+ The minus (<b><span class="ttb">-</span></b>) button shrinks the view region by 50%, keeping
+the same center, while the plus (<b><span class="ttb">+</span></b>) button doubles the view region,
 again keeping the same center.
 <p>
 
 <b>Scale Button</b>
 The Scale button
-(right of <b><big>+</big></b>) resizes the tracks so that they are in the same scale
+(right of <b><span class="ttb">+</span></b>) resizes the tracks so that they are in the same scale
 (base pairs per pixel) as the reference sequence track in the view.
 <p>
-
 
 <a id="mouse_function_selector"></a>
 <b>Mouse Function Selector</b>
@@ -169,8 +155,6 @@ click and drag actions:
 </table>
 
 <p>
-
-
 <a id="main"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h3>Tracks in Main Panel</h3>
@@ -196,7 +180,7 @@ and the coordinates of the displayed region are indicated above and below the tr
 Annotation data of the following types may be loaded into SyMAP and displayed.
 (Note that display colors <a href="#control">can be changed</a>.)
 <p>
-<table class="ty" style="border-spacing: 5px;  width">
+<table class="ty" style="border-spacing: 5px;">
 	<tr>
 		<td><i>Annotation Type</i></td>
 		<td><i>How Displayed</i></td>
@@ -239,7 +223,7 @@ predictions; the annotation file included both genes and exons.
 </ul>
 <table><tr>
 <td style="vertical-align: text-top;">
-<ul>
+<ul><li>
 The alternating brown/gray lines indicate anchor clusters. The solid brown lines indicate
 a single anchor (or multiple anchors very close together), while the gray lines are spaces with no alignment.
 <p>
@@ -256,7 +240,6 @@ annotation may be seen by choosing "Show Description for Annotations" from the S
 </td></tr></table>
 
 <p>
-
 <a id="sequence_filter"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
 <h4>Sequence Filter</h4>
@@ -290,7 +273,6 @@ rectangles) along the sequence.
 
 <td><a href="img/sequencefilter.png"><img src="img/sequencefilter.png" alt="sequencefilter" style="border: 1px solid black; width: 300px"></a>
 </table>
-
 
 <p>
 <b>Show Gaps</b> Enables/disables the display of sequence gaps (drawn as solid red
@@ -466,7 +448,7 @@ Markers are colored based on their hit information and if they are shared.
 <tr><td>Current Hits</td><td style="background-color:#149646"></td><td style="background-color:#0000FF"></td></tr>
 </table>
 <p>
-<table class="ty" style="border: 1px solid black; border-collapse: collapse; font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
+<table style="border: 1px solid black; border-collapse: collapse; font-family: Verdana, Arial, Helvetica, sans-serif; font-size:9pt">
 <tr>
 	<td><b>Select Marker</b></td>
 	<td>Left mouse button</td>
@@ -633,14 +615,14 @@ hits. Genes that overlap this gene will be partially shown.
 <ul>
 <li>If contigs are not anchored to chromosome, they will be on chromosome 0. If chromosome 0 is part of any blocks, they are only be shown on the block display.
 <li>The block display only shows the FPC chromosomes aligned to the sequence chromosomes; the reverse does not work.
-<li>The Colors (see Color Wheel on top right of 2D display) can only be changed on the <ttl>Chromosome Explorer</ttl>,
-but any changes there will also be reflected when viewing a 2D display from the <ttl>Dot Plot</ttl> or <ttl>Block View</ttl>.
+<li>The Colors (see Color Wheel on top right of 2D display) can only be changed on the <span class="ttl">Chromosome Explorer</span>,
+but any changes there will also be reflected when viewing a 2D display from the <span class="ttl">Dot Plot</span> or <span class="ttl">Block View</span>.
 </ul>
-	<!---- END BODY -->
-	</td></tr>
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
-                        Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>
 
+<!-- END BODY -->
+</td></tr>
+<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+                  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>
 </td></tr>
 </table>
 </body>

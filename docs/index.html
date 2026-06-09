@@ -1,18 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP</title>
-<style>
-	a:link {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:visited {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a:active {color:#6666CC;text-decoration: none; background-color: transparent;}
-	a.current {font-family:verdana; font-size:12px; color:white; text-decoration: none;}
-	a.white {font-family:verdana; font-size:12px; color:white; text-decoration: underline;}
-	a.ext {font-weight: bold;}
-	mark.white {font-family:verdana; font-size:12px; color:white;background:none;}
-	body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }
-	ttt {font-family: Verdana, Arial, Helvetica, sans-serif; color="#000000"; font-size: 13px;}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style1st.css">
 </head>
 
 <body>
@@ -53,10 +44,11 @@
 				</table>
 		</table>
 	<tr><td style='vertical-align: top; text-align: left; padding:15px;'>
-<!---- START BODY -->
+<!-- START BODY -->
 <div style="width:95%;  margin-left:15px;">
 SyMAP (<u>Sy</u>nteny <u>M</u>apping and <u>A</u>nalysis <u>P</u>rogram) is a software package for
 detecting, displaying, and querying syntenic relationships between sequenced genomes.
+<p>
 <ul>
 	<li>It is designed for divergent eukaryotic genomes (not bacteria).
 	<li>For gene synteny and fast computation, have SyMAP mask the non-genic sequence.
@@ -74,28 +66,28 @@ detecting, displaying, and querying syntenic relationships between sequenced gen
 			<tr><td>&nbsp;<img src="./img/bullet.gif" alt="" style="height: 8px; width: 8px;">
 				<td><a href="https://github.com/csoderlund/SyMAP/releases" class="ext" target="_blank">symap_5.tar.gz</a>
 			<tr><td>&nbsp;
-				<td><ttt> - Executable and demo files</ttt>
-			<tr><td colspan="3">&nbsp;
+				<td><span class="ttt"> - Executable and demo files</span>
+			<tr><td colspan="2">&nbsp;
 			<tr><td colspan="2"><b>Documentation</b>
 			<tr><td>&nbsp;<img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
-				<td><ttt><a href="./Docs.html">Index of Docs</a></ttt>
+				<td><span class="ttt"><a href="./Docs.html">Index of Docs</a></span>
 			<tr>
 				<td>&nbsp;<img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
 				<td>
-				<ttt><a href="./SystemGuide.html">System Guide</a> -  Build synteny</ttt>
+				<span class="ttt"><a href="./SystemGuide.html">System Guide</a> -  Build synteny</span>
 			<tr>
 				<td>&nbsp;<img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
-				<td> <ttt><a href="./UserGuide.html">User Guide</a> - View synteny</ttt>
+				<td> <span class="ttt"><a href="./UserGuide.html">User Guide</a> - View synteny</span>
 			<tr>
 				<td>&nbsp;<img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
-				<td> <ttt><a href="./Tour.html">SyMAP Tour</a></ttt>
+				<td> <span class="ttt"><a href="./Tour.html">SyMAP Tour</a></span>
 
-			<tr><td colspan="3">&nbsp;
+			<tr><td colspan="2">&nbsp;
 			<tr>
 			   <td colspan="2"><b>Also see</b>
 			<tr>
 			  <td>&nbsp;<img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
-			  <td><ttt><a href="https://csoderlund.github.io/TCW/">TCW</a>: Comparative transcriptomes</ttt>
+			  <td><span class="ttt"><a href="https://csoderlund.github.io/TCW/">TCW</a>: Comparative transcriptomes</span>
 		</table>
 	<td><small>Click an image to see the closeup.</small>
 		<table>
@@ -119,31 +111,30 @@ detecting, displaying, and querying syntenic relationships between sequenced gen
 <div style="width:95%;  margin-left:15px;">
 <table>
 	<tr><td> <img src="./img/usda.jpg" alt="" style="height: 30px; width: 158px;border: 1px solid black;">
-		<td><ttt>This project was partially supported by the National Research Initiative of USDA's National
-		Institute of Food and Agriculture, grant #0214643.</ttt>
+		<td><span class="ttt">This project was partially supported by the National Research Initiative of USDA's National
+		Institute of Food and Agriculture, grant #0214643.</span>
 	<tr><td colspan="2"><img src="./img/bullet.gif"  alt="" style="height: 8px; width: 8px;">
-	<ttt><i>All upgrades since release 7-Nov-2016 have been developed by Cari Soderlund without funding.</i>
+	<span class="ttt"><i>All upgrades since release 7-Nov-2016 have been developed by Cari Soderlund without funding.</i>
 	<br>SyMAP was originally written for diverse plant genomes with short introns, but has been modified to work
-for the long introns of mammalian genomes, and less diverse genomes.</ttt>
+for the long introns of mammalian genomes, and less diverse genomes.</span>
 </table>
 
 <hr>
-<ttt> <b>Publications</b>
-		<p>
+<b>Publications</b>
+		<p><span class="ttt">
 		C. Soderlund, M. Bomhoff, and W. Nelson (2011) SyMAP v3.4: a turnkey synteny system with
 		application to plant genomes <i>Nucleic Acids Research</i> 39(10):e68
 		<a href="http://nar.oxfordjournals.org/content/39/10/e68" target="_blank" class="ext">Link</a>
-		<p>
+		</span>
+		<p><span class="ttt">
 		C. Soderlund, W. Nelson, A. Shoemaker and A. Paterson (2006) SyMAP: A system for
 		discovering and viewing syntenic regions of FPC maps. Genome Research 16:1159-1168.
 		<a href="http://genome.cshlp.org/content/16/9/1159.abstract" target="_blank" class="ext">Link</a>
-</ttt>
+	</span>
 </div>
- <!---- END BODY -->
-
-	<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
+ <!-- END BODY -->
+<tr><td style="background-color: #DDDDDD; text-align: center; padding: 0; font-family: Verdana, Arial; font-size: 12px;">
                         Email: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>
-
 </table>
 </body>
 </html>
