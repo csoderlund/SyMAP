@@ -11,17 +11,23 @@
 <div class="sidenav">
 <a href="https://csoderlund.github.io">
 		<img src="../img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
-<p class=sidetit>&nbsp;&nbsp;Input</p>
-<p>
+<div class=sidetit>&nbsp;&nbsp;Input</div>
 <a href="#seqprep">Sequence files</a>
 <a href="#annot">Annotation files</a>
 <a href="#dir">Location of files</a>
 <a href="#if">xToSymap</a>
+<a href="#if">&nbsp;&nbsp;Interface</a> <!-- ref# in code -->
+<a href="#sf">&nbsp;&nbsp;Summarize</a>
+<a href="#convert">&nbsp;&nbsp;Convert</a>
+<a href="#ol">&nbsp;&nbsp;Lengths</a>
+<a href="#sp">&nbsp;&nbsp;Split</a>
 <a href="./ncbi.html" class="ext" target="_blank">NCBI</a>
 <a href="./ensembl.html" class="ext" target="_blank">Ensembl</a>
 <a href="./Other.html" class="ext" target="_blank">Other</a>
 <a href="#gen">General</a>
-<p>&nbsp;
+<a href="#tg">&nbsp;&nbsp; Tested Genomes</a>
+<a href="#second">&nbsp;&nbsp; Secondary name</a>
+<a href="#edit">&nbsp;&nbsp; Edit</a>
 <a href="#top">Go to top</a>
 </div>
 
@@ -86,9 +92,9 @@
 <td style="vertical-align: text-top;">
    <table>
    <tr><td>&nbsp;&nbsp;<td><u>General</u>
-   <tr><td>&nbsp;&nbsp;<td> <a href="#second">Secondary name</a>
-    <tr><td>&nbsp;&nbsp;<td> <a href="#orig">Loading the original files</a>
    <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td> <a href="#tg">Tested Genomes</a>
+   <tr><td>&nbsp;&nbsp;<td> <a href="#orig2">Loading the original files</a>
+    <tr><td>&nbsp;&nbsp;<td> <a href="#second">Secondary name</a>
    <tr><td>&nbsp;&nbsp;<td> <a href="#edit">Editing the convert scripts</a>
    </table>
 </table>
@@ -107,16 +113,16 @@ The input is one or more FASTA files of sequences (genome, scaffold, contig), wi
 annotation file(s).
 <p>
 <ul>
-<li>As of v5.5.7, many NCBI and Ensembl files can be loaded directly, though variations could limit some.
-See <a href="#tg">Tested genomes</a> for results on loading the files directly.
+<li>As of v5.5.7, NCBI and Ensembl files can be loaded directly.
+See <a href="#orig2">Tested genomes - Load Originals</a> for what NCBI/Ensembl species original files
+did not work and why.
 <p>
 <li><span class="ttp">xToSymap</span> converts the NCBI and Ensembl files to a format friendly to <span class="ttp">symap</span>;
 i.e. <i>it is superior</i> than directly loading the files;
 see <a href="./ncbi.html" class="ext" target="_blank">NCBI</a> and <a href="./ensembl.html"  class="ext" target="_blank">Ensembl</a>.
 If you are using files from another source, see <a href="./other.html" class="ext" target="_blank">Other</a>.
 <p>
-<li>The documentation and SyMAP interface assumes a knowledge of the Linux directory (folder) structure, as
-used by a terminal application.
+<li>The documentation and SyMAP interface assumes a knowledge of the Linux directory (folder) structure.
 </ul>
 
 <a id="seqprep"></a> <!-- accessed in SystemHelp -->
@@ -129,34 +135,34 @@ A header line, which starts with a "&gt;", occurs before the sequence, e.g.
   AATCCCTAAATACCTAAttccctaaacccgaaaccggTTTCTCTGGTTGAAAATCATTGTGtatataatgataattttat...
 </pre>
 The first word (<span class="ttt">Chr01</span>) is used as the sequence identifier (<span class="ttx">seqid</span>) in <span class="ttp">symap</span>.
-If the <span class="ttx">seqid</span> is &gt;20 characters, the sequence will be ignored.
+If the <span class="ttx">seqid</span> is &gt;20 characters, it will be truncated to 20 characters.
 The second word is the secondary name (<span class="ttt">NC_003070.9</span>),
 see <a href="#second">Secondary name</a>.
 
 <a id="seqid"></a>
 <h4>Identifier (seqid)</h4>
 <i>Important points in naming sequences for SyMAP</i>:
-<table style="margin-left:10px;margin-top:5px;padding:5px">
+<table class="tx">
    <tr><td style="vertical-align: text-top;">A.
       <td style="vertical-align: text-top;">
-         Sequence identifiers <u>can only contain</u> letters, numbers, underscores "_", dash "-" or period ".".
+         Sequence identifiers (<span class="ttx">seqid</span>) <u>can only contain</u> letters, numbers, underscores "_", dash "-" or period ".".
          This is in contrast with names allowed in
          <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 files</a>,
          which allows the <span class="ttx">seqid</span> to contain the additional characters of [:^*$@!+?|].
-         The sequence identifier (<span class="ttx">seqid</span>) must be renamed if it contains any of these characters.
+         The <span class="ttx">seqid</span> must be renamed if it contains any of these characters.
    <tr><td style="vertical-align: text-top;">B.
       <td style="vertical-align: text-top;">
-         The sequence identifiers <u>must <i>exactly</i> </u>match those
+         The <span class="ttx">seqid</span>  <u>must <i>exactly</i> </u>match those
          used in the annotation files (first column), or the annotations will not be loaded.
    <tr><td style="vertical-align: text-top;">C.
       <td style="vertical-align: text-top;">
-         Use a consistent prefix such as "Chr" for all sequences,
+         Use a consistent <span class="ttx">seqid</span>  prefix such as "Chr" for all sequences,
          then set <span class="ttl">Group prefix</span> to the prefix in project's
          <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Parameter</a> panel.
    <tr><td style="vertical-align: text-top;">D.
       <td style="vertical-align: text-top;">
-         If there is not a consistent prefix, you may leave the <span class="ttl">Group prefix</span> blank;
-         beware, this can have unintended results, so should be avoided if possible.
+         If there is not a consistent <span class="ttx">seqid</span>  prefix (e.g. there are chromosomes and scaffolds, each of which
+         has a different prefix), you may leave the <span class="ttl">Group prefix</span> blank.
          <u><i>Make the names short</i></u> so they will not clutter the display. You may
          need to rename your sequence, in which case, it must be done in the FASTA
          and GFF files.
@@ -165,7 +171,7 @@ see <a href="#second">Secondary name</a>.
          The <span class="ttp">xToSymap</span>
          <a href="./ncbi.html" class="ext" target="_blank">NCBI</a>
         and <a href="./ensembl.html" class="ext" target="_blank">Ensembl</a> conversion programs
-        will create a short name for the sequences and provide the renaming in both
+        will create a short <span class="ttx">seqids</span> and provide the renaming in both
         the FASTA and GFF files. One of these programs may also work for files created elsewhere;
         see <a href="./other.html" class="ext" target="_blank">Other inputs</a>.
 </table>
@@ -188,10 +194,8 @@ Masking is not really necessary unless the genome is highly repetitive
 <i>and</i> those repeats are shared with other genomes being aligned.
 <p>
 <li>Occasionally, MUMmer fails aligning sequences, which can be resolved by masking the
-sequence
-(see <a href="../MUMmer.html" class="ext" target="_blank">MUMmer</a>,
-which explains detection and solutions
-for known reasons for failure).
+sequence;  the SyMAP webpage <a href="../MUMmer.html" class="ext" target="_blank">MUMmer</a> explains MUMmer
+failures and how to fix them.
 </ul>
 <p>
 <i>Mask genes:</i>
@@ -222,57 +226,67 @@ which is a tab-delimited file of 9 columns.
      <td>The first column must exactly match the sequence identifier in the FASTA files.
 <tr><td  style="vertical-align: text-top;"><span class="ttx">Type</span>
     <td>The third column determines how SyMAP uses the entry.
-	<br>Only types <span class="ttx">gene</span>, <span class="ttx">mRNA</span>, <span class="ttx">exon</span>, <span class="ttx">gap</span> or <span class="ttx">centromere</span> are recognized.
+	<br>Only types <span class="ttx">gene</span>, <span class="ttx">mRNA</span>, <span class="ttx">exon</span>,
+	<span class="ttx">CDS</span>, <span class="ttx">gap</span> and <span class="ttx">centromere</span> are recognized.
 <tr><td  style="vertical-align: text-top;"><span class="ttx">Attribute</span>
     <td>The last column contains "keyword=value" pairs describing the annotation.
 	<table>
-		<tr><td style="vertical-align: text-top;">a. <td>The genes/mRNAs <i><u>must</u></i> have a <span class="ttx">ID=</span> keyword,
-		and your mRNAs/exons <i><u>must</u></i> have a <span class="ttx">Parent=</span> keyword.
+		<tr><td style="vertical-align: text-top;">a.
+		<td>The genes and mRNAs <i><u>must</u></i> have a <span class="ttx">ID=</span> keyword.
+		The mRNAs, CDS, and exons <i><u>must</u></i> have a <span class="ttx">Parent=</span> keyword.
 		<tr><td style="vertical-align: text-top;">b.
+		<td>The file can have both exons and CDSs, where exons are loaded into the database by default. To load the CDSs instead,
+		start <span class="ttx">symap</span> with the <span class="ttx">-cds</span> flag.
+		<tr><td style="vertical-align: text-top;">c.
 		<td>For genes, by default all attributes are saved in the database for viewing.
 		You can set which attributes keywords to save by opening the
 		<a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Project Parameter</a> panel
 		and entering them for the parameter <span class="ttx">Anno keywords</span>.
 	</table>
 <tr><td  style="vertical-align: text-top;"><span class="ttl">Order</span>
-	<td>Each mRNA and its exons must come after the parent gene and before the next gene.
-	<br>The mRNA must be before its exons, but it is okay if all the mRNAs for a gene are listed first.
+	<td>Each mRNA and its exons/CDS must come after the parent gene and before the next gene.
+	<br>The mRNA must be before its exons/CDS, but it is okay if all the mRNAs for a gene are listed first.
 	<br>Exons are entered in the order they are found; they must be either ascending or descending.
 </table>
 <br>
-For example (extracted from Ensembl gff3 file):
+For example, the following is from a Ensembl gff3 file:
 <pre>
 <small>
-1   araport11   gene   11649   13714   .   -   .   ID=gene:AT1G01030;Name=NGA3;....
-1   araport11   mRNA   11649   13714   .   -   .   ID=transcript:AT1G01030.2;Parent=gene:AT1G01030....
-1   araport11   three_prime_UTR   11649   11863   .   -   .   Parent=transcript:AT...
-1   araport11   exon   11649   12354   .   -   .   Parent=transcript:AT1G01030.2....
-1   araport11   CDS   11864   12354    .   -   2   ID=CDS:AT1G01030.2;Parent=transc...
-1   araport11   CDS   12424   12940    .   -   0   ID=CDS:AT1G01030.2;Parent=transc...
-1   araport11   exon   12424   13173   .   -   .   Parent=transcript:AT1G01030.2....
-1   araport11   five_prime_UTR   12941   13173   .   -   .   Parent=transcript:AT...
-1   araport11   exon   13335   13714   .   -   .   Parent=transcript:AT1G01030.2....
-1   araport11   five_prime_UTR   13335   13714   .   -   .   Parent=transcript:AT...
-1   araport11   mRNA   11649   13714   .   -   .   ID=transcript:AT1G01030.1;Parent=gene:AT1G01030....
-1   araport11   three_prime_UTR   11649   11863   .   -   .   Parent=transcript:AT...
-1   araport11   exon   11649   13173   .   -   .   Parent=transcript:AT1G01030.1....
-1   araport11   CDS   11864   12940    .   -   0   ID=CDS:AT1G01030.1;Parent=transc...
-1   araport11   five_prime_UTR   12941   13173   .   -   .   Parent=transcript:AT...
-1   araport11   exon   13335   13714   .   -   .   Parent=transcript:AT1G01030.1....
-1   araport11   five_prime_UTR   13335   13714   .   -   .   Parent=transcript:AT...
+1 araport11  gene	3631	5899	.	+	.	ID=gene:AT1G01010;Name=NAC001;biotype=protein_coding;description=NAC domain containing protein 1 [Source....
+1 araport11  mRNA	3631	5899	.	+	.	ID=transcript:AT1G01010.1;Parent=gene:AT1G01010;Name=NAC001-201;biotype=protein_coding;tag=Ensemb...
+1 araport11  five_prime_UTR	3631	3759	.	+	.	Parent=transcript:AT1G01010.1
+1 araport11  exon	3631	3913	.	+	.	Parent=transcript:AT1G01010.1;Name=AT1G01010.1.exon1;constitutive=1;ensembl_end_phase=1;ensembl_p...
+1 araport11  CDS	3760	3913	.	+	0	ID=CDS:AT1G01010.1;Parent=transcript:AT1G01010.1;protein_id=AT1G01010.1
+1 araport11  exon	3996	4276	.	+	.	Parent=transcript:AT1G01010.1;Name=AT1G01010.1.exon2;constitutive=1;ensembl_end_phase=0;ensembl_p...
+1 araport11  CDS	3996	4276	.	+	2	ID=CDS:AT1G01010.1;Parent=transcript:AT1G01010.1;protein_id=AT1G01010.1
+etc
 </small>
 </pre>
-
-For the above example, the following information will be saved in the SyMAP database:
+For the above example, the <span class="ttp">xToSymap</span> converted file will contain:
 <pre>
 <small>
-1   gene   11649   13714   ID=AT1G01030;Name=NGA3;rnaID=AT1G01030.2;desc=....
-1   exon   11649   12354
-1   exon   12424   13173
-1   exon   13335   13714
+Chr01   araport11       gene    3631    5899    .       +       .       ID=AT1G01010;Name=NAC001;desc=NAC domain containing protein 1;rnaID=AT1G01010.1 (1);
+Chr01   araport11       mRNA    3631    5899    .       +       .       ID=AT1G01010.1;Parent=AT1G01010;tag=Ensembl_canonical
+Chr01   araport11       exon    3631    3913    .       +       .       Parent=AT1G01010.1
+Chr01   araport11       exon    3996    4276    .       +       .       Parent=AT1G01010.1
+Chr01   araport11       CDS     3760    3913    .       +       0       Parent=AT1G01010.1
+Chr01   araport11       CDS     3996    4276    .       +       2       Parent=AT1G01010.1
+etc
 </small>
 </pre>
-
+The following will be loaded into the SyMAP database, where only the exons from the longest mRNA are loaded:
+<pre>
+<small>
+1  gene	3631	5899	+	ID=gene:AT1G01010;Name=NAC001;desc=NAC domain containing protein 1
+1  exon	3631	3913	Parent=AT1G01010
+1  exon	3996	4276	Parent=AT1G01010
+etc
+</small>
+</pre>
+Note: as of v5.8.6, the <span class="ttp">xToSymap</span> conversion programs include CDS coordinates
+in the converted <span class="ttt">.gff/.gff3</span> files. If you start <span class="ttx">symap</span> with the <span class="ttx">-cds</span> option,
+the CDS coordinates will be loaded instead of the exons; the only evidence that they were used is on the
+project's <a href="img/viewB.png">View</a> panel.
 <hr>
 <!-- ===================================================== -->
 <a id="dir"></a>
@@ -283,7 +297,7 @@ For the above example, the following information will be saved in the SyMAP data
 <ul>
 <li>The <span class="ttx">project-name</span> should be a short descriptive name
 containing only alphanumeric characters, periods, underscores and hyphens; do not use symbols like %, $, spaces, etc.
-The names are case-sensitive, so you cannot have "Mus" and "mus" for two different projects.
+The names are case-sensitive, e.g. you cannot use "Mus" and "mus" for two different projects.
 <p>
 <li>The <span class="ttx">project-name</span> is the same as the <span class="ttx">directory name</span> for the project, i.e.
 <br>&nbsp;&nbsp;&nbsp;<span class="ttt">data/seq/&lt;project-name&gt;</span>
@@ -291,7 +305,7 @@ The names are case-sensitive, so you cannot have "Mus" and "mus" for two differe
 <li>The <span class="ttx">project-name</span> is used in the <span class="ttt">data/seq_results</span> directory name and  MUMmer output file names.
 <br>For example, the alignments between <span class="ttx">project-names</span> <span class="ttt">demo_seq</span> and <span class="ttt">demo_seq2</span> are in the directory
 <br>&nbsp;&nbsp;&nbsp;<span class="ttt">data/seq_results/demo_seq_to_demo_seq2</span>
-<br>and the MUMmer results file are named using it, e.g.
+<br>and the MUMmer results file are named using it,
 <br>&nbsp;&nbsp;&nbsp;<span class="ttt">demo_seq_f2.demo_seq_f1.mum</span>.
 <p>
 <li><i>You should not rename this directory</i> after the data is loaded into SyMAP! However, you can
@@ -329,7 +343,8 @@ Move your FASTA file(s) to <span class="ttt">data/seq/&lt;project-name&gt;/seque
 and your optional GFF files(s) to <span class="ttt">data/seq/&lt;project-name&gt;/annotation</span>
 (e.g. <span class="ttt">data/seq/foobar/annotation</span>)
 <p>
-<li><i><span class="ttp">xToSymap</span></i>: This program puts the files in the <i>default</i> locations;
+<li><i>Use xToSymap</i>: If you use this program to convert your NCBI or Ensembl files,
+it automatically puts the files in the default locations;
 see <a href="#if">xToSymap</a>.
 <p>
 <li><i>Link</i>: Create these sub-directories under <span class="ttt">/data/seq</span> and use soft links to point to the file locations,
@@ -345,7 +360,7 @@ see <a href="#if">xToSymap</a>.
 <ul>
 <li>Use the <span class="ttb">Add project</span> button on the <span class="ttp">symap</span>
 interface (lower-left corner; see <a href="../SystemGuide.html#intro" target="_blank" class="ext">Manager</a>).
-This add the <span class="ttx">project name</span> to the <span class="ttt">data/seq</span> directory.
+This will add the <span class="ttx">project name</span> to the <span class="ttt">data/seq</span> directory.
 <li>Use the <a href="../SystemHelp.html#projParams" class="ext" target="_blank">project's parameter</a>
 panel to enter the location of the sequences and optional annotation files into the <span class="ttx">Sequence files</span>
 and <span class="ttx">Anno files</span> parameters.
@@ -387,27 +402,17 @@ Once loaded, the <u>View</u> option will be present. <i>Always check the results
    <td class="colrt"><a href="#top">Go to top</a>
 </table>
 <p>
-<br><span class="ttp">xToSymap</span> was added to the SyMAP tar file in release v5.5.7 and updated in v.5.5.8.
+<br><span class="ttp">xToSymap</span> is in the SyMAP tar file. <span class="ttp">xToSymap</span>
+was last updated v.5.8.6.
 <p>
 <a id="ifi"></a>
 <table>
 	<tr><td style="vertical-align: text-top;">
 	<p><span class="ttl">Project Directory</span>: All options and function buttons will be disabled until a project directory is selected.
 
-	<p>The options <span class="ttl">Converted</span>, <span class="ttb">Lengths</span> and <span class="ttb">Split</span> are
+	<p>The option <span class="ttl">Converted</span> and functions <span class="ttb">Lengths</span> and <span class="ttb">Split</span> are
 	disabled when there is no <span class="ttx">/sequence</span> sub-directory, which is created when  <span class="ttb">Convert</span>
 	is executed.
-	<p><span class="ttb">Convert</span> options:
-	<ul style="margin: 0px 5px 0px 0px;">
-	<li>When <span class="ttl">NCBI</span> is selected, all the options relevant to it will be enabled.
-	Similarly for <span class="ttl">Ensembl</span>.
-	<li><span class="ttl">NCBI</span> has the <span class="ttl">Hard Mask</span> option and <span class="ttl">Ensembl</span> has the <span class="ttl">Only #,X,Y,I</span>
-	option.
-	<li>The rest of the options work for both.
-	<li>See <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
-			and <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a>
-			for a description of the options.
-	</ul>
 
 	<td><a href="img/toSymap.png"><img src="img/toSymap.png" alt="" style="border: 1px solid black; width: 360px"></a>
 </table>
@@ -438,8 +443,9 @@ Perform the following steps:
 	<td>Splits the converted file <span class="ttx">genomic.fna</span> and <span class="ttx">anno.gff</span> into a file per chromosome.
 </table>
 
-<br><span class="red">NOTE</span>: The NCBI and Ensembl files have variations and I may not have accounted for them all.
-If <span class="ttb">Convert</span> does not work as you wish, the files <span class="ttt">ConvertNCBI.java</span> and <span class="ttt">ConvertEnsembl.java</span>
+<br><span class="red">NOTE</span>: The NCBI and Ensembl files have variations that I may not have accounted for.
+If <span class="ttb">Convert</span> does not work as you wish, the files
+<span class="ttt">scripts/ConvertNCBI.java</span> and <span class="ttt">scripts/ConvertEnsembl.java</span>
 are available for <a href="#edit">Edit</a>.
 <p>
 
@@ -452,19 +458,19 @@ to process, in the following order (this assumes a <span class="ttl">project nam
 <ol>
 <li>Directly under the project's directory, e.g.
 <pre>
- symap_5/data/seq/cabb
+ symap_5/data/seq/CabbE
     Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz
     Brassica_oleracea.BOL.59.gff3.gz
 </pre>
 <li>The project's <span class="ttt">ncbi_datasets/data/&lt;sub-directory&gt;</span>, e.g.
 <pre>
- symap_5/data/seq/cabb/data/seq/ncbi_dataset/data/GCF_000695525.1
+ symap_5/data/seq/CabbN/data/seq/ncbi_dataset/data/GCF_000695525.1
     GCF_000695525.1_BOL_genomic.fna
     genomic.gff
 </pre>
 <li>The project's sub-directories <span class="ttt">/sequence</span> and <span class="ttt">/annotation</span>, e.g
 <pre>
- symap_5/data/seq/cabb
+ symap_5/data/seq/Cabb
     sequence/
        genomic.fna
     annotation/
@@ -477,95 +483,95 @@ The FASTA file must end in .fas, .fa, .fna, .fasta, .seq (with optional .gz).
 <a id="sf1"></a>
 <p><span class="ttb">Summarize</span> with <span class="ttl">Converted</span> assumes there are converted files.
 
-<p>The following is an example terminal and log file output:
+<p>The following is an example terminal and log file output with <span class="ttl">Verbose</span>:
 <p>
-
 <pre>
------- Summary for ./data/seq/cabbN ------
-Log file to  ./data/seq/cabbN/xSummary.log
-Sequence directory: ./data/seq/cabbN/ncbi_dataset/data/GCF_000695525.1      29-Jul-2024 10:16
-   GCF_000695525.1_BOL_genomic.fna
-Annotation directory: ./data/seq/cabbN/ncbi_dataset/data/GCF_000695525.1
-   genomic.gff
+<small>
+------ Summary for ./data/seq/cabbN on 09-Jul-26 ------
+Summary file: ./data/seq/cabbN/xSummary.log
 
-FASTA sequence file(s)
-Example header lines:
-   Chr:  &gt;NC_027748.1 Brassica oleracea var. oleracea cultivar TO1000 chromosome C1, BOL, ...
-   Scaf: &gt;NW_013617415.1 Brassica oleracea var. oleracea cultivar TO1000 unplaced genomic ...
-   Mt:   &gt;NC_016118.1 Brassica oleracea mitochondrion, complete genome
+Sequence directory: ./data/seq/cabbN
+   GCF_000695525.1_BOL_genomic.fna                            File date 23-Jul-2024 14:06
+Annotation directory: ./data/seq/cabbN
+   genomic.gff                                                File date 23-Jul-2024 14:06
 
-Count Totals:
-      9 Chromosomes
- 32,876 Scaffolds
-      1 Mt/Pt
- 32,886 Total sequences
+### FASTA sequence file(s)
+Example header lines
+   Chr:  >NC_027748.1 Brassica oleracea var. oleracea cultivar TO1000 chromosome C1, BOL, whole genome shotgun sequence
+   Scaf: >NW_013617415.1 Brassica oleracea var. oleracea cultivar TO1000 unplaced genomic scaffold, BOL UnpScaffold00285, whole genome shotgun sequence
+   Mt:   >NC_016118.1 Brassica oleracea mitochondrion, complete genome
 
-Count Prefixes:
+Count prefixes
  32,876 NW_
      10 NC_
 
-Counts of Length Ranges:
-   32,284&lt;10k   552&lt;100k   41&lt;1M   &lt;10M   5&lt;50M   4&lt;100M
-   488,954,160 Total length
+Lengths of 3 sequences
+    Length    SeqId
+  43,764,888  NC_027748.1
+  52,886,895  NC_027749.1
+  64,984,695  NC_027750.1
 
-GFF Annotation file(s)
-Summary:
-  44,386 Genes from 49,563    (use protein_coding only)
-  44,382 mRNAs from 56,687    (44,382 has protein_id)
- 227,191 Exons from 398,922
+#Seqs&lt;length && &gt;=previous
+   0&lt;10k   552&lt;100k   41&lt;1M   0&lt;10M   5&lt;50M   4&lt;100M
 
-Gene Attribute:
-  44,386 Dbxref                     44,386 ID
-  44,386 Name                          569 end_range
-       7 exception                  44,386 gbkey
-  44,386 gene                       44,386 gene_biotype
-      81 locus_tag                       7 part
-     985 partial                       499 start_range
-mRNA Attribute:
-  44,305 product
+Bases count for all sequence
+   A 137,627,834  a   4,845,085
+   T 137,625,945  t   4,834,468
+   C  78,312,962  c   2,192,767
+   G  78,317,437  g   2,192,880
+   N  43,004,782  n           0
 
-Input type: NCBI chr NC_ prefix; NCBI GFF header
+Summary
+      9 Chromosomes    446,885,882
+ 32,876 Scaffolds       41,708,007
+      1 Mt/Pt              360,271
+ 32,886 Total          488,954,160
+
+### GFF Annotation file(s)
+Gene attribute keywords
+   44,386 Dbxref                      44,386 ID
+   44,386 Name                           569 end_range
+        7 exception                   44,386 gbkey
+   44,386 gene                        44,386 gene_biotype
+       81 locus_tag                        7 part
+      985 partial                        499 start_range
+
+   44,305 mRNA's with attribute keyword 'product'
+
+Summary
+   44,386 Gene from  49,563 (protein_coding)
+   44,382 mRNA from  56,687 (1st mRNA)
+  227,191 Exon from 398,922
+  217,004 CDS  from 305,897
+
+Input type: NCBI NC_ chromosome prefix
             NCBI 'gene_biotype' keyword; NCBI mRNA 'product' keyword
 ------ Finish summary for ./data/seq/cabbN/ ------
+</small>
 </pre>
-
-Observations:
-<table>
-<tr><td style="vertical-align: text-top;">1. <td>The last line confirms that the <span class="ttl">NCBI</span> radio button should be selected for <span class="ttb">Convert</span>.
-<tr><td style="vertical-align: text-top;">2. <td>It shows that there are 9 chromosomes to be converted to symap files.
-<tr><td style="vertical-align: text-top;">3. <td>It confirms that an mRNA and exons are found for each protein-coding gene.
-<tr><td style="vertical-align: text-top;">4. <td>On the first example line, it has 'chromosome C1'.
-Since the 'chromosome' is followed by 'C1' instead of a digit (i.e. 1), the chromosome identifier will be 'C1'
-in the conversion.
-<tr><td style="vertical-align: text-top;">5. <td>After conversion, the summary will be like this
+The last line verifies that it has the NCBI chromosome prefix and attributes used by SyMAP.
+<br>After conversion, the summary will be like this
 <a href="./logs/sumCabbNcnv.html" class="ext" target="_blank">log</a> file.
-<br>There is a remark that the file may be hard-masked, which was not done by the <span class="ttl">ConvertNCBI</span>;
-strangely, the chromosomes in the NCBI file were hard-mask but the scaffolds were soft-masked.
-If the summary has been computed with <span class="ttl">Verbose</span>, it would show the count of all nucleotides
-upper and lower case, which would show zero lowercase and many N's.
-</table>
 
-<h4>Verbose</h4>
-The Ensembl cabbage files <span class="ttl">Verbose</span> summary log file look like this
+<p><u>Summarized Verbose</u>
+<br>The Ensembl cabbage files <span class="ttl">Verbose</span> summary log file look like this
 <a href="./logs/sumCabbEv.html" class="ext" target="_blank">Ensembl summary log</a>.
 The verbose mode takes longer to execute, but has the following extra information:
 <ul>
 <li>From FASTA:
 <ul>
-<li>Base count (maximum 2,147,483,647 bases).
-<li>Lengths of 5 sequences.
+<li>Base count has maximum 2.14G bases (instead of 500M).
+<li>Lengths of all chromosomes plus a few of scaffolds, Mt, Pt (instead of the 1st 5 sequences).
 </ul>
 <li>From GFF:
 <ul>
+<li>Some of the header lines from the first GFF file (relevant for Ensembl).
 <li>The first gene, mRNA and exons lines.
-<li><span class="ttx">Types</span>, e.g. gene, mRNA, and exon.
-<li><span class="ttx">Gene Attributes biotype</span>, e.g. protein_coding.
+<li>All types from column 3, and all gene attribute biotype values.
 </ul>
 </ul>
 
-<br>As shown in <a href="#tg">Tested genomes</a>, it appears to be more common not to have
-a letter before the chromosome number (e.g. chromosome 1), in which case the chromosome identifier will be Chr01.
-For example, for Homo sapiens, see the
+For more examples, see for <i>Homo sapiens</i>
 <a href="./logs/sumHsaN.html" class="ext" target="_blank">NCBI summary log</a>
 compared to the <a href="./logs/sumHsaE.html" class="ext" target="_blank">Ensembl summary log</a>
 (both are <span class="ttl">Verbose</span> output).
@@ -574,7 +580,7 @@ compared to the <a href="./logs/sumHsaE.html" class="ext" target="_blank">Ensemb
 This should aid in determining how to set the options.
 If this is not enough, execute the following on your FASTA file:
 <pre>
-   zgrep ">" [use your FASTA file name]
+   zgrep ">" [use your FASTA file name] | more
 </pre>
 
 <!-- ======================================================= -->
@@ -582,22 +588,81 @@ If this is not enough, execute the following on your FASTA file:
 <h3>Convert</h3>
 
 <table>
-	<tr><td style="vertical-align: text-top;">1. <td>Select <span class="ttl">NCBI</span> or <span class="ttl">Ensembl</span>.
-	<tr><td style="vertical-align: text-top;">2. <td>Select the options you want; see
-	 <a href="./ncbi.html#opts" class="ext" target="_blank">NCBI</a>
-			or <a href="./ensembl.html#opts" class="ext" target="_blank">Ensembl</a> options.
-	<tr><td style="vertical-align: text-top;">3. <td>Select <span class="ttb">Convert</span>.
+	<tr><td style="vertical-align: text-top;">
+	1. Select <span class="ttl">NCBI</span> or <span class="ttl">Ensembl</span>.
+	<br>2. Select the options you want as described below.
+	<br>3. Select <span class="ttb">Convert NCBI/Ensembl</span>
+
+	<p>NCBI and Ensembl both have their own general rules for identifying chromosomes, scaffold, etc from the
+	FASTA header line for each sequence; see <a href="./ncbi.html#rules" class="ext" target="_blank">NCBI</a> and
+<a href="./ensembl.html#rules" class="ext" target="_blank">Ensembl</a>.  Chromosome sequences will use 'Chr' for
+the prefix of the <span class="ttx">seqid</span> unless <span class="ttl">Scaffolds</span> is selected; additional prefix rules
+are provided below.
+	<td><a href="img/NCBI-options.png"><img src="img/NCBI-options.png" alt="" style="border: 1px solid black; width: 300px"></a>
 </table>
 
+<p>
+The following options are mainly for FASTA files that do not follow the NCBI/Ensembl general rules for header lines
+(see <a href="#except">Exceptions</a>):
+<p>
+<table class="ty">
+<tr><td><b>Option</b><td><b>Description</b><td><b>Default<br>if not selected</b>
+<tr><td><span class="ttl">Hard mask</span>
+     <td>(NCBI only) NCBI genome sequences are typically soft-masked, where this option changes it to hard masked
+    <td>Leave as soft-mask
+	<tr><td style="white-space: nowrap;"><span class="ttl">Only #,X,Y,I</span>
+	<td>(Ensembl only) Most Ensembl FASTA header lines specify the chromosome number, X, Y or Roman numeral.
+	Only these sequences will be written.
+	<td>Any that have 'chromosome' on their header line.
+
+<tr><td style="white-space: nowrap;"><span class="ttl">All Seqs</span><sup>1</sup>
+<td>Load all sequences.<td>Ignore un-identified sequences
+
+<tr><td><span class="ttl">Scaffolds</span><sup>2</sup><td>Any sequence identified as scaffold
+will be written to the FASTA file. Chromosomes will be given the prefix 'C' and scaffolds will
+be given the prefix 's'. <td>Ignore scaffolds
+
+<tr><td><span class="ttl">Mt/Pt</span>
+    <td>Mt/Pt chromosomes will be included in FASTA and GFF. Only the first occurrence will be included.
+    The prefix of 'Mt' or 'Pt' will be used.
+    <td>Ignore Mt/Pt
+
+<tr><td style="white-space: nowrap;"><span class="ttl">Only prefix</span><sup>3</sup><td>Only sequences with the specified prefix will be processed. <td>None
+<tr><td><span class="ttl">Gap</span>
+    <td>A annotation file called <span class="ttx">gap.gff</span> is created, and any sequence of n's
+    greater than this number is considered a gap and the coordinates are written to this file.
+    <td>30000
+<tr><td><span class="ttl">Verbose</span><td>Print extra information, e.g. see
+<a href="./logs/cnvCabbEv.html" class="ext" target="_blank">verbose log</a>
+<td>No extra information
+</table>
+
+<p><sup>1</sup><span class="ttl">All Seqs</span> selected: If <span class="ttl">Scaffolds</span> and/or <span class="ttl">Mt/Pt</span>
+are also selected, their prefix rules will be used.
+Otherwise, any sequence not identified as 'chromosome' will be prefixed with 'Seq'.
+
+<p><sup>2</sup><span class="ttl">Scaffold</span> selected: If there are 100's of scaffolds, limit the input on the <span class="ttp">symap</span>
+<span class="ttb">Load project</span> by setting
+<span class="ttl">Minimal length</span> in the project's
+<a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+
+<p><sup>3</sup>If <span class="ttl">Only prefix</span> is not blank,
+sequences are <i>first</i> filtered out if the <span class="ttx">seqid</span> does not
+start with the prefix. Then, the rest of the Rules are applied as described by
+<a href="./ncbi.html#rules" class="ext" target="_blank">NCBI</a> and
+<a href="./ensembl.html#rules" class="ext" target="_blank">Ensembl</a>.
+
+<p>It is HIGHLY recommended that you run <span class="ttp">Summarize</span> on
+the <span class="ttl">Converted</span> sequences to determine if the output is what you expected.
 <!-- ============================================================== -->
 <a id="ol"></a>
 <h3>Lengths</h3>
 The FASTA files must be in the project's <span class="ttx">/sequence</span> sub-directory
-(e.g. <span class="ttx">symap_5/data/seq/cabbN</span>) for this
+(e.g. <span class="ttx">symap_5/data/seq/cabbN/sequence</span>) for this
 to work. It reads the FASTA file(s), prints out the names and lengths of all sequences, then
 writes a summary.
-<p><i>Summary</i>: If your file has many small scaffolds and you just want to process the large
-ones, the summary will help you decide what value to use as the
+<p>If your file has many small scaffolds and you just want to process the large
+ones, the <span class="ttb">Length</span> output will help you decide what value to use as the
 
 <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Parameter</a>
 <span class="ttx">Minimum length</span> values. For example, the following is output from  <span class="ttb">Length</span>:
@@ -641,12 +706,131 @@ remove the ones you do not want processed.
 <a id="gen"></a>
 <h2>General</h2>
 <table class="tz"><tr>
-<td><a href="#second">Secondary name</a>
-<td><a href="#orig">Original files</a>
+
 <td><a href="#tg">Tested genomes</a>
+<td><a href="#orig2">Load original files</a>
+<td><a href="#second">Secondary name</a>
 <td><a href="#edit">Editing the convert scripts</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
+
+
+<p>
+<!-- ================================================= -->
+<a id="tg"></a>
+<h3>Tested genomes</h3>
+
+In June 2026, the scripts were tested on the following species (most were downloaded in 2024), which shows the variation
+in NCBI/Ensembl files that I have come across:
+<table class=ty>
+<tr><th>Genome<th>NCBI<th>Ensembl<th>Sequence<br>bp in file<th>Note
+<tr><td><i>Arabidopsis thaliana</i> (thale crest)<td>Chr 1-5<td>Chr 1-5<td style="text-align: right">119M<td>
+<tr><td><i>Brassica oleracea</i> (wild cabbage)<td>C1-C9<td>C1-C9<td style="text-align: right">489M<td>C prefixes chr#
+<tr><td><i>Oryza sativa</i> (rice) <td>Chr 1-12<td>Chr 1-12<td style="text-align: right">386M<td>&nbsp;
+<tr><td><i>Prunus persica</i> (peach)<td>G1-G8<td>G1-G8<td style="text-align: right">228M<td>G prefixes chr#
+<tr><td><i>Prunus yedoensis</i><td>Scaffolds 4015<td>N/A<td style="text-align: right">319M<td>Draft
+<tr><td><i>Caenorhabditis elegans</i> (worm)<td>Chr I,II,III,IV,X<td>Chr I,II,III,IV,X<td style="text-align: right">100M<td>&nbsp;
+<tr><td><i>Bemisia tabaci</i> (whitefly)<td>Scafs 19,750<td>Contigs 227<td style="text-align: right">615M<td>&nbsp;
+<tr><td><i>Danio rerio</i> (zebrafish)<td>Chr 1-25<td>Chr 1-25<td style="text-align: right">52,633M<td>Contains 930 ALT CHR
+<tr><td><i>Oryctolagus cuniculus</i> (rabbit)<td>Chr 1-21, X<td>Chr 1-21, X<td style="text-align: right">2,841M<td>&nbsp;
+<tr><td><i>Homo Sapiens</i> (human)<td>Chr 1-22, X, Y<td>Chr 1-22, X, Y<td style="text-align: right">3,298M<td>&nbsp;
+</table>
+
+<p>Most FASTA files only use a number after the word 'chromosome'. However, some FASTA files prefix the number with a letter.
+For example, Cabbage had 'C' before its chromosome number, e.g.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ttt">&gt;NC_027748.1 Brassica oleracea var. oleracea cultivar TO1000 chromosome C1, BOL...</span>
+<br>so the chromosome names will be C1, C2, etc.
+
+<p>See <a href="../SystemGuide.html#time"  class="ext" target="_blank">Tested datasets and timings</a>
+for the <span class="ttl">Alignment&amp;Synteny</span> compute times for a range of species pairs.
+
+<!-- ==================================================== -->
+<a id="except"></a>
+<h4>xToSymap - exceptions to the defaults</h4>
+<p>The above downloaded genomes were all converted with the <span class="ttp">xToSymap</span> defaults,
+with the following exceptions:
+<p>
+<ul>
+<li><i>Ensembl Danio rerio</i> (zebrafish): The 100's of ALT sequences appear as valid chromosomes as
+the headers contain the word 'chromosome', e.g.
+<span class=ttt>
+<br>&nbsp;&nbsp;&nbsp;&gt;1 dna_sm:chromosome chromosome:GRCz11:1:1:59578282:1 REF
+<br>&nbsp;&nbsp;&nbsp;&gt;CHR_ALT_CTG8_1_12 dna_sm:chromosome chromosome:GRCz11:CHR_ALT....
+</span>
+<br>In order not to include these,
+the <span class="ttl">Only #,X,Y,I</span> option was used.
+<p>
+<li>Ensembl <i>Bemisia tabaci</i> (whitefly): The words 'chromosome' or 'scaffold'
+were NOT part of the header lines. The header line ID prefix was 'Contig', e.g.
+<span class=ttt>
+<br>&nbsp;&nbsp;&nbsp;&gt;Contig14 dna_sm:primary_assembly primary_assembly:ASIAII5_n227_616Mb:Contig14:1:53342825:1
+</span>
+<br>The summary showed that all sequences had the same prefix, so <span class="ttl">All Seqs</span> could be used.
+Alternatively, the <span class="ttl">Prefix only</span>=<span class="ttt">Contig</span> could be set.
+Either way, the output will use the sequence ID prefix 'Seq'.
+<br>Since there were 227 contigs, <span class="ttb">Lengths</span> was used to determine a <span class="ttx">Minimal length</span>
+to enter on <span class="ttp">symap</span> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+<p>
+<li>NCBI <i>Bemisia tabaci</i> (whitefly): The file only had scaffolds, so including <span class="ttl">Scaffolds</span> was necessary.
+Since there were 19,750 scaffolds, the <span class="ttb">Lengths</span> was used to determine a <span class="ttx">Minimal length</span>
+to enter on <span class="ttp">symap</span> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
+<p>
+<li>NCBI <i>Prunus yedoensis</i>:
+The words 'chromosome' or 'scaffold'
+were NOT part of the header lines. The header line ID prefix was 'PJQY' (not the NCBI prefix of 'NC_'), e.g.
+<span class=ttt>
+<br>&nbsp;&nbsp;&nbsp;&gt;PJQY01000001.1 Prunus yedoensis var. nudiflora Py_C0000, whole genome shotgun sequence
+</span>
+<br>The summary showed that all sequences had the same prefix, so <span class="ttl">All Seqs</span> could be used.
+Alternatively, the <span class="ttl">Prefix only</span>=<span class="ttt">PJQY</span> could be set.
+Either way, the output will use the sequence ID prefix 'Seq'.
+
+</ul>
+
+<p><i>Input variations</i>: There are probably more variations then shown here, which may possibly be handled with the
+available options.
+If not, you may want to edit the script to tailor it (see <a href="#edit">Edit</a>).
+Alternatively,
+   you can contact me (cas1@arizona.edu) and I will make the edit for you (it allows me to add the your variation to
+   <span class="ttp">xToSymap</span>).
+
+<a id="orig2"></a>
+<h3>Load original files</h3>
+<p>To <u>load the originals files</u> into SyMAP, the following was done:
+<ul>
+<li>Create <span class="ttt">/sequence</span> and move the FASTA file into it.
+<br>Create <span class="ttt">/annotation</span> and move the GFF file into it.
+<p>
+<li>Run the <span class="ttp">xToSymap</span> <span class="ttb">Summarize</span> and <span class="ttb">Lengths</span> functions.
+<ul><li>For Ensembl, a <span class="ttx">Minimal length</span> may need to be set to only load the sequence &gt;= the smallest chromosome length.
+<li>For NCBI, set the <span class="ttx">Group prefix</span> to 'NC_' to only load the chromosomes.
+</ul>
+
+<p>For example, for species such as <i>Homo Sapiens</i>, if <span class="ttx">Group prefix</span> or <span class="ttx">Minimal length</span> were NOT specified,
+over 500 sequences were loaded.
+With Ensembl, it also had a problem
+with duplicate entries because it has scaffold names such as HSCHR19KIR_CA01-TB04_CTG3_1 and HSCHR19KIR_CA01-TB01_CTG3_1,
+where the name was truncated at the "-", hence, HSCHR19KIR_CA01 is a duplicate name.
+</ul>
+
+Problem during <span class="ttb">Load</span> of originals:
+<ul>
+<li>Ensembl <i>Danio rerio</i> (zebrafish): It could not be loaded without conversion.
+It has 1922 sequences where most of them had prefix "ALT", the word 'chromosome' in their header line,
+and were the size of their REF chromosome,
+so setting a <span class="ttx">Minimal length</span> did not exclude them. And there was no unique chromosome ID prefix to use as
+the <span class="ttx">Group prefix</span> in <span class="ttp">symap</span>.
+</ul>
+
+<p>Some problems with the original files: (there are probably more)
+<ul>
+<li>Genes are not restricted to protein-coding. The 1st mRNA will be loaded instead of the longest.
+<li>Numerous <span class="ttl">Queries</span> functions fail if there is a '.' in the original
+<span class="ttt">seqid</span>.
+<li>There may be excessive attributes in the <span class="ttp">Queries</span> table.
+<li><span class="ttp">2D</span> and other displays will likely have chromosomes names written on top of each other
+due to their length.
+</ul>
 
 <!-- ===================================================== -->
 <a id="second"></a>
@@ -660,131 +844,23 @@ The following example shows the header line of an NCBI <span class="ttp">xToSyma
 <p><pre>
   >Chr01 NC_003070.9 chromosome
 </pre>
-<table><tr><td>
-The <span class="ttp">symap</span> <span class="ttb">Load Project</span> will make
+<table><tr>
+<td>The <span class="ttp">symap</span> <span class="ttb">Load Project</span> will make
 Chr01 the unique identifier and NC_003070.9 will be its secondary name.
 This secondary name will be shown on the <span class="ttl">View</span> popup.
 <p>Ensembl <span class="ttp">xToSymap</span> converted files do not have a secondary name.
-<p><span class="green">Note: The secondary name was introduced in v5.8.2.</span>
 <td><a href="./img/viewA.png"><img src="./img/viewA.png" alt="View with secondary" style="border: 1px solid black; width: 350px"></a>
 </table>
 
-<a id="orig"></a>
-<h3>Original files</h3>
-<p><i>Load Original NCBI File</i>: Though it is not recommended, the original NCBI
-files will probably load. An example header line will be:
+<p><i>Original NCBI File</i>: An example header line will be:
 <p><pre>
   >NC_003070.9 Arabidopsis thaliana chromosome 1 sequence
 </pre>
 In this case, NC_003070.9 will be its identifier and "Chr01" will be its secondary name.
 The secondary name is only assigned if the value "chromosome " or "scaffold " exists on the header line.
 
-<p><i>Load Original Ensembl File</i>: This will usually work, but generally no secondary name is assigned.
-However, in some cases it does assign one incorrectly, which will look weird in <span class="ttp">View</span>.
-
-<p>Loading the original files can lead to small problems. For example,
-<ul>
-<li><span class="ttp">symap</span> will load names with the "." in them to preserve the original name,
-but these cannot be searched on in <span class="ttl">Query</span>.
-<li>Genes are not restricted to protein-coding.
-<li>See <a href="#orig2">Load original files</a> for more examples.
-</ul>
-
-<p>
-<!-- ================================================= -->
-<a id="tg"></a>
-<h3>Tested genomes</h3>
-
-In Aug 2024, the scripts were tested on the following:
-<table class=ty>
-<tr><th>Genome<th>NCBI<th>Ensembl<th>Sequence<br>bp in file<th>Note
-<tr><td>Arabidopsis thaliana (thale crest)<td>Chr 1-5<td>Chr 1-5<td style="text-align: right">119M<td>
-<tr><td>Brassica oleracea (wild cabbage)<td>C1-C9<td>C1-C9<td style="text-align: right">489M<td>C prefixes chr#
-<tr><td>Oryza sativa (rice) <td>Chr 1-12<td>Chr 1-12<td style="text-align: right">386M<td>&nbsp;
-<tr><td>Prunus persica (peach)<td>G1-G8<td>G1-G8<td style="text-align: right">228M<td>G prefixes chr#
-<tr><td>Prunus yedoensis<td>Scaffolds 4015<td>N/A<td style="text-align: right">319M<td>Draft
-<tr><td>Caenorhabditis elegans (worm)<td>Chr I,II,III,IV,X<td>Chr I,II,III,IV,X<td style="text-align: right">100M<td>&nbsp;
-<tr><td>Bemisia tabaci (whitefly)<td>Scafs 19,750<td>Contigs 227<td style="text-align: right">615M<td>&nbsp;
-<tr><td>Danio rerio (zebrafish)<td>Chr 1-25<td>Chr 1-25<td style="text-align: right">52,633M<td>Contains 930 ALT CHR
-<tr><td>Oryctolagus cuniculus (rabbit)<td>Chr 1-21, X<td>Chr 1-21, X<td style="text-align: right">2,841M<td>&nbsp;
-<tr><td>Homo Sapiens (human)<td>Chr 1-22, X, Y<td>Chr 1-22, X, Y<td style="text-align: right">3,298M<td>&nbsp;
-</table>
-
-Other species have been downloaded and tested since 2024.
-
-<p>See <a href="../SystemGuide.html#time"  class="ext" target="_blank">Tested datasets and timings</a>
-for the <span class="ttl">Alignment&amp;Synteny</span> compute times for a range of species pairs.
-
-<!-- ==================================================== -->
-<a id="except"></a>
-<h4>xToSymap - exceptions to the defaults</h4>
-<p>The above downloaded genomes were all converted with the <span class="ttp">xToSymap</span> defaults,
-with the following exceptions:
-<p>
-<ul>
-<li>Ensembl Danio rerio (zebrafish): The 100's of 'Alt' sequences appear as valid chromosomes,
-hence, the <span class="ttl">Only #,X,Y,I</span> option was used.
-<br>&nbsp;
-<li>Ensembl Bemisia tabaci (whitefly): The words 'chromosome' or 'scaffold'
-were NOT part of the header lines. The header line ID prefix was 'Contig',
-hence, the <span class="ttl">Prefix only</span>='Contig' was used; the output used the sequence ID prefix 'Unk'.
-Then <span class="ttb">Lengths</span> was used to determine a <span class="ttx">Minimal length</span>
-to enter on <span class="ttp">symap</span> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
-<br>&nbsp;
-<li>NCBI Bemisia tabaci (whitefly): Only had scaffolds, so including <span class="ttl">Scaffolds</span> was necessary.
-Then <span class="ttb">Lengths</span> was used to determine a <span class="ttx">Minimal length</span>
-to enter on <span class="ttp">symap</span> project <a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
-<br>&nbsp;
-<li>NCBI Prunus yedoensis:
-The words 'chromosome' or 'scaffold'
-were NOT part of the header lines. The header line ID prefix was 'CPJQY' (not the NCBI prefix of 'NC_'),
-hence, the <span class="ttl">Prefix only</span>='CPJQY' was used; the output used the sequence ID prefix 'Unk'.
-
-<br>&nbsp;
-<li>Cabbage had 'C' before its chromosome number so the chromosome names were C1, C2, etc.
-<br>Peach had 'G' before its chromosome  so the chromosome names were G1, G2, etc. .
-</ul>
-
-<p><i>Input variations</i>: There are probably more variations then shown here, which may possibly be handled with the
-Ensembl <span class="ttl">Only #,X,Y,I</span> option or NCBI/Ensembl <span class="ttl">Only prefix</span> option.
-If not, you may want to edit the script to tailor it (see <a href="#edit">Edit</a>).
-Alternatively,
-   you can contact me (cas1@arizona.edu) and I will make the edit for you (it allows me to add the your variation to
-   <span class="ttp">xToSymap</span>).
-
-<a id="orig2"></a>
-<h4>Load original files</h4>
-<p>To <u>load the originals files</u> into SyMAP, the following was done:
-<ul>
-<li>Create <span class="ttt">/sequence</span> and move the FASTA file into it.
-<li>Create <span class="ttt">/annotation</span> and move the GFF file into it.
-<li>Run the <span class="ttp">xToSymap</span> <span class="ttb">Summarize</span> and <span class="ttb">Lengths</span> functions.
-<ul><li>For Ensembl, a <span class="ttx">Minimal length</span> was set to only load the sequence &gt;= the smallest chromosome length.
-<li>For NCBI, <span class="ttx">Group prefix</span> to 'NC_' to only load the chromosomes.
-</ul>
-
-<p>For example, for species such as Homo Sapiens, if <span class="ttx">Group prefix</span> or <span class="ttx">Minimal length</span> were NOT specified,
-over 500 sequences were loaded.
-With Ensembl, it also had a problem
-with duplicate entries because it has scaffold names such as HSCHR19KIR_CA01-TB04_CTG3_1 and HSCHR19KIR_CA01-TB01_CTG3_1,
-where the name was truncated at the "-", hence, HSCHR19KIR_CA01 is a duplicate name.
-</ul>
-
-Problem during <span class="ttb">Load</span> of originals:
-<ul>
-<li>Ensembl Danio rerio (zebrafish): It could not be loaded without conversion.
-It has 1922 sequences where most of them had prefix "ALT", the word 'chromosome' in their header line,
-and were the size of their REF chromosome,
-so setting a <span class="ttx">Minimal length</span> did not exclude them. And there was no unique chromosome ID prefix to use as
-the <span class="ttx">Group prefix</span> in <span class="ttp">symap</span>.
-</ul>
-
-<p><span class="ttb">A&S</span> with the originals:
-<ul>
-<li>Ensembl Oryza and NCBI Arabidopsis were aligned and synteny computed.
-There was no problem with the Synteny, but the Arabidopsis names cluttered the displays, and there were many attributes for each.
-<li>NCBI Mus musculus and Homo Sapiens were converted/split and their Chr17 successfully aligned.
-</ul>
+<p><i>Original Ensembl File</i>: Generally no secondary name is assigned.
+However, in some cases it does assign one incorrectly, which will look weird in <a href="./img/viewA.png">View</a>.
 
 <!-- ========================================================= -->
 <a id="edit"></a>

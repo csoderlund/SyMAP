@@ -64,7 +64,7 @@ public class TableMainPanel extends JPanel {
 	// called by QueryFrame
 	protected TableMainPanel(QueryFrame parentFrame, String tabName,  boolean [] selCols,
 			String query, String sum, boolean isSingle) {
-		this.qFrame = parentFrame;
+		this.qFrame 		= parentFrame;
 		this.theTabName 	= tabName;
 		
 		qPanel 				= qFrame.getQueryPanel();
@@ -316,7 +316,7 @@ public class TableMainPanel extends JPanel {
 	    cmb2Dopts.addItem("Block");		   // showBLOCK=2
 	    cmb2Dopts.addItem("Group-chr");    // showGRP=3
 	    cmb2Dopts.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) { // CAS579c add
+			public void actionPerformed(ActionEvent arg0) { 
 				boolean b = (cmb2Dopts.getSelectedIndex()==showREGION);
 				txt2Dregion.setEnabled(b); lbl2Dkb.setEnabled(b);
 			}
@@ -518,7 +518,7 @@ public class TableMainPanel extends JPanel {
     	
     	int [] spPos = theAnnoKeys.getSpPosList(); 
     	
-    	if (spPos.length==0) { // When no project has annotation; CAS579c
+    	if (spPos.length==0) { // When no project has annotation; 
     		retVal.add(Jcomp.createLabel("No annotation columns"));
     		retVal.setBorder(BorderFactory.createTitledBorder("Gene Annotation"));
         	retVal.setMaximumSize(retVal.getPreferredSize());
@@ -679,7 +679,7 @@ public class TableMainPanel extends JPanel {
     	removeAll();
     	repaint();
     	setBackground(Color.WHITE);
-    	loadStatus = new JTextField(60); // CAS579 was 40
+    	loadStatus = new JTextField(60); 
     	loadStatus.setBackground(Color.WHITE);
     	loadStatus.setMaximumSize(loadStatus.getPreferredSize());
     	loadStatus.setEditable(false);
@@ -883,7 +883,7 @@ public class TableMainPanel extends JPanel {
     			chkSpeciesFields[x][y].setEnabled(enable);
     	}
     	
-    	if (isSingle) enable=false; // CAS576 were becoming active after run
+    	if (isSingle) enable=false; 
     	
     	if (!bMSArun) btnShowMSA.setEnabled(enable);
     	txt2Dregion.setEnabled(enable);
@@ -1039,9 +1039,10 @@ public class TableMainPanel extends JPanel {
 		final int mode = ex.getSelection();
 		
 		if (mode != ex.ex_cancel) {
-			if (mode==ex.ex_csv)        ex.writeCSV();
-			else if (mode==ex.ex_html)  ex.writeHTML();
-			else if (mode==ex.ex_fasta) ex.writeFASTA();
+			if (mode==ex.ex_csv)        ex.writeColsCSV();
+			else if (mode==ex.ex_html)  ex.writeColsHTML();
+			else if (mode==ex.ex_fa_pairs) ex.writeSeqPairs();  
+			else if (mode==ex.ex_fa_genes) ex.writeSeqGenes(); // CAS586 unique genes
 		}	
  	}
    
@@ -1091,7 +1092,7 @@ public class TableMainPanel extends JPanel {
     
 		 btnSearch.setEnabled(true);
      }
-     protected void showSearch(int rowIndex) { // Search stays open and set next row here; CAS579b
+     protected void showSearch(int rowIndex) { // Search stays open and set next row here;
     	 if (rowIndex>=0 && rowIndex<theTable.getRowCount()) {
       		Rectangle cellRect = theTable.getCellRect(rowIndex, 0, true);       
       	    theTable.scrollRectToVisible(cellRect);
@@ -1373,7 +1374,7 @@ public class TableMainPanel extends JPanel {
 	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; 
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
-	protected boolean isBlock=false, isGroup=false;			// set 2d pull-down based on query; CAS577
+	protected boolean isBlock=false, isGroup=false;			// set 2d pull-down based on query; 
 	protected boolean isSelf=false, isAllNoAnno=true, isNoPseudo=false; 
 	
 	// for Stop 

@@ -26,21 +26,23 @@ public class TmpRowData {
 	}
 	
 	/* LoadRow; if add column, add to getRowLocData also */
-	protected boolean loadRow(int row) {// showAlign, showSynteny, writeFasta, UtilReport
+	protected boolean loadRow(int row) {// MSA, view2D, Report, Export (all options), getSharedRef (3D)
 		try {
 			nRow = row;
 			
 			Vector <String> colNames = new Vector <String> (); // for new 2D-3track
 			Vector <Object> colVals = new Vector <Object> ();
 			
-			tPanel.theTableData.getRowLocData(row, colNames, colVals); // only needed columns are returned
+			// NOT ALL COLUMNS RETURNED - only those checked for here
+			tPanel.theTableData.getRowLocData(row, colNames, colVals); 
 			
 			HashMap <String, Integer> sp2x = new HashMap <String, Integer> ();
 			int isp=0;
 			
 			for (int i=0; i<colNames.size(); i++) {
 				String colHead = colNames.get(i);
-				Object colVal = colVals.get(i);				
+				Object colVal = colVals.get(i);	
+	
 				if (colVal instanceof String) { // if >2 species, ignores ones w/o values, so only get 2
 					String str = (String) colVal;
 					if (str.equals("") || str.equals(Q.empty)) continue; // the blanks species
@@ -85,9 +87,9 @@ public class TmpRowData {
 				// Species columns
 				String [] field = colHead.split(Q.delim); // speciesName\nChr or Start or End
 				if (field.length!=2) continue;
-				String species=field[0];
-				String col=field[1];
-				
+				String species = field[0];
+				String col = field[1];
+			
 				String sVal="";
 				int iVal=0;
 				if (col.equals(Q.chrCol)) {
@@ -111,28 +113,25 @@ public class TmpRowData {
 					isp++;
 					if (isp>2) {Globals.eprt("species " + isp); break;} // should not happen
 				}
-				if (col.equals(Q.chrCol)) 		  chrNum[i0or1]  = sVal;
-				else if (col.equals(Q.hStartCol)) start[i0or1]   = iVal;
-				else if (col.equals(Q.hEndCol))   end[i0or1]     = iVal;
-				else if (col.equals(Q.gNCol))	  geneTag[i0or1] = sVal; // this will be N.N.[b] or N.- 
+				if (col.equals(Q.chrCol)) 		  	chrNum[i0or1]  = sVal;
+				else if (col.equals(Q.hStartCol)) 	start[i0or1]   = iVal;
+				else if (col.equals(Q.hEndCol))   	end[i0or1]     = iVal;
+				else if (col.equals(Q.gNCol))	  	geneTag[i0or1] = sVal; // this will be N.N.[b] or N.- 
 			}
 			
-			// get supporting values
-			if (spAbbr[1]==null || spAbbr[1]=="") {
-				util.Popup.showWarningMessage("The abbrev_names are the same, cannot continue...");
-				return false;
-			}
-			spName[0] = tPanel.qFrame.getDisplayFromAbbrev(spAbbr[0]);
-			spName[1] = tPanel.qFrame.getDisplayFromAbbrev(spAbbr[1]);
-			
+			// get supporting values; Export gene for singles is the only function that will be 1; CAS586 allow
+			int loop = (spAbbr[1]==null || spAbbr[1]=="") ? 1 : 2; 
+				
 			SpeciesPanel spPanel = tPanel.qPanel.getSpeciesPanel();
-			for (isp=0; isp<2; isp++) {
+			for (isp=0; isp<loop; isp++) {
+				spName[isp] = tPanel.qFrame.getDisplayFromAbbrev(spAbbr[isp]);
 				spIdx[isp] =  spPanel.getSpIdxFromSpName(spName[isp]);
 				chrIdx[isp] = spPanel.getChrIdxFromChrNumSpIdx(chrNum[isp], spIdx[isp]);
 			}
 			return true;
 		} catch (Exception e) {ErrorReport.print(e, "Getting row data"); return false;}
 	}
+	
 	// Show Group
 	// loadRow occurs before this, so the selected row values are known for each row.
 	// If the group, chr[0], chr[1] are the same, get min start and max end
@@ -197,7 +196,6 @@ public class TmpRowData {
 			}
 		} // finish all rows
 		
-		// The coords are on the hit start/end; CAS580 add pad
 		int pad = (Math.abs(coords[1]-coords[0])/1000)*2;
 		pad = Math.max(pad, 200);
 		coords[0] -= pad; coords[1] += pad;  				
@@ -230,6 +228,11 @@ public class TmpRowData {
 	}
 	// Values for selected row; if add column, ADD in TableData TOO!
 	protected int nRow=0;
+	protected String hitSt="";
+	protected int hitnum=0, blockN=0;
+	protected int collinearN=0, collinearSz=0; 	
+	protected int groupN=0, groupSz=0; 			// for Show Group; set in loadRow, used in loadGroup
+	
 	protected String [] spName = {"",""}; 
 	protected String [] spAbbr = {"",""}; 
 	protected int [] 	spIdx = {0,0};
@@ -241,9 +244,4 @@ public class TmpRowData {
 	protected int [] 	end = {0,0};
 	
 	protected String [] geneTag = {"",""};
-	
-	protected String hitSt="";
-	protected int hitnum=0, blockN=0;
-	protected int collinearN=0, collinearSz=0; 	
-	protected int groupN=0, groupSz=0; 			// for Show Group; set in loadRow, used in loadGroup
 }

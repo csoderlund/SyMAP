@@ -1,107 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>ConvertEnsembl Cabbage</title>
 </head>
 <body>
-<p  style="margin-left:200px; margin-right:50px;">Sequences with "*" are not written to the new FASTA file.
+
 <pre style="margin-left:200px; margin-right:50px;">
------- ConvertEnsembl ./data/seq/cabbE ------
-./data/seq/cabbE/sequence exists - clear existing  .fna and .fa  files
-./data/seq/cabbE/annotation exists - clear existing  .gff and .gff3 files
+------ ConvertEnsembl ./data/seq/cabbE on 09-Jul-26 ------
 Log file to  ./data/seq/cabbE/xConvertENS.log
 Parameters:
    Project Directory: ./data/seq/cabbE
    Verbose
 Processing ./data/seq/cabbE/Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz
-C1      C1               43,764,888
-C2      C2               52,886,895
-C3      C3               64,984,695
-C4      C4               53,719,093
-C5      C5               46,902,585
-C6      C6               39,822,476
-C7      C7               48,366,697
-C8      C8               41,758,685
-C9      C9               54,679,868
-Scaf    Scaffold00285       550,871  *
-Scaf    Scaffold00418       360,705  *
-Scaf    Scaffold00434       343,593  *
-Scaf    Scaffold00452       324,463  *
-Scaf    Scaffold00534       246,008  *
-Scaf    Scaffold00576       215,938  *
-Scaf    Scaffold00578       215,108  *
-Scaf    Scaffold00579       214,022  *
-Scaf    Scaffold00580       213,535  *
-Scaf    Scaffold00581       213,381  *
-Scaf    Scaffold00613       193,719  *
-Scaf    Scaffold00615       192,988  *
-Scaf    Scaffold00616       192,287  *
-Scaf    Scaffold00626       187,934  *
-Scaf    Scaffold00629       187,313  *
-Scaf    Scaffold00640       176,243  *
-Scaf    Scaffold00641       174,647  *
-Scaf    Scaffold00667       159,200  *
-Scaf    Scaffold00671       156,667  *
-Scaf    Scaffold00673       154,937  *
-Suppressing further scaffold outputs
-Sequences not output: 32,919  (*)
+   C1      C1               43,764,888
+   C2      C2               52,886,895
+   C3      C3               64,984,695
+   C4      C4               53,719,093
+   C5      C5               46,902,585
+   C6      C6               39,822,476
+   C7      C7               48,366,697
+   C8      C8               41,758,685
+   C9      C9               54,679,868
+   Sequences not output: 32,919
+
+   A  69,247,430  a  61,229,198
+   T  69,276,626  t  61,218,908
+   C  40,952,680  c  32,332,328
+   G  40,973,403  g  32,310,317
+   N         305  n  39,344,687
+   Total written: 446,885,882
 Finish writing ./data/seq/cabbE/sequence/genomic.fna
 
-A  69,247,430  a  61,229,198
-T  69,276,626  t  61,218,908
-C  40,952,680  c  32,332,328
-G  40,973,403  g  32,310,317
-N         305  n  39,344,687
-
-Gaps &gt;= 30000: 39 (using N and n)
+Gaps >= 30,000: 39 (using N and n)
 Finish writing ./data/seq/cabbE/annotation/gap.gff
 
+All sequences
+       9 Chromosomes  Output 9         446,885,882
+       0 Mt/Pt        Output 0                   0
+  32,919 Scaffolds    Output 0          41,736,625
+
 Processing ./data/seq/cabbE/Brassica_oleracea.BOL.59.gff3.gz
-   Use Gene 59,225 from 59,225
-   Use mRNA 54,761 from 59,225
-   Use Exon 256,428 from 269,978
+   Process 50000 genes...
+   Chromosome gene count: 54,761
+   C1      C1                 5,401
+   C2      C2                 5,842
+   C3      C3                 8,489
+   C4      C4                 6,426
+   C5      C5                 5,849
+   C6      C6                 4,762
+   C7      C7                 5,751
+   C8      C8                 5,599
+   C9      C9                 6,642
+   Genes not included in GFF file: 4,459
+
+   54,761 Gene from 59,225 (protein coding)
+   54,761 mRNA from 59,225 (canonical or longest)
+  256,428 Exon from 269,978
+  256,428 CDS  from 268,591
 Finish writing ./data/seq/cabbE/annotation/anno.gff
 
-&gt;&gt;Sequences
-       9 Output 9      Chromosomes      446,885,882
-  32,919 Output 0      Scaffolds         41,736,625 (32,327 < 10,000bp)
+Gene Source (col 2)
+     54,761 brad
 
-&gt;&gt;All Types  (col 3)  (+ are processed keywords)
-   CDS                     268,591
-   RNase_MRP_RNA                 3
-   SRP_RNA                      29
-   chromosome                    9
-   exon                    269,978 +
-   gene                     59,225 +
-   lnc_RNA                      22
-   mRNA                     59,225 +
-   ncRNA_gene                1,361
-   pre_miRNA                   121
-   rRNA                        220
-   scaffold                 32,919
-   snRNA                       174
-   snoRNA                      282
-   tRNA                        510
-&gt;&gt;All Gene Source (col 2)
-   brad                     59,225
-&gt;&gt;All gene biotype= (col 8)
-   nontranslating_CDS            5
-   protein_coding           59,220 +
-&gt;&gt;Written to file
-   Genes                    59,225
-   mRNA                     54,761
-   Exons                   256,428
-&gt;&gt;Chromosome gene count 54,761
-   C1         C1                      5,401
-   C2         C2                      5,842
-   C3         C3                      8,489
-   C4         C4                      6,426
-   C5         C5                      5,849
-   C6         C6                      4,762
-   C7         C7                      5,751
-   C8         C8                      5,599
-   C9         C9                      6,642
-   Genes not on Chromosome    4,459
+Gene attribute keywords (col 8)
+     54,761 ID                         54,761 biotype                    14,914 description
+     54,761 gene_id                    54,761 logic_name
 
 ------ Finish ConvertEnsembl ./data/seq/cabbE -------
 </pre>

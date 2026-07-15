@@ -981,10 +981,35 @@ public class DBdata implements Cloneable {
 			b0 = grpIdxForAnno.contains(chrIdx[0]);
 			b1 = grpIdxForAnno.contains(chrIdx[1]);
 		}
-		if (b0 && annotStr[0].toLowerCase().contains(anno)) return true;
-		if (b1 && annotStr[1].toLowerCase().contains(anno)) return true;
-			
+		if (!b0 && !b1) return false;
+		
+		if (qPanel.isAnnoExact()) { // CAS586
+			if (b0 && passFilterAnnoSplit(0, anno, true)) return true;
+			if (b1 && passFilterAnnoSplit(1, anno, true)) return true;
+		}
+		else if (qPanel.isAnnoStart()) {
+			if (b0 && passFilterAnnoSplit(0, anno, false)) return true;
+			if (b1 && passFilterAnnoSplit(1, anno, false)) return true;
+		}
+		else {
+			if (b0 && annotStr[0].toLowerCase().contains(anno)) return true;
+			if (b1 && annotStr[1].toLowerCase().contains(anno)) return true;
+		}	
 		return false;
+    }
+    // e.g. id=mosa18754;desc=expressed protein.
+    private boolean passFilterAnnoSplit(int idx, String anno, boolean isExact) {
+    	String annoStr = annotStr[idx].toLowerCase();
+    	String [] tok = annoStr.split(";");
+    	
+    	for (String tuple : tok) {
+    		String [] val = tuple.split("=");
+    		if (val.length==2 && val[1].contains(anno)) {
+    			if (isExact && val[1].trim().equals(anno)) return true; // descriptions can end with space
+    			else if (!isExact && val[1].startsWith(anno)) return true;
+    		}	
+    	}
+    	return false;
     }
 	/*********************************************************
 	 * Called if ComputeClust or runGeneGroups

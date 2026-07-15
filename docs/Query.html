@@ -52,7 +52,7 @@
 
 <!-- **************** bulk of page ********************* -->
 <div class="main">
-
+<p>&nbsp;
 <table>
 <tr>
 <td style="white-space: nowrap; vertical-align: text-top;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -77,19 +77,19 @@
 		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#pairCol">Pair</a>, <a href="#singleCol">Single</a>, <a href="#save">Auto-save</a>&nbsp;&nbsp;&nbsp;&nbsp;
 		<tr><td><a href="#stat">Statistics</a>
 		<tr><td><a href="#but">Top buttons</a>
-		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#msaAlign">MSA</a>, <a href="#view2D">View 2D</a>, <a href="#report">Report</a>, <a href="#search">Search</a>,...
+		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#showRow">Show</a>, <a href="#msaAlign">MSA...</a>, <a href="#view2D">View 2D</a>
+		<tr><td>&nbsp;&nbsp;&nbsp;<a href="#export">Export...</a>, <a href="#report">Report...</a>, <a href="#search">Search</a>,...
 	</table>
 <td  style="white-space: nowrap; vertical-align: text-top;">
 	<table>
 	<tr><td><a href="#rtab"><u><small>&gt;</small> Results</u></a>
 	<tr><td>&nbsp;
-	<tr><td><span class="ttb">Extra topics:</span>
+	<tr><td><span class="ttl">Extra topics:</span>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="UserGuide.html#self" target="_blank" class="ext">Self-synteny</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="Details.html#q3" class="ext" target="_blank">3-chr queries</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="UserGuide.html#term" class="ext" target="_blank">Terminology</a>
 	</table>
 </table>
-
-See <a href="./UserGuide.html#term" class="ext" target="_blank">Terminology</a> in the User Guide.
 
 <!-- ************************************************************************ -->
 <hr>
@@ -239,7 +239,12 @@ It cannot stop the database search, but once the search is done, it stops all su
 
 <p><span class="ttb">Annotation Description</span>
 <ul><li>Enter a substring: the entire <span class="ttx">All_Anno</span> attributes column (see <a href="#geneCol">Columns</a>)
-will be searched for the substring.
+will be searched for the substring, as follows.
+<ul>
+<li><span class="ttl">Any</span>:&nbsp;&nbsp; A match anywhere in <span class="ttx">All_Anno</span>.
+<li><span class="ttl">Exact</span>: For each 'keyword=value' pair, the value will be checked for an exact match.
+<li><span class="ttl">Start</span>:&nbsp; For each 'keyword=value' pair, the value will be checked for a match at the beginning.
+</ul>
 <li>By default, either end of the hit can have the annotation.
 <br>To restrict the search to one end, see <u>Unselect species</u> below.
 <li>If there are no additional filters, <i>this is slow</i> on large databases.
@@ -877,6 +882,7 @@ one(s) that are used in certain unusual situations when <span class="ttt">--auto
 <br>&rarr; On Mac, if you are using MAFFT <span class="ttt">--auto</span>, you may get a "Cannot be verified" for <span class="ttt">dndpre</span>.
 See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS and external programs</a> to fix this.
 
+<p>&nbsp;
 <a id="view2D"></a>
 <h4>4.3 View 2D</h4>
 
@@ -943,28 +949,36 @@ The region displayed can be specified by the drop-down beside the <span class="t
 	<td><a href="img/query_synteny.png"><img src="img/query_synteny.png" alt="query synteny" style="border: 1px solid black; width: 450px"></a>
 </table>
 
+<!-- ********************* Export ******************************************** -->
+<p>&nbsp;
 <a id="export"></a>
 <h4>4.4 Export...</h4>
 One or more rows can be selected for the following exports; or if no rows are selected, the entire table is exported.
 
 <table class="tx">
 <tr><td>
-	<p><span class="ttb">CSV</span>:
+	<b>Table row and columns</b>
+	<p class="hanging-indent"><span class="ttb">CSV</span>:
 	Export the rows using the selected set of columns to a CSV format suitable for import into Excel.
-	<p><span class="ttb">HTML</span>:
+	<p class="hanging-indent"><span class="ttb">HTML</span>:
 	Export the rows using the selected set of columns to a HTML format suitable for viewing on the web
 	(e.g. <a href="./img/query_export.html"  class="ext" target="_blank">Example</a>).
-	<p>The <span class="ttb">Include Row column</span> option is available because this column is alway present, but
-it may be desirable to exclude it in the output.
-	<p>
-	<span class="ttb">FASTA</span>: (Pairs Only) For each row, the two hit sequences from the <span class="ttx">Hstart</span> to <span class="ttx">Hend</span>
-	are written to file. NOTE: this is a very slow function and takes minutes if many rows are selected.
+	<p class="hanging-indent"><span class="ttb">Include Row column</span>: This option is available because column
+	<span class="ttt">Row</span> is alway present, but it may be desirable to exclude it in the output.
 
-	<td>
-	<a href="img/query_export.png"><img src="img/query_export.png" alt="result export" style="border: 1px solid black; width: 260px"></a>
+	<p><b>Table FASTA</b>
+	<p class="hanging-indent"><span class="ttb">All pair hit sequences</span>: (Pairs Only)
+	For each row, the two hit sequences from the <span class="ttx">Hstart</span> to <span class="ttx">Hend</span>
+	are written to file.
+	<p class="hanging-indent"><span class="ttb">Unique spliced transcripts</span>:
+	For each row, output the spliced transcripts.
+	This is very slow to execute! For example, it took 1m15s for 500 rows.
+
+	<td><a href="img/query_export.png"><img src="img/query_export.png" alt="result export" style="border: 1px solid black; width: 260px"></a>
 </table>
 <!-- ************************************************************************ -->
 <!-- ********************* REPORT ******************************************** -->
+<p>&nbsp;
 <a id="report"></a>
 <h4>4.5 Report...</h4>
 
@@ -979,14 +993,17 @@ it may be desirable to exclude it in the output.
 <p>
 <ul>
 <li>The report is on the genes in the query table; <i>hits without paired genes are ignored</i>.
+<p>
 <li>Unless the query is for <span class="ttb">Collinear</span>, <span class="ttb">Multi-hit</span> or <span class="ttb">Cluster genes</span>, a <span class="ttb">Gene</span>
 report will be produced.
-<li>This is most relevant when used with &gt;2 species. <i><u>It has not been tested for &gt;4 species.</u></i>
-<li><span class="ttb">Gene</span>, <span class="ttb">Collinear</span> and <span class="ttb">Multi-hit genes</span> produce a reference-based report whereas
-the <span class="ttb">Cluster genes</span> does not; however <span class="ttb">Cluster genes</span> shares most of the same options.
+<p><li>This is most relevant when used with &gt;2 species. <i>It has not been tested for &gt;4 species.</i>
+
+<p><li><span class="ttb">Gene</span>, <span class="ttb">Collinear</span> and <span class="ttb">Multi-hit genes</span>
+produce a <u>reference-based</u> report whereas the <span class="ttb">Cluster genes</span> does not;
+however <span class="ttb">Cluster genes</span> shares most of the same options.
 </ul>
 <a id="rint"></a>
-<h4>Reference-based interface</h4>
+<h4>Interface</h4>
 <p>The menu on the lower-right shows the options that will always exist.
 There may be additional options in between the middle lines,
 depending on the condition used to create the table, as discussed below.
@@ -1032,6 +1049,7 @@ by a ";".
 </ul>
 The following discussion will all apply to results from 3 or 4 species.
 <!-- ************************************ -->
+
 <a id="rgene"></a>
 <h4>Gene Report</h4>
 
@@ -1109,7 +1127,7 @@ derived from a table of 94715 rows.
 
 <!-- Cluster Group -->
 <p><a id="rclust"></a>
-<h4>4.5.5 Cluster gene report</h4>
+<h4>Cluster gene report</h4>
 
 <table class="tx">
 <tr><td>
@@ -1143,6 +1161,7 @@ is linked across all species (asr: <u>a</u>ll <u>s</u>pecies <u>r</u>ow).
   <img src="img/query_report_clust.png" alt="report cluster" style="border: 1px solid black; width: 700px"></a>
 
 <!-- ************************************************************************ -->
+<p>&nbsp;
 <a id="search"></a>
 <h4>4.6 Search...</h4>
 
@@ -1174,8 +1193,9 @@ a message on the panel will state "Found N of M".
 <span class="ttb">Restart</span>: Clear internal parameters so the next <span class="ttb">Next</span> restarts the search from the first row.
 <br>Changing any value on the panel also restarts the search.
 <p>
-<hr>
+
 <!-- ************************************************************************ -->
+<hr>
 <a id="rtab"></a>
 <h2><span class="small">&gt;</span> Results</h2>
 

@@ -1,0 +1,81 @@
+### xToSymap Summary v5.8.6 on 26-Jun-26
+  Verbose output 
+Existing xConvertENS.log		file date 25-Jun-2026 14:10
+
+Sequence directory: ./data/seq/CabbE
+   Brassica_oleracea.BOL.dna_sm.toplevel.fa.gz		file date 24-Jun-2026 16:06
+Annotation directory: ./data/seq/CabbE
+   Brassica_oleracea.BOL.59.gff3		file date 24-Jun-2026 16:06
+#!genome-build CanSeq BOL
+#!genome-date 2014-05
+#!genebuild-last-updated 2014-05
+
+### FASTA sequence file(s)
+Example header lines:                                                         
+   Chr:  >C1 dna_sm:chromosome chromosome:BOL:C1:1:43764888:1 REF
+   Chr:  >C2 dna_sm:chromosome chromosome:BOL:C2:1:52886895:1 REF
+   Scaf: >Scaffold00285 dna_sm:scaffold scaffold:BOL:Scaffold00285:1:550871:1 REF
+   Scaf: >Scaffold00418 dna_sm:scaffold scaffold:BOL:Scaffold00418:1:360705:1 REF
+
+Count totals:            
+      9 Chromosomes
+ 32,919 Scaffolds
+ 32,928 Total sequences
+
+Count Prefixes:
+ 32,919 Scaffold
+      9 C
+
+Counts of length ranges:
+   32,327<10k   552<100k   40<1M   0<10M   5<50M   4<100M
+   488,622,507 Total length
+
+Lengths of first 10 sequences:
+ C1            43,764,888
+ C2            52,886,895
+ C3            64,984,695
+ C4            53,719,093
+ C5            46,902,585
+ C6            39,822,476
+ C7            48,366,697
+ C8            41,758,685
+ C9            54,679,868
+ Scaffold00285     550,871
+
+Base counts for all sequences
+   A  73,470,451  a  68,910,477
+   T  73,494,796  t  68,874,706
+   C  43,441,875  c  36,987,039
+   G  43,465,652  g  36,970,246
+   N         346  n  43,006,919
+                      
+### GFF Annotation file(s)
+Example lines:
+C1	brad	gene	1449	1625	.	-	.	ID=gene:Bo1g001000;biotype=protein_coding;gene_id=Bo1g001000;logic_name=brad_maker_pasa
+C1	brad	mRNA	1449	1625	.	-	.	ID=transcript:Bo1g001000.1;Parent=gene:Bo1g001000;biotype=protein_coding;tag=Ensembl_canonical;transcript_id=Bo1g001000.1
+C1	brad	exon	1449	1625	.	-	.	Parent=transcript:Bo1g001000.1;Name=Bo1g001000.1_exon_1;constitutive=1;ensembl_end_phase=0;ensembl_phase=0;exon_id=Bo1g001000.1_exon_1;rank=1
+C1	brad	CDS	1449	1625	.	-	0	ID=CDS:Bo1g001000.1;Parent=transcript:Bo1g001000.1;protein_id=Bo1g001000.1
+                                                               
+Summary:                                                              
+   59,220 Gene from 59,225 (protein_coding)
+   59,220 mRNA from 59,225 (1st mRNA)
+  268,591 Exon from 269,978 
+  268,591 CDS  from 268,591 
+
+Types: (col 2)
+ 268,591 CDS                              3 RNase_MRP_RNA                   29 SRP_RNA                   
+       9 chromosome                 269,978 exon                        59,225 gene                      
+      22 lnc_RNA                     59,225 mRNA                         1,361 ncRNA_gene                
+     121 pre_miRNA                      220 rRNA                        32,919 scaffold                  
+     174 snRNA                          282 snoRNA                         510 tRNA                      
+
+Gene attribute biotype values: 
+       5 nontranslating_CDS          59,220 protein_coding            
+
+Gene attribute keywords (col 8): 
+   59,220 ID                          59,220 biotype                  
+   15,318 description                 59,220 gene_id                  
+   59,220 logic_name               
+                                           
+Input type: Ensembl 'biotype' keyword; gene 'description' keyword
+------ Finish summary for ./data/seq/CabbE/ ------

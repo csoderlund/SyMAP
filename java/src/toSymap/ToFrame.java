@@ -21,6 +21,7 @@ import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
 import backend.Constants;
+import symap.Globals;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
@@ -28,6 +29,7 @@ import util.Popup;
 
 /******************************************************
  * Interface to run convertNCBI, convertEnsembl, and getLengths
+ * CAS586 remove Protein-id, add All
  */
 public class ToFrame extends JDialog implements WindowListener {
 	private static final long serialVersionUID = 1L;
@@ -40,7 +42,7 @@ public class ToFrame extends JDialog implements WindowListener {
 	public ToFrame() {
 		addWindowListener(this);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);	
-		setTitle("Input files for SyMAP");
+		setTitle("Create input for SyMAP");
 		parent = this;
 		
 		createMainPanel();
@@ -52,11 +54,12 @@ public class ToFrame extends JDialog implements WindowListener {
 		setVisible(true);
 	}
 	private void createMainPanel() {
+		System.out.println("\nxToSymap " +  Globals.VERDATE + "   " + Globals.WEB); // CAS586 add
 		mainPanel = Jcomp.createPagePanel();
 		
 		createFileSelect();	 mainPanel.add(new JSeparator());
 		
-		createConvert(); 	 mainPanel.add(new JSeparator());
+		createConvert(); 	 mainPanel.add(new JSeparator()); 
     	
     	createButtonPanel();
     	
@@ -101,7 +104,7 @@ public class ToFrame extends JDialog implements WindowListener {
 					return;
 				}
 				boolean b = chkSumConvert.isSelected() && chkSumConvert.isEnabled();
-				new Summary(dir).runCheck(chkSumVerbose.isSelected(), b);
+				new Summary(dir, chkSumVerbose.isSelected(), b);
 			}
 		});
 		crow.add(btnSummary); crow.add(Box.createHorizontalStrut(10));
@@ -118,11 +121,11 @@ public class ToFrame extends JDialog implements WindowListener {
 	}
 	private void createConvert() {
 		JPanel panel = Jcomp.createPagePanel();
-		
-		createConvertOptions(panel);  panel.add(Box.createVerticalStrut(20));
+		createConvertOptions(panel);  
+		panel.add(Box.createVerticalStrut(10));
     	
         JPanel row = Jcomp.createRowPanel();
-        btnExec = Jcomp.createBoldButton("Convert", "Covert FASTA and GFF to SyMAP input");
+        btnExec = Jcomp.createBoldButton("Convert NCBI", "Covert FASTA and GFF to SyMAP input");
 		btnExec.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				convert();
@@ -130,13 +133,11 @@ public class ToFrame extends JDialog implements WindowListener {
 		});
 		chkVerbose = Jcomp.createCheckBox("Verbose", "Write extra information to the terminal/log", false);
 		
-		row.add(btnExec);	row.add(Box.createHorizontalStrut(5));
-		lblExec = new JLabel("NCBI files");
-		row.add(lblExec);	
-		row.add(Box.createHorizontalStrut(30));
+		row.add(btnExec);	row.add(Box.createHorizontalStrut(30));
 		row.add(chkVerbose);
 		
 		panel.add(row);
+		panel.add(Box.createVerticalStrut(10));
 		mainPanel.add(panel);
 	}
 	private void createConvertOptions(JPanel cpanel) {
@@ -179,6 +180,7 @@ public class ToFrame extends JDialog implements WindowListener {
 		
 		// 2 shared
 		JPanel row3 = Jcomp.createRowPanel(); 
+		chkAll  = Jcomp.createCheckBox("All Seqs", "Include all sequences", false);
 		chkScaf = Jcomp.createCheckBox("Scaffolds", "Include scaffolds in the output", false);
 		chkMtPt = Jcomp.createCheckBox("Mt/Pt", "Include Mt/Pt in the output", false);
 		
@@ -191,8 +193,9 @@ public class ToFrame extends JDialog implements WindowListener {
 		});
 		txtPrefix = Jcomp.createTextField("", 6);
 		txtPrefix.setEnabled(false);
+		row3.add(chkAll);  row3.add(Box.createHorizontalStrut(2));
 		row3.add(chkScaf); row3.add(Box.createHorizontalStrut(2));
-		row3.add(chkMtPt); row3.add(Box.createHorizontalStrut(25));
+		row3.add(chkMtPt); row3.add(Box.createHorizontalStrut(8));
 		row3.add(chkOnlyPrefix);row3.add(Box.createHorizontalStrut(1));
 		row3.add(txtPrefix);
 		
@@ -200,16 +203,14 @@ public class ToFrame extends JDialog implements WindowListener {
 		JPanel row4 = Jcomp.createRowPanel(); row4.add(Box.createHorizontalStrut(7));
 		lblGap = Jcomp.createLabel("Gap size >=", "Consecutive n's of this length will be identified in the gap.gff file."); 
 		txtGap = Jcomp.createTextField(defGapLen+"", 6);
-		chkNp = Jcomp.createCheckBox("Protein-id",  "New gene attribute of: proteinID = 1st CDS protein-id of 1st mRNA", false);
 		
-		row4.add(lblGap);  row4.add(Box.createHorizontalStrut(2)); 
-		row4.add(txtGap); row4.add(Box.createHorizontalStrut(15));
-		row4.add(chkNp);
+		row4.add(lblGap); row4.add(Box.createHorizontalStrut(2)); 
+		row4.add(txtGap); 
 		
 		cpanel.add(rowN); cpanel.add(Box.createVerticalStrut(5));
 		cpanel.add(rowE); cpanel.add(Box.createVerticalStrut(10));
 		cpanel.add(row3); cpanel.add(Box.createVerticalStrut(5));
-		cpanel.add(row4); cpanel.add(Box.createVerticalStrut(5));
+		cpanel.add(row4); 
 	}
 	
 	private void createButtonPanel() {
@@ -259,7 +260,7 @@ public class ToFrame extends JDialog implements WindowListener {
 			}
 		});
 		
-		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, Jhtml.xtosymap); // CAS579 goto xToSymap
+		JButton btnHelp = Jhtml.createHelpIconSysSm(Jhtml.CONVERT_GUIDE_URL, Jhtml.xtosymap); 
 		row.add(btnHelp); row.add(Box.createHorizontalStrut(10));
 		
 		panel.add(row);
@@ -302,17 +303,17 @@ public class ToFrame extends JDialog implements WindowListener {
 		
 		args.add(g);
 		if (chkVerbose.isSelected()) args.add("-v");
+		if (chkAll.isSelected())     args.add("-a");
 		if (chkScaf.isSelected())    args.add("-s");
 		if (chkMtPt.isSelected())    args.add("-t");
-		if (chkNp.isSelected())      args.add("-p"); 
 		
-		if (radNCBI.isSelected()) {
+		if (radNCBI.isSelected()) { // NCBI
 			if (chkNmask.isSelected())   args.add("-m");
 			String [] s = args.toArray(new String [args.size()]);
 			
 			new ConvertNCBI(s, gapLen, prefix);
 		}	
-		else {
+		else {						// Ensembl
 			if (chkEonlyNum.isSelected() && prefix!=null) {
 				Popup.showInfoMessage("Only options", "Select either 'Only #, X, Y, I' or 'Only prefix', not both.");
 				return;
@@ -361,8 +362,8 @@ public class ToFrame extends JDialog implements WindowListener {
 	private void radDisable() {
 		boolean bNCBI = radNCBI.isSelected();
 		
-		if (bNCBI) lblExec.setText("NCBI files");
-		else       lblExec.setText("Ensembl files");
+		if (bNCBI) btnExec.setText("Convert NCBI");
+		else       btnExec.setText("Convert Ensembl");
 		
 		chkNmask.setEnabled(bNCBI);  
 		chkEonlyNum.setEnabled(!bNCBI);
@@ -373,14 +374,14 @@ public class ToFrame extends JDialog implements WindowListener {
 		boolean b = !(fname.equals(rootDir)) ;
 		btnSummary.setEnabled(b); chkSumVerbose.setEnabled(b); chkSumConvert.setEnabled(b);
 		 
-		radNCBI.setEnabled(b); chkNp.setEnabled(b);  chkNmask.setEnabled(b);
+		radNCBI.setEnabled(b); chkNmask.setEnabled(b);
 		radEns.setEnabled(b);  chkEonlyNum.setEnabled(b);
 		
-		chkScaf.setEnabled(b); chkMtPt.setEnabled(b);
- 		chkVerbose.setEnabled(b); chkOnlyPrefix.setEnabled(b);
-		lblGap.setEnabled(b);  txtGap.setEnabled(b);
+		chkAll.setEnabled(b); 		chkScaf.setEnabled(b); 		chkMtPt.setEnabled(b);
+ 		chkVerbose.setEnabled(b); 	chkOnlyPrefix.setEnabled(b);
+		lblGap.setEnabled(b);  		txtGap.setEnabled(b);
 		
-		lblExec.setEnabled(b); btnExec.setEnabled(b); btnLen.setEnabled(b); btnSplit.setEnabled(b);
+		btnExec.setEnabled(b); btnLen.setEnabled(b); btnSplit.setEnabled(b);
 		
 		if (b) { // these need /sequence directory
 			b = new File(fname + convertDir).exists();
@@ -397,19 +398,18 @@ public class ToFrame extends JDialog implements WindowListener {
 	private JCheckBox chkSumVerbose = null, chkSumConvert = null;
 	
 	private JRadioButton radNCBI = null;
-	private JCheckBox chkNmask = null, chkNp = null;
+	private JCheckBox chkNmask = null;
 	
 	private JRadioButton radEns = null;
 	private JCheckBox chkEonlyNum = null;
 	
 	// shared
-	private JCheckBox chkScaf = null,  chkMtPt = null;
+	private JCheckBox chkScaf = null,  chkMtPt = null, chkAll = null;
 	private JCheckBox chkOnlyPrefix = null;
 	private JLabel lblGap = null;
 	private JTextField txtGap = null, txtPrefix = null;
 	private JCheckBox  chkVerbose = null;
 	
-	private JLabel lblExec = null ;
 	private JButton btnExec = null;
 	
 	private JButton btnLen = null, btnSplit = null, btnExit = null;

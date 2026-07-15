@@ -54,6 +54,53 @@ which is aware of the exon-intron structure.
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
 </table>
 
+<a id="v586"></a>
+<h3>Release: v5.8.6 (15-July-2026)</h3>
+Changed to <span class="ttp">symap</span> and <span class="ttp">xToSymap</span> (including <span class="ttt">scripts/ConvertNCBI.java</span>
+and <span class="ttt">scripts/ConvertEns.java</span>).
+<p>
+<ul>
+<li><span class="ttp">xToSymap</span>:
+<ul>
+<li>Instead of using the first mRNA per gene, the following is done:
+<br>NCBI: use the longest mRNA.
+<br>Ensembl: use the mRNA with 'tag=Ensembl_canonical'; if none exist,
+use the longest mRNA.
+<li>The GFF output includes the CDS coordinates.
+<li><span class="ttl">All Seqs</span> option was added, which converts all sequences for SyMAP input.
+<br><span class="ttl">Include Protein-ID</span> option was removed.
+<li>Small things:
+<ul>
+<li>Instead of using the <span class="ttt">seqid</span> prefix 'Unk' for unknown sequences, the prefix 'Seq' is used.
+<li>NCBI: If a gff file has the scaffold NW_ prefix but the line contains 'chromosome',
+keep it a scaffold (it was tagging it a chromosome).
+<li>Ensembl: If a gene has no description, it will be given one of "uncharacterized protein".
+</ul>
+<li><span class="ttb">Summary</span>: Has various changes to improve the output.
+</ul>
+<p>
+<li><span class="ttp">Load Annotation</span>: If symap is started with the '-cds' flag, the CDS coordinates
+are loaded instead of the Exons. The only place this is obvious is on the
+<span class="ttp">Manager</span> and <span class="ttp">View</span>
+option for the species project; everywhere else will still say 'Exon'.
+<p>
+<li><span class="ttp">Queries</span>:
+<ul>
+<li>New options for  <span class="ttx">Exact</span> and  <span class="ttx">Start</span> for annotation.
+<li><span class="ttl">Export</span>: new option <span class="ttx">Unique splice genes</span>
+to export FASTA spliced genes, which also works for singles. If the annotation was loaded with
+<span class="ttp">symap</span> using the -cds flag,
+the output will be the spliced CDSs, else it will be the spliced exons.
+<li>Bug fix: (1) The <span class="ttl">Export</span> did not work for selected rows.
+(2) <span class="ttl">Show</span>
+crashed if using the <span class="ttl">Single</span> option.
+</ul>
+<p>
+<li><small>Developers: (1) ConvertNCBI and ConvertEnsembl were redesigned into classes. (2)
+Schema projects.types was changed from an enum to short string with types ncbi, ens, other.
+</small>
+</ul>
+<!-- ==================== -->
 <a id="v585"></a>
 <h3>Release: v5.8.5 (1-June-2026)</h3>
 More changes to the <span class="ttp">Linear</span> and <span class="ttp">Circle</span> control of displays.
@@ -816,7 +863,7 @@ it was not doing.
 <ul>
 <li>The default is to surpress output to the terminal and <span class="ttt">logs/{proj-to-proj}/symap.log</span> except final summaries.
 To show the verbose output, use <span class="ttx">./symap -v</span> or use the parameters
-<a href="SystemHelp" class="ext" target="_blank">Verbose</a> checkbox.
+<a href="SystemHelp.html#cpu" class="ext" target="_blank">Verbose</a> checkbox.
 See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
 <li>Status lines, which repeatedly use the same line, are written to stderr instead of stdout.
 <li>The <span class="ttx">symap</span> or <span class="ttx">viewSymap</span> flag to show settings for the important MySQL variables is now "-sql".

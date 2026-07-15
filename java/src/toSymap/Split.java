@@ -15,7 +15,7 @@ import util.FileDir;
  * Splits converted files into chromosome files. Must be converted files.
  */
 public class Split {
-	private final String header = "### Written by SyMAP Convert";
+	private final String header = "### Written by " + symap.Globals.toConvert;
 	private String logFileName = "/xSplit.log";
 	
 	//output - the projDir gets appended to the front - predefined names, do not change

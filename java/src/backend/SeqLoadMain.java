@@ -39,7 +39,8 @@ public class SeqLoadMain {
 	private Vector<File> seqFiles = new Vector<File>();	
 	private String saveSeqDir="", projName;
 	private long modDirDate=0;
-	private int totalnSeqs=0, cntFile=0, totalSeqIgnore=0, totalBasesWritten=0;
+	private int totalnSeqs=0, cntFile=0, totalSeqIgnore=0;
+	private long totalBasesWritten=0;	// CAS586 genome size! was int.
 	private Vector<String> grpList = new Vector<String>();
 	private int fileType=0, iNCBI=1, iEns=2; 
 	
@@ -64,6 +65,9 @@ public class SeqLoadMain {
 			// print on View
 			mProj.saveProjParam("proj_seq_date", Utils.getDateStr(modDirDate));
 			mProj.saveProjParam("proj_seq_dir", saveSeqDir);
+			
+			if (fileType==iNCBI) mProj.saveType("NCBI"); // CAS586 replaced projects.type from fpc/pseudo to this
+			else if (fileType==iEns) mProj.saveType("ENS");
 			
 			if (cntFile>1) {
 				plog.msg("Total:");
@@ -206,10 +210,8 @@ public class SeqLoadMain {
 			while ((line = fh.readLine()) != null) {
 				
 				if (line.startsWith("#") || line.isEmpty()) {
-					if (line.contains("Written by SyMAP")) {
-						if (line.contains("ConvertNCBI")) fileType=iNCBI;
-						else if (line.contains("ConvertEnsembl")) fileType=iEns;
-					}
+					if (line.contains(Globals.toNCBI)) fileType=iNCBI;
+					else if (line.contains(Globals.toENS)) fileType=iEns;
 					continue; 
 				}
 				

@@ -1,113 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP hsaN summmary</title>
 </head>
 <body>
 
 <pre style="margin-left:200px; margin-right:50px;">
------- Summary for ./data/seq/HsaN ------
-Log file to  ./data/seq/HsaN/xSummary.log
-Verbose output
+------ Summary for ./data/seq/HsaN on 09-Jul-26 ------
+Summary file: ./data/seq/HsaN/xSummary.log
+  Verbose output
 
-Sequence directory: ./data/seq/HsaN/ncbi_dataset/data/GCF_000001405.40      02-Aug-2024 12:22
-   GCF_000001405.40_GRCh38.p14_genomic.fna
-Annotation directory: ./data/seq/HsaN/ncbi_dataset/data/GCF_000001405.40
-   genomic.gff
+Sequence directory: ./data/seq/HsaN
+   GCF_000001405.40_GRCh38.p14_genomic.fna.gz                 File date 02-Aug-2024 15:15
+Annotation directory: ./data/seq/HsaN
+   genomic.gff.gz                                             File date 02-Aug-2024 15:17
 
-FASTA sequence file(s)
+### FASTA sequence file(s)
+Example header lines
    Chr:  &gt;NC_000001.11 Homo sapiens chromosome 1, GRCh38.p14 Primary Assembly
    Scaf: &gt;NT_187361.1 Homo sapiens chromosome 1 unlocalized genomic scaffold, GRCh38.p14 Primary Assembly HSCHR1_CTG1_UNLOCALIZED
    Scaf: &gt;NW_012132914.1 Homo sapiens chromosome 1 genomic patch of type FIX, GRCh38.p14 PATCHES HG1342_HG2282_PATCH
    Mt:   &gt;NC_012920.1 Homo sapiens mitochondrion, complete genome
 
-Count Totals:
-     24 Chromosomes
-    680 Scaffolds
-      1 Mt/Pt
-    705 Total sequences
-
-Count Prefixes:
+Count prefixes
     355 NT_
     325 NW_
      25 NC_
 
-Counts of Length Ranges:
-   91&lt;10k   96&lt;100k   461&lt;1M   33&lt;10M   1&lt;50M   7&lt;100M   14&lt;200M   2&gt;=200M
-   3,298,430,636 Total length
+Lengths of 27 sequence (includes all chromosomes)
+    Length    SeqId
+ 248,956,422  NC_000001.11
+     175,055  NT_187361.1
+      32,032  NT_187362.1
+ 242,193,529  NC_000002.12
+ 198,295,559  NC_000003.12
+ 190,214,555  NC_000004.12
+ 181,538,259  NC_000005.10
+ 170,805,979  NC_000006.12
+ 159,345,973  NC_000007.14
+ 145,138,636  NC_000008.11
+ 138,394,717  NC_000009.12
+ 133,797,422  NC_000010.11
+ 135,086,622  NC_000011.10
+ 133,275,309  NC_000012.12
+ 114,364,328  NC_000013.11
+ 107,043,718  NC_000014.9
+ 101,991,189  NC_000015.10
+  90,338,345  NC_000016.10
+  83,257,441  NC_000017.11
+  80,373,285  NC_000018.10
+  58,617,616  NC_000019.10
+  64,444,167  NC_000020.11
+  46,709,983  NC_000021.9
+  50,818,468  NC_000022.11
+ 156,040,895  NC_000023.11
+  57,227,415  NC_000024.10
+      16,569  NC_012920.1
 
-Lengths of first 5 sequences:
- NC_000001.11 248,956,422
- NT_187361.1      175,055
- NT_187362.1       32,032
- NT_187363.1      127,682
- NT_187364.1       66,860
+#Seqs&lt;length && &gt;=previous
+   0&lt;10k   96&lt;100k   461&lt;1M   33&lt;10M   1&lt;50M   7&lt;100M   14&lt;200M   2&lt;300M
 
-Base counts:
-   A 558,619,211  a 364,497,992
-   T 559,373,567  t 366,543,471
-   C 413,530,454  c 229,022,463
-   G 413,917,617  g 231,314,379
-   N 161,611,379  n           0
-   B 2  K 8  M 8  R 29  S 5  W 15  Y 36
+Base count for 1st 2.14G bases
+   A 382,077,624  a 241,302,208
+   T 382,446,377  t 242,364,262
+   C 273,762,314  c 147,038,618
+   G 273,861,270  g 148,106,073
+   N  56,524,838  n           0
+   B 2  K 5  M 6  R 18  S 2  W 10  Y 22
 
-GFF Annotation file(s)
-Example lines:
+Summary
+   24 Chromosomes  3,088,269,832
+  680 Scaffolds      210,144,235
+    1 Mt/Pt               16,569
+  705 Total        3,298,430,636
+
+### GFF Annotation file(s)
+Example lines
 NC_000001.11	BestRefSeq	gene	65419	71585	.	+	.	ID=gene-OR4F5;Dbxref=GeneID:79501,HGNC:HGNC:14825;Name=OR4F5;description=olfactory receptor family 4 subfamily F member 5;gbkey=Gene;gene=OR4F5;gene_biotype=protein_coding
-NC_000001.11	BestRefSeq	mRNA	65419	71585	.	+	.	ID=rna-NM_001005484.2;Parent=gene-OR4F5;Dbxref=Ensembl:ENST00000641515.2,GeneID:79501,GenBank:NM_001005484.2,HGNC:HGNC:14825;Name=NM_001005484.2;gbkey=mRNA;gene=OR4F5;product=olfactory...
-NC_000001.11	BestRefSeq	exon	65419	65433	.	+	.	ID=exon-NM_001005484.2-1;Parent=rna-NM_001005484.2;Dbxref=Ensembl:ENST00000641515.2,GeneID:79501,GenBank:NM_001005484.2,HGNC:HGNC:14825;gbkey=mRNA;gene=OR4F5;product=olfactory receptor...
+NC_000001.11	BestRefSeq	mRNA	65419	71585	.	+	.	ID=rna-NM_001005484.2;Parent=gene-OR4F5;Dbxref=Ensembl:ENST00000641515.2,GeneID:79501,GenBank:NM_001005484.2,HGNC:HGNC:14825;Name=NM_001005484.2;gbkey=mRNA;gene=OR4F5;product=olfactory receptor family 4 subfamily F member 5;tag=MANE Select;transcript_id=NM_001005484.2
+NC_000001.11	BestRefSeq	exon	65419	65433	.	+	.	ID=exon-NM_001005484.2-1;Parent=rna-NM_001005484.2;Dbxref=Ensembl:ENST00000641515.2,GeneID:79501,GenBank:NM_001005484.2,HGNC:HGNC:14825;gbkey=mRNA;gene=OR4F5;product=olfactory receptor family 4 subfamily F member 5;tag=MANE Select;transcript_id=NM_001005484.2
+NC_000001.11	BestRefSeq	CDS	65565	65573	.	+	0	ID=cds-NP_001005484.2;Parent=rna-NM_001005484.2;Dbxref=CCDS:CCDS30547.2,Ensembl:ENSP00000493376.2,GeneID:79501,GenBank:NP_001005484.2,HGNC:HGNC:14825;Name=NP_001005484.2;gbkey=CDS;gene=OR4F5;product=olfactory receptor 4F5;protein_id=NP_001005484.2;tag=MANE Select
 
-Summary:
-  23,314 Genes from 48,104    (use protein_coding only)
-  23,314 mRNAs from 144,481    (23,312 has protein_id)
- 233,893 Exons from 2,307,779
+Types
+        6 CAAT_signal                      96 CAGE_cluster              1,838,180 CDS
+       44 C_gene_segment                  177 DNaseI_hypersensitive...         61 D_gene_segment
+        1 D_loop                           15 GC_rich_promoter_regi...        128 J_gene_segment
+        1 RNase_MRP_RNA                     2 RNase_P_RNA                      30 TATA_box
+      664 V_gene_segment                    4 Y_RNA                            39 antisense_RNA
+  137,091 biological_region            26,404 cDNA_match                       24 centromere
+       14 chromosome_breakpoint...        138 conserved_region                 20 direct_repeat
+        5 dispersed_repeat            115,163 enhancer                         59 enhancer_blocking_ele...
+       12 epigenetically_modifi...  2,307,779 exon                         48,104 gene
+        2 imprinting_control_re...         12 insulator                    32,844 lnc_RNA
+       14 locus_control_region        144,481 mRNA                        161,162 match
+       18 matrix_attachment_sit...        368 meiotic_recombination...      3,218 miRNA
+        5 microsatellite                   13 minisatellite                    54 mitotic_recombination...
+      204 mobile_genetic_elemen...         54 ncRNA                           514 non_allelic_homologou...
+        4 nucleotide_cleavage_s...        623 nucleotide_motif                 87 origin_of_replication...
+    2,139 primary_transcript              438 promoter                      1,418 protein_binding_site
+   19,252 pseudogene                       80 rRNA                            632 recombination_feature...
+      709 region                            2 regulatory_region                62 repeat_instability_re...
+       10 repeat_region                    11 replication_regulator...          3 replication_start_sit...
+       20 response_element                  4 scRNA                            30 sequence_alteration
+       10 sequence_alteration_a...          2 sequence_comparison           1,964 sequence_feature
+       14 sequence_secondary_st...     35,932 silencer                        172 snRNA
+    1,300 snoRNA                          691 tRNA                             64 tandem_repeat
+        1 telomerase_RNA               14,974 transcript                    2,259 transcriptional_cis_r...
+        4 vault_RNA
 
-Types: 73
-      6 CAAT_signal                    96 CAGE_cluster              1,838,180 CDS
-     44 C_gene_segment                177 DNaseI_hypersensitive_site      61 D_gene_segment
-     15 GC_rich_promoter_region       128 J_gene_segment                  2 RNase_P_RNA
-     30 TATA_box                      664 V_gene_segment                  4 Y_RNA
-     39 antisense_RNA             137,091 biological_region          26,404 cDNA_match
-     24 centromere                     14 chromosome_breakpoint         138 conserved_region
-     20 direct_repeat                   5 dispersed_repeat          115,163 enhancer
-     59 enhancer_blocking_element      12 epigenetically_modified_region 2,307,779 exon
- 48,104 gene                            2 imprinting_control_region      12 insulator
- 32,844 lnc_RNA                        14 locus_control_region      144,481 mRNA
-161,162 match                          18 matrix_attachment_site        368 meiotic_recombination_region
-  3,218 miRNA                           5 microsatellite                 13 minisatellite
-     54 mitotic_recombination_region     204 mobile_genetic_element         54 ncRNA
-    514 non_allelic_homologous_recombination_region       4 nucleotide_cleavage_site      623 nucleotide_motif
-     87 origin_of_replication       2,139 primary_transcript            438 promoter
-  1,418 protein_binding_site       19,252 pseudogene                     80 rRNA
-    632 recombination_feature         709 region                          2 regulatory_region
-     62 repeat_instability_region      10 repeat_region                  11 replication_regulatory_region
-      3 replication_start_site         20 response_element                4 scRNA
-     30 sequence_alteration            10 sequence_alteration_artifact       2 sequence_comparison
-  1,964 sequence_feature               14 sequence_secondary_structure  35,932 silencer
-    172 snRNA                       1,300 snoRNA                        691 tRNA
-     64 tandem_repeat              14,974 transcript                  2,259 transcriptional_cis_regulatory_region
-      4 vault_RNA
+Gene attribute biotype=values
+       33 C_region                         61 D_segment                       117 J_segment
+        1 RNase_MRP_RNA                     2 RNase_P_RNA                     365 V_segment
+        4 Y_RNA                            20 antisense_RNA                19,645 lncRNA
+    2,139 miRNA                            68 misc_RNA                         54 ncRNA
+       29 other                        23,314 protein_coding                   80 rRNA
+        4 scRNA                           172 snRNA                         1,300 snoRNA
+      691 tRNA                              1 telomerase_RNA                    4 vault_RNA
 
-Gene Attributes biotype: 21
-     33 C_region                       61 D_segment                     117 J_segment
-      2 RNase_P_RNA                   365 V_segment                       4 Y_RNA
-     20 antisense_RNA              19,645 lncRNA                      2,139 miRNA
-     68 misc_RNA                       54 ncRNA                          29 other
- 23,314 protein_coding                 80 rRNA                            4 scRNA
-    172 snRNA                       1,300 snoRNA                        691 tRNA
-      4 vault_RNA
+Gene attribute keywords
+    23,314 Dbxref                       23,314 ID                           23,314 Name
+    23,301 description                     195 end_range                        18 exception
+    23,314 gbkey                        23,314 gene                         23,314 gene_biotype
+    19,894 gene_synonym                    335 partial                         141 start_range
 
-Gene Attribute: 12
-  23,314 Dbxref                     23,314 ID
-  23,314 Name                       23,301 description
-     195 end_range                      18 exception
-  23,314 gbkey                      23,314 gene
-  23,314 gene_biotype               19,894 gene_synonym
-     335 partial                       141 start_range
-mRNA Attribute:
-  23,301 product
+    23,301 mRNA's with attribute keyword 'product'
 
-Input type: NCBI chr NC_ prefix; NCBI GFF header
+Summary
+   23,314 Gene from    48,104 (protein_coding)
+   23,314 mRNA from   144,481 (1st mRNA)
+  233,893 Exon from 2,307,779
+  215,377 CDS  from 1,838,180
+
+Input type: NCBI GFF header; NCBI NC_ chromosome prefix
             NCBI 'gene_biotype' keyword; NCBI mRNA 'product' keyword; gene 'description' keyword
 ------ Finish summary for ./data/seq/HsaN/ ------
 </pre>

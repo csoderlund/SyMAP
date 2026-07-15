@@ -319,7 +319,6 @@ Neither of these are saved with the <span class="ttb">Pair parameters</span> <a 
 <p><i>Make sure these two parameters are correct before running the alignment</i>: <span class="ttl">Minimum length</span>, <span class="ttl">Sequence files</span>.
 These are described in <a href="#project">Load project</a>.
 
-<p>&nbsp;
 <p><span class="ttl">Sequence</span> and <span class="ttl">Anno</span> (annotation) <span class="ttl">files</span>:
 <br>If the files are put in the default locations, nothing needs to be entered for them.
 Default locations:
@@ -329,6 +328,10 @@ Default locations:
 </pre>
 See <a href="./input/index.html" class="ext" target="_blank">input</a> for a description of the input files.
 </table>
+<p>&nbsp;<p>
+Note: as of v5.8.6, the <span class="ttp">xToSymap</span> conversion programs include CDS coordinates
+in the converted .gff files. If you start symap with the '-cds' option, the CDS coordinates will be loaded instead of
+the exons; the only evidence that they were used is on the project's <a href="input/img/viewB.png">View</a> panel.
 
 <td><a href="img/parameters1.png">
     <img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 400px"></a>

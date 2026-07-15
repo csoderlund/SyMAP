@@ -48,7 +48,7 @@
 <!-- ================ bulk of page ========================= -->
 <div class="main">
 <!--START BODY -->
-
+<p><span class="ttp">xToSymap</span> and <span class="ttp">ConvertEnsembl</span> were updated in v5.8.6.
 <p>Ensembl supplies FASTA formatted files for genome sequence and GFF formatted files for the annotation
 The following provides a simple scheme to produce the correctly formatted files for SyMAP.
 
@@ -77,6 +77,8 @@ The following provides a simple scheme to produce the correctly formatted files 
 <ol>
 <li>Only chromosome and optional scaffold sequences are processed.
 <li>Only the 'protein-coding' genes are processed.
+<li>The exons and CDSs from the canonical or longest mRNA are saved
+(<span class="ttp">symap</span> only loads one mRNA).
 <li>Gene attributes:
 <table>
 <tr><td><span class="ttx">ID</span><td> From the input gene attributes.
@@ -84,10 +86,8 @@ The following provides a simple scheme to produce the correctly formatted files 
 <tr><td style="vertical-align: text-top;"><span class="ttx">desc</span><td> Is the gene <span class="ttx">description</span>,
 where symbols (e.g. %3B) are replaced with the correct character.
 <br>It removes the ending "[Source:..." from the input <span class="ttx">description</span>.
-<tr><td style="vertical-align: text-top;"><span class="ttx">rnaID</span><td> Is equal to the first mRNA ID.
+<tr><td style="vertical-align: text-top;"><span class="ttx">rnaID</span><td> Is equal to the canonical or longest mRNA ID.
 Following the ID is <span class="ttx">(n)</span>, where n=number of mRNAs for the gene.
-<tr><td style="vertical-align: text-top;"><span class="ttx">proteinID</span>
-	<td> (optional) Is equal the 1st CDS <span class="ttx">protein-id</span> of the 1st mRNA.
 </table>
 </ol>
 
@@ -130,7 +130,7 @@ is the soft masked chromosome sequences.
 <h2>Convert files</h2>
 
 <table class="tz">
-<tr><td><a href="#opts">xToSymap Ensembl Options</a>
+<tr><td><a href="#opts">xToSymap</a>
 <td><a href="#scaf">Scaffolds</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
@@ -142,7 +142,7 @@ and move the FASTA and GFF files into the directory.
 
 <li>
 Start the <a href="./index.html#if" class="ext" target="_blank">xToSymap</a> program.
-<ul><li>Select the appropriate xToSymap Ensembl options (described below).
+<ul><li>Select the appropriate <span class="ttp">xToSymap</span> Ensembl options (described below).
 <li>Then select <span class="ttb">Convert</span>.
 </ul>
 </ol>
@@ -163,53 +163,22 @@ data/seq/cabbE/
 </pre>
 
 <a id="opts"></a>
-<h3>xToSymap Ensembl Options</h3>
+<h3>xToSymap</h3>
 
 <table class="tx"><tr><td>
 <a href="img/ENS-options.png"><img src="img/ENS-options.png" alt="" style="border: 1px solid black; width: 300px"></a>
 <td>The FASTA file must end in ".fa" and the annotation file
 must end in ".gff3" (the Ensembl defaults). They may be zipped, i.e. have a '.gz' suffix.
+
+<p>For an explanation of the options, see <a href="./index.html#convert" class="ext" target="_blank">Convert</a>.
 <td></table>
-
-<table class="ty">
-<tr><td><b>Option</b><td><b>Description</b><td><b>Default</b>
-<tr><td style="white-space: nowrap;"><span class="ttl">Only #,X,Y,I</span><sup>2</sup>
-<td>Most Ensembl FASTA header lines specify the chromosome number, X, Y or Roman numeral.
-Only these sequences will be written. <td>Any that have 'chromosome' on their header line.
-
-<tr><td><span class="ttl">Scaffolds</span><sup>1</sup><td>Any sequence with 'scaffold' in the header line
-will be written to the FASTA file. See <a href="#scaf">Scaffolds</a><td>Chromosomes only
-<tr><td><span class="ttl">Mt/Pt</span>
-    <td>Mt/Pt chromosomes will be included in FASTA and GFF. Only the first occurrence will be included.
-    <td>No Mt/Pt
-<tr><td><span class="ttl">Only prefix</span><sup>2</sup><td>Only sequences with the specified prefix will be processed. <td>None
-<tr><td><span class="ttl">Protein-id</span>
-    <td>A new attribute called <span class="ttx">proteinID=</span> will have the value of the <span class="ttx">protein-id</span> of the 1st CDS for
-    the 1st mRNA of the gene.
-This can be searched using the <span class="ttp">viewSymap</span>
-        <a href="../Query.html" target="_blank" class="ext">Queries</a>.
-    <td>Do not include
-<tr><td><span class="ttl">Verbose</span><td>Print extra information, e.g. see
-<a href="./logs/cnvCabbEv.html" class="ext" target="_blank">verbose log</a>
-<td>No extra information
-</table>
-<p>
-<sup>1</sup>You may include <span class="ttl">Scaffolds</span>, and then limit the input on the <span class="ttp">symap</span>
-<span class="ttb">Load</span> by setting
-<br>&nbsp;&nbsp;<span class="ttl">Minimal length</span> in the project's
-<a href="../SystemHelp.html#projParams" class="ext" target="_blank">Parameters</a>.
-<p><sup>2</sup>For situations needing <span class="ttl">Only #,X,Y,I</span> and <span class="ttl">Only prefix</span>,
-see <a href="./index.html#except" class="ext" target="_blank">exceptions</a>. This mainly occur
-if the words 'chromosome' or 'scaffold' are not in the header lines.
 
 <a id="rules"></a>
 <p><i><u>Rules</u></i>: There are variations in the text associated with <span class="ttx">&gt;seqid</span> header lines. The rules
 used by this script are as follows:
 <ol>
-<li>If <span class="ttl">Only prefix</span> is not blank, sequences are filtered out if the <span class="ttx">seqid</span> does not
-start with the prefix. Then the following rules 2-4 are applied to the non-filtered sequences:
-<br>&nbsp;
-<li>Chromosomes: A sequence is considered a chromosome if: (a) the ">" is followed by a number, X, Y, or roman numeral,
+
+<li>Chromosomes: A sequence is considered a chromosome if: (a) the ">" is followed by a # (number), X, Y, or roman numeral,
  or (b) the header line contains the word 'chromosome'.
   <ul>
  <li>The exception is when the header line starts with '>Mt' or '>Pt', these will not be output unless
@@ -232,7 +201,7 @@ start with the prefix. Then the following rules 2-4 are applied to the non-filte
 <li>Unknown: All other ">" entries are considered 'unknown'.
 	<ul>
 	<li>They will only be output if <span class="ttl">Only prefix</span> matches the input header line <span class="ttx">seqid</span>.
-	<li>&gt;<span class="ttx">seqid</span>: 'Unk' followed by a consecutive number.
+	<li>&gt;<span class="ttx">seqid</span>: 'Seq' followed by a consecutive number.
 	</ul>
 </ol>
 See <a href="./index.html#sf" class="ext" target="_blank">Summarize</a> to help determine how to set the options for your input.
@@ -277,7 +246,10 @@ you want to load, which will cause them to be shown on the right of the <span cl
 to enter the appropriate values.
 <li>Then select <span class="ttb">Load Project</span>.
 </ol>
-
+Note: as of v5.8.6, if you start symap with the '-cds' option, the CDS coordinates will be loaded instead of
+the exons; the only evidence that they were used is on the project's
+<a href="img/viewB.png">View</a> panel.
+<!-- ============================ -->
 <a id="edit"></a>
 <h2>Editing the ConvertEnsembl script</h2>
 
@@ -297,24 +269,25 @@ if it is correct or not), edit the program
 <u>FASTA</u>: Reads the file ending in '.fa.gz' and writes a new file called
 <span class="ttt">sequence/genomic.fna</span> with the following changes:
 	<ol type="a">
-	<li>Sequences are output according to the option <a href="#rules">Rules</a>.
+	<li>Sequences are output according to the options selected and <a href="#rules">Rules</a>.
 	<li>Gaps of &gt;30,000 are written to the <span class="ttt">annotation/gap.gff</span> file (this value can be changed
 in the <span class="ttp">xToSymap</span> interface).
 	</ol>
-<br>
 
 <u>GFF</u>: Reads the file ending in 'gff3.gz' and writes the file <span class="ttt">annotation/anno.gff</span>. The
 <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>
 has 9 columns, where the first is the 'seqid', the third is the 'type' (e.g. feature 'gene'), the
 last column is a semicolon-delimited keyword=value 'attribute' list. The file is processed as follows:
 	<ol  type="a">
-	<li>Only lines with the 'type' (3rd column) equal 'gene', 'mRNA' and 'exon' are read.
-	<li>Genes with "biotype=protein_coding" are written to file, followed by the first mRNA and
-	its exons.
-	<li>All lines have their seqID replaced with the assigned seqID used in the FASTA file. They all have a modified
-	set of attributes written.
-	<li>The only gene attributes retained are ID, description and Name (if it is not the same as ID).
+	<li>Only lines with the 'type' (3rd column) equal <span class="ttx">gene</span>, <span class="ttx">mRNA</span>,
+	<span class="ttx">exon</span> and <span class="ttx">CDS</span> are read.
+	<li>Genes with <span class="ttx">biotype=protein_coding</span> are written to file, followed by the canonical mRNA and
+	its exons and CDSs.
+	<li>All lines have their <span class="ttx">seqid</span> replaced with the assigned <span class="ttx">seqid</span> used in the FASTA file.
+	<li>The only gene attributes retained are <span class="ttx">ID</span>, <span class="ttx">description</span> and <span class="ttx">Name</span>
+	(if it is not the same as <span class="ttx">ID</span>).
 	It removes the ending "[Source:..." from the input <span class="ttx">description</span>.
+	If there is no description, it will be assigned "uncharacterized protein".
 	</ol>
 <!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">

@@ -21,6 +21,7 @@ import util.Utilities;
  * TextShowAlign DP align Hit for Hit Info
  * TextShowSeq   get sequence for Show Sequence
  * Query MSA 	 get full hit sequence or concatenated subhit for MSA align
+ * Query Export  get gene sequence with introns removed
  * 
  * 1. Query and target are used in the pseudo_hits table
  * 2. Select and Other are from the user selected sequence
@@ -30,18 +31,23 @@ public class AlignPool  {
 	private static final boolean TRACE = false; 
 	private static final boolean toUpper = false;
 	private static final boolean bTrim=Globals.bTrim; // only used for Closeup; Text align has it passed in
+	private static final int lineLen = 70;
 	
-	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; 
+	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // 1000000;
 	private HitAlignResults curHit; // hqr for the whole current hit
 	
 	private DBconn2 dbc2;
 	
 	/**************************************************************
-	 * Symap query MSA
+	 * Symap query MSA 
 	 */
 	public AlignPool(DBconn2 dbc2){ // For SyMAPQueryFrame to use loadPseudoSeq
 		this.dbc2 = dbc2;
 	}
+	/********************************************************
+	 * Return concatenated hits, with nnnnn between each hit
+	 * Overlapping hits are merged.
+	 */
 	public String loadSeq(int pos, String indices, int grpIdx, String gapLess) {
 	try {
 		if (gapLess.equals("")) return loadPseudoSeq(indices, grpIdx); // pseudo_seq2 is index by grpIdx only
@@ -58,7 +64,6 @@ public class AlignPool  {
 		
 		int s2=0, e2=0;
 		for (int i=0; i<subhits.length; i++) {
-			Globals.tprt(subhits[i]);
 			int [] coords = extractInt(subhits[i]);
 			
 			int olap= (e2==0) ? 0 : Math.min(coords[1],e2) - Math.max(coords[0],s2) + 1;
@@ -84,9 +89,11 @@ public class AlignPool  {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Getting sequence"); return null;}
 	}
+
 	public String loadSeq(String indices, int grpIdx) { // For query export
-		 return loadPseudoSeq(indices, grpIdx);
+		 return mkLines(loadPseudoSeq(indices, grpIdx), lineLen);
 	}
+	
 	/*****************************************************************
 	 * 2D Text popup and closeup
 	 ***********************************************************/
@@ -323,6 +330,100 @@ public class AlignPool  {
 	/************************************************************************
 	 * Database calls
 	 */
+	/**************************************************************
+	 * Exon spliced sequence; CAS586 add
+	 * Read DB for idx and strand; read DB for exons/CDS; read DB for each splice CDS
+	 * Very slow
+	 */
+	public String loadGeneSeq(String genetag, int grpIdx, String annoType) { // For query export and MSA
+		String seq="", query="";
+		if (genetag.isEmpty()) {Globals.prt("No genetag"); return null;}
+		
+		String genenum = genetag.substring(0, genetag.indexOf(Globals.DOT)); // 123. or 123.b; int is genenum
+		if (genenum.isEmpty()) {Globals.prt("Could not parse: " + genetag);return null;}
+		
+		try {
+			int annotIdx=0;
+			String strand="+", id="", rna="";
+			
+			query = "select idx, tag, name, strand from pseudo_annot "
+					+ " where genenum=" + genenum + " and grp_idx=" + grpIdx;
+			
+			// Go through records getting the genenum and tag, and use that one where pseudo_tag.startsWith(genetag)
+			ResultSet rs = dbc2.executeQuery(query);
+			while (rs.next()) {
+				String tag = rs.getString(2);		// 123. (exon stuff) or 123.b (exon stuff)
+				tag = tag.substring(0, tag.indexOf("(")).trim();
+				
+				if (tag.equals(genetag)) {
+					annotIdx 		= rs.getInt(1);
+					strand   		= rs.getString(4);
+					
+					// ID=AT1G01010;Name=NAC001;rnaID=NM_099983.2 (1);desc=NAC domain containing protein 1
+					String name     = rs.getString(3);
+					String [] tok = name.split(";");
+					for (String val : tok) {
+						if (val.startsWith("ID="))    id=val.replace("ID=","");
+						else if (val.startsWith("rnaID")) rna=val;
+					}
+					if (id.isEmpty()) id = name;
+					break;
+				}
+			}
+			rs.close();
+			if (annotIdx==0) {Globals.prt("Fail: " + query);return null;}
+			
+			// header is first line, where > geneTag will be put in front from calling routine
+			int [] num = new int [3];
+			seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
+			
+			// >ID will be put in from of header for output
+			String header  = String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
+			return header + seq; 
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + genetag); Globals.prt(query);} 	
+		return seq;
+	}
+	// returns Spliced gene sequence; get coordinates of exons/CDS, then call LoadGeneSeq for each
+	// the output was compared with gffRead on CDSs
+	public String loadGeneSplice(int annotIdx, String strand, int grpIdx, int [] num) { // For query export and MSA
+		String seq="", query="";
+		try {
+			Vector <String> coords = new Vector <String> (20);
+	
+			query = "SELECT start, end FROM pseudo_annot WHERE gene_idx=" + annotIdx 
+					+ " and grp_idx= " + grpIdx + " order by start";
+		
+			// GFF coordinates are 1-based and fully closed (the start position is the exact position of the first base, and the end position is the exact position of the last base).
+			ResultSet rs2 = dbc2.executeQuery(query); // loadPseudoSeq does db calls, so cannot be in the loop
+			while (rs2.next()) {
+				int start = rs2.getInt(1); // loadPseudoSeq adds one assuming zero-based coords
+				int end   = rs2.getInt(2);
+				
+				coords.add(start + ":" + end);
+				num[1] += (end-start)+1;
+				num[0]++;
+			}
+			rs2.close();
+			
+			// get splice strings and concatenate 
+			StringBuffer seqbuf = new StringBuffer();
+			for (String c : coords) {
+				String exon = loadPseudoSeq(c, grpIdx);
+				seqbuf.append(exon);
+			}
+			seq = seqbuf.toString();
+			num[2] = seq.length();
+			if (strand.equals("-")) seq = reverseComplement(seq);
+			seq = mkLines(seq, lineLen);
+			
+			return seq;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + annotIdx); Globals.prt(query);} 
+		
+		return "#error\n" + seq;
+	}
+	
 	/***************************************************************************
 	 * Load the hit info and subhit target/query sequence
 	 * Coords for subhits are relative to forward strand
@@ -390,14 +491,15 @@ public class AlignPool  {
 		return curHit;
 	}
 	/*********************************
-	 * indices is start:end; also called directly from TextShowSeq
+	 * indices is start:end; called from anywhere that needs chucks of sequence;
+	 * called directly from TextShowSeq and from this file
+	 * Original routine written by Will
 	 */
 	protected String loadPseudoSeq(String indices, int grpIdx) {
 		ResultSet rs = null;
-		String pseudoSeq = "";
+		String pseudoSeq = ""; // add to in 1M chucks
 		
-		try {
-			// Java and MUMmer are zero based but mysql is 1 based, add one
+		try {// Java and MUMmer are zero based but mysql is 1 based, add one
 			int start = extractStart(indices) + 1; 
 			int end =   extractEnd(indices) + 1;   
 			if (start == -1 || end == -1) return "";
@@ -408,10 +510,10 @@ public class AlignPool  {
 				end = temp;
 			}
 			
-			String query2="";
+			String query2="", seq="";
+			
 			long count = end - start + 1;
 			long chunk = start / CHUNK_SZ;
-			String seq;
 			start = start % CHUNK_SZ;
 			if (start>0) start--;  // -1 =translate like MUMmer show_align AA output (it seems to do 6-frame and pick best)
 			end = end % CHUNK_SZ;
@@ -488,6 +590,7 @@ public class AlignPool  {
 		
 		return curHit;
 	}
+	
 	// Query MSA 
 	private String loadSubHitStr(int pos, String gapLess) {
 	try {
@@ -511,6 +614,29 @@ public class AlignPool  {
 	private String reverseStrand(String s) { // used to reverse +/- or -/+
 		return new StringBuffer(s).reverse().toString();
 	}
+	
+	private String reverseComplement(String dna){ 
+		StringBuilder rc = new StringBuilder();
+        
+        // Loop through the string backwards to reverse it
+        for (int i = dna.length() - 1; i >= 0; i--) {
+            char c = dna.charAt(i);
+            
+            switch (c) { // Append the complement while preserving case
+                case 'A': rc.append('T'); break;
+                case 'a': rc.append('t'); break;
+                case 'T': rc.append('A'); break;
+                case 't': rc.append('a'); break;
+                case 'C': rc.append('G'); break;
+                case 'c': rc.append('g'); break;
+                case 'G': rc.append('C'); break;
+                case 'g': rc.append('c'); break;
+                default: rc.append(c); // Retain unknown characters (like N)
+            }
+        }
+        return rc.toString();
+	}
+	
 	private int extractStart(String range) {return extractInt(range)[0];}
 	private int extractEnd(String range)   {return extractInt(range)[1];}
 	
@@ -522,6 +648,20 @@ public class AlignPool  {
 		out[0] = Integer.parseInt(tokens[0]); 
 		out[1] = Integer.parseInt(tokens[1]); 
 		return out;
+	}
+	private String mkLines(String seq, int len) { // CAS586 add for Queries Export transcript and spliced gene
+		StringBuffer seqbuf = new StringBuffer();
+		int i=0;
+		while (i<seq.length()) {
+			if (i+len < seq.length()) {
+				seqbuf.append(seq.substring(i, i+len) + "\n");
+			}
+			else {
+				seqbuf.append(seq.substring(i, seq.length()));
+			}
+			i+=len;
+		}
+		return seqbuf.toString();
 	}
 	
 	/********************************************************

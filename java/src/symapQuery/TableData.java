@@ -544,7 +544,7 @@ public class TableData implements Serializable {
 		}
 		return headVal;
     }
-    // For 2D 3track, Report; Align
+    // For 2D 3track, Report; Align; Query Export
     protected void getRowLocData(int row, Vector <String> colNames, Vector <Object> colVals) {
   		for (int i=0; i<arrHeaders.length; i++) {
   			String colName = arrHeaders[i].getColumnName();
@@ -557,22 +557,25 @@ public class TableData implements Serializable {
   			// general
   			else if (colName.endsWith(Q.hitSt))		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.blockCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
-  			else if (colName.equals(Q.cosetCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.cosetCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.hitCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.grpCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   		}
      }
+    
     /* For show row */
     protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
+			if (arrData[row][i]==null) continue; // CAS586 Singles
+			
 			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.dash);
 			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") 
 				|| colName.equals(Q.hitCol))
 			{
 				int dd = Utilities.getInt(arrData[row][i].toString());
-				if (dd == -1) line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
-				else line += String.format("%-15s %,d\n", colName, dd);
+				if (dd == -1) 	line += String.format("%-15s %s\n", colName, arrData[row][i].toString());
+				else 			line += String.format("%-15s %,d\n", colName, dd);
 			}
 			else if (!colName.endsWith(Q.All_Anno)) {// generally in other columns, but not always..
 				String all = arrData[row][i].toString();

@@ -1,44 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>ConvertNCBI Cabbage</title>
 </head>
 <body>
 <pre  style="margin-left:200px; margin-right:50px;">
------- ConvertNCBI ./data/seq/cabbN ------
-Log file to  ./data/seq/cabbN/xConvertNCBI.log
+------ ConvertNCBI ./data/seq/CabbN on 29-Jun-26 ------
+Log file to  ./data/seq/CabbN/xConvertNCBI.log
 Parameters:
-   Project directory: ./data/seq/cabbN
+   Project directory: ./data/seq/CabbN/
 
-Processing ./data/seq/cabbN/ncbi_dataset/data/GCF_000695525.1/GCF_000695525.1_BOL_genomic.fna
-C1      NC_027748.1      43,764,888
-C2      NC_027749.1      52,886,895
-C3      NC_027750.1      64,984,695
-C4      NC_027751.1      53,719,093
-C5      NC_027752.1      46,902,585
-C6      NC_027753.1      39,822,476
-C7      NC_027754.1      48,366,697
-C8      NC_027755.1      41,758,685
-C9      NC_027756.1      54,679,868
-Sequences not output: 32,877
-Finish writing ./data/seq/cabbN//sequence/genomic.fna
+Processing ./data/seq/CabbN/GCF_000695525.1_BOL_genomic.fna
+   C1      NC_027748.1      43,764,888
+   C2      NC_027749.1      52,886,895
+   C3      NC_027750.1      64,984,695
+   C4      NC_027751.1      53,719,093
+   C5      NC_027752.1      46,902,585
+   Suppressing further chromosome logs
+   Sequences not output:  32,877
 
-A 130,476,628  a           0
-T 130,495,534  t           0
-C  73,285,008  c           0
-G  73,283,720  g           0
-N  39,344,992  n           0
+   A 130,476,628  a           0
+   T 130,495,534  t           0
+   C  73,285,008  c           0
+   G  73,283,720  g           0
+   N  39,344,992  n           0
+   Total written: 446,885,882
+Finish writing ./data/seq/CabbN/sequence/genomic.fna
 
-Gaps >= 30000: 39
-Finish writing ./data/seq/cabbN//annotation/gap.gff
+Gaps >= 30,000: 39
+Finish writing ./data/seq/CabbN/annotation/gap.gff
 
-Processing ./data/seq/cabbN/ncbi_dataset/data/GCF_000695525.1/genomic.gff
-   Use Genes 42,414 from 49,563
-   Use mRNAs 42,414 from 54,434
-   Use Exons 220,036 from 398,922
-Finish writing ./data/seq/cabbN//annotation/anno.gff
-
->>Chromosome gene count 42,414
+Processing ./data/seq/CabbN/genomic.gff
+   Process 40000 genes...
+   Chromosome gene count: 42,414
    C1         NC_027748.1             4,198
    C2         NC_027749.1             4,326
    C3         NC_027750.1             6,668
@@ -48,9 +42,15 @@ Finish writing ./data/seq/cabbN//annotation/anno.gff
    C7         NC_027754.1             4,523
    C8         NC_027755.1             4,430
    C9         NC_027756.1             5,115
-   Genes not on Chromosome    1,972
+   Genes not included in GFF file: 1,972
 
------- Finish ConvertNCBI ./data/seq/cabbN/ ------
+   42,414 Gene from 49,563 (protein coding)
+   42,414 mRNA from 56,687 (longest mRNA)
+  220,164 Exon from 398,922
+  210,205 CDS  from 305,897
+Finish writing ./data/seq/CabbN/annotation/anno.gff
+
+------ Finish ConvertNCBI ./data/seq/CabbN/ ------
 </pre>
 </body>
 </html>

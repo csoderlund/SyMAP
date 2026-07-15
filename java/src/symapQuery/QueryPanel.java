@@ -102,6 +102,8 @@ public class QueryPanel extends JPanel {
 // General
 	protected boolean isAnnoStr()	{return chkAnno.isEnabled() && chkAnno.isSelected();}// DBdata filter;
 	protected String getAnnoTxt()	{return txtAnno.getText().trim();}
+	protected boolean isAnnoExact() {return radAnnoExact.isSelected();}
+	protected boolean isAnnoStart() {return radAnnoStart.isSelected();}
 	
 	protected SpeciesPanel getSpeciesPanel() {return spPanel;}
 	protected HashMap <Integer, String> getGrpCoords() { return grpCoords;} // DBdata filter
@@ -277,12 +279,31 @@ public class QueryPanel extends JPanel {
 				setAnnoSingleRow();
 			}
 		});
-		txtAnno = Jcomp.createTextField("", 30); txtAnno.setEnabled(false);
+		txtAnno = Jcomp.createTextField("", 20); 
 		
-		row.add(chkAnno); row.add(Box.createHorizontalStrut(10));
-		row.add(txtAnno);   row.setMaximumSize(row.getPreferredSize());
+		radAnnoAny 	= Jcomp.createRadio("Any", "String match can be anywhere");
+		radAnnoExact= Jcomp.createRadio("Exact", "String match must be exact");
+		radAnnoStart= Jcomp.createRadio("Start", "String match must be at start");
 		
-		if (!bNoAnno) page.add(row); 
+		if (bNoAnno) return page; // create components even if not showing
+		
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(radAnnoAny); bg.add(radAnnoExact); bg.add(radAnnoStart);
+		radAnnoAny.setSelected(true);
+		
+		txtAnno.setEnabled(false);
+		radAnnoAny.setEnabled(false); radAnnoExact.setEnabled(false); radAnnoStart.setEnabled(false);
+		
+		row.add(chkAnno); 		row.add(Box.createHorizontalStrut(8));
+		row.add(txtAnno); 		row.add(Box.createHorizontalStrut(2));
+		row.add(radAnnoAny);   	row.add(Box.createHorizontalStrut(1));
+		row.add(radAnnoExact); 	row.add(Box.createHorizontalStrut(1));
+		row.add(radAnnoStart); 
+		
+		row.setMaximumSize(row.getPreferredSize());
+		
+		page.add(row); 
+		
 		return page;
 	}
 	/** Orphan or Single genes **/
@@ -707,7 +728,7 @@ public class QueryPanel extends JPanel {
 	 */
 	private void setClearDefaults() {
 		// Anno/Chr 
-		txtAnno.setText(""); txtAnno.setEnabled(false); 
+		txtAnno.setText(""); txtAnno.setEnabled(false); radAnnoAny.setSelected(true);
 		chkAnno.setEnabled(true); chkAnno.setSelected(false);
 		spPanel.setClear();  
 		
@@ -800,6 +821,9 @@ public class QueryPanel extends JPanel {
 		boolean bAnno = isAnnoStr();
 		
 		txtAnno.setEnabled(bAnno);
+		radAnnoAny.setEnabled(bAnno);
+		radAnnoExact.setEnabled(bAnno);
+		radAnnoStart.setEnabled(bAnno);
 	
 		if (bSingle) { 
 			setChkAll(nChkSingle); // Disable Exact rows
@@ -1305,8 +1329,12 @@ public class QueryPanel extends JPanel {
 			int numSpecies = spPanel.getNumSpecies();
 			if(numSpecies ==0) return "No species"; // not possible?
 			
-			String retVal="";
-			String anno = (isAnnoStr()) ? txtAnno.getText() : ""; 
+			String retVal="", anno=" ";
+			if (isAnnoStr()) { // CAS586
+				if (isAnnoExact()) 		anno = "Exact: ";
+				else if (isAnnoStart()) anno = "Start: ";
+				anno += txtAnno.getText();
+			}
 			String loc =  makeSummaryLoc(); 
 			
 			retVal = makeJoinDelim(retVal, anno, ";  "); 
@@ -1454,6 +1482,7 @@ public class QueryPanel extends JPanel {
 	
 	private JCheckBox  chkAnno = null;  // CAS579c add so can silence other species
 	private JTextField txtAnno = null; // Used with all but HitNum
+	private JRadioButton radAnnoExact = null, radAnnoStart=null, radAnnoAny=null; // CAS576 add
 	
 	protected SpeciesPanel spPanel = null;	
 	protected int nSpecies=0;

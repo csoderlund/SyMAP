@@ -214,7 +214,13 @@ public class Version {
 	// DB 7 has not happened; this contains on-the-fly add; to be done officially when there is more to add
 	private void updateVer7() {
 		try {
+			if (dbc2.tableColumnExists("pairs", "params"))	// Mpair; added in 511 as tinytext; do not know when changed to text
+				 dbc2.tableCheckModifyColumn("pairs", "params", "text");
+			else dbc2.tableCheckAddColumn("pairs", "params", "text", null); 
+			
 			dbc2.tableCheckAddColumn("xgroups", "labname", "VARCHAR(40) NOT NULL", "fullname"); // search CAS582 backwards
+			
+			dbc2.tableCheckModifyColumn("projects", "type", "VARCHAR(10) default 'other'"); // CAS586 was enum; Mprojects
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database for v7");}
 	}

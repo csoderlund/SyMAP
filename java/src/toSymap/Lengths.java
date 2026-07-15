@@ -104,9 +104,10 @@ public class Lengths {
 		System.out.print("                                                \r");
 		prt("");
 		prt(String.format("Total %,dbp from %,d sequences", total, cntSeq));
-		if (cntShortLen>0) prt(String.format("%,d sequences < %dbp %,d - not listed", cntShortLen, maxLenForPrt));
+		if (cntShortLen>0) 
+			prt(String.format("%,d sequences < %dbp - not listed", cntShortLen, maxLenForPrt)); // CAS586 extra %d
 	}
-	catch (Exception e) {ErrorReport.print("Length Read FASTA ");}
+	catch (Exception e) {ErrorReport.print(e, "Length Read FASTA ");}
 	}
 	/******************************************************/
 	private void findCutoff() {

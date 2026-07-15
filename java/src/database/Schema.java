@@ -32,10 +32,10 @@ public class Schema {
 
 		sql = "CREATE TABLE projects (" +
 		    "idx            INTEGER NOT NULL AUTO_INCREMENT," + // proj_idx
-		    "type           enum('fpc','pseudo')  NOT NULL," +
+		    "type           VARCHAR(10) default 'other'," +     // CAS586 was enum('fpc','pseudo'); see Mproject
 		    "name           VARCHAR(40) NOT NULL," +
 			"hasannot		boolean default 0," +
-			"annotdate		datetime," +	// date of load sequence and/or annotation
+			"annotdate		datetime," +	// date of load sequence and/or annotation; used on left side of manager
 			"loaddate		datetime," +	// db create, update synteny 
 			"syver			tinytext," +	// version of load sequence and/or annotation
 		    "PRIMARY KEY (idx)," +

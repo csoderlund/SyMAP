@@ -1,37 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>SyMAP hsaE summmary</title>
 </head>
 <body>
 
 <pre style="margin-left:200px; margin-right:50px;">
------- Summary for ./data/seq/HsaE ------
-Log file to  ./data/seq/HsaE/xSummary.log
-Verbose output
+------ Summary for ./data/seq/HsaE on 09-Jul-26 ------
+Summary file: ./data/seq/HsaE/xSummary.log
+  Verbose output
 
-Sequence directory: ./data/seq/HsaE      24-Aug-2024 05:42
-   Homo_sapiens.GRCh38.dna_sm.toplevel.fa.gz
+Sequence directory: ./data/seq/HsaE
+   Homo_sapiens.GRCh38.dna_sm.toplevel.fa.gz                  File date 02-Aug-2024 12:21
 Annotation directory: ./data/seq/HsaE
-   Homo_sapiens.GRCh38.112.gff3
+   Homo_sapiens.GRCh38.112.gff3.gz                            File date 02-Aug-2024 12:23
 
-FASTA sequence file(s)
-Example header lines:
+### FASTA sequence file(s)
+Example header lines
    Chr:  &gt;1 dna_sm:chromosome chromosome:GRCh38:1:1:248956422:1 REF
    Mt:   &gt;MT dna_sm:chromosome chromosome:GRCh38:MT:1:16569:1 REF
    Scaf: &gt;HG76_PATCH dna_sm:scaffold scaffold:GRCh38:HG76_PATCH:1:6367528:1
    Scaf: &gt;HSCHR15_4_CTG8 dna_sm:scaffold scaffold:GRCh38:HSCHR15_4_CTG8:1:5161414:1
    Scaf: &gt;HSCHRX_1_CTG14 dna_sm:scaffold scaffold:GRCh38:HSCHRX_1_CTG14:1:619716:1
-   Scaf: &gt;KI270728.1 dna_sm:scaffold scaffold:GRCh38:KI270728.1:1:1872759:1 REF
-   Scaf: &gt;GL000225.1 dna_sm:scaffold scaffold:GRCh38:GL000225.1:1:211173:1 REF
 
-Count Totals:
-     24 Chromosomes
-    681 Scaffolds
-      1 Mt/Pt
-    706 Total sequences
-
-Count Prefixes:
+Count prefixes
     342 HSCHR
     163 HG
     153 KI
@@ -40,57 +32,86 @@ Count Prefixes:
       7 HSCHRX
       1 MT
 
-Counts of Length Ranges:
-   91&lt;10k   97&lt;100k   463&lt;1M   31&lt;10M   1&lt;50M   7&lt;100M   14&lt;200M   2&gt;=200M
-   3,291,585,349 Total length
+Lengths of 27 sequence (includes all chromosomes)
+    Length    SeqId
+ 248,956,422  1
+ 242,193,529  2
+ 198,295,559  3
+ 190,214,555  4
+ 181,538,259  5
+ 170,805,979  6
+ 159,345,973  7
+ 145,138,636  8
+ 138,394,717  9
+ 133,797,422  10
+ 135,086,622  11
+ 133,275,309  12
+ 114,364,328  13
+ 107,043,718  14
+ 101,991,189  15
+  90,338,345  16
+  83,257,441  17
+  80,373,285  18
+  58,617,616  19
+  64,444,167  20
+  46,709,983  21
+  50,818,468  22
+ 156,040,895  X
+  57,227,415  Y
+      16,569  MT
+   6,367,528  HG76_PATCH
+   5,500,449  HG2365_PATCH
 
-Lengths of first 5 sequences:
-          1 248,956,422
-          2 242,193,529
-          3 198,295,559
-          4 190,214,555
-          5 181,538,259
+#Seqs&lt;length && &gt;=previous
+   0&lt;10k   97&lt;100k   463&lt;1M   31&lt;10M   1&lt;50M   7&lt;100M   14&lt;200M   2&lt;300M
 
-Base counts:
-   A 427,892,127  a 493,309,384
-   T 428,411,414  t 495,585,932
-   C 295,725,867  c 345,462,265
-   G 296,048,044  g 347,815,722
-   N 150,910,698  n  10,423,896
+Base count for 1st 2.14G bases
+   A 297,043,935  a 326,406,502
+   T 297,286,975  t 327,570,043
+   C 196,594,125  c 224,154,138
+   G 196,734,887  g 225,168,141
+   N  53,318,034  n   3,206,869
 
-GFF Annotation file(s)
-Example lines:
-1	ensembl_havana	gene	65419	71585	.	+	.	ID=gene:ENSG00000186092;Name=OR4F5;biotype=protein_coding;description=olfactory receptor family...
-1	havana	mRNA	65419	71585	.	+	.	ID=transcript:ENST00000641515;Parent=gene:ENSG00000186092;Name=OR4F5-201;biotype=protein_coding;ccdsid=...
-1	havana	exon	65419	65433	.	+	.	Parent=transcript:ENST00000641515;Name=ENSE00003812156;constitutive=1;ensembl_end_phase=-1;ensembl_phas...
+Summary
+  24 Chromosomes  3,088,269,832
+ 681 Scaffolds      203,298,948
+   1 Mt/Pt               16,569
+ 706 Total        3,291,585,349
 
-Summary:
-  20,089 Genes from 21,571    (use protein_coding only)
-  20,089 mRNAs from 111,563    (20,089 has protein_id)
- 189,587 Exons from 1,668,828
+### GFF Annotation file(s)
+Example lines
+1	ensembl_havana	gene	65419	71585	.	+	.	ID=gene:ENSG00000186092;Name=OR4F5;biotype=protein_coding;description=olfactory receptor family 4 subfamily F member 5 [Source:HGNC Symbol%3BAcc:HGNC:14825];gene_id=ENSG00000186092;logic_name=ensembl_havana_gene_homo_sapiens;version=7
+1	havana	mRNA	65419	71585	.	+	.	ID=transcript:ENST00000641515;Parent=gene:ENSG00000186092;Name=OR4F5-201;biotype=protein_coding;ccdsid=CCDS30547.2;tag=basic,Ensembl_canonical,MANE_Select,GENCODE Primary;transcript_id=ENST00000641515;version=2
+1	havana	exon	65419	65433	.	+	.	Parent=transcript:ENST00000641515;Name=ENSE00003812156;constitutive=1;ensembl_end_phase=-1;ensembl_phase=-1;exon_id=ENSE00003812156;rank=1;version=1
+1	havana	CDS	65565	65573	.	+	0	ID=CDS:ENSP00000493376;Parent=transcript:ENST00000641515;protein_id=ENSP00000493376
 
-Types: 26
-900,301 CDS                            29 C_gene_segment                 42 D_gene_segment
-     97 J_gene_segment                252 V_gene_segment            182,818 biological_region
-     25 chromosome                1,668,828 exon                      175,449 five_prime_UTR
- 21,571 gene                       92,171 lnc_RNA                   111,563 mRNA
-  1,879 miRNA                      26,350 ncRNA_gene                     10 processed_transcript
- 15,219 pseudogene                 15,222 pseudogenic_transcript         55 rRNA
-     50 scRNA                         169 scaffold                    1,915 snRNA
-    942 snoRNA                         22 tRNA                      211,674 three_prime_UTR
- 28,741 transcript                  1,139 unconfirmed_transcript
+Types
+  900,301 CDS                              29 C_gene_segment                   42 D_gene_segment
+       97 J_gene_segment                  252 V_gene_segment              182,818 biological_region
+       25 chromosome                1,668,828 exon                        175,449 five_prime_UTR
+   21,571 gene                         92,171 lnc_RNA                     111,563 mRNA
+    1,879 miRNA                        26,350 ncRNA_gene                       10 processed_transcript
+   15,219 pseudogene                   15,222 pseudogenic_transcrip...         55 rRNA
+       50 scRNA                           169 scaffold                      1,915 snRNA
+      942 snoRNA                           22 tRNA                        211,674 three_prime_UTR
+   28,741 transcript                    1,139 unconfirmed_transcrip...
 
-Gene Attributes biotype: 11
-     14 IG_C_gene                      37 IG_D_gene                      18 IG_J_gene
-    145 IG_V_gene                   1,052 TEC                             6 TR_C_gene
-      5 TR_D_gene                      79 TR_J_gene                     107 TR_V_gene
-     19 artifact                   20,089 protein_coding
+Gene attribute biotype=values
+       14 IG_C_gene                        37 IG_D_gene                        18 IG_J_gene
+      145 IG_V_gene                     1,052 TEC                               6 TR_C_gene
+        5 TR_D_gene                        79 TR_J_gene                       107 TR_V_gene
+       19 artifact                     20,089 protein_coding
 
-Gene Attribute: 7
-  20,089 ID                         19,463 Name
-  20,089 biotype                    20,067 description
-  20,089 gene_id                    20,089 logic_name
-  20,089 version
+Gene attribute keywords
+    20,089 ID                           19,463 Name                         20,089 biotype
+    20,067 description                  20,089 gene_id                      20,089 logic_name
+    20,089 version
+
+Summary
+   20,089 Gene from    21,571 (protein_coding)
+   20,089 mRNA from   111,563 (1st mRNA)
+  189,587 Exon from 1,668,828
+  167,592 CDS  from   900,301
 
 Input type: Ensembl chr 'Number, X, Y, Roman'
             Ensembl 'biotype' keyword; gene 'description' keyword

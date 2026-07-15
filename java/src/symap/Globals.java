@@ -14,9 +14,10 @@ import java.io.File;
  * Version changes may be in (1) database.Version, (2) in code calling DBconn2.tableCheckAddColumn or (3) Version.isVerLt
  */
 public class Globals {
-	public static final String 	VERSION = "v5.8.5";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
-	public static final String 	DATE = " (1-June-26)";
+	public static final String 	VERSION = "v5.8.6";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
+	public static final String 	DATE = " (15-July-26)";
 	public static final String  VERDATE = VERSION + " " + DATE;
+	public static final String  WEB = "https://csoderlund.github.io/SyMAP"; // Jhtml.BASE_HELP_URL/
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
 	public static final String  DBVERSTR = "db" + DBVER;
 	public static final String  JARVERION = "17.0.11"; // verify with 'jar xvf symap.jar META-INF', view META_INF
@@ -24,6 +25,11 @@ public class Globals {
 	public static String  MAIN_PARAMS =   "symap.config"; 	// default; changed on command line -c
 	
 	public static final  String PERSISTENT_PROPS_FILE = ".symap_saved_props"; // under user's directory; see props.PersistenProps
+	
+	// These are hard-coded in the stand-alone converts
+	public static final String toConvert = "SyMAP Convert";
+	public static final String toENS 	 = "SyMAP ConvertEnsembl";
+	public static final String toNCBI 	 = "SyMAP ConvertNCBI";
 	
 	// Set in SyMAPmanager 
 	public static boolean INFO=false;		// -ii; popup indices, query overlap, case-insensitive; also set on -tt and -dd 
@@ -44,9 +50,10 @@ public class Globals {
 	// These are the pseudo_annot.type values
 	public static final String geneType = "gene";	  // this is hard-coded many places; search 'gene'
 	public static final String exonType = "exon";
-	public static final String pseudoType = "pseudo"; // pseudo type
+	public static final String cdsType = "CDS";
 	public static final String gapType = "gap";
 	public static final String centType = "centromere";
+	public static final String pseudoType = "pseudo"; // pseudo type - anchor1 only
 	
 	public static final String pseudoChar = "~";	 // pseudo tag;
 	public static final String minorAnno = "*";      // used in Query and Anno popup for hit to non-assigned anno
@@ -107,7 +114,7 @@ public class Globals {
     public static void xprt(String msg) {System.out.println(msg);} // temp message
     public static void rprt(String msg) {System.err.print("      " + msg + "...                   \r");}// to stderr
     public static void rclear() {
-    	System.err.print("                                                                          \r");} 
+    	System.err.print("                                                                                  \r");} 
     public static void eprt(String msg) {System.err.println("***Error: " + msg);}
     public static void die(String msg)  {eprt(msg); System.exit(-1);}
     

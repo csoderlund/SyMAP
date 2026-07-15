@@ -42,11 +42,12 @@ public class Mproject implements Comparable <Mproject> {
 	
 	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0, numDraft=0; // numDraft to see !strict by default
 	private long length=0; 		// genome length - must be long
+	private String annot_type = "Exon"; // symap -cds will load cds instead of exons; only shown as a key in proj_props of annot_type
 	
 	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01
 	private TreeMap <String, Integer> grpName2Idx = new TreeMap <String, Integer> ();     // full name and name
-	private TreeMap <String, String>  grpName2Lab = new TreeMap <String, String> ();      // name to labname; CAS582 add
+	private TreeMap <String, String>  grpName2Lab = new TreeMap <String, String> ();      // name to labname;
 	
 	private boolean bHasSelf=false, bHasLab=true; 
 	
@@ -75,7 +76,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (!annotdate.isBlank())  {// CAS572 was !=""
+			if (!annotdate.isBlank())  {
 				strDate = Utilities.reformatAnnotDate(annotdate);
 				if (strDate.contentEquals("???")) 
 					System.out.println("Warning: " + strName + " interrupted on load - reload");
@@ -110,7 +111,7 @@ public class Mproject implements Comparable <Mproject> {
 	public String getAnnoStr() {
 		String msg= ""; 
 		if (numGene>0) msg += String.format("Genes: %,d  ", numGene);
-		if (numExon>0) msg += String.format("Exons: %,d  ", numExon);
+		if (numExon>0) msg += String.format("%s: %,d  ", annot_type + "s", numExon);
 		if (numGap>0)  msg += String.format("Gaps: %,d", numGap);
 		
 		return msg;
@@ -119,6 +120,7 @@ public class Mproject implements Comparable <Mproject> {
 		if (numSynteny==0) return "";
 		else return "[" + numSynteny + "]";
 	}
+	public String getAnnoType() {return annot_type;}
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() 	{return numGene>0;}
 	public boolean hasSelf() 	{return bHasSelf;}
@@ -145,10 +147,9 @@ public class Mproject implements Comparable <Mproject> {
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
 	
-	public void setIsSelf(String display, String abbrev) { // for isSelf
-		setProjVal(sDisplay, display); strDisplayName = display;
-		setProjVal(sAbbrev, abbrev); 
-	} 
+	public String getKeywords()     { return getProjVal(lANkeyword); }
+	
+	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
 	
 	public int getdbMinKey() {return Utilities.getInt(getDBVal(sANkeyCnt));}
 	
@@ -160,10 +161,11 @@ public class Mproject implements Comparable <Mproject> {
 		if (val.contains(",")) val = val.replace(",",""); 
 		return Utilities.getInt(val);
 	}
-	public String getKeywords()     { return getProjVal(lANkeyword); }
-	public String getAnnoType()		{ return "";} 
+	public void setIsSelf(String display, String abbrev) { // for isSelf
+		setProjVal(sDisplay, display); strDisplayName = display;
+		setProjVal(sAbbrev, abbrev); 
+	} 
 	
-	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
 	public int getGrpSize() { return grpIdx2Name.size();}
 	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} 
 	
@@ -181,12 +183,12 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	
 	public int getGrpIdx(String name) {	// grpName2Idx has both w/o prefix
-		// String prefix = getProjVal(lGrpPrefix); // CAS582 Was checking for prefix and \\w+; not necessary
+		// String prefix = getProjVal(lGrpPrefix); 
 		if (grpName2Idx.containsKey(name)) return grpName2Idx.get(name);
 		return -1;
 	}
 	public String getValidGroup() { // AnnotLoadMain; 
-		String msg= grpIdx2FullName.size()+": "; // CAS582 was using grName2Idx which has name and fullname
+		String msg= grpIdx2FullName.size()+": "; 
 		int cnt=0; 
 		for (int idx : grpIdx2FullName.keySet())  {
 			String x = grpIdx2FullName.get(idx);
@@ -286,7 +288,7 @@ public class Mproject implements Comparable <Mproject> {
 	try {
 		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();// idx, chrName
 		
-	// get chrs and lengths (CAS582 stop reading for name)
+	// get chrs and lengths 
 		ResultSet rs = dbc2.executeQuery("select xgroups.idx, pseudos.length from pseudos " + 
 				" join xgroups on xgroups.idx=pseudos.grp_idx " +
 				" where xgroups.proj_idx=" + projIdx);
@@ -301,7 +303,8 @@ public class Mproject implements Comparable <Mproject> {
 		if (!Utilities.isEmpty(desc)) info += desc + "\n";
 		info += "\n";
 		
-		String [] fields = {"Chr", " ", "Length",   " ","#Genes","AvgLen",   "  ","#Exons","AvgLen",  "  ","Gaps"}; 
+		String aType = "#" + annot_type;
+		String [] fields = {"Chr", " ", "Length",   " ","#Genes","AvgLen",   "  ",aType,"AvgLen",  "  ","Gaps"}; 
 		int [] justify =   {1,     1,   0,          0,    0,        0,          0,    0,        0,     0,     0};
 		if (bHasLab) fields[1] = "Name";
 				
@@ -448,14 +451,25 @@ public class Mproject implements Comparable <Mproject> {
 	catch (Exception e) {ErrorReport.print(e, "Save project param " + name + " " + val); }
 	}
 	
+	// CAS586 saved from SeqLoadMain based on initial comment in FASTA file
+	// type was fpc/pseudo: but NCBI/Ens is more useful than fpc (though still not used except when I look at DB)
+	public void saveType(String type) { 
+	try {
+		dbc2.executeUpdate("update projects set type='" + type + "' where idx=" + projIdx);	
+	} 
+	catch (Exception e) {ErrorReport.print(e, "Save project type " + type); }
+	}
+	
 	/**********************************************************/
 	public void createProject() throws Exception {
 	try {
+		dbc2.tableCheckModifyColumn("projects", "type", "VARCHAR(10) default 'other'"); // CAS586 was enum
+		
 		projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 		
 		if (projIdx == -1) {
 			dbc2.executeUpdate("INSERT INTO projects (name,type,loaddate, syver) " + 
-					"VALUES('" + strDBName + "','pseudo',NOW(),'" + Globals.VERSION + "')");
+					"VALUES('" + strDBName + "','other',NOW(),'" + Globals.VERSION + "')");
 			projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 			
 			System.out.println("Create project in database - " + strDBName);
@@ -480,7 +494,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public void removeProjectFromDB() {
 	try {
-		Globals.rprt("Removing " + strDisplayName + " from database..."); 
+		Globals.prt("Removing " + strDisplayName + " from database...");  // CAS586 was rprt
 		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
@@ -534,6 +548,7 @@ public class Mproject implements Comparable <Mproject> {
 	        		pKeysMap.get(key).dbVal   = val;
 	        		pKeysMap.get(key).projVal = val;
 	        	}
+	        	if (key.equals("annot_type")) annot_type=val; // annot_type is set from AnnotLoadMain
 	        }
 			rs = dbc2.executeQuery("select idx from pairs where proj1_idx=" + projIdx + " and proj2_idx=" + projIdx); 
 			bHasSelf = (rs.next()) ? true : false;
@@ -601,7 +616,7 @@ public class Mproject implements Comparable <Mproject> {
 			
 			if (Utilities.isEmpty(abbrev)) { // could get duplicate for new project, but checked in Param Save and QueryFrame
 				int len = strDisplayName.length();
-				if (len>abbrevLen) abbrev = strDisplayName.substring(0, abbrevLen);// 1st char (was last CAS578)
+				if (len>abbrevLen) abbrev = strDisplayName.substring(0, abbrevLen);// 1st char 
 				else 			   abbrev = strDisplayName;
 				setProjVal(sAbbrev, abbrev);
 			}
@@ -609,7 +624,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	
 	public void loadDataFromDB() throws Exception {
-		bHasLab = dbc2.tableColumnExists("xgroups", "labname"); // CAS582 backward
+		bHasLab = dbc2.tableColumnExists("xgroups", "labname"); 
 		String sql = (bHasLab) ? ", labname" : "";
 		
 		ResultSet rs = dbc2.executeQuery("select idx, fullname, name " + sql + " from xgroups where proj_idx=" + projIdx);

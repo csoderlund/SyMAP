@@ -44,7 +44,7 @@ public class SyMAPmanager extends ManagerFrame {
 
 	/** Args **/
 	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
-	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  		// symap
+	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh", "-cds"};					  		// symap
 	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat"}; 	    // hidden
 	
 	private static void argPrint(String args[]) {
@@ -57,10 +57,11 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -h        : Show help to terminal and exit");
 		
 		if (!isReadOnly) { // viewSymap is started with -r arg
+			System.out.println("\nLoad Project:");
+			System.out.println("  -cds      : Use CDSs instead of exons (CDSs must be in .gff file)");
 			System.out.println("\nAlign&Synteny:");
 			System.out.println("  -mum      : MUMmer: Do not remove any mummer files");
 			System.out.println("  -wsp      : Algo2: print MUMmer hits that differ from gene strand");
-			System.out.println("  -nh       : NumHits: recompute for v5.7.9c");
 			System.out.println("  -v        : A&S verbose output (same as checking Verbose on Manager)");
 		}
 		System.out.println("\nDisplay:");
@@ -87,14 +88,14 @@ public class SyMAPmanager extends ManagerFrame {
 			inReadOnlyMode = true; 
 		}
 		if (equalOption(args, "-c")) {
-			Globals.MAIN_PARAMS = getCommandLineOption(args, "-c");
+			Globals.MAIN_PARAMS = getOption(args, "-c");
 			if (Globals.MAIN_PARAMS==null) {
 				System.err.println("-c must be followed by the name of a configuration file");
 				System.exit(-1);
 			}
 		}
 		if (equalOption(args, "-p")) { // #CPU;
-			String x = getCommandLineOption(args, "-p"); 
+			String x = getOption(args, "-p"); 
 			try {
 				maxCPU = Integer.parseInt(x);	
 				System.out.println("-p  Max CPUs " + x);
@@ -122,6 +123,11 @@ public class SyMAPmanager extends ManagerFrame {
 			Globals.bQuerySaveLgClust=true;
 			System.out.println("-ac  Queries: retain all clusters regardless of size");
 		}
+	/** Load Project symap **/
+		if (equalOption(args, "-cds")) {// CAS586
+			System.out.println("-cds  Load CDSs instead of Exons");
+			backend.AnnotLoadMain.bUseCDS = true;
+		}
 	/** A&S symap **/
 		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output
 			Constants.VERBOSE = true;		
@@ -135,7 +141,7 @@ public class SyMAPmanager extends ManagerFrame {
 			System.out.println("-wsp  Algo2: print MUMmer hits that differ from gene strand");
 			Constants.WRONG_STRAND_PRT = true;
 		}
-		if (equalOption(args, "-nh")) {// CAS579c add
+		if (equalOption(args, "-nh")) {// CAS579c add - not on help anymore
 			System.out.println("-nh  numHits: recompute numHits for v5.7.9c");
 			Constants.NUMHITS_ONLY = true;
 		}
@@ -220,14 +226,16 @@ public class SyMAPmanager extends ManagerFrame {
 				return true;
 		return false;
 	}
-	private static String getCommandLineOption(String[] args, String name){
+	private static String getOption(String[] args, String name){
 		for (int i = 0;  i < args.length;  i++){
+			/* CAS586 remove
 			if (args[i].startsWith(name) && !args[i].equals(name)){
 				String ret = args[i];
 				ret = ret.replaceFirst(name,"");
 				return ret;
 			}
-			else if (args[i].equals(name) && i+1 < args.length) {
+			else */ 
+			if (args[i].equals(name) && i+1 < args.length) {
 				return args[i+1];
 			}
 		}
@@ -261,12 +269,10 @@ public class SyMAPmanager extends ManagerFrame {
 	}
 	/** Banner**/
 	private static void printVersion() {
-		String url = util.Jhtml.BASE_HELP_URL;
-		String base = url.substring(0, url.length()-1);
-		System.out.println("\nSyMAP " + Globals.VERSION + Globals.DATE + "  " + base);	
+		System.out.println("\nSyMAP " + Globals.VERDATE + "  " + Globals.WEB);	
 		System.out.println("Running on " + Ext.getPlatform() + " with Java v" + System.getProperty("java.version")); 
 	}
-	private static boolean checkJavaSupported(Component frame) {	// CAS559 update; CAS42 10/16/17 - did not work for Java SE 9
+	private static boolean checkJavaSupported(Component frame) {
 	try {
 		String userV = System.getProperty("java.version");
 		if (userV==null) {
@@ -274,7 +280,7 @@ public class SyMAPmanager extends ManagerFrame {
 			return true;
 		}
 		String [] ua = userV.split("\\.");
-		int u0=0, u1=0, u2=0; 	// this is suppose to have 3 numbers, but 22 just has 1; CAS569
+		int u0=0, u1=0, u2=0; 	// this is suppose to have 3 numbers, but 22 just has 1; 
 		if (ua.length>=0) u0 = Integer.valueOf(ua[0]);
 		if (ua.length>=1) u1 = Integer.valueOf(ua[1]);
 		if (ua.length>=2) u2 = Integer.valueOf(ua[2]);

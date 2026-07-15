@@ -30,7 +30,10 @@ import util.ErrorReport;
 public class AnnotLoadMain {
 	private static final int maxPrtErr = SeqLoadMain.maxPrtErr;
 	private final String idKey 		= "ID"; 			// Gene and mRNA
-	private final String parentKey 	= "Parent"; 		// mRNA and Exon
+	private final String parentKey 	= "Parent"; 		// mRNA and Exon and CDS
+	
+	public static boolean bUseCDS = false;				// symap -cds			
+	private String prtType="exon";						// change to CDS if -cds; CDS goes in database as exon; only proj_props shows CDS
 	
 	private ProgressDialog plog;
 	private DBconn2 tdbc2;
@@ -41,7 +44,7 @@ public class AnnotLoadMain {
 	// init
 	private Vector<File> annotFiles = 				new Vector<File>();
 	
-	private final String exonAttr = "Parent"; 		// save exon attribute; 
+	private final String exonAttr = "Parent"; 		// save exon attribute to db; 
 	private TreeMap<String,Integer> userAttr = 		new TreeMap <String,Integer>();
 	private TreeMap <String, Integer> ignoreAttr = 	new TreeMap <String,Integer> ();
 	private int userSetMinKeywordCnt=0;
@@ -49,7 +52,7 @@ public class AnnotLoadMain {
 	private final int savAtLeastKeywords=10; 		// These are columns in SyMAP Query
 	
 	private boolean bSuccess=true;
-	private int cntAllGene=0 , cntNoKey=0;
+	private int cntAllGene=0, cntNoKey=0;
 	
 	protected AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
 		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
@@ -60,8 +63,9 @@ public class AnnotLoadMain {
 	
 	protected boolean run(String projDBName) throws Exception {
 		long startTime = Utils.getTime();
+		if (bUseCDS) prtType = "CDS";
 		
-		plog.msg("Loading annotation for " + projDBName);
+		plog.msg("Loading annotation (" + prtType + ") for " + projDBName);
 		
 		initFromParams(projDBName);	if (!bSuccess) {tdbc2.close(); return false; };
 		
@@ -162,18 +166,23 @@ public class AnnotLoadMain {
 			/** only use exons from first mRNA **/
 			boolean isGene = (type.contentEquals(Globals.geneType)) ? true : false; 
 			boolean isExon = (type.contentEquals(Globals.exonType)) ? true : false;
+			boolean isCDS  = (type.contentEquals(Globals.cdsType)) ? true : false;
 			boolean isMRNA = (type.contentEquals("mRNA")) ? true : false;			// this is nowhere else
 			boolean isGap =  (type.contentEquals(Globals.gapType))  ? true : false;
 			boolean isCent = (type.contentEquals(Globals.centType)) ? true : false;
-			if (!(isGene || isExon || isMRNA || isGap || isCent)) continue;
 			
+			if (!(isGene || isExon || isMRNA || isGap || isCent || isCDS)) continue;
+			if ((isExon && bUseCDS) || (isCDS && !bUseCDS)) continue;// CAS586 add
+			
+			if (isCDS) type="exon";	// needs to go into DB as exon, or too many changes are needed
+				
 			String[] keyVals = attr.split(";"); 
 			
 			if (isGene)   {
 				mrnaID = null;
 				geneID = getVal(idKey, keyVals);
 			} 
-			else if (isMRNA) {
+			else if (isMRNA) { // load 1st mRNA only
 				if (geneID!=null && mrnaID==null) {
 					mrnaID = getmRNAid(geneID, keyVals, lineNum, line); 
 					if (!bSuccess) return;
@@ -181,10 +190,10 @@ public class AnnotLoadMain {
 				else if (geneID!=null) cntSkipMRNA++;
 				continue;
 			}
-			else if (isExon) {
+			else if (isExon || isCDS) { // CAS586 add; see above where only one is allowed thru
 				if (mrnaID==null) continue;
 				
-				if (!isGoodExon(mrnaID, keyVals, lineNum, line)) {
+				if (!isGoodExon(mrnaID, keyVals, lineNum, line)) { // if fail, the exon/CDS parent does not match mrnaID
 					if (!bSuccess) return;
 					continue;
 				}
@@ -193,7 +202,7 @@ public class AnnotLoadMain {
 			
 	/** Process for write **/
 			// Chromosome idx
-			grpIdx = mProj.getGrpIdx(chr); // Was checking for valid ID, but if its in the database, then it is. CAS582
+			grpIdx = mProj.getGrpIdx(chr); 
 			if (grpIdx < 0) {// this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
 					if (noGrpSet.size() < maxPrtErr) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
@@ -251,7 +260,7 @@ public class AnnotLoadMain {
 					
 				if (parsedAttr.equals("")) parsedAttr="[no description]"; 
 			}
-			else if (isExon) { // using parent or first; 
+			else if (isExon || isCDS) { // using parent 
 				cntExon++;
 				
 				for (String kv : keyVals) {
@@ -298,7 +307,7 @@ public class AnnotLoadMain {
 		cntAllGene+=cntGene;
 		Utils.prtNumMsg(plog, totalLoaded, "annotations loaded from " + f.getName()); 
 		if (cntGene>0 || cntExon>0) { 				// no longer supporting exons in separate file
-			Utils.prtNumMsg(plog, cntGene, String.format("genes  %,d exons", cntExon));
+			Utils.prtNumMsg(plog, cntGene, String.format("genes  %,d %ss",  cntExon, prtType));
 			if (cntGene==0) plog.msg("Warning: genes and exons must be in the same file for accurate results");
 		}
 		if (cntSkipGeneAttr>0)  Utils.prtNumMsg(plog,cntSkipGeneAttr, "skipped gene attribute with no '='");
@@ -436,10 +445,12 @@ public class AnnotLoadMain {
 					}
 				}
 			}
-			if (!saveAnnoDir.isBlank()) {// print on View; CAS582 was !=""
+			if (!saveAnnoDir.isBlank()) {// print on View; 
 				modDirDate = new File(saveAnnoDir).lastModified();
 				mProj.saveProjParam("proj_anno_date", Utils.getDateStr(modDirDate));
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
+				if (bUseCDS) mProj.saveProjParam("annot_type", "CDS"); // CAS586 add
+				else 		 mProj.saveProjParam("annot_type", "Exon");
 			}
 			
 			// Parse user-specified types
@@ -501,6 +512,9 @@ public class AnnotLoadMain {
 						plog.msg(String.format("   %-15s %,d", key, count));
 				}
 	        }
+	        if (bUseCDS && !typeCounts.containsKey("CDS") && typeCounts.containsKey("exon")) 
+				util.Popup.showWarning("No CDS in .gff file");
+	        
 			// Release data from heap
 			typeCounts = null;
 			System.gc(); // Java treats this as a suggestion
