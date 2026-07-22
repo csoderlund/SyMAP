@@ -67,7 +67,9 @@ public class ProjParams extends JDialog {
 	private String [] catArr;
 	private Pattern pat = Pattern.compile("^[a-zA-Z0-9_\\.\\-]+$");	// category, display name, abbrev
 	private String patMsg = "\nEntry can only contain letters, digit, '-', '_', '.'";
+	private String [] typeArr = {"Exon", "CDS"};				
 	
+	/*********************************************************/
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
 			Vector <Mproject> projVec, String [] catArr, boolean isLoaded, boolean existAlign) { 
 		
@@ -114,7 +116,7 @@ public class ProjParams extends JDialog {
 		int startAnno=0, startLoad=0, i=0;
 		boolean bReload=true, bReAlign=true;
 		
-		theFields = new Field[11]; // If change #fields, change!
+		theFields = new Field[12]; // If change #fields, change!
 		theFields[i++] = new Field(mProj.sCategory, catArr, 0, 	!bReload, !bReAlign, true);// true -> add text field; CAS582 was '1' 
 		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
@@ -130,6 +132,7 @@ public class ProjParams extends JDialog {
 		theFields[i++] = new Field(mProj.lSeqFile,		  bReload,  bReAlign, false);
 		
 		startAnno=i-1; 
+		theFields[i++] = new Field(mProj.lAnnoType, typeArr, 0, !bReload, !bReAlign, false); // false --> do not add text field
 		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  	
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
@@ -348,6 +351,12 @@ public class ProjParams extends JDialog {
 			else if (index == mProj.sANkeyCnt) {
 				msg = checkInt(lab, val);
 			}
+			else if (index == mProj.lAnnoType) {
+				if (val.length() == 0) msg = lab + " must have a value of Exon or CDS.";
+				if (val.compareToIgnoreCase(Globals.exonType)!=0 && val.compareToIgnoreCase(Globals.cdsType)!=0){
+					msg = lab + " must have a value of Exon or CDS.";
+				}
+			}
 			
 			// only shows the first warning - returns for user to fix, then test again
 			if (msg!=null) { 
@@ -386,6 +395,7 @@ public class ProjParams extends JDialog {
 				String m1 = (bExistAlign) 
 						? "Reload Project (remove existing alignments) and run A&S."
 						: "Reload Project";
+				m1 += "\n" + mProj.getLoadParameters(); // CAS587 
 				String msg = "Changed: " + theFields[x].getLabel() 
 						+ "\n\n" + m1 
 						+ "\n\nProceed with save?";

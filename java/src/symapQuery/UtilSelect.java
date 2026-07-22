@@ -67,7 +67,7 @@ public class UtilSelect {
 			this.isSelf = isSelf;
 			
 			if (numRows==2 && isSelf) {
-				Popup.showWarning("Only one row can be selected for self-synteny.");// CAS579c add
+				Popup.showWarning("Only one row can be selected for self-synteny.");
 				return;
 			}
 			
@@ -335,7 +335,8 @@ public class UtilSelect {
 		// saves between usage, but cancel does not restore old except for nCPU
 		private static int nCPU=1; // performed in MsaRun for mafft
 		private static boolean 
-				bMerge=true,    // performed in buildHitVec
+				bGene=false, 	// performed in loadGeneSeq
+				bMerge=true,    // performed in buildHitMerge
 		        bGapLess=false, // performed in loadSeq
 		        bTrim=true,		// performed after align in alignRun
 		        bAuto=true,		// performed in MsaRun for mafft
@@ -346,31 +347,32 @@ public class UtilSelect {
 		private long alignBase=0;
 		private boolean bOkay=false;
 		private boolean bSuccess=true;
-		private AlignPool aPool = null;
 		
 		private MsaAlign() {
 		try {						
-			DBconn2 dbc = tPanel.qPanel.getDBC();
-			aPool = new AlignPool(dbc);
-			
 			tPanel.setPanelEnabled(false);
 			createMenu();
+			
 			if (bOkay) {
 				tPanel.setMsaButton(false);
 				
-				buildHitVec();	if (!bSuccess) return;
-				loadSeq();		if (!bSuccess) return;
-				buildTableAndAlign();
+				buildHitVec();					
+				if (bSuccess) loadSeq(tPanel.qPanel.getDBC());			
+				if (bSuccess) buildTableAndAlign();
 			}
+			if (!bSuccess) tPanel.setMsaButton(true);
 			tPanel.setPanelEnabled(true);
 		}
 		catch(Exception e) {ErrorReport.print(e, "Show alignment");}			
 		}
 		private void popupHelp() {
-			String msg = "";
-			msg += "Merge overlap hits: this greatly reduces bases aligned by removing redundant sequence";
-			msg += "\nUse gapless hits: this is good for genes with long introns (e.g. homo sapiens), "
-				+  "\n                  where the subhits are separatedly by long intronic regions. ";
+			String msg = "Align hit sequences";
+			msg += "\n   Merge overlapping seqs: When multiple rows contain the same gene, "
+				 + "\n         or overlapping hits, the hits will be merged.";
+			msg += "\n   Use gapless hits: Remove gaps between subhits. This is good when there are long gaps"
+				 + "\n         between subhits due to long introns (e.g. human genes)";
+			msg += "\nAlign gene sequence: Align the spliced transcripts. "
+				 + "\n   The selected rows must contain at least 2 unique genes.";
 			msg += "\n\nSee ? for details.\n";
 			Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 		}
@@ -381,7 +383,7 @@ public class UtilSelect {
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 			setTitle("MSA options");
 			
-			JPanel selectPanel = Jcomp.createPagePanel();
+			JPanel page = Jcomp.createPagePanel();
 			
 			ButtonGroup bg = new ButtonGroup();
 			JPanel row1 = Jcomp.createRowPanel();
@@ -407,7 +409,7 @@ public class UtilSelect {
 			txtCPUs.setMinimumSize(txtCPUs.getPreferredSize());
 			txtCPUs.setText(nCPU+"");
 			row1.add(Jcomp.createLabel("CPUs: ")); row1.add(txtCPUs);
-			selectPanel.add(row1);selectPanel.add(Box.createVerticalStrut(5));
+			page.add(row1); page.add(Box.createVerticalStrut(5));
 			
 			JPanel row2 = Jcomp.createRowPanel();
 			JRadioButton muscle = Jcomp.createRadio("MUSCLE", "Align with MUSCLE (Edgar 2004 NAR:32)");
@@ -419,52 +421,87 @@ public class UtilSelect {
 			if (!Ext.isMacM4()) {// no MUSCLE for M4 (executable had hard-link and could not compile easily)
 				row2.add(muscle); bg.add(muscle);
 			}
-			selectPanel.add(row2);	selectPanel.add(Box.createVerticalStrut(5));	
+			page.add(row2);	page.add(Box.createVerticalStrut(5));	
 			if (bMAFFT) mafft.setSelected(true); else muscle.setSelected(true);
 			
-			selectPanel.add(new JSeparator());
+			page.add(new JSeparator());
 			
-			JRadioButton radMerge = Jcomp.createRadio("Merge overlapping seqs", "Merge overlapping sequences");
+			bMerge = true;
+			JRadioButton radMerge = Jcomp.createRadio("Merge overlapping seqs", "For duplicate genes or overlapping hits, merge the hits");
 			radMerge.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					bGapLess = false;
-					bMerge = radMerge.isSelected();
+					bMerge = true; bGapLess = false;
 				}
 			});
-			JRadioButton radGapLess = Jcomp.createRadio("Use gapless hits", "For cluster hits, remove gaps");
+			
+			bGapLess=false;
+			JRadioButton radGapLess = Jcomp.createRadio("Use gapless hits", "For hits with multiple subhits, remove gaps");
 			radGapLess.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					bMerge = false;
-					bGapLess = radGapLess.isSelected();
+					bGapLess = true; bMerge = false;
 				}
 			});
-			JRadioButton radNone = Jcomp.createRadio("None of the above", "Align all hits ends as is");
+			
+			JRadioButton radNone = Jcomp.createRadio("None of the above", "Align all hits from hStart to hEnd");
 			radNone.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					bMerge = bGapLess = false;
+					bGapLess = false; bMerge = false;
+				}
+			});
+			ButtonGroup hg = new ButtonGroup();
+			hg.add(radMerge); hg.add(radGapLess);  hg.add(radNone);
+			radMerge.setSelected(true);
+		
+			JRadioButton radHit = Jcomp.createRadio("Align hit sequences", "Align the selected hits.");
+			radHit.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					boolean b = true;
+					radMerge.setEnabled(b);radGapLess.setEnabled(b);radNone.setEnabled(b);
+					bGene = false; 
+				}
+			});
+			JRadioButton radGene = Jcomp.createRadio("Align genes sequences", "Align the spliced transcripts");
+			radGene.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					boolean b = false;
+					radMerge.setEnabled(b);radGapLess.setEnabled(b);radNone.setEnabled(b);
+					bGene = true;
 				}
 			});
 			ButtonGroup rg = new ButtonGroup();
-			rg.add(radMerge); rg.add(radGapLess); rg.add(radNone); 
+			rg.add(radHit); rg.add(radGene); 
+			radHit.setSelected(true);
+			bGene = false;
 			
-			if (bMerge) radMerge.setSelected(true);
-			else if (bGapLess) radGapLess.setSelected(true);
-			else radNone.setSelected(true);
-			
-			JCheckBox chkTrim = Jcomp.createCheckBox("Trim", "Trim ends that has no match", bTrim);
+			JCheckBox chkTrim = Jcomp.createCheckBox("Trim", "Trim end bases that have no match", bTrim);
 			chkTrim.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					bTrim  = chkTrim.isSelected();
 				}
 			});
-			selectPanel.add(Box.createVerticalStrut(5)); 	
-			selectPanel.add(radMerge); 		selectPanel.add(Box.createVerticalStrut(3));	
-			selectPanel.add(radGapLess); 	selectPanel.add(Box.createVerticalStrut(3));				
-			selectPanel.add(radNone); 		selectPanel.add(Box.createVerticalStrut(5));
-			selectPanel.add(new JSeparator());
-			selectPanel.add(chkTrim); 		selectPanel.add(Box.createVerticalStrut(5));	
-			selectPanel.add(new JSeparator());
+			// Build page
+			page.add(Box.createVerticalStrut(5)); 	
+			page.add(radHit); 		page.add(Box.createVerticalStrut(3));
 			
+			JPanel r1 = Jcomp.createRowPanel();
+			r1.add(Box.createHorizontalStrut(15)); r1.add(radMerge);   
+			page.add(r1); page.add(Box.createVerticalStrut(3));	
+			
+			JPanel r2 = Jcomp.createRowPanel();
+			r2.add(Box.createHorizontalStrut(15)); r2.add(radGapLess);   
+			page.add(r2); page.add(Box.createVerticalStrut(3));	
+			
+			JPanel r3 = Jcomp.createRowPanel();
+			r3.add(Box.createHorizontalStrut(15)); r3.add(radNone);   
+			page.add(r3); page.add(Box.createVerticalStrut(10));	
+			
+			page.add(radGene); 		page.add(Box.createVerticalStrut(3));
+			
+			page.add(new JSeparator());
+			page.add(chkTrim); 		page.add(Box.createVerticalStrut(5));	
+			page.add(new JSeparator());
+			
+		// Buttons
 			JPanel row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
 			JButton btnOK = Jcomp.createButton("Align", "Run MSA align"); 	
 	    	btnOK.addActionListener(new ActionListener() {
@@ -493,11 +530,11 @@ public class UtilSelect {
 			});
 			row.add(btnInfo); 			row.add(Box.createHorizontalStrut(5));
 			
-	    	selectPanel.add(row);
-	    	selectPanel.add(Box.createVerticalStrut(5));
+	    	page.add(row);
+	    	page.add(Box.createVerticalStrut(5));
 	    	
-	    	selectPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-	    	add(selectPanel);
+	    	page.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    	add(page);
 	    	
 			pack();
 			this.setResizable(false);
@@ -515,36 +552,57 @@ public class UtilSelect {
 			else {
 				if (Ext.getMafftCmd()==null) {bSuccess=false; return;}
 			}
+			if (bGene) {
+				buildGeneMerge();
+				return;
+			}
+			if (bMerge) {
+				buildHitMerge();
+				return;
+			}
+			/********* Not Merge ************/
+			alignBase=0;
+			int [] selRows = tPanel.theTable.getSelectedRows();
+			numRows = selRows.length;
+			TmpRowData rd = new TmpRowData(tPanel);
+		
+			for(int x=0; x<numRows; x++) {
+				if (!rd.loadRow(selRows[x])) {bSuccess=false; return;} // Load row data
+				String [] hitSt = rd.hitSt.split("/");
+				
+				String gapLess =  ""; // Use start to end of hit
+				if (bGapLess) 		  // Need this to get the queryStr or targetStr from database
+					gapLess = rd.hitnum + ";" + rd.chrIdx[0] + ";" + rd.spIdx[0]+ ";" + rd.chrIdx[1]+ ";" + rd.spIdx[1];
+				
+				for (int i=0; i<2; i++) {
+					alignBase += (rd.end[i]-rd.start[i])+1;
+					HitEnd h = new HitEnd(i, rd.hitnum, rd.start[i], rd.end[i], rd.chrIdx[i], 
+							                 rd.spAbbr[i], rd.chrNum[i], rd.geneTag[i],hitSt[i], gapLess);
+					hitVec.add(h);
+				}
+			}		
+		}
+		catch (Exception e) {ErrorReport.print(e, "Building gene vec for muscle"); bSuccess=false;}
+		}
+		/************* Merge *********************/
+		private void buildHitMerge() {
+		try {
 			alignBase=0;
 			int [] selRows = tPanel.theTable.getSelectedRows();
 			numRows = selRows.length;
 			HashMap<String, HitEnd> tagMap = new HashMap<String, HitEnd> (); 
-			
 			TmpRowData rd = new TmpRowData(tPanel);
-			if (!bMerge) {
-				for(int x=0; x<numRows; x++) {
-					if (!rd.loadRow(selRows[x])) {bSuccess=false; return;} // Load row data
-					String [] hitSt = rd.hitSt.split("/");
-					String gapLess =  (!bGapLess) ? "" : rd.hitnum + ";" + rd.chrIdx[0] + ";" + rd.spIdx[0]+ ";" + rd.chrIdx[1]+ ";" + rd.spIdx[1];
-					for (int i=0; i<2; i++) {
-						alignBase += (rd.end[i]-rd.start[i])+1;
-						HitEnd h = new HitEnd(i, rd.hitnum, rd.start[i], rd.end[i], rd.chrIdx[i], 
-								rd.spAbbr[i], rd.chrNum[i], rd.geneTag[i],hitSt[i], gapLess);
-						hitVec.add(h);
-					}
-				}
-				return;
-			}
-			/************* Merge *********************/
+			
 			for(int row=0; row<numRows; row++) {
 				if (!rd.loadRow(selRows[row])) {bSuccess=false; return;} // Load row data
-				String [] hitSt = rd.hitSt.split("/");
+				String [] hitSt = rd.hitSt.split("/"); // orients of both
 				
 				for (int i=0; i<2; i++) {
 					boolean merged=false;
 					String key=null;
 				
-					if (!rd.geneTag[i].endsWith(Q.dash)) {// this will be N.N.[b] or N.- 
+					// this will be N.N.[b] or N.~
+					if (!rd.geneTag[i].endsWith(Q.pseudo)) {// isGene:  CAS578 was using -
 						key = rd.spIdx[i] + "." + rd.geneTag[i] + hitSt[i];
 						merged = tagMap.containsKey(key);
 						
@@ -553,13 +611,13 @@ public class UtilSelect {
 							ht.updateCoords(rd.start[i], rd.end[i], rd.hitnum);
 						}
 					}
-					else {								// merge on coordinates
+					else {								// not gene; find overlapping hits
 						for (HitEnd ht : hitVec) {
 							if (ht.bIsGene) continue;
 							
 							if (ht.spAbbr.equals(rd.spAbbr[i]) && ht.chrIdx==rd.chrIdx[i] && ht.strand.equals(hitSt[i])) {
 								int olap = Math.min(rd.end[i],ht.end) - Math.max(rd.start[i],ht.start) + 1;
-								if (olap>20) {
+								if (olap>0) {
 									ht.updateCoords(rd.start[i], rd.end[i], rd.hitnum);
 									merged=true;
 									break;
@@ -568,9 +626,8 @@ public class UtilSelect {
 						}
 					}
 					if (!merged) {
-						String gapLess = (!bGapLess) ? "" : rd.hitnum + ";" + rd.chrIdx[0] + ";" + rd.spIdx[0]+ ";" + rd.chrIdx[1]+ ";" + rd.spIdx[1];
-						HitEnd h = new HitEnd(i, rd.hitnum, rd.start[i], rd.end[i], rd.chrIdx[i], rd.spAbbr[i], 
-								rd.chrNum[i], rd.geneTag[i], hitSt[i], gapLess);
+						HitEnd h = new HitEnd(i, rd.hitnum, rd.start[i], rd.end[i], rd.chrIdx[i], 
+								rd.spAbbr[i], rd.chrNum[i], rd.geneTag[i], hitSt[i], "");
 						hitVec.add(h);
 						if (key!=null) tagMap.put(key, h);
 					}	
@@ -578,21 +635,78 @@ public class UtilSelect {
 			} // end merge
 			for (HitEnd ht : hitVec) alignBase += (ht.end-ht.start)+1; // need to wait until after merges
 		}
-
 		catch (Exception e) {ErrorReport.print(e, "Building gene vec for muscle"); bSuccess=false;}
+		}
+		/************************************************/
+		private void buildGeneMerge() {
+		try {
+			alignBase=0;
+			int [] selRows = tPanel.theTable.getSelectedRows();
+			numRows = selRows.length;
+			HashMap<String, HitEnd> tagMap = new HashMap<String, HitEnd> (); 
+			TmpRowData rd = new TmpRowData(tPanel);
+			
+			for(int row=0; row<numRows; row++) {
+				if (!rd.loadRow(selRows[row])) {bSuccess=false; return;} // Load row data
+				
+				String [] hitSt = rd.hitSt.split("/");
+				
+				for (int i=0; i<2; i++) {
+					if (rd.geneTag[i].endsWith(Q.pseudo)) continue;
+					int start = (bGene) ? rd.gstart[i] : rd.start[i];
+					int end   = (bGene) ? rd.gend[i] : rd.end[i];
+					
+					String key = rd.spIdx[i] + "." + rd.geneTag[i] + hitSt[i];
+					
+					if (tagMap.containsKey(key)) { // update hit ends
+						HitEnd ht = tagMap.get(key);
+						ht.updateCoords(start, end, rd.hitnum);
+					}
+					else {
+						HitEnd h = new HitEnd(i, rd.hitnum, start, end, rd.chrIdx[i], 
+								              rd.spAbbr[i], rd.chrNum[i], rd.geneTag[i], hitSt[i], "");
+						hitVec.add(h);
+						if (key!=null) tagMap.put(key, h);
+					}	
+				}
+			} // end merge
+		
+			for (HitEnd ht : hitVec) alignBase += (ht.end-ht.start)+1; // need to wait until after merges
+			
+			if (hitVec.size()<2) {
+				util.Popup.showContinue("No genes", "There must be >=2 unique genes in the selected rows.");
+				bSuccess=false; // selected rows without genes
+			}
+		}
+		catch (Exception e) {ErrorReport.print(e, "Building gene vec for muscle"); bSuccess=false;}	
 		}
 		/*****************************************************
 		 * Load full sequence or gapless
 		 */
-		private void loadSeq() {
+		private void loadSeq(DBconn2 dbc) {
 		try {
+			AlignPool aPool = new AlignPool(dbc);
+			
 			for (HitEnd ht : hitVec) {
-				ht.theSeq = aPool.loadSeq(ht.pos, ht.start + ":" + ht.end, ht.chrIdx, ht.gapLess); 	// needed for gapLess
-				if (ht.strand.equals("-")) ht.theSeq = SeqData.revComplement(ht.theSeq); 
+				if (bGene) {
+					String tag = ht.geneTag.substring(ht.geneTag.indexOf(Globals.DOT)+1, ht.geneTag.length()); // remove chr
+					
+					ht.theSeq = aPool.loadGeneSeq(tag, ht.chrIdx, null); 	 // revComp in loadGeneSeq
+					
+					if (ht.theSeq==null) {bSuccess=false; return;}
+				}
+				else {
+					ht.theSeq = aPool.loadSeq(ht.pos, ht.start + ":" + ht.end, ht.chrIdx, ht.gapLess); 	
+					
+					if (ht.theSeq==null) {bSuccess=false; return;}
+					
+					if (ht.strand.equals("-")) ht.theSeq = SeqData.revComplement(ht.theSeq); 
+				}
 			}
 		}
 		catch (Exception e) {ErrorReport.print(e, "Load sequences"); bSuccess=false;}
 		}
+		
 		/********************************************************
 		 * Create the vectors of names and sequence, lower table, and calls tdp.queryFrame.addAlignmentTab
 		 ******************************************************/
@@ -601,7 +715,8 @@ public class UtilSelect {
 			Vector<String> theNames = new Vector<String> (); // Names go beside sequence alignment
 			Vector<String> theSeqs = new Vector<String> ();  // Actual sequences
 			
-			String [] fields = { "" , "Gene#", "Start", "End", "St", "Length", "Hit#"};
+			String prefix = (bGene) ? "Gene" : "Hit";
+			String [] fields = { "" , "Gene#", prefix + "-Start", prefix+"-End", "St", "Length", "Hit#"};
 			int [] justify =   {   1,    1,       0,          0,   0, 0,  1}; // 1 left justify
 			int nRow = hitVec.size(); 
 		    int nCol=  fields.length;
@@ -619,7 +734,7 @@ public class UtilSelect {
 				int c=0;
 				rows[r][c++]=String.format("%2d. %s.%s", r+1, ht.spAbbr, ht.chrNum);
 				rows[r][c++]=ht.geneTag.substring(ht.geneTag.indexOf(".")+1);
-				rows[r][c++]=String.format("%,d",ht.start);
+				rows[r][c++]=String.format("%,d",ht.start); // will be gene start if bGene; else hit start
 				rows[r][c++]=String.format("%,d",ht.end);
 				rows[r][c++]=String.format("%s",ht.strand);
 				rows[r][c++]=String.format("%,d",len);
@@ -639,11 +754,14 @@ public class UtilSelect {
 				
 			String params = pgm;
 			if (bMAFFT && bAuto) params += " Auto";
-			if (bMerge) 	params += " Merge";
-			if (bGapLess) 	params += " GapLess";
+			if (bGene)		params += "; Gene";
+			else {
+				if (bMerge) 	params += "; Merge";
+				if (bGapLess) 	params += "; GapLess";
+			}
 			String msaSum = params;							// for MSA panel (trim # is added in AlignRun)
 			
-			String resultSum = pgm; 						// for result table
+			String resultSum = pgm; 						// for Result tab
 			if (bTrim) 	resultSum += " Trim";
 			resultSum += "; Hit#" + hitVec.get(0).hitNum + " plus " + (r-1) + " more";
 			
@@ -669,14 +787,15 @@ public class UtilSelect {
 			private String hitNumStr="";
 			private String gapLess="";
 			
-			private HitEnd(int pos, int hitNum, int start, int end, int chrIdx, String spAbbr, String chrNum, String geneTag, String strand, String gapLess) {
+			private HitEnd(int pos, int hitNum, int start, int end, int chrIdx, String spAbbr, String chrNum, 
+					String geneTag, String strand, String gapLess) {
 				this.pos=pos; this.start=start; this.end=end; this.chrIdx=chrIdx; 
 				this.spAbbr=spAbbr; this.chrNum=chrNum; 
 				this.geneTag=geneTag;
 				this.strand=strand;
-				bIsGene = !geneTag.endsWith(Q.dash);	
 				this.hitNum=hitNum;  hitNumStr = hitNum+"";
 				this.gapLess = gapLess;
+				bIsGene = !geneTag.endsWith(Q.pseudo); // CAS587 was using -
 			}
 			private void updateCoords(int start, int end, int hitNum) {
 				if (this.start>start) this.start=start;

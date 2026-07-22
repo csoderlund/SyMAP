@@ -362,7 +362,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			// rest of lines
 			if(mProj.getStatus() == Mproject.STATUS_ON_DISK) { 
-				String x = mProj.notLoadedInfo(); 
+				String x = mProj.getLoadParameters(); 
 				textPanel.add(new JLabel(x));	
 			} 
 			else {
@@ -1487,7 +1487,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// Reload
 	private void reloadAnno(Mproject mProj) {
 	try {
-		String msg = "Reload annotation " + mProj.getDisplayName();
+		String msg = "Reload annotation " + mProj.getDisplayName() + "\n" + mProj.getLoadParameters(); // CAS587 add info
 		
 		if (!Popup.showConfirm2("Reload annotation", msg +							
 			"\n\nYou will need to re-run the synteny computations for this project," +  

@@ -17,15 +17,14 @@ import util.ErrorReport;
 public class SeqDataInfo {
 	
 	  // format exon list (e.g. Exon #1:20:50,Exon #1:20:50)
-    static public String formatExon(String exonList) {	
+    static public String formatExon(String exonList, String annoType) {	// annoType CDS|Exon CAS587
     	String exonTag = Globals.exonTag;
     	int rm = exonTag.length();
     	String list="";
     	String [] exons = exonList.split(",");
     	int dist=0, last=0;
     	
-    	String exCol = Globals.exonTag.substring(0, Globals.exonTag.indexOf(" "));
-    	String [] fields = {"#", exCol + " Coords","Exon", "Intron"}; 
+    	String [] fields = {"#", annoType + "-coords",annoType, "Intron"}; 
 		int [] justify =   {1,    0,    0,     0};
 		int nRow = exons.length;
 	    int nCol=  fields.length;

@@ -239,7 +239,7 @@ public class Utilities {
 		return dbtag;
     }
     // Annotation class; create fullTag for hover
-    static public String createFullTagFromDBtag(String tag) {
+    static public String createFullTagFromDBtag(String tag, String annoType) {// CAS587 add annoType for popup
     	String [] tok = tag.split("\\(");
     	
     	if (tok.length!=2) { // this should not happen but maybe very old db
@@ -247,16 +247,17 @@ public class Utilities {
     		else return Globals.geneTag + tag;
     	}
  
-    	tok[1] = "(#Exon=" + tok[1];
+    	tok[1] = "(#" + annoType + "=" + tok[1];
     	if (!tag.startsWith("Gene")) { 
     		tok[0] = Globals.geneTag + tok[0];
     		tok[1] = tok[1].replace(")","bp)");
     	}
 		return tok[0] + " " + tok[1];
     }
-    // Annotation.popupDesc; e.g  1563.w (15 2164)
+    // Annotation.popupDesc
+    // e.g tag = 660. (3 1,593) or 847.b (3 16,458)
     // return tok[0]=Gene #1563.w and tok[1]=#Exons=15 2,164bp
-    static public String [] getGeneExonFromTag(String tag) {
+    static public String [] getGeneExonFromTag(String tag, String annoType) {
     	String [] ret = new String [2];
     	String [] tok = tag.split("\\(");
     	
@@ -269,18 +270,11 @@ public class Utilities {
     
     	ret[0] = tok[0];
     	tok[1] = tok[1].replace(")","");
-    	ret[1] = exonNum() + tok[1].replace(")",""); 
+    	ret[1] = "#" + annoType + "=" + tok[1].replace(")",""); 
     	
-    	if (!tag.startsWith("Gene")) { // v543 992.a (1 746)  old version started with Gene
-			ret[0] = Globals.geneTag +  tok[0].trim();
-			ret[1] = ret[1] + "bp";
-		}
     	return ret;
     }
-    // exonTag = "Exon #"; returns #Exons=
-    public static String exonNum() { 
-    	return "#" + Globals.exonTag.substring(0, Globals.exonTag.indexOf(" ")) + "s=";
-    }
+   
     // Created in backend.AnchorsPost.Gene; return "d.[a]"
     static public String getGenenumFromDBtag(String tag) {
 		if (!tag.startsWith("Gene")) { // CAS544 '2 (9 1306)' or '2.b (9 1306)'

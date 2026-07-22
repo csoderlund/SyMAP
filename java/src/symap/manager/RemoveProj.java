@@ -77,7 +77,8 @@ public class RemoveProj {
 	 */
 	protected boolean reloadProject(Mproject pj) {
 		try {
-			String msg = "Reload project " + pj.getDisplayName();
+			String msg = "Reload project " + pj.getDisplayName()  + "\n" + pj.getLoadParameters(); // CAS587 add info;
+			
 			if (!pj.hasExistingAlignments(true)) { // only care if there is a /align
 				if (!Popup.showConfirm2("Reload project",msg)) {close(); return false;}
 			}

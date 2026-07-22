@@ -44,7 +44,7 @@ public class SyMAPmanager extends ManagerFrame {
 
 	/** Args **/
 	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
-	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh", "-cds"};					  		// symap
+	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  		// symap
 	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat"}; 	    // hidden
 	
 	private static void argPrint(String args[]) {
@@ -57,8 +57,6 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -h        : Show help to terminal and exit");
 		
 		if (!isReadOnly) { // viewSymap is started with -r arg
-			System.out.println("\nLoad Project:");
-			System.out.println("  -cds      : Use CDSs instead of exons (CDSs must be in .gff file)");
 			System.out.println("\nAlign&Synteny:");
 			System.out.println("  -mum      : MUMmer: Do not remove any mummer files");
 			System.out.println("  -wsp      : Algo2: print MUMmer hits that differ from gene strand");
@@ -122,11 +120,6 @@ public class SyMAPmanager extends ManagerFrame {
 		if (equalOption(args, "-ac")) { // CAS579 add
 			Globals.bQuerySaveLgClust=true;
 			System.out.println("-ac  Queries: retain all clusters regardless of size");
-		}
-	/** Load Project symap **/
-		if (equalOption(args, "-cds")) {// CAS586
-			System.out.println("-cds  Load CDSs instead of Exons");
-			backend.AnnotLoadMain.bUseCDS = true;
 		}
 	/** A&S symap **/
 		if (equalOption(args, "-v")) {// also on ManagerFrame; verbose A&S output

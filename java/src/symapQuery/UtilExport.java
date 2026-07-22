@@ -412,7 +412,7 @@ public class UtilExport extends JDialog {
 			}
 			
 			HashMap <Integer, String> spAnnoType = new HashMap <Integer, String> ();
-			for (Mproject mp : projVec) spAnnoType.put(mp.getID(), mp.getAnnoType()); // getID is projIdx
+			for (Mproject mp : projVec) spAnnoType.put(mp.getID(), mp.getdbAnnoType()); // getID is projIdx
 			
 			HashSet <String> geneSet = new HashSet <String> ();
 			int cntDup=0, cntIgn=0;

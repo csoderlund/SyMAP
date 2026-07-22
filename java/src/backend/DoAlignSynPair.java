@@ -79,7 +79,7 @@ public class DoAlignSynPair extends JFrame {
 		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
 		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  // Saved to DB in SumFrame
-		diaLog.msg(chgMsg);
+		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters:
 		diaLog.closeWhenDone();					
 		
 		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir);

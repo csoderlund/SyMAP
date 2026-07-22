@@ -177,9 +177,10 @@ public class AlignMain {
 			nAlignDone = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
 			
 			if (bdone && nAlignDone>0) {// could by SyMAP or user complete
-				plog.msg("Warning: " + nAlignDone + " alignment files exist - using existing files");
-				plog.msg("   If not correct, remove " + resultDir + " and re-align");
 				paramsRead(Utils.getDateStr(f.lastModified()));
+				if(!alignParams.equals("")) plog.msg(alignParams); // what was set in paramsAlign.txt; CAS587
+				plog.msg("--If not correct, remove " + resultDir + " and re-align");
+				
 				return true;
 			}
 			/*-------- Alignments to be done ------*/

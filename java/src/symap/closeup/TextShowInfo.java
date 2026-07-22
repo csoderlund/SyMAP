@@ -13,10 +13,13 @@ import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.WindowConstants;
 import javax.swing.JCheckBox;
@@ -50,8 +53,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private boolean isInvHit;	// !strands (but the block may be Inv)
 	
 	private AlignPool alignPool;
-	private HitAlignment[] hitAlignArr=null;
-	private JCheckBox ntCheckBox;
+	
 	private JButton alignHitButton, orderButton, mergeButton, removeButton;
 	
 	// for Gene popup
@@ -163,14 +165,13 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		closeButton.addActionListener(this);
 		
 		// Hit only
-		alignHitButton = Jcomp.createButton("Align", "Popup window of text alignment");
+		alignHitButton = Jcomp.createButton("Align...", "Popup window of text alignment");
 		alignHitButton.addActionListener(this);
-		ntCheckBox = new JCheckBox("NT", true); 	// not shown, was going to do AA align...
 		
-		orderButton = Jcomp.createButton(titleOrder, "Order disordered hits(*)");
+		orderButton = Jcomp.createButton(titleOrder, "Order disordered hits(#)");// was (*) CAS587
 		orderButton.addActionListener(this);
 		
-		removeButton = Jcomp.createButton(titleRemove, "Remove disordered hits(*)");
+		removeButton = Jcomp.createButton(titleRemove, "Remove disordered hits(#)");
 		removeButton.addActionListener(this);
 		
 		mergeButton = Jcomp.createButton(buttonMerge, "Merge overlapping hits");
@@ -192,7 +193,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		Dimension d = new Dimension (350, 200); // w,h
 		if (getWidth() >= d.width || getHeight() >= d.height) setSize(d);
-		setAlwaysOnTop(true); 						
+		toFront(); //setAlwaysOnTop(true); 						
 		setLocationRelativeTo(null);	
 		setVisible(true);
 	}
@@ -203,7 +204,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 			setVisible(false); 					// close popup
 		}
 		else if (e.getSource() == alignHitButton) {
-			runAlign(true); 						     // new align popup
+			new Align(this); 						     // new align popup
 		}
 		else if (e.getSource() == orderButton) {
 			runOrder(); 							// two hit popups will be shown 
@@ -214,161 +215,6 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		else if (e.getSource() == removeButton) {
 			runRemove(); 							// two hit popups will be shown 
 		}
-	}
-	
-	/**************************************************************/
-	private void addAlign(Vector <String> lines, String aSeq1, String aSeqM, String aSeq2, int [] coords) {
-	try {
-		int nStart1=coords[0], nStart2=coords[2], nEnd=aSeq1.length();
-		
-		int maxC = Math.max(coords[1], coords[3]);
-		int sz = (maxC+"").length();
-		String formatC =  "%" + sz + "d  "; 
-		String formatM =  "%" + sz + "s  ";
-		
-		int inc = 60; // output in rows of 60
-		int x;
-		StringBuffer sb = new StringBuffer (inc);
-		
-		for (int offset=0; offset<nEnd; offset+=inc) {
-			lines.add("");
-			sb.append(String.format(formatC, nStart1)); 
-			for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq1.charAt(x+offset));
-			sb.append("  " + (nStart1+x));
-			lines.add(sb.toString());
-			sb.delete(0, sb.length());
-			
-			sb.append(String.format(formatM, " "," "));
-			for (int i=0; i<inc && (i+offset)<nEnd; i++) sb.append(aSeqM.charAt(i+offset));
-			lines.add(sb.toString());
-			sb.delete(0, sb.length());
-			
-			sb.append(String.format(formatC, nStart2));
-			for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq2.charAt(x+offset));
-			sb.append("  " + (nStart2+x));
-			lines.add(sb.toString());
-			sb.delete(0, sb.length());
-			
-			nStart1+=inc;
-			nStart2+=inc;
-		}
-	} catch (Exception e) {ErrorReport.print(e, "run align add align");}
-	}
-	/**********************************************
-	 * Specialized displayInfoMonoSpace
-	 */
-	private void displayAlign(String title, String theAlign, boolean isFirst) {
-		JDialog diag = new JDialog();
-		diag.setTitle(title);
-		
-		// scrollable selectable message area
-		JTextArea messageArea = new JTextArea(theAlign);
-		JScrollPane sPane = new JScrollPane(messageArea); 
-		messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
-		messageArea.setEditable(false);
-		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		
-		JButton okButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
-		okButton.addActionListener(new ActionListener() {
-	   		public void actionPerformed(ActionEvent arg0) {
-	   			diag.setVisible(false);
-	   		}
-		});  
-		JButton revButton = Jcomp.createButton("Reverse", "Align the reverse complement sequence"); 
-		revButton.addActionListener(new ActionListener() {
-	   		public void actionPerformed(ActionEvent arg0) {
-	   			revButton.setEnabled(false); // the data structures is reused and changed
-	   			reverseAlign();
-	   		}
-		}); 
-		JButton trimButton = Jcomp.createButton("No trim", "Align without trimming"); 
-		trimButton.addActionListener(new ActionListener() {
-	   		public void actionPerformed(ActionEvent arg0) {
-	   			trimButton.setEnabled(false); // the data structures is reused and changed
-	   			runAlign(false);
-	   		}
-		}); 
-		
-		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white); // will not center if use Jcomp 
-		if (isFirst) {
-			buttonPanel.add(revButton); buttonPanel.add(Box.createHorizontalStrut(5));
-			buttonPanel.add(trimButton); buttonPanel.add(Box.createHorizontalStrut(5));
-		}
-		buttonPanel.add(okButton); 
-		
-		diag.getContentPane().setLayout(new BorderLayout());
-		diag.getContentPane().add(sPane,BorderLayout.CENTER);
-		diag.getContentPane().add(buttonPanel,BorderLayout.SOUTH);
-		diag.pack();
-		
-		diag.setModal(false); // true - freeze other windows
-		diag.setResizable(true);
-		Dimension d = new Dimension (600, 450); // width, height
-		if (!isFirst) d = new Dimension (600, 420); // goes on top of align, make the other show
-		if (diag.getWidth() >= d.width || diag.getHeight() >= d.height) diag.setSize(d);
-		diag.setLocationRelativeTo(null);
-		//diag.setAlwaysOnTop(true);
-		diag.setVisible(true);	
-	}
-	/****************************************************************/
-	private void runAlign(boolean bTrim) {
-		try {
-			boolean isNT = ntCheckBox.isSelected();
-			Vector <HitData> hitList = new Vector <HitData> ();
-			hitList.add(hitDataObj);
-			
-			// Run Align 
-			hitAlignArr = alignPool.buildHitAlignments(hitList, isNT, isQuery, bTrim);
-			
-			String p1 = proj1.substring(0, proj1.indexOf(" "));
-			String p2 = proj2.substring(0, proj2.indexOf(" "));
-			
-			int cnt=0;
-			Vector <String> lines = new Vector <String> ();
-			for (HitAlignment hs : hitAlignArr) {
-				if (cnt>0) lines.add("_______________________________________________________________________");
-				String desc = (isNT) ? hs.toText(false, p1, p2) : hs.toTextAA(p1, p2);
-				String [] toks = desc.split("\t");
-				lines.add(toks[0]); // Block Hit#
-				lines.add(toks[1]); // %Id
-				
-				addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());
-				
-				cnt++;
-			}
-			String msg="";
-			for (String l : lines) msg += l + "\n";
-			 
-			String x = (bTrim) ? "Align trim " : "Align";
-			String title =  x + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
-			displayAlign(title, msg, bTrim);	// true says put Reverse/Trim buttons on bottom
-		} 
-		catch (Exception e) {ErrorReport.print(e, "run align");}
-	}
-	private void reverseAlign() {
-		hitAlignArr = alignPool.getHitReverse(hitAlignArr);
-		
-		int cnt=0;
-		String p1 = proj1.substring(0, proj1.indexOf(" "));
-		String p2 = proj2.substring(0, proj2.indexOf(" "));
-		
-		Vector <String> lines = new Vector <String> ();
-		for (HitAlignment hs : hitAlignArr) {
-			if (cnt>0) lines.add("_______________________________________________________________________");
-			String desc = hs.toText(false, p1, p2);
-			String [] toks = desc.split("\t");
-			lines.add(toks[0]); // Block Hit#
-			lines.add(toks[1]); // %Id
-			
-			addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());
-			
-			cnt++;
-		}
-		String msg="";
-		for (String l : lines) msg += l + "\n";
-		 
-		String title =  "Reverse Align " + hitDataObj.getName() + "; " + proj1 + " to " + proj2;
-		displayAlign(title, msg, false);
 	}
 	
 	/*************************************************************
@@ -399,5 +245,249 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		new TextShowInfo(alignPool, hitDataObj, titleRemove + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
 				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */); 
+	}
+	/****************************************************************/
+	private class Align extends JDialog {
+		private static final long serialVersionUID = 1L;
+		private boolean bGene=false, bTrim=true, bOkay=false;
+		private TextShowInfo parent;
+		private HitAlignment[] hitAlignArr=null;
+		
+		private Align(TextShowInfo obj) {
+			parent = obj;
+			createMenu();
+			
+			if (bOkay) {
+				if (bGene) runGeneAlign();
+				else runHitAlign();
+			}
+		}
+		private void createMenu() {
+			setModal(true);
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			setTitle("Align options");
+			
+			JPanel page = Jcomp.createPagePanel();
+			
+			JRadioButton radHit = Jcomp.createRadio("Align hit sequences", "Align each subhit separately.");
+			radHit.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					bGene = false; 
+				}
+			});
+			JRadioButton radGene = Jcomp.createRadio("Align genes sequences", "Align the spliced transcripts");
+			radGene.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					bGene = true;
+				}
+			});
+			ButtonGroup rg = new ButtonGroup();
+			rg.add(radHit); rg.add(radGene); 
+			radHit.setSelected(true);
+			bGene = false;
+			if (!hitDataObj.is2Gene()) radGene.setEnabled(false);
+			
+			JCheckBox chkTrim = Jcomp.createCheckBox("Trim", "Trim end bases that have no match", bTrim);
+			chkTrim.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					bTrim  = chkTrim.isSelected();
+				}
+			});
+			
+			page.add(Box.createVerticalStrut(5)); 	
+			page.add(radHit); 		page.add(Box.createVerticalStrut(3));
+			page.add(radGene); 		page.add(Box.createVerticalStrut(3));
+			
+			page.add(new JSeparator());
+			page.add(chkTrim); 		page.add(Box.createVerticalStrut(5));	
+			page.add(new JSeparator());
+			
+			// Buttons
+			JPanel row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
+			JButton btnOK = Jcomp.createButton("Align", "Run align"); 	
+	    	btnOK.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					bOkay=true;
+					setVisible(false);
+				}
+			});
+	    	row.add(Box.createHorizontalStrut(5));
+	    	row.add(btnOK); 				row.add(Box.createHorizontalStrut(5));
+	    	
+	    	JButton btnCancel = Jcomp.createButton(Jcomp.cancel, "Cancel align"); 
+	    	btnCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					bOkay=false;
+					setVisible(false);
+				}
+			});
+	    	row.add(btnCancel); 			row.add(Box.createHorizontalStrut(5));
+	    	
+	    	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
+			btnInfo.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					popupHelp();
+				}
+			});
+			row.add(btnInfo); 			row.add(Box.createHorizontalStrut(5));
+			
+	    	page.add(row);
+	    	page.add(Box.createVerticalStrut(5));
+	    	
+	    	page.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    	add(page);
+	    	
+			pack();
+			setModal(true); // nothing else can happen until ok,cancel
+			setAlwaysOnTop(true); //toFront();
+			this.setResizable(false);
+			setLocationRelativeTo(parent); 
+			setVisible(true);
+		}
+		/****************************************************************/
+		private void runGeneAlign() {
+		try {
+			// Run align
+			HitAlignment hs = alignPool.buildGeneAlignments(hitDataObj, proj1, aObj1,proj2, aObj2, bTrim);
+			
+			// Format
+			String g1 = "#" + aObj1.getFullGeneNum().trim(), g2 = "#" + aObj2.getFullGeneNum().trim();
+			String title = "Gene " + proj1 + " " + g1 + " to " + proj2+ " " + g2;
+			String line1 = "Gene " + proj1 + " " + g1 + "(" + aObj1.getAnnoType() + ") to "
+					               + proj2 + " " + g2 + "(" + aObj2.getAnnoType() + ")";
+				
+			String result = hs.toText(false, g1, g2);
+			String [] toks = result.split("\t");
+		
+			Vector <String> lines = new Vector <String> ();
+			lines.add(line1);
+			lines.add(toks[0]); // Align stats
+			lines.add(toks[1]); // Proj & coords
+			
+			addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());// aseq1, aseq2, match
+				
+			String toStr="";
+			for (String l : lines) toStr += l + "\n";
+			 
+			displayAlign(title, toStr);	
+		} 
+		catch (Exception e) {ErrorReport.print(e, "run align");}
+		}
+		/****************************************************************/
+		private void runHitAlign() {
+		try {
+			// Run Align 
+			Vector <HitData> hitList = new Vector <HitData> ();
+			hitList.add(hitDataObj);
+			hitAlignArr = alignPool.buildHitAlignments(hitList, true, isQuery, bTrim);
+			
+			// format
+			String p1 = proj1.substring(0, proj1.indexOf(" ")); // proj1 has chromosome at end
+			String p2 = proj2.substring(0, proj2.indexOf(" "));
+			
+			int cnt=0;
+			Vector <String> lines = new Vector <String> ();
+			for (HitAlignment hs : hitAlignArr) {
+				if (cnt>0) lines.add("_______________________________________________________________________");
+				String desc = hs.toText(false, p1, p2);
+				String [] toks = desc.split("\t");
+				lines.add(toks[0]); // Align Stats
+				lines.add(toks[1]); // proj & coords
+				
+				addAlign(lines, toks[2], toks[3], toks[4], hs.getCoords());
+				
+				cnt++;
+			}
+			String toStr="";
+			for (String l : lines) toStr += l + "\n";
+			 
+			String title =  hitDataObj.getName() + "; " + proj1 + " to " + proj2;
+			
+			displayAlign(title, toStr);	
+		} 
+		catch (Exception e) {ErrorReport.print(e, "run align");}
+		}
+		/**********************************************
+		 * Specialized displayInfoMonoSpace
+		 */
+		private void displayAlign(String title, String theAlign) {
+			JDialog diag = new JDialog();
+			diag.setTitle(title);
+			
+			// scrollable selectable message area
+			JTextArea messageArea = new JTextArea(theAlign);
+			JScrollPane sPane = new JScrollPane(messageArea); 
+			messageArea.setFont(new Font("monospaced", Font.BOLD, 12));
+			messageArea.setEditable(false);
+			messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			
+			JButton okButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
+			okButton.addActionListener(new ActionListener() {
+		   		public void actionPerformed(ActionEvent arg0) {
+		   			diag.setVisible(false);
+		   		}
+			});  
+			
+			JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white); // will not center if use Jcomp 
+			buttonPanel.add(okButton); 
+			
+			diag.getContentPane().setLayout(new BorderLayout());
+			diag.getContentPane().add(sPane,BorderLayout.CENTER);
+			diag.getContentPane().add(buttonPanel,BorderLayout.SOUTH);
+			diag.pack();
+			
+			diag.setModal(false); // true - freeze other windows
+			diag.setResizable(true);
+			Dimension d = new Dimension (600, 450); // width, height
+			if (diag.getWidth() >= d.width || diag.getHeight() >= d.height) diag.setSize(d);
+			diag.setLocationRelativeTo(parent);
+			diag.toFront();
+			diag.setVisible(true);	
+		}
+		/**************************************************************/
+		private void addAlign(Vector <String> lines, String aSeq1, String aSeqM, String aSeq2, int [] coords) {
+		try {
+			int nStart1=coords[0], nStart2=coords[2], nEnd=aSeq1.length();
+			
+			int maxC = Math.max(coords[1], coords[3]);
+			int sz = (maxC+"").length();
+			String formatC =  "%" + sz + "d  "; 
+			String formatM =  "%" + sz + "s  ";
+			
+			int inc = 60; // output in rows of 60
+			int x;
+			StringBuffer sb = new StringBuffer (inc);
+			
+			for (int offset=0; offset<nEnd; offset+=inc) {
+				lines.add("");
+				sb.append(String.format(formatC, nStart1)); 
+				for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq1.charAt(x+offset));
+				sb.append("  " + (nStart1+x));
+				lines.add(sb.toString());
+				sb.delete(0, sb.length());
+				
+				sb.append(String.format(formatM, " "," "));
+				for (int i=0; i<inc && (i+offset)<nEnd; i++) sb.append(aSeqM.charAt(i+offset));
+				lines.add(sb.toString());
+				sb.delete(0, sb.length());
+				
+				sb.append(String.format(formatC, nStart2));
+				for (x=0; x<inc && (x+offset)<nEnd; x++) sb.append(aSeq2.charAt(x+offset));
+				sb.append("  " + (nStart2+x));
+				lines.add(sb.toString());
+				sb.delete(0, sb.length());
+				
+				nStart1+=inc;
+				nStart2+=inc;
+			}
+		} catch (Exception e) {ErrorReport.print(e, "run align add align");}
+		}
+		
+		private void popupHelp() {
+			String msg = "Align hit sequences: Align each subhit separately.";
+			msg += "\nAlign gene sequence: Align the spliced transcripts. ";
+			msg += "\n\nSee ? for details.\n";
+			util.Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
+		}
 	}
 }

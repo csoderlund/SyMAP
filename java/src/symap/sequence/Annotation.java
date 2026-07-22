@@ -33,7 +33,10 @@ public class Annotation {
 	private int itype;
 	private int start, end;						
 	private String description;
-	private String strGeneNum, tag, fullTag; 
+	private String strGeneNum,  // number.{suffix}
+					tag, 		// for exons
+					fullTag, 	// 'Gene' geneTag ('#Exons' n exon-len)
+					annoType;   // CDS, Exon
 	private boolean bStrandPos;
 	private int gene_idx=0;  	// If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
 	private int annot_idx=0; 	// pseudo_annot.idx
@@ -65,7 +68,7 @@ public class Annotation {
 	 * SeqPool.setSequence
 	 */
 	protected Annotation(Sequence seqObj, String desc, int itype, int start, int end, String strand, 
-			String dbtag, int gene_idx, int idx, int genenum, int numhits) {
+			String dbtag, int gene_idx, int idx, int genenum, int numhits, String annoType) { // CAS587 add annoType
 		this.seqObj = seqObj;
 		this.itype = itype;
 		this.start = start;
@@ -75,6 +78,7 @@ public class Annotation {
 		this.gene_idx = gene_idx;
 		this.annot_idx = idx;
 		this.genenum = genenum;
+		this.annoType = annoType;
 		bHasHits = (numhits>0); // this could be from any synteny pair 
 	
 		// see backend.AnnotLoadPost.computeTags for formatting
@@ -85,7 +89,7 @@ public class Annotation {
 		else {
 			tag =  		 Utilities.convertTag(dbtag); 			// coverts old to new DB: geneNum (n exon-len)
 			strGeneNum = Utilities.getGenenumFromDBtag(tag);	// extracts geneNum.suffix only
-			fullTag =    Utilities.createFullTagFromDBtag(tag); // create: 'Gene' geneTag ('#Exons' n exon-len)
+			fullTag =    Utilities.createFullTagFromDBtag(tag, annoType); // create: 'Gene' geneTag ('#Exons' n exon-len)
 			exonVec = new Vector <Annotation> ();
 		}
 		
@@ -286,6 +290,7 @@ public class Annotation {
 	public int getStart() {return start;}
 	public int getEnd() {return end;}
 	public int getGeneIdx() { return gene_idx;} 			// For Sequence to know if overlap exon
+	public int getGrpIdx() {return seqObj.getGroup();}		// For AlignPool/TextShowInfo
 	public int getAnnoIdx() { return annot_idx;}			// ditto
 	public String getTag() {return tag;} 					// For HelpBox; called for Exons
 	public boolean isStrandPos() {return bStrandPos;}		// for seq-seq closeup
@@ -300,6 +305,7 @@ public class Annotation {
 	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
 	protected int getGeneNum() { return genenum;}				 // for sorting in SeqPool
 	public String getFullGeneNum() {return strGeneNum;}          // has suffix
+	public String getAnnoType()		{ return annoType;}			 // CDS/Exon CAS587
 	
 	/*******************************************
 	 * XXX hover and box and closeup info
@@ -440,7 +446,7 @@ public class Annotation {
 		if (!tag.contains("(")) return;
 		setIsPopup(true);
 		
-		String [] tok = Utilities.getGeneExonFromTag(tag); // tok[0] Gene #X  tok[1] #Exon=n nnnnbp
+		String [] tok = Utilities.getGeneExonFromTag(tag, annoType); // tok[0] Gene #X  tok[1] #Exon=n nnnnbp
 		
 		String msg = null;
 		for (String x : getPopUpDesc()) {
@@ -459,7 +465,7 @@ public class Annotation {
 		}
 		
 		if (exonList!=null) {
-			msg += tok[1] + "\n" + SeqDataInfo.formatExon(exonList); 
+			msg += tok[1] + "\n" + SeqDataInfo.formatExon(exonList, annoType); 
 		}
 		
 		if (Globals.INFO) msg += "\nIdx=" + annot_idx + "\n"; 

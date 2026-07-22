@@ -552,6 +552,8 @@ public class TableData implements Serializable {
   			if (colName.endsWith(Q.chrCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.hStartCol)) {colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.hEndCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.endsWith(Q.gStartCol)) {colNames.add(colName); colVals.add(arrData[row][i]);} // CAS587 add
+  			else if (colName.endsWith(Q.gEndCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.endsWith(Q.gNCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			
   			// general

@@ -42,7 +42,6 @@ public class Mproject implements Comparable <Mproject> {
 	
 	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0, numDraft=0; // numDraft to see !strict by default
 	private long length=0; 		// genome length - must be long
-	private String annot_type = "Exon"; // symap -cds will load cds instead of exons; only shown as a key in proj_props of annot_type
 	
 	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01
@@ -76,7 +75,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (!annotdate.isBlank())  {
+			if (annotdate!=null && !annotdate.isBlank())  {// CAS578 add !=
 				strDate = Utilities.reformatAnnotDate(annotdate);
 				if (strDate.contentEquals("???")) 
 					System.out.println("Warning: " + strName + " interrupted on load - reload");
@@ -108,10 +107,12 @@ public class Mproject implements Comparable <Mproject> {
 		return false;
 	}
 	
-	public String getAnnoStr() {
+	public String getAnnoStr() {// written on manager right panel
 		String msg= ""; 
 		if (numGene>0) msg += String.format("Genes: %,d  ", numGene);
-		if (numExon>0) msg += String.format("%s: %,d  ", annot_type + "s", numExon);
+		String type = getDBVal(lAnnoType);
+		if (type.equals("")) type = "Exon";
+		if (numExon>0) msg += String.format("%s: %,d  ", type+'s', numExon);
 		if (numGap>0)  msg += String.format("Gaps: %,d", numGap);
 		
 		return msg;
@@ -120,7 +121,7 @@ public class Mproject implements Comparable <Mproject> {
 		if (numSynteny==0) return "";
 		else return "[" + numSynteny + "]";
 	}
-	public String getAnnoType() {return annot_type;}
+	
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() 	{return numGene>0;}
 	public boolean hasSelf() 	{return bHasSelf;}
@@ -146,13 +147,12 @@ public class Mproject implements Comparable <Mproject> {
 	public String getdbGrpName() 	{ return getDBVal(sGrpType);}
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
-	
-	public String getKeywords()     { return getProjVal(lANkeyword); }
-	
-	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
-	
+	public String getdbAnnoType() 	{ return getDBVal(lAnnoType);}
 	public int getdbMinKey() {return Utilities.getInt(getDBVal(sANkeyCnt));}
 	
+	public String getAnnoType()		{ return getProjVal(lAnnoType); }
+	public String getKeywords()     { return getProjVal(lANkeyword); }
+	public String getGrpPrefix()    { return getProjVal(lGrpPrefix);}
 	public String getSequenceFile() { return getProjVal(lSeqFile); }
 	public String getAnnoFile()     { return getProjVal(lAnnoFile); }
 	
@@ -202,7 +202,7 @@ public class Mproject implements Comparable <Mproject> {
 		return msg;
 	}
 	///////////////////////
-	public String notLoadedInfo() {
+	public String getLoadParameters() {
 		String msg="Parameters: ";
 		if (getProjVal(lSeqFile).contentEquals("")) 	msg += "Default file locations; ";
 		else 											msg += "User file locations; ";
@@ -213,9 +213,10 @@ public class Mproject implements Comparable <Mproject> {
 		prefix = (Utilities.isEmpty(prefix)) ? "None" : prefix;
 		msg += " Prefix " + prefix + "; ";
 		
+		msg += getProjVal(lAnnoType);
+		
 		String annotKeywords = getProjVal(lANkeyword);
-		if (annotKeywords.equals("")) 	msg += " All anno keywords ";
-		else 							msg += " Keywords " + annotKeywords;
+		if (!annotKeywords.equals("")) 	msg += "; Keywords " + annotKeywords;
 		
 		return msg;
 	}
@@ -303,7 +304,7 @@ public class Mproject implements Comparable <Mproject> {
 		if (!Utilities.isEmpty(desc)) info += desc + "\n";
 		info += "\n";
 		
-		String aType = "#" + annot_type;
+		String aType = "#" + getDBVal(lAnnoType);
 		String [] fields = {"Chr", " ", "Length",   " ","#Genes","AvgLen",   "  ",aType,"AvgLen",  "  ","Gaps"}; 
 		int [] justify =   {1,     1,   0,          0,    0,        0,          0,    0,        0,     0,     0};
 		if (bHasLab) fields[1] = "Name";
@@ -430,7 +431,14 @@ public class Mproject implements Comparable <Mproject> {
 					dbc2.executeUpdate("delete from proj_props where proj_idx="+ projIdx 
 							+ " and name='" + p.key + "'");
 					
-					dbc2.executeUpdate("insert into proj_props (proj_idx,name,value) "
+					if (p.projVal.length()>=255) { // CAS587 add check; depends on value whether this messes things up
+						String msg = "Warning: Value for parameter '" + p.key + " is too long (>=255)."
+							+ "\n    " + p.projVal.substring(0,254) + "...\nAbbreviated value will be stored in database";
+						Globals.prt(msg);
+						dbc2.executeUpdate("insert into proj_props (proj_idx,name,value) "
+								+ " values(" + projIdx + ",'" + p.key + "','" + p.projVal.substring(0,254) + "')");	
+					}
+					else dbc2.executeUpdate("insert into proj_props (proj_idx,name,value) "
 							+ " values(" + projIdx + ",'" + p.key + "','" + p.projVal + "')");	
 					
 					pKeysMap.get(p.key).dbVal = p.projVal;
@@ -548,7 +556,6 @@ public class Mproject implements Comparable <Mproject> {
 	        		pKeysMap.get(key).dbVal   = val;
 	        		pKeysMap.get(key).projVal = val;
 	        	}
-	        	if (key.equals("annot_type")) annot_type=val; // annot_type is set from AnnotLoadMain
 	        }
 			rs = dbc2.executeQuery("select idx from pairs where proj1_idx=" + projIdx + " and proj2_idx=" + projIdx); 
 			bHasSelf = (rs.next()) ? true : false;
@@ -764,17 +771,17 @@ public class Mproject implements Comparable <Mproject> {
 	private final String [] paramKey = { // key for file and db saves
 			"category", "display_name", "abbrev_name", "grp_type", 
 			"description", "annot_kw_mincount", "grp_prefix", "min_size", 
-			"annot_keywords", "sequence_files", "anno_files"
+			"annot_keywords", "sequence_files", "anno_files", "annot_type"
 	};
 	private final String [] paramDef = {
 			"Uncategorized", "", "", "Chromosome", 
 			"",  "50", "", "100000", 
-			"", "", ""
+			"", "", "", "Exon"
 	};
 	private String [] paramLabel = {
 			"Category", "Display name", "Abbreviation", "Group type", 
 			"Description",  "Anno key count","Group prefix", "Minimum length", 
-			 "Anno keywords", "Sequence files", "Anno files"
+			 "Anno keywords", "Sequence files", "Anno files", "Anno type"
 	};
 	private String [] paramDesc = { 
 			"Select a Category from the drop down or enter a new one in the text box.", 
@@ -787,7 +794,8 @@ public class Mproject implements Comparable <Mproject> {
 			"Only load sequences that have at least this many bases will be loaded", 
 			"Only load this set of keywords; if blank, all will be loaded", 
 			"The directory or file name of the FASTA file(s); if blank, the default location will be used", 
-			"The directory or file name of the GFF file(s); if blank, the default location will be used"
+			"The directory or file name of the GFF file(s); if blank, the default location will be used",
+			"Either Exon or CDS will be loaded per gene"
 	};
 	// Index into the above three arrays
 	protected final int sCategory = 0;
@@ -802,6 +810,7 @@ public class Mproject implements Comparable <Mproject> {
 	public final int lANkeyword = 	8;
 	protected final int lSeqFile =  9;
 	protected final int lAnnoFile = 10;
+	protected final int lAnnoType = 11; // CAS587
 	
 	public final int xDisplay = 1;
 	public final int xLoad = 2;
@@ -814,8 +823,8 @@ public class Mproject implements Comparable <Mproject> {
 			this.defVal = 	defVal;  	// default
 			projVal =		defVal;  	// assigned in proj params
 			
-			if (index<7) isSum=true;
-			else isLoad=true;
+			if (index<lGrpPrefix) 	isSum=true;	// incorrectly 7; CAS587
+			else 					isLoad=true;
 		}
 		private boolean isDBvalDef() {
 			return dbVal.equals(defVal);

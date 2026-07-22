@@ -47,7 +47,7 @@ public class Schema {
 		sql = "CREATE TABLE proj_props (" +
 		    "proj_idx        INTEGER NOT NULL," +
 		    "name            VARCHAR(40) NOT NULL," +		// key:value parameters, etc
-		    "value           VARCHAR(255) NOT NULL," +
+		    "value           VARCHAR(255) NOT NULL," +		// length checked in Mproject
 		    "UNIQUE INDEX (proj_idx,name)," +
 		    "FOREIGN KEY (proj_idx) REFERENCES projects (idx) ON DELETE CASCADE" +
 		    ")  ENGINE = InnoDB;";

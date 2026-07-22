@@ -188,11 +188,11 @@ public class SeqLoadMain {
 		if (prefix.contentEquals("")) plog.msg("   No sequence prefix supplied (See Parameters - Group prefix)");
 		else 						  plog.msg("   Load sequences with '" + prefix + "' prefix (See Parameters - Group prefix)");
 		
-		int minSize = mProj.getMinSize(), readSeq=0;
+		int minSize = mProj.getMinSize();
 		plog.msg(String.format("   Load sequences > %,dbp (See Parameters - Minimum length)", minSize)); 
 		
-		TreeSet<String> grpNamesSeen = new TreeSet<String>();
-		TreeSet<String> grpFullNamesSeen = new TreeSet<String>();
+		TreeSet<String> grpNamesSeen = new TreeSet<String>(); // No prefix
+		TreeSet<String> grpFullNamesSeen = new TreeSet<String>(); // with prefix
 		
 	// For all files, Scan and upload the sequences		
 		for (File f : seqFiles) {
@@ -208,26 +208,28 @@ public class SeqLoadMain {
 			BufferedReader fh = Utils.openGZIP(f.getAbsolutePath()); 
 			
 			while ((line = fh.readLine()) != null) {
-				
 				if (line.startsWith("#") || line.isEmpty()) {
 					if (line.contains(Globals.toNCBI)) fileType=iNCBI;
 					else if (line.contains(Globals.toENS)) fileType=iEns;
 					continue; 
 				}
-				
+			/* Header */
 				if (line.startsWith(">")) {
+					// Finish last sequence
 					if (grpName != null && curSeq.length() >= minSize) {
-						if (!grpNamesSeen.contains(grpName) &&  !grpFullNamesSeen.contains(grpFullName)){
+						if (!grpNamesSeen.contains(grpName) && !grpFullNamesSeen.contains(grpFullName)){
 							grpList.add(grpName);
 							grpNamesSeen.add(grpName);
 							grpFullNamesSeen.add(grpFullName);
-							nSeqs++; 
 							basesWritten += curSeq.length();
-							Globals.rprt(String.format("%s: %,d", grpName,curSeq.length()));
+							nSeqs++; 
 							
 							// load sequence
 							String chrSeq = curSeq.toString(); // prevent two copies in memory at once
 							curSeq.setLength(0);
+							
+							if (chrSeq.length()>10000000 || nSeqs%10==0) 
+								Globals.rprt(String.format("%d. %s: %,d", nSeqs, grpName,chrSeq.length()));
 							
 							uploadSequence(grpName,grpFullName, grpLabName, chrSeq,f.getName(),totalnSeqs+1);	
 		
@@ -235,13 +237,11 @@ public class SeqLoadMain {
 							System.gc();	
 						}
 						else {
-							plog.msgToFile("+++ Dup seqid: " + grpName + " skipping...");
+							plog.msgToFile("*** Dup seqid: " + grpFullName + " skipping...");
 						}
 					} else seqIgnore++;
 					
-					readSeq++;
-					if (readSeq%100 == 0) Globals.rprt("Read sequences " + readSeq); 
-					
+					// Start next sequence
 					grpName = null;  grpFullName = "";
 					curSeq.setLength(0);
 					
@@ -260,7 +260,8 @@ public class SeqLoadMain {
 						return rtError("Unable to parse group name from:" + line);
 					}
 				} 	
-				else if (grpName!=null) { // sequence for valid grpName
+			/* sequence for valid grpName */
+				else if (grpName!=null) { 
 					line = line.replaceAll("\\s+",""); 
 
 					if (line.matches(".*[^agctnAGCTN].*")) {
@@ -275,32 +276,41 @@ public class SeqLoadMain {
 					return rtError("User cancelled");
 				}	
 			} // end reading file
-			fh.close(); 
 			
+			// Finish this file
+			fh.close(); 
 			if (grpName != null &&  curSeq.length() >= minSize) {// load last sequence
-				grpList.add(grpName);
-				nSeqs++;
-				basesWritten += curSeq.length();
-				Globals.rprt(String.format("%s: %,d", grpName,curSeq.length())); 
-				
-				String chrSeq = curSeq.toString(); 
-				curSeq.setLength(0);
-				uploadSequence(grpName, grpFullName, grpLabName, chrSeq, f.getName(), totalnSeqs+1);	
-				chrSeq="";
+				if (!grpNamesSeen.contains(grpName) && !grpFullNamesSeen.contains(grpFullName)){// CAS587 was not doing this
+					grpNamesSeen.add(grpName);		
+					grpFullNamesSeen.add(grpFullName);
+					grpList.add(grpName);
+					nSeqs++;
+					basesWritten += curSeq.length();
+					
+					String chrSeq = curSeq.toString(); 
+					curSeq.setLength(0);
+					uploadSequence(grpName, grpFullName, grpLabName, chrSeq, f.getName(), totalnSeqs+1);	
+					chrSeq="";
+				}
+				else {
+					plog.msgToFile("*** Dup seqid: " + grpFullName + " skipping...");
+				}
 			}
 			else if (curSeq.length()>0) seqIgnore++; 
 			curSeq.setLength(0);
 			
-			if (seqIgnore==0) plog.msg(String.format("%,5d sequences   %,10d bases", nSeqs, basesWritten));
-			else 			  plog.msg(String.format("%,5d sequences   %,10d bases   %,4d sequences ignore", nSeqs, basesWritten, seqIgnore));
-			
-			if (nBadCharLines > 0) {
-				plog.msg("+++ " + nBadCharLines + " lines contain characters that are not AGCT; replaced by N");
-				mProj.saveProjParam("badCharLines","" + nBadCharLines);	
-			}
-			totalSeqIgnore += seqIgnore;
-			totalBasesWritten += basesWritten;
-			totalnSeqs += nSeqs;
+			if (nSeqs>0) {// otherwise duplicate in file or something
+				if (seqIgnore==0) plog.msg(String.format("%,5d sequences   %,10d bases", nSeqs, basesWritten));
+				else 			  plog.msg(String.format("%,5d sequences   %,10d bases   %,4d sequences ignore", nSeqs, basesWritten, seqIgnore));
+				
+				if (nBadCharLines > 0) {
+					plog.msg("+++ " + nBadCharLines + " lines contain characters that are not AGCT; replaced by N");
+					mProj.saveProjParam("badCharLines","" + nBadCharLines);	
+				}
+				totalSeqIgnore += seqIgnore;
+				totalBasesWritten += basesWritten;
+				totalnSeqs += nSeqs;
+			}	
 		} // end loop through files
 		
 		if (totalnSeqs==0) return rtError( "No sequences were loaded! Read the documentation on 'input'.");

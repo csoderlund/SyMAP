@@ -1383,7 +1383,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (hitsObj1!=null) {
 			if (!annot.hasHitList()) { 
 				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
-				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+				TreeMap <Integer, String> scoreMap = 
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType()); // CAS587 add annoType
 				if (scoreMap.size()>0) {
 					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList(hits, scoreMap);
@@ -1393,7 +1394,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (hitsObj2!=null) {// for 3-track
 			if (!annot.hasHitList2()) { 
 				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
-				TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+				TreeMap <Integer, String> scoreMap = 
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType());
 				if (scoreMap.size()>0) {
 					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList2(hits, scoreMap);
@@ -1406,7 +1408,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (x==2 && hitsObj2==null) return false;
 		
 		boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
-		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1);
+		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType());
 		if (scoreMap.size()==0) return false;
 		
 		SeqHits hitObj = (x==1) ? hitsObj1 : hitsObj2;

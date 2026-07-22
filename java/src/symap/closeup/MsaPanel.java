@@ -15,7 +15,7 @@ import java.awt.geom.Rectangle2D;
 import javax.swing.JPanel;
 
 /**************************************
- * SyMAP query multiple alignment panel; this is the top part of AlignMainPanel, where the key table is the bottom
+ * SyMAP query multiple alignment panel; this is the top part of MsaMainPanel, where the key table is the bottom
  **************************************/
 public class MsaPanel extends JPanel {
 	private static final long serialVersionUID = 8622662337486159085L;

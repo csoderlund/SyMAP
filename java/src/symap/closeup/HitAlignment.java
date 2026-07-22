@@ -19,8 +19,7 @@ import symap.mapper.HitData;
  * Display Hit Alignments; created in AlignPool; drawn from CloseUpComponent
  */
 public class HitAlignment implements Comparable<HitAlignment> { 
-	public static final String tokS=" ",     tokO=" "; 
-	private final       String tokpS=" ", tokpO=" ";
+	
 	private final boolean drawLine=false;
 	
 	private HitData hitDataObj;
@@ -111,27 +110,12 @@ public class HitAlignment implements Comparable<HitAlignment> {
 				   "\n " + nSeq + " \n"; 
 		}
 		else { // the text formatter puts the S and N before each align name
-			String sName = String.format("%s", p1 + tokpS);
-			String nName = String.format("%s", p2 + tokpO);
-			return  (hitN + "  " + scoreStr) + "\t" + sName + sCoord + "  " + nName + nCoord + 
-					"\t" 	+ sSeq + "\t" + mSeq + "\t" + nSeq;
+			return  (hitN + "  " + scoreStr) 
+					+ "\t" + p1 + " " + sCoord + " " + p2 + " " + nCoord 
+					+ "\t" 	+ sSeq + "\t" + mSeq + "\t" + nSeq;
 		}
 	}
 	
-	protected String toTextAA(String p1, String p2) {
-		String qd = selectData.toString(), td = otherData.toString();
-		String mk = matchData.toString();
-		
-		String qn = p1 + tokpS;
-		String tn = p2 + tokpO;
-		
-		String qc = SeqData.coordsStr(sStart, sEnd);
-		String tc = SeqData.coordsStr(oStart, oEnd);
-		
-		String desc = hitDataObj.getName() + "." + numSubHit;
-		
-		return desc  + "\t" + qn + qc + "   "+ tn + tc + "\t" 	+ qd + "\t" + mk + "\t" + td;
-	}
 	// for TextShowInfo
 	protected int [] getCoords( ) {
 		int [] coords = new int[4];

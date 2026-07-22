@@ -142,6 +142,21 @@ public class FileDir {
 	catch (Exception e) {ErrorReport.print(e, "get file date " + path); }
 	return "";
 	}
+	public static String fileDateOnly(String path) { 
+		try {
+			File f = new File(path);
+			 if (f.exists()) {
+		         long lastModified = f.lastModified();
+		         Date date = new Date(lastModified);
+		         SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+		         String formattedDate = formatter.format(date);
+		         return formattedDate;
+			 }
+		}
+		catch (Exception e) {ErrorReport.print(e, "get file date " + path); }
+		return "";
+	}
+	
 	// return path/file  (not path//file or pathfile path/file/)
 	public static String fileNormalizePath(String path, String file) {
 		String p = path, f = file;

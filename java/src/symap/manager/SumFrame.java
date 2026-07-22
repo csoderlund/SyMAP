@@ -94,6 +94,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		btnHelp.addActionListener(this);
 		JPanel buttonPanel = new JPanel();
 		
+		
 		buttonPanel.add(btnHelp); buttonPanel.add(Box.createHorizontalStrut(20));
 		buttonPanel.add(btnOK);
 		
@@ -529,7 +530,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	
 	/*****************************************************************
 	 * Block section
-	 * CAS575 was using original for finding coverage; same results, simplier to change, but a wee bit slower
+	 * CAS575 was using original for finding coverage; same results, simpler to change, but a wee bit slower
 	 */
 	private String createBlock() {
 		try {
@@ -552,9 +553,9 @@ public class SumFrame extends JDialog implements ActionListener {
 			String pBlkGene1 = pct((double)nBlkGenes1, (double)proj1.nGenes); 
 			String pBlkGene2 = pct((double)nBlkGenes2, (double)proj2.nGenes);
 				
-	/* Coverage */
+	/* Coverage <100kb 100kb-1Mb 1Mb-10Mb >10Mb*/
 			int nblks=0, ninv = 0;
-			long bcov1=0, bdcov1=0, bcov2=0, bdcov2=0; // CAS576 were ints; hsa overflow
+			long bcov1=0, bdcov1=0, bcov2=0, bdcov2=0; 
 			int  b11=0, b12=0, b13=0, b14=0;
 			int  b21=0, b22=0, b23=0, b24=0;
 			
@@ -582,7 +583,7 @@ public class SumFrame extends JDialog implements ActionListener {
 						else if (olap1<10000000)b13++;
 						else 					b14++;
 						
-						for (int i=bstart; i<bend; i++) arrB[i]++;
+						for (int i=bstart; i<bend && i<grp1Len; i++) arrB[i]++; // CAS587 add <grp1Len; block end goes over the grpLen 
 					}
 					rs.close();
 				}// finished proj1 chrN
@@ -602,16 +603,16 @@ public class SumFrame extends JDialog implements ActionListener {
 					rs = dbc2.executeQuery("select corr, start2, end2 from blocks "
 							+ "where pair_idx=" + pairIdx + " and grp1_idx="+grp1Idx + " and grp2_idx="+grp2Idx);
 					while (rs.next()) {
-						int bstart = 	rs.getInt(2); 
-						int bend = 	rs.getInt(3); 
-						
+						int bstart = rs.getInt(2); 
+						int bend   = rs.getInt(3); 
+			
 						int olap1 = (bend-bstart+1);
 						if (olap1<100000) 		b21++;
 						else if (olap1<1000000) b22++;
 						else if (olap1<10000000)b23++;
 						else 					b24++;
 						
-						for (int i=bstart; i<bend; i++) arrB[i]++;
+						for (int i=bstart; i<bend && i<grp2Len; i++) arrB[i]++;
 					}
 					rs.close();	
 				}// finished proj2 chrN

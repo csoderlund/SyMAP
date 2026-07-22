@@ -32,8 +32,8 @@ public class AnnotLoadMain {
 	private final String idKey 		= "ID"; 			// Gene and mRNA
 	private final String parentKey 	= "Parent"; 		// mRNA and Exon and CDS
 	
-	public static boolean bUseCDS = false;				// symap -cds			
-	private String prtType="exon";						// change to CDS if -cds; CDS goes in database as exon; only proj_props shows CDS
+	private boolean bUseCDS = false;						
+	private String prtType="exon";		// parameter; CDS goes in database as exon; only proj_props shows CDS
 	
 	private ProgressDialog plog;
 	private DBconn2 tdbc2;
@@ -58,12 +58,14 @@ public class AnnotLoadMain {
 		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
 		this.plog = log;
 		this.mProj = proj;
+		
 		proj.loadDataFromDB();
 	}
 	
 	protected boolean run(String projDBName) throws Exception {
 		long startTime = Utils.getTime();
-		if (bUseCDS) prtType = "CDS";
+		prtType = mProj.getAnnoType();
+		bUseCDS = prtType.equals("CDS"); // CAS587 changed from command line to project params
 		
 		plog.msg("Loading annotation (" + prtType + ") for " + projDBName);
 		

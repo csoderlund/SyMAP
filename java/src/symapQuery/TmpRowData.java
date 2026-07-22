@@ -116,7 +116,9 @@ public class TmpRowData {
 				if (col.equals(Q.chrCol)) 		  	chrNum[i0or1]  = sVal;
 				else if (col.equals(Q.hStartCol)) 	start[i0or1]   = iVal;
 				else if (col.equals(Q.hEndCol))   	end[i0or1]     = iVal;
-				else if (col.equals(Q.gNCol))	  	geneTag[i0or1] = sVal; // this will be N.N.[b] or N.- 
+				else if (col.equals(Q.gStartCol)) 	gstart[i0or1]  = iVal; // CAS587 add
+				else if (col.equals(Q.gEndCol))   	gend[i0or1]    = iVal;
+				else if (col.equals(Q.gNCol))	  	geneTag[i0or1] = sVal; // this will be N.N.[b] or N.~ 
 			}
 			
 			// get supporting values; Export gene for singles is the only function that will be 1; CAS586 allow
@@ -242,6 +244,9 @@ public class TmpRowData {
 	
 	protected int [] 	start = {0,0};
 	protected int [] 	end = {0,0};
+	
+	protected int [] 	gstart = {0,0}; // CAS587 add
+	protected int [] 	gend = {0,0};
 	
 	protected String [] geneTag = {"",""};
 }

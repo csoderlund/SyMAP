@@ -9,6 +9,7 @@ import java.util.Vector;
 import database.DBconn2;
 import symap.Globals;
 import symap.mapper.HitData;
+import symap.sequence.Annotation;
 import util.ErrorReport;
 import util.Utilities;
 
@@ -47,6 +48,8 @@ public class AlignPool  {
 	/********************************************************
 	 * Return concatenated hits, with nnnnn between each hit
 	 * Overlapping hits are merged.
+	 * If not gapless, load from start to end of hit.
+	 * Otherwise, get the queryStr or targetStr from database, and just pull out their sequence
 	 */
 	public String loadSeq(int pos, String indices, int grpIdx, String gapLess) {
 	try {
@@ -104,10 +107,43 @@ public class AlignPool  {
 	{	
 		return computeHitAlign(hitList, isQuery, projS, projO, true, selStart, selEnd, bTrim); // use -a trim
 	}
-	// Called from TextPopup
+	// Called from TextPopup for hit alignment
 	protected synchronized HitAlignment[] buildHitAlignments(Vector <HitData> hitList, boolean isNT, boolean isQuery, boolean isTrim) 
 	{
 		return computeHitAlign(hitList, isQuery, "", "", isNT, -1, -1, isTrim); 
+	}
+	// Called from TextPopup for gene alignment
+	protected synchronized HitAlignment buildGeneAlignments(HitData hd, 
+			String projS, Annotation anno1, String projO, Annotation anno2, boolean isTrim) 
+	{
+		// get spliced sequences
+		char s1 = (anno1.isStrandPos()) ? '+' : '-';
+		char s2 = (anno2.isStrandPos()) ? '+' : '-';
+		int [] num1 = new int [4];
+		String seq1 = loadGeneSplice(anno1.getAnnoIdx(), s1+"", anno1.getGrpIdx(), num1);
+		int [] num2 = new int [4];
+		String seq2 = loadGeneSplice(anno2.getAnnoIdx(), s2+"", anno2.getGrpIdx(), num2);
+		
+		 /** Align **/
+		AlignData ad = new AlignData();
+		if (!ad.align(AlignData.NT, seq1, seq2, isTrim, "")) return null; 
+		
+		// Get results
+		String seq1Align =  ad.getAlignSeq1();
+		String seq2Align =  ad.getAlignSeq2();
+		String matchAlign =	ad.getAlignMatch();
+		
+		String scoreStr = ad.getScore();
+		int offset  = 	  ad.getStartOffset();
+		int alignLength = seq1Align.length();
+		
+		// data structure that will put it into text form
+		HitAlignment ha = new HitAlignment(hd, anno1.getFullGeneNum(), anno2.getFullGeneNum(), 
+				new SeqData(seq1, seq1Align, s1),  new SeqData(seq2,  seq2Align, s2),
+				new SeqData(matchAlign, ' '),
+				num1[2], num1[3], num2[2], num2[3], // start, end
+				alignLength, offset, scoreStr, "");
+		return ha;
 	}
 	// Called from TextPopup 
 	protected synchronized HitAlignment[] getHitReverse(HitAlignment [] halign) 
@@ -166,6 +202,7 @@ public class AlignPool  {
 		return (HitAlignment[]) hitAlign.toArray(new HitAlignment[0]);
 	} catch (Exception e) {ErrorReport.print(e, "getHitAlignments"); return null; }
 	}
+	
 	/******************************************************************************/
 	private synchronized HitAlignment[] computeHitReverse(HitAlignment [] halign) {
 		Vector <HitAlignment> alignments = new Vector <HitAlignment>();
@@ -187,6 +224,7 @@ public class AlignPool  {
 		return (HitAlignment[]) alignments.toArray(new HitAlignment[0]);
 	}
 	/*********************************************************************
+	 * ComputeHitAlign
 	 */
 	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd, boolean isTrim) {
 	try {
@@ -340,11 +378,11 @@ public class AlignPool  {
 		if (genetag.isEmpty()) {Globals.prt("No genetag"); return null;}
 		
 		String genenum = genetag.substring(0, genetag.indexOf(Globals.DOT)); // 123. or 123.b; int is genenum
-		if (genenum.isEmpty()) {Globals.prt("Could not parse: " + genetag);return null;}
+		if (genenum.isEmpty()) {Globals.prt("Could not parse: " + genetag); return null;}
 		
 		try {
 			int annotIdx=0;
-			String strand="+", id="", rna="";
+			String strand="+", id="", rna="", tag="";
 			
 			query = "select idx, tag, name, strand from pseudo_annot "
 					+ " where genenum=" + genenum + " and grp_idx=" + grpIdx;
@@ -352,9 +390,9 @@ public class AlignPool  {
 			// Go through records getting the genenum and tag, and use that one where pseudo_tag.startsWith(genetag)
 			ResultSet rs = dbc2.executeQuery(query);
 			while (rs.next()) {
-				String tag = rs.getString(2);		// 123. (exon stuff) or 123.b (exon stuff)
+				tag = rs.getString(2);		// 123. (exon stuff) or 123.b (exon stuff)
 				tag = tag.substring(0, tag.indexOf("(")).trim();
-				
+	
 				if (tag.equals(genetag)) {
 					annotIdx 		= rs.getInt(1);
 					strand   		= rs.getString(4);
@@ -371,14 +409,17 @@ public class AlignPool  {
 				}
 			}
 			rs.close();
-			if (annotIdx==0) {Globals.prt("Fail: " + query);return null;}
+			if (annotIdx==0) {Globals.prt("Fail: " + genetag + " (" + tag + ") " + query);return null;}
 			
 			// header is first line, where > geneTag will be put in front from calling routine
-			int [] num = new int [3];
+			int [] num = new int [4]; 
 			seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
 			
-			// >ID will be put in from of header for output
-			String header  = String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
+			seq = mkLines(seq, lineLen);
+			
+			// >ID will be put in from of header for output for export; nothing for MSA
+			String header  = (annoType==null) ? "" 
+					: String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
 			return header + seq; 
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + genetag); Globals.prt(query);} 	
@@ -386,9 +427,12 @@ public class AlignPool  {
 	}
 	// returns Spliced gene sequence; get coordinates of exons/CDS, then call LoadGeneSeq for each
 	// the output was compared with gffRead on CDSs
+	// num[0]=#exons, num[1]=length, num[2]=start, num[3]=end (if CDS, not the same as gene start/end)
 	public String loadGeneSplice(int annotIdx, String strand, int grpIdx, int [] num) { // For query export and MSA
 		String seq="", query="";
 		try {
+			num[2]=Integer.MAX_VALUE; num[3]=0;
+			
 			Vector <String> coords = new Vector <String> (20);
 	
 			query = "SELECT start, end FROM pseudo_annot WHERE gene_idx=" + annotIdx 
@@ -401,8 +445,11 @@ public class AlignPool  {
 				int end   = rs2.getInt(2);
 				
 				coords.add(start + ":" + end);
-				num[1] += (end-start)+1;
+				
 				num[0]++;
+				num[1] += (end-start)+1;
+				num[2] = Math.min(num[2], start);
+				num[3] = Math.max(num[3], end);
 			}
 			rs2.close();
 			
@@ -413,9 +460,7 @@ public class AlignPool  {
 				seqbuf.append(exon);
 			}
 			seq = seqbuf.toString();
-			num[2] = seq.length();
 			if (strand.equals("-")) seq = reverseComplement(seq);
-			seq = mkLines(seq, lineLen);
 			
 			return seq;
 		}
@@ -595,8 +640,9 @@ public class AlignPool  {
 	private String loadSubHitStr(int pos, String gapLess) {
 	try {
 		String [] tok = gapLess.split(";");		// pseudo_hits needs all of these to be unique since no hitIdx
-		String where = " FROM pseudo_hits where hitNum=" + tok[0] + " and grp1_idx=" + tok[1] + " and proj1_idx=" + tok[2] 
-				                                 + " and grp2_idx=" + tok[3] + " and proj2_idx=" + tok[4];
+		String where = " FROM pseudo_hits where hitNum=" + tok[0] 
+				+ " and grp1_idx=" + tok[1] + " and proj1_idx=" + tok[2] 
+				+ " and grp2_idx=" + tok[3] + " and proj2_idx=" + tok[4];
 		if (pos==0) {
 			ResultSet rs = dbc2.executeQuery("SELECT query_seq " + where);
 			if (rs.next()) return rs.getString(1);

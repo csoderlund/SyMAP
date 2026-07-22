@@ -31,8 +31,9 @@ import util.ErrorReport;
 import util.Jcomp;
 /**************************************
  * For Symap Query: align selected set using muscle or mafft 
- * Called from SyMAPQueryFrame; calls methods to build alignments and displays
+ * Called from symapQuery.queryFrame; calls methods to build alignments and displays
  * MsaPanel is the actual align panel and MsaRun runs the alignment
+ * Lower panel: MsaRun.finalStats; tableLines created in UtilSelect.buildTableAndAlign
  */
 public class MsaMainPanel extends JPanel {
 	private static final long serialVersionUID = -2090028995232770402L;

@@ -44,36 +44,37 @@ public class SeqPool {
 	protected synchronized String loadSeqData(Sequence seqObj,  Vector<Annotation> annoVec) {
 		int grpIdx =   seqObj.getGroup();		
 		
-		String name=null, type, desc;
+		String name=null, type, desc, annoType;
 		int start, end; 
 		String strand, tag; 
-		int annot_idx, genenum, gene_idx, numhits, itype;
+		int projIdx, annot_idx, genenum, gene_idx, numhits, itype;
 
 		ResultSet rs = null;
 		try {
-			String size_query = 
-					"SELECT (SELECT length FROM pseudos WHERE grp_idx=" + grpIdx + ") as size, "+
-					"       (SELECT name   FROM xgroups WHERE idx="     + grpIdx + ") as name; ";
-			
-			rs = dbc2.executeQuery(size_query);
+			// Get chromosome name and annotType
+			rs = dbc2.executeQuery("SELECT proj_idx, name FROM xgroups WHERE idx=" + grpIdx); // reduce, add proj_idx CAS587
 			rs.next(); // a row no matter what
-			
 			if (rs.wasNull()) {
 				System.err.println("No information in db found for Sequence with group id "+grpIdx);
 				return null;
 			}
+			projIdx = rs.getInt(1);
 			name = rs.getString(2);
 			
+			annoType = dbc2.executeString("SELECT value FROM proj_props WHERE proj_idx=" + projIdx // CDS/Exon CAS587
+					 + " and name='annot_type'");
+			if (annoType==null || annoType.isEmpty()) annoType="Exon";
+			
+			// Load all annotation for chromosome
 			HashMap <Integer, Annotation> geneMap = new HashMap <Integer, Annotation>  ();
 			
-			String annot_query =		
-					"SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits FROM pseudo_annot " 
-					+ " WHERE grp_idx=" + grpIdx + " and ";  
+			String query = "SELECT idx, type,name,start,end,strand, genenum, gene_idx, tag, numhits "
+					+ " FROM pseudo_annot WHERE grp_idx=" + grpIdx + " and ";  
 			
 			for (int i=0; i<2; i++) {
 				String sql = (i==0) ? " type='" + Globals.geneType + "'" 
-				: " (type!='" + Globals.geneType + "' && type!='" + Globals.pseudoType + "')"; 
-				rs = dbc2.executeQuery(annot_query + sql + " order by start ASC"); 
+						: " (type!='" + Globals.geneType + "' && type!='" + Globals.pseudoType + "')"; 
+				rs = dbc2.executeQuery(query + sql + " order by start ASC"); 
 				while (rs.next()) {
 					annot_idx = rs.getInt(1);		
 					type = rs.getString(2);	
@@ -96,7 +97,8 @@ public class SeqPool {
 						System.out.println(tag + " unknown type: " + type);
 					}
 					
-					Annotation aObj = new Annotation(seqObj, desc,itype,start,end,strand, tag, gene_idx, annot_idx, genenum, numhits);
+					Annotation aObj = new Annotation(seqObj, desc,itype,start,end,strand, tag, gene_idx, 
+							annot_idx, genenum, numhits, annoType);
 					annoVec.add(aObj);
 					
 					if (i==0) geneMap.put(annot_idx, aObj);
@@ -135,7 +137,7 @@ public class SeqPool {
 		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + grpIdx); return 0;}
 	}
 	// for popup
-	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx, boolean isAlgo1) {
+	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx, boolean isAlgo1, String annoType) {
 		TreeMap <Integer, String> hitMap = new TreeMap <Integer, String> ();
 		try {
 			ResultSet rs = dbc2.executeQuery("select pha.hit_idx, pha.olap, pha.exlap "
@@ -146,8 +148,8 @@ public class SeqPool {
 				int hitIdx = rs.getInt(1);
 				int olap = rs.getInt(2);
 				int exlap = rs.getInt(3);
-				String scores = "Gene " + olap + "%";
-				if (!isAlgo1) scores += " Exon " + exlap + "%"; 
+				String scores = "Gene " + olap + "%  ";
+				if (!isAlgo1) scores += annoType + " " + exlap + "%"; 
 				hitMap.put(hitIdx, scores);
 			}
 			return hitMap;
