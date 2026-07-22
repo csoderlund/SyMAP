@@ -113,9 +113,9 @@ The input is one or more FASTA files of sequences (genome, scaffold, contig), wi
 annotation file(s).
 <p>
 <ul>
-<li>As of v5.5.7, NCBI and Ensembl files can be loaded directly.
-See <a href="#orig2">Tested genomes - Load Originals</a> for what NCBI/Ensembl species original files
-did not work and why.
+<li>As of v5.5.7, most NCBI and Ensembl files can be loaded directly.
+See <a href="#orig2">Tested genomes - Load Originals</a> for what NCBI/Ensembl files
+did not work and why. Regardless, it is MUCH better to convert using <span class="ttp">xToSymap</span>.
 <p>
 <li><span class="ttp">xToSymap</span> converts the NCBI and Ensembl files to a format friendly to <span class="ttp">symap</span>;
 i.e. <i>it is superior</i> than directly loading the files;
@@ -235,8 +235,8 @@ which is a tab-delimited file of 9 columns.
 		<td>The genes and mRNAs <i><u>must</u></i> have a <span class="ttx">ID=</span> keyword.
 		The mRNAs, CDS, and exons <i><u>must</u></i> have a <span class="ttx">Parent=</span> keyword.
 		<tr><td style="vertical-align: text-top;">b.
-		<td>The file can have both exons and CDSs, where exons are loaded into the database by default. To load the CDSs instead,
-		start <span class="ttx">symap</span> with the <span class="ttx">-cds</span> flag.
+		<td>The file can have both exon and CDS coordinates, where exons are loaded into the database by default. To load the CDS instead,
+		change it on the <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Project Parameter</a> panel.
 		<tr><td style="vertical-align: text-top;">c.
 		<td>For genes, by default all attributes are saved in the database for viewing.
 		You can set which attributes keywords to save by opening the
@@ -284,9 +284,9 @@ etc
 </small>
 </pre>
 Note: as of v5.8.6, the <span class="ttp">xToSymap</span> conversion programs include CDS coordinates
-in the converted <span class="ttt">.gff/.gff3</span> files. If you start <span class="ttx">symap</span> with the <span class="ttx">-cds</span> option,
-the CDS coordinates will be loaded instead of the exons; the only evidence that they were used is on the
-project's <a href="img/viewB.png">View</a> panel.
+in the converted <span class="ttt">.gff/.gff3</span> files.
+To load the CDSs instead of the default exons,
+	change it on the <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Project Parameter</a> panel.
 <hr>
 <!-- ===================================================== -->
 <a id="dir"></a>
@@ -383,7 +383,8 @@ the label <span class="ttl">Directory</span>.
 <a href="../img/demoLoad.png"><img src="../img/demoLoad.png" alt="projNew2" style="border: 1px solid black; width: 450px"></a>
 <tr><td>
 <u>Load project</u> accesses the files and loads them into the database.
-Once loaded, the <u>View</u> option will be present. <i>Always check the results before continuing!!</i>
+Once loaded, the
+<a href="../img/view.png">view</a> option will be present. <i>Always check the results before continuing!!</i>
 <td><a href="./img/loaded.png"><img src="./img/loaded.png" alt="loaded" style="border: 1px solid black; width: 450px"></a>
 </table>
 <p>The <span class="ttp">symap</span> program requires the directories to be present (and will create them if necessary),

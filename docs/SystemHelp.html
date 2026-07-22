@@ -330,8 +330,7 @@ See <a href="./input/index.html" class="ext" target="_blank">input</a> for a des
 </table>
 <p>&nbsp;<p>
 Note: as of v5.8.6, the <span class="ttp">xToSymap</span> conversion programs include CDS coordinates
-in the converted .gff files. If you start symap with the '-cds' option, the CDS coordinates will be loaded instead of
-the exons; the only evidence that they were used is on the project's <a href="input/img/viewB.png">View</a> panel.
+in the converted .gff files.
 
 <td><a href="img/parameters1.png">
     <img src="img/parameters1.png" alt="parameters1" style="border: 1px solid black; width: 400px"></a>
@@ -454,6 +453,28 @@ select <span class="ttb">Clear Pair</span> and remove the alignment files, then 
 <h3>2.d Load annotation</h3>
 The following parameters are under the <u>Load annotation</u> section of the <a href="#start">parameters</a> panel.
 
+<p><span class="ttl">Exon/CDS</span> toggle (v5.8.7 or later)
+<ul>
+<li>The associated type will be loaded (if it exists in the gff file).
+<li>There will be places where the term "Exon" is used, even if "CDS" are loaded; this is partially because
+one project can load exons and another can load CDS, and this has no effect on the synteny.
+<li>The loading of CDSs versus Exons are shown in the following places:
+<ul>
+<li>The <span class="ttp">Manager</span> <span class="ttl">Selected projects</span> will state CDS or Exon.
+The <span class="ttp">View</span> will state CDS or Exon.
+<li><span class="ttp">2D</span>:
+<br>The gene graphics will show the CDSs instead of exons.
+<br>The <span class="ttl">Align</span>
+has an option to align <span class="ttx">spliced transcripts</span>, which will use the CDSs instead of exons.
+<li><span class="ttp">Queries</span>:
+<br><span class="ttl">MSA</span>  <span class="ttx">unique spliced transcripts</span> option, will align the CDS sequences.
+<br><span class="ttl">Export</span> <span class="ttx">unique spliced transcripts</span> option,
+where CDSs will be used instead of exons.
+
+</ul>
+</ul>
+
+
 <p><span class="ttl">Anno keywords</span>
 <br>A comma separated list of keywords. This can be used to reduce the annotation attribute keywords
 shown in the <span class="ttl">2D display</span> and <span class="ttl">Queries</span> table, as described in the <a href="#annot">GFF Attributes</a> section below.
@@ -465,20 +486,23 @@ a GFF3 file directly can cause problems if it does not conform to what SyMAP exp
 <a href="input/index.html#annot" class="ext" target="_blank">Annotation files</a>.
 Annotation is optional but highly recommended. Default location: <span class="ttt">data/seq/&lt;project-name&gt;/annotation</span>
 
-<p>If either <span class="ttl">Anno keywords</span> or  <span class="ttl">Anno files</span> is changed:
+<p>If any of these are changed:
 <ul><li>If the annotation has already been loaded, <span class="ttb">Reload Annotation</span>.
 <li>If <span class="ttl">A&amp;S</span> has been previously run, re-run <span class="ttl">A&amp;S</span> (the existing alignments files will be reused).
 </ul>
 <!-- ================================================= -->
 <a id="annot"></a>
 <h3>2.e GFF Attributes</h3>
-This section gives details on what GFF <i>attributes</i> are displayed in SyMAP,
-which refers to them as <i>annotations</i>.
-<p>The gene annotation is shown on the
+If <span class="ttp">xToSymap</span> was used to create the GFF file, then the attributes have already been filtered,
+and this section can probably be ignored.
+<p>
+This section discussed parameters <span class="ttl">Anno key count</span> and <span class="ttl">Anno keywords</span>.
+<br>It gives details on what GFF <i>attributes</i> are displayed in SyMAP, which refers to them as <i>annotations</i>.
+<br>The gene annotations are shown on the
 <a href="UserGuide.html#view2D" class="ext" target="_blank">2D display</a> and as columns in the
-<a href="Query.html#col" class="ext" target="_blank">Queries</a> results table. The attributes (annotations)
-comes from the last column of the GFF file.
-The attributes are a keyword=value list, e.g.
+<a href="Query.html#col" class="ext" target="_blank">Queries</a> results table.
+
+<p>The attributes (annotations) comes from the last column of the GFF file. It is  a keyword=value list, e.g.
 <p>
 <pre>
    ID=gene-AT1G01010;Name=NAC001;ID=rna-NM_099983.2;product=NAC domain containing protein 1

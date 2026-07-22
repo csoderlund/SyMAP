@@ -53,7 +53,8 @@
 
 <p>This webpage provides results from the supplied demo, which
 is used by <a href="SystemGuide.html#demo" target="_blank" class="ext">System Guide</a>.
-<br>This demo was created from real data &gt;15 years ago, and is VERY obsolete - it is strictly for demonstration
+<p>This demo was created July 2026 using 2 chromosomes from Ensembl <i>Arabipdopsis</i> and 2 from NCBI <i>Brassica rapa</i>.
+The draft demo is a simulated draft from the 2 chromosome sequences of <i>Brassica rapa</i>.
 
 <a id="reg"></a>
 <h2>Demo Results</h2>
@@ -64,22 +65,25 @@ is used by <a href="SystemGuide.html#demo" target="_blank" class="ext">System Gu
 <td><a href="#slog">symap.log</a>&nbsp;&nbsp;&nbsp;&nbsp;
 </table>
 
-<a id="two"></a>
-<h3>Two complete genomes: Demo-Seq to Demo-Seq2</h3>
 <table class="tx">
 	<tr><td>&nbsp;<td><small>Click an image to view a closeup.</small>
 	<tr><td style="vertical-align: text-top;">
-	The demo that is provided with the SyMAP tarball has the projects <span class="ttx">demo_seq</span>, <span class="ttx">demo_seq2</span>
-	and <span class="ttx">demo_draft</span>.
-	<p>The project <span class="ttx">demo_draft..demo_seq2</span> is created with ordered contigs,
+	The demo that is provided with the SyMAP tarball has the projects
+	<span class="ttx">demoArab</span>, <span class="ttx">demoBrap</span>
+	and <span class="ttx">demoDraft</span>.
+	<p>The project <span class="ttx">demoDraft.demoBrap</span> was created with ordered contigs,
 	as described in <a href="#draft">Draft</a>.
-	<p>This section discusses the
-	<span class="ttx">demo_seq</span> to <span class="ttx">demo_seq2</span> synteny, which represent complete genome sequences.
+
 	<td><a href="img/demoProjects.png">
-    	<img src="img/demoProjects.png" alt="demo projects" style="border: 1px solid black; width: 450px"></a>
+    	<img src="img/demoProjects.png" alt="demo projects" style="border: 1px solid black; width: 600px"></a>
 </table>
 
-<p>There are a variety of options, as discussed in
+<a id="two"></a>
+<h3>Two complete genomes: demoArab to demoBrap2</h3>
+This section discusses the
+	<span class="ttx">demoArab</span> to <span class="ttx">demoBrap</span> synteny, which represent complete genome sequences.
+
+<p>There are a variety of clustering&amp;synteny computation options, as discussed in
 <a href="SystemHelp.html" class="ext" target="_blank">Pair Parameters</a>.
 The following shows the <span class="ttp">Dot Plot</span> and <span class="ttp">Summary</span> using the following:
 <p>
@@ -102,7 +106,7 @@ The second is recommended for complete genome sequence; it does not perform well
 
 <tr><td colspan="2"><span class="ttl">Cluster Algo2 (exon-intron)</span> and <span class="ttl">Synteny Strict</span>
 <tr><td style="vertical-align: text-top;"><a href="img/demoSum2.png">
-       <img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 350px"></a>
+       <img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 360px"></a>
      <td style="vertical-align: text-top;"><a href="img/demoDotplot2.png">
 	     <img src="img/demoDotplot2.png" alt="demoDotplot2" style="border: 1px solid black; width: 400px"></a>
 <tr><td colspan="2">There is very little difference between the <span class="ttp">Dot Plots</span>. The
@@ -113,46 +117,46 @@ difference in the synteny algorithm are obvious on the more complicated examples
 <!-- ============================================ -->
 <p>
 <a id="draft"></a> <!-- ref -->
-<h3>Draft: Demo-Draft to Demo-Seq2</h3>
+<h3>Draft: demoDraft to demoBrap</h3>
 
 <table style="width: 800px;">
-<tr><td colspan="2">The <span class="ttt">Demo-draft</span> was run against
-the <span class="ttt">Demo-Seq2</span> with its <span class="ttx">order_against</span> parameter set to <span class="ttt">Demo_Seq2</span>;
-this is explained in detail in the <a href="SystemGuide.html#draft" target="_blank" class="ext">System Guide</a>.
-The resulting dot plot is shown on the right. Note that the 43 contigs
+<tr><td colspan="2">The <span class="ttt">demoDraft</span> was run against
+the <span class="ttt">demoBrap</span> with its <span class="ttx">order_against</span> parameter set to <span class="ttt">draft-&gt;demoBp</span>;
+this is explained in the <a href="SystemGuide.html#draft" target="_blank" class="ext">System Guide</a>.
+The resulting dot plot is shown on the right. Note that the 36 contigs
 are ordered, but still fragmented.
 <p>
 <tr><td style="vertical-align: text-top;">
 	<a href="img/demoSumDraft.png">
-    <img src="img/demoSumDraft.png" alt="demoSumDraft" style="border: 1px solid black; width: 340px"></a>
+    <img src="img/demoSumDraft.png" alt="demoSumDraft" style="border: 1px solid black; width: 360px"></a>
 	<td><a href="img/demoDraft2.png">
     <img src="img/demoDraft2.png" alt="demoDraft2" style="border: 1px solid black; width: 400px"></a>
 <tr><td>&nbsp;<td>&nbsp;
 <tr><td colspan=2>When the ordering algorithm is run, it creates a new project called
-<span class="ttt">Demo-Draft.Demo_Seq2</span>,
-where the 43 contigs are written into three chromosomes; the first two correspond
-to chr1 and chr3 of <span class="ttt">Demo_Seq2</span>, and chr0 contains the contigs that do not align.
-<p>The new project <span class="ttt">Demo-Draft.Demo_Seq2</span>
-was aligned with <span class="ttt">Demo_Seq2</span>, resulting in the dot plot shown on the right.
+<span class="ttt">demoDraft.demoBrap</span>,
+where the 36 contigs are written into three chromosomes; the first two correspond
+to chr02 and chr06 of <span class="ttt">demoBrap</span>. If there were
+any contigs that do not align, they would be assigned to chr0.
+<p>The new project <span class="ttt">demoDraft.demoBrap</span>
+was aligned with <span class="ttt">demoBrap</span>, resulting in the dot plot shown on the right.
 <tr><td style="vertical-align: text-top;">
 	<a href="img/demoSumOrd.png">
-    <img src="img/demoSumOrd.png" alt="demoSumOrd" style="border: 1px solid black; width: 340px"></a>
+    <img src="img/demoSumOrd.png" alt="demoSumOrd" style="border: 1px solid black; width: 360px"></a>
 	<td><a href="img/demoDraftOrd.png">
     <img src="img/demoDraftOrd.png" alt="demoDraftOrd" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <!-- ===================================================== -->
 <a id="self"></a> <!-- ref -->
-<h3>Self-synteny: Demo-Seq</h3>
+<h3>Self-synteny: demoBrap</h3>
 
 <table class="tx">
-<tr><td colspan="2"><span class="ttt">Demo-Seq</span> has been run against itself.
-There are a few blocks, but these blocks are probably too small to be meaningful.
+<tr><td colspan="2"><span class="ttt">demoBrap</span> has been run against itself.
 The blocks below the diagonal are mirrored above
-the diagonal, e.g. 3.5.1 and 5.3.1 are the same.
+the diagonal, e.g. 02.06.3 and 06.02.3 are the same.
 <tr> <td style="vertical-align: text-top; width: 670px">
 <a href="img/demoSumSelf.png">
-    <img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 340px"></a>
+    <img src="img/demoSumSelf.png" alt="demo Sum Self" style="border: 1px solid black; width: 360px"></a>
 <td><a href="img/demoSelf.png">
     <img src="img/demoSelf.png" alt="demoSelf" style="border: 1px solid black; width: 400px"></a>
 </table>
@@ -162,6 +166,7 @@ the diagonal, e.g. 3.5.1 and 5.3.1 are the same.
 <h2>symap.log</h2>
 
 The following 4 sections show the contents of the <span class="ttx">logs/&lt;proj-to-proj&gt;/symap.log</span> file:
+<p>
 <table class="tz"><tr>
 <td><a href="#algo1off">Algo1 !verbose</a>
 <td><a href="#algo1on">Algo1 verbose</a>
@@ -169,135 +174,140 @@ The following 4 sections show the contents of the <span class="ttx">logs/&lt;pro
 <td><a href="#algo2on">Algo2 verbose</a>
 <td><a href="#top">Go to top</a>
 </table>
-<p>The parameters selected are:
-<p>
-<pre>
- Use previous 2 MUMmer files 17-Aug-25 13:45   CPUs: 2
- Cluster Algo1 (modified original) or Cluster Algo2 (exon-intron)
-  Synteny Strict
-</pre>
-The 2 MUMmer files indicates the chromosome were not split and <span class="ttx">Concat</span> was
-used. These two facts along with the number of CPUs can make subtle differences in
-the output.
 <p>
 <!-- ========================================================== -->
 <a id="algo1off"></a>
 <b>Algo1 !verbose</b>
-
 <pre><small>
-Start calculating cluster hits for demo_seq and demo_seq2
-   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
-   Scan files to create candidate genes from hits
-    20,005 Total scanned hits from 2 files
-   Scan files to cluster and filter hits
-    11,000 Total cluster hits
-     6,816 Filtered hits to save
-   Finding Collinear sets
-       717 Collinear sets
-Finish clustering hits               8s
+Pair Parameters
+  Cluster Algo1 (modified original)
+  Synteny Original
+Use previous 2 MUMmer files 16-Jul-26 08:18   CPUs: 2
+  Align PROmer
+--If not correct, remove data/seq_results/demoArab_to_demoBrap and re-align
 
-Finding synteny for demo_seq and demo_seq2
-     	17 Blocks
-Finish Synteny                       2s
+Start calculating cluster hits for demoArab and demoBrap
+   Alignment files in data/seq_results/demoArab_to_demoBrap/align/
+   Scan files to create candidate genes from hits
+    35,073 Total scanned hits from 2 files
+   Scan files to cluster and filter hits
+    15,528 Total cluster hits
+    11,082 Filtered hits to save
+   Finding Collinear sets
+     1,254 Collinear sets
+Finish clustering hits               13s
+
+Finding synteny for demoArab and demoBrap
+        45 Blocks
+Finish Synteny                       7s
 </small></pre>
 
 <!-- ============================================================== -->
 <a id="algo1on"></a>
 <b>Algo1 verbose</b>
-
+<br>Using same settings as above.
 <pre><small>
-Start calculating cluster hits for demo_seq and demo_seq2
-   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
+Start calculating cluster hits for demoArab and demoBrap
+   Alignment files in data/seq_results/demoArab_to_demoBrap/align/
    Loading annotations
-    10,108 demo_seq genes
-    10,137 demo_seq2 genes
+    13,476 demoArab genes
+     8,138 demoBrap genes
    Scan files to create candidate genes from hits
-    14,058 scanned PROMER demo_seq_cc.demo_seq2_f1.mum
-     5,947 scanned PROMER demo_seq_cc.demo_seq2_f2.mum
-    20,005 Total scanned hits from 2 files
+ 1.     18,012 scanned PROMER demoArab_c1.demoBrap_f1.mum
+ 2.     17,061 scanned PROMER demoArab_c1.demoBrap_f2.mum
+    35,073 Total scanned hits from 2 files
    Scan files to cluster and filter hits
-     6,923 clustered demo_seq_cc.demo_seq2_f1.mum
-     4,077 clustered demo_seq_cc.demo_seq2_f2.mum
-    11,000 Total cluster hits
+ 1.      8,054 clustered demoArab_c1.demoBrap_f1.mum
+ 2.      7,474 clustered demoArab_c1.demoBrap_f2.mum
+    15,528 Total cluster hits
 Filter hits
-     8,556 for demo_seq
-     7,350 for demo_seq2
-     6,816 Filtered hits to save
+    13,104 for demoArab
+    12,085 for demoBrap
+    11,082 Filtered hits to save
 Save results
-   Save filtered hits
+   Save filtered hits 11,082
    Save hit to gene
-     6,564  (6,375) for demo_seq
-     6,564  (12,749) for demo_seq2
+    10,249  (10,139) for demoArab
+    10,249  (20,326) for demoBrap
    Finding Collinear sets
-       717 Collinear sets
-     1,969 Updates
-   Finish Collinear            0s
-Finish clustering hits               8s
+     1,254 Collinear sets
+     3,548 Updates
+   Finish Collinear            1s
+Finish clustering hits               13s
 
-Finding synteny for demo_seq and demo_seq2
-     6,817 Total hits
+Finding synteny for demoArab and demoBrap
+    11,082 Total hits
          4 group-x-group pairs to analyze
-            7 Blocks chr3-chr1     Orient:  Same   3   Diff   4
-            1 Blocks chr3-chr3     Orient:  Same   0   Diff   1
-            1 Blocks chr5-chr1     Orient:  Same   0   Diff   1
-            8 Blocks chr5-chr3     Orient:  Same   4   Diff   4
-        17 Blocks
-           10 Collinear Sets not in blocks (20 total hits)
-Finish Synteny                       2s
+           11 Blocks Chr01-A02
+            8 Blocks Chr01-A06
+           13 Blocks Chr05-A02
+           13 Blocks Chr05-A06
+        45 Blocks
+            9 Collinear Sets not in blocks (18 total hits)
+Finish Synteny                       7s
+
 </small></pre>
 <!-- =========================================================== -->
 <a id="algo2off"></a>
 <b>Algo2 !verbose</b>
 <pre><small>
-Start calculating cluster hits for demo_seq and demo_seq2
-   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
-   Final totals    Raw hits 20,005    Files 2                             .
-     4,747 Clusters   Both genes     4,713   One gene        34   No gene         0
-     6,914 Filtered   Both genes     3,263   One gene     2,453   No gene     1,198   Pile hits 0
-   Finding Collinear sets
-       635 Collinear sets
-Finish clustering hits               9s
+Pair Parameters
+  Cluster Algo2 (exon-intron)
+  Synteny Strict
+Use previous 2 MUMmer files 16-Jul-26 08:18   CPUs: 2
+  Align PROmer
+--If not correct, remove data/seq_results/demoArab_to_demoBrap and re-align
 
-Finding synteny for demo_seq and demo_seq2
-        14 Blocks
-Finish Synteny                       1s
+Start calculating cluster hits for demoArab and demoBrap
+   Alignment files in data/seq_results/demoArab_to_demoBrap/align/
+   Final totals    Raw hits 35,073    Files 2
+     8,149 Clusters   Both genes     7,404   One gene       380   No gene       365
+     9,644 Filtered   Both genes     4,170   One gene     3,675   No gene     1,799   Pile hits 497
+   Finding Collinear sets
+     1,143 Collinear sets
+Finish clustering hits               12s
+
+Finding synteny for demoArab and demoBrap
+        45 Blocks
+Finish Synteny                       4s
 </small></pre>
 
 <!-- =========================================================== -->
 <a id="algo2on"></a>
 <b>Algo2 verbose</b>
+<br>Using same settings as above.
 
 <pre><small>
-Start calculating cluster hits for demo_seq and demo_seq2
-   Alignment files in data/seq_results/demo_seq_to_demo_seq2/align/
+Start calculating cluster hits for demoArab and demoBrap
+   Alignment files in data/seq_results/demoArab_to_demoBrap/align/
    Load genes for Algo2
-      Demo_Seq2  [Avg Min Max] [Gene 2,968  120   89k] [Intron   430    1   87k] [Exon   294    3 4,935] Cov 46.5%
-      Demo_Seq   [Avg Min Max] [Gene 2,575   63  508k] [Intron   373    1  501k] [Exon   379    1 6,153] Cov 57.8%
-   Load demo_seq_cc.demo_seq2_f1.mum  Hits 14,058 (EQ 2,893 NE 11,165)
-        3,035 Clusters chr3-chr1     Both genes  3,022   One gene     13   No gene      0
-          489 Clusters chr5-chr1     Both genes    484   One gene      5   No gene      0
-   Load demo_seq_cc.demo_seq2_f2.mum  Hits 5,947 (EQ 2,366 NE 3,581)
-          424 Clusters chr3-chr3     Both genes    417   One gene      7   No gene      0
-          799 Clusters chr5-chr3     Both genes    790   One gene      9   No gene      0
-   Final totals    Raw hits 20,005    Files 2
-     4,747 Clusters   Both genes     4,713   One gene        34   No gene         0
-     6,914 Filtered   Both genes     3,263   One gene     2,453   No gene     1,198   Pile hits 0
+      demoBrap   [Avg Min Max] [Gene 3,941  206  729k] [Intron   294    1  518k] [Exon   478    2   18k] Cov 65.7%
+      demoArab   [Avg Min Max] [Gene 2,423    3   26k] [Intron   163   10 7,384] [Exon   308    2 7,761] Cov 68.9%
+   Load demoArab_c1.demoBrap_f1.mum  Hits 18,012 (EQ 11,335 NE 6,677)
+        1,499 Clusters Chr01-A02     Both genes  1,337   One gene     73   No gene     89
+        2,605 Clusters Chr05-A02     Both genes  2,410   One gene     98   No gene     97
+   Load demoArab_c1.demoBrap_f2.mum  Hits 17,061 (EQ 10,066 NE 6,995)
+        2,317 Clusters Chr01-A06     Both genes  2,120   One gene    105   No gene     92
+        1,728 Clusters Chr05-A06     Both genes  1,537   One gene    104   No gene     87
+   Final totals    Raw hits 35,073    Files 2
+     8,149 Clusters   Both genes     7,404   One gene       380   No gene       365
+     9,644 Filtered   Both genes     4,170   One gene     3,675   No gene     1,799   Pile hits 497
    Finding Collinear sets
-       635 Collinear sets
-     1,714 Updates
-   Finish Collinear            0s
-Finish clustering hits               9s
+     1,143 Collinear sets
+     3,189 Updates
+   Finish Collinear            1s
+Finish clustering hits               12s
 
-Finding synteny for demo_seq and demo_seq2
-     4,747 Total hits
+Finding synteny for demoArab and demoBrap
+     8,149 Total hits
          4 group-x-group pairs to analyze
-            7 Blocks chr3-chr1     Orient:  Same   3   Diff   4
-            1 Blocks chr3-chr3     Orient:  Same   0   Diff   1
-            1 Blocks chr5-chr1     Orient:  Same   0   Diff   1
-            5 Blocks chr5-chr3     Orient:  Same   1   Diff   4
-        14 Blocks
+           11 Blocks Chr01-A02     Orient:  Same   5   Diff   6
+            9 Blocks Chr01-A06     Orient:  Same   6   Diff   3
+           14 Blocks Chr05-A02     Orient:  Same   8   Diff   6
+           11 Blocks Chr05-A06     Orient:  Same   6   Diff   5
+        45 Blocks
             6 Collinear Sets not in blocks (12 total hits)
-Finish Synteny                       1s
+Finish Synteny                       4s
 </small></pre>
 
 <table style="width: 95%"><tr><td style="text-align: left">

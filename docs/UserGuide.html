@@ -215,11 +215,12 @@ if you use SyMAP results in a paper, poster, or presentation.
 		you select <span class="ttl">A.thal</span> and <span class="ttl">B.rapa</span>,
 		which have <span class="ttx">Directory</span> names <span class="ttx">Arab</span> and <span class="ttx">Brapa</span>,
 		the hit numbering will be sequential down the <span class="ttx">Arab</span> chromosomes.
-	<tr><td><span class="ttx">Block</span> and <span class="ttx">!Block</span>
-		<td>Hits that are in a block and hits that are not within a block, respectively.
+
 	<tr><td><span class="ttx">Hit %Id</span>
 	    <td>Percent identity of the alignment. The value of the "Identity" column is from the MUMmer file.
 		If the hit has subhits, then this is an approximation.
+		<tr><td><span class="ttx">Block</span> and <span class="ttx">!Block</span>
+		<td>Hits that are in a block and hits that are not within a block, respectively.
 </table>
 
 <!-- =========== Project Manager ================= -->
@@ -1136,8 +1137,8 @@ The bottom part shows the coordinates of the subhits:
 </table>
 The lower buttons are as follows:
 <table class="ty">
-<tr><td><span class="ttb">Align</span>
-    <td>Select to view the subhits text alignment. See <a href="#btext">Align</a>.
+<tr><td><span class="ttb">Align...</span>
+    <td>Select to view the subhits text alignment or the gene text alignment. See <a href="#btext">Align...</a>.
 <tr><td colspan="2"><i>Conditional:</i>
 <tr><td><span class="ttb">Merge</span>
     <td>This button will be present if there are overlapping hits (<span class="ttx">Gap</span>&lt;=0).
@@ -1145,7 +1146,7 @@ The lower buttons are as follows:
 	See <a href="Details.html#hit" class="ext" target="_blank">Hits</a>.
 <tr><td><span class="ttb">Order</span>
     <td>This button will be present if the numbers in the <span class="ttl">#</span> column for the target genome
-	are not in sequential order. The <span class="ttb">Order</span> function will sort by '#',
+	are not in sequential order. The <span class="ttb">Order</span> function will sort by the '#' number,
 	and the subhits will no longer be in sorted order; these are referred to as <i>disordered</i> subhits.
 	See <a href="Details.html#hit" class="ext" target="_blank">Hits</a>.
 </table>
@@ -1169,15 +1170,17 @@ Viewing the <span class="ttx">Cabb</span> alignment, #230.1 and #230.2 overlap b
 <u>Information</u>: Hovering the mouse over a gene will show its information in the <span class="ttl">Information</span> box.
 <table>
 <tr><td>
-<table>
+<table class="tx">
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><span class="ttx">Gene #</span>
 <td>is a sequential number along the chromosome. If genes overlap, they will have the same number
 but a different suffix
 <br>(e.g. #818.a, #818.b,...).
-<tr><td><span class="ttx">#Exon=</span><td>is the number of exons followed by their summed sizes.
+
+<tr><td style="vertical-align: text-top;"><span class="ttx">#Exon=</span><td>is the number of exons followed by their summed sizes.
+If the CDSs were loaded instead of the Exons, this label would be <span class="ttx">#CDS=</span>.
 <tr><td colspan="2">The next line is the location followed by its total length.
 <tr><td colspan="2">The lines (<span class="ttt">ID</span>...) are the annotation provided by the GFF file.
-<tr><td colspan="2">If the mouse is over an exon, the last line will be <span class="ttx">Exon #N</span>, where N is the exon
+<tr><td colspan="2">Optional last line: If the mouse is over an exon in the graphics, the last line will be <span class="ttx">Exon #N</span>, where N is the exon
 number.
 </table>
 <td>
@@ -1692,22 +1695,21 @@ occurrences have been fixed in v5.4.8, but a few will have slipped through.
 <a id="btext"></a>
 <h4>Text Align (Hit popup)</h4>
 
-Hover over a hit-wire and right click, which will result in the information popup shown on the lower left.
-<br>The <span class="ttl">Align</span> option aligns the hit as shown on the lower right.
-Use the <span class="ttl">Reverse</span> button to view the reverse complement alignment.
-<table>
-<tr>
-<td><a href="img/hitInfo.png">
-<img src="img/hitInfo.png" alt="Hit Information" style="border: 1px solid black; width: 230px"></a>
-<td>&nbsp;&nbsp;
-<td><a href="img/basetext.png">
-	<img src="img/basetext.png" alt="Text view of alignment" style="border: 1px solid black; width: 430px"></a>
-</table>
+Hover over a hit-wire and right click, which will result in the information popup (e.g. <span class="ttt">Hit #100</span> below).
+<br>Click the <span class="ttl">Align...</span> for the <span class="ttl">Align options</span>.
+The left alignment shows the <span class="ttl">Align hit sequences</span> and the right side
+shows the <span class="ttl">Align gene sequences</span>. The <span class="ttl">Align gene sequences</span>
+uses the spliced transcripts, which are either the Exons or CDSs depending on which was loaded;
+in the below example, CDSs were loaded for both species.
+
+<p><a href="img/basetext.png">
+	<img src="img/basetext.png" alt="Text view of alignment" style="border: 1px solid black; width: 730px"></a>
+<p>
 <a id="trim"></a>
 <u>Trimmed alignments:</u> SyMAP extracts the sequence between the coordinates provided by MUMmer and
 aligns the sequence using a dynamic programming algorithm.
 When the sequences do not align fully, the alignment is trimmed. This is illustrated above for subhit 5, where
-the <span class="ttt">Trim 0,13</span> indicates that 13 bases were trimmed off the end. The un-trimmed
+the <span class="ttt">Trim 17,0</span> indicates that 17 bases were trimmed off the end. The un-trimmed
 alignment can be viewed by selected <span class="ttl">No trim</span>.
 
 <!-- *********************************************************** -->

@@ -826,7 +826,8 @@ The text in the popup can be copied.
 <a id="msaAlign"></a>
 <h4>4.2 MSA...</h4>
 
-Below is an image of a multiple alignment. The right half shows the sequence, where the
+Below is an image of a multiple alignment of gene sequences, where CDSs were loaded for all species.
+<br>The right half shows the sequence, where the
 first row is the consensus: A 'n' (purple) is used where there is no majority base.
 Lowercase (green) is used if there is a least one mismatch.
 <a href="img/query_msa.png"><img src="img/query_msa.png" alt="query MSA" style="border: 1px solid black; width: 770px"></a>
@@ -838,14 +839,22 @@ to determine the best algorithm to use.
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 <table>
+<tr><td colspan="2"><span class="ttb">Align hit sequences</span>
 <tr><td><span class="ttb">Merge overlapping hits</span><td>Instead of repeating the alignment of identical regions,
-	overlapping hits will be merged. The above shows in the last table column that Atha.01 has 5 merged hits.
+	overlapping hits will be merged.
+	In the summary table of the alignment, the <span class="ttx">Hit#</span> column will have multiple hit numbers if it is
+	a merged set of hits.
+
 <tr><td><span class="ttb">Use gapless hits</span><td>Multiple subhits can be clustered into one hit, where there
 are gaps between them. The subhits are concatenated together with 5 N's in between each
 non-overlapping subhit. This is important for long genes as found in humans, where there are
 often hits to exons with large gaps covering the introns.
 <tr><td><span class="ttb">None of the above</span><td>Align from the start coordinate to the end coordinate
 of each end of each selected hit.
+<tr><td colspan="2"><span class="ttb">Align gene sequences</span>
+<tr><td>&nbsp;<td>The unique spliced transcripts will be aligned instead of the hits. There must be at least 2 genes in the
+selected rows.
+<tr><td colspan="2">For either align
 <tr><td><span class="ttb">Trim</span><td>There can be a long set of bases at the beginning or end
 of one sequence, these will be removed.
 </table>
