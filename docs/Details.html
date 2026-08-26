@@ -64,22 +64,44 @@
 </table>
 <a id="col"></a>
 <h2>Collinear sets</h2>
+<table class="tz">
+<tr>
+<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#coRules">Rules</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#simple">Advanced vs Simple</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#coTedious">Tedious details</a>
+</table>
+<p>
 Either using the <span class="ttb">Hit Filter</span>, or right click in the hit region, set the highlighting for <span class="ttx">Collinear Sets</span>.
 As shown below, the number of highlighted collinear hits and sets will be shown in
 the <span class="ttl">Information</span> box (<span class="ttx">CoSets</span> is the abbreviation for <span class="ttx">Collinear Sets</span>).
 <br>
 <a href="img/colHigh.png">
 <img src="img/colHigh.png" alt="Collinear Sets" style="border: 1px solid black; width: 650px"></a>
-<p>
+<a id="coRules"></a>
+<h3>Rules</h3>
+<ol>
+<li>To be a collinear set, all hits must be in ascending or descending order and align to sequential genes.
+<p><li>All hits for a collinear set must be inverted (strands +/- or -/+) or non-inverted (strands +/+ or -/-).
+<p><li>If two genes from species #1 align to one gene in species #2, the two hits will not be in the same collinear set.
+<p><li>The Collinear sets may have been computed with the <span class="ttl">Advanced</span> or <span class="ttl">Simple</span>
+algorithm. The
+<span class="ttl">Summary</span> will state <span class="ttx">Collinear Simple</span> at the bottom if it was used.
+<span class="ttl">Advanced</span> tries to determine collinearity across overlapping genes, whereas <span class="ttl">Simple</span>
+does not. Some examples are shown <a href="#simple">below</a>.
+
+</ol>
 <table>
 <tr><td  style="vertical-align: text-top;">
 In the image on the right, two different sets are shown where the pink highlighted hits is the 1st set,
-green is the 2nd; these are <a href="UserGuide.html#wheel" class="ext" target="_blank">Color Wheel</a>
-<span class="ttx">Highlight1</span> and <span class="ttx">Highlight2</span> colors. The sets were broken by an extra gene on Human Chr01.
+green is the 2nd. The sets were broken by an extra gene on Human Chr01.
+<p>There are 3 colors used for sets which are the
+<a href="UserGuide.html#wheel" class="ext" target="_blank">Color Wheel</a>
+<span class="ttl">Hit</span> <span class="ttx">Highlight1</span>, <span class="ttx">Highlight2</span>
+and the <span class="ttl">Track</span> <span class="ttx">Highlight</span> colors; the <span class="ttl">Track</span> color will not change for hits.
+
 <p>A collinear set either has all hits/genes to the same strand (+/+, -/-) or different (+/-, -/+).
 In the image on the right, all genes in both sets are on different strands.
-<p>Note: The above is not guaranteed when using <span class="ttl">Algo1</span> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>),
-as the hit strands may be different than the strands assigned to the homologous genes.
 
 <p>The collinear set algorithm does not consider the amount of overlap of the hit to a gene, or the similarity
 of the hit sequences.
@@ -92,9 +114,7 @@ of the hit sequences.
 <p>The image below shows a collinear set of 4 genes and 6 brown hit-wires that are not part of the set. The following
 explains them, using the symbols g0 (hit 0 genes), g1 (hit 1 gene), g2 (hit paired genes).
 <table>
-
-<tr><td   style="vertical-align: text-top;">
-
+<tr><td style="vertical-align: text-top;">
 <p>
 <table class="ty">
 <tr><td>1<td>g1<td>Ignored, not part of the set since it does not hit paired genes.
@@ -105,13 +125,78 @@ explains them, using the symbols g0 (hit 0 genes), g1 (hit 1 gene), g2 (hit pair
 <tr><td>6<td>g2<td>This could start a new set, but is not followed by another paired gene.
 </table>
 
-<p>Sometimes two genes look as one, so the <span class="ttb">Sequence Filter</span> <span class="ttx">Gene Delimiter</span> option is important to
-view these.
-<br><a href="img/colSetGL.png">
-	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 250px"></a>
+<p>Sometimes two genes look as one (e.g. gene 791 and 792 on Chr01 below), so the <span class="ttb">Sequence Filter</span>
+<span class="ttx">Gene Delimiter</span> option can be used to delimit the genes with a black bar.
+<p><a href="img/colSetGL.png">
+	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 370px"></a>
 <td><a href="img/colG1HitsN.png">
 <img src="img/colG1HitsN.png" alt="Collinear hits" style="border: 1px solid black; width: 320px"></a>
 </table>
+
+<a id="simple"></a>
+<h3>Advanced vs Simple</h3>
+<p>
+<span class="ttl">Advanced</span> compared to <span class="ttl">Simple</span>:
+<ul>
+<li>It is better at including overlapping genes in a single CoSet.
+<br>It is better at including embedded genes, but it also sometimes ignore embedded genes.
+<br>This results in longer sets.
+<li>It removes 2-hit CoSets if:
+<br>(1) Two CoSets have the same genes (generally, one is inverted and the other is not).
+<br>(2) One hit is to a non-overlap and the other is to an embedded gene.
+<br>This results in fewer 2-hit CoSets.
+<li>The <span class="ttl">Advanced</span> improvements are most obvious with mammalian genomes that have very complex overlapping
+and embedded genes.
+</ul>
+<p><span class="ttl">Simple</span> algorithm:
+<ul>
+<li>Sets are often broken into multiple CoSets due to overlapping genes.
+</ul>
+Note: both algorithms can make some mistakes in regions of embedded genes as there are bizarre variations.
+
+<p><u>Example 1.</u> The following shows the results of the two algorithms in regions of embedded genes. The <span class="ttl">Advanced</span>
+will often ignore an embedded gene, as shown on the left below.
+<br>
+<table>
+<tr><td><span class="ttl">Advanced</span><td style="vertical-align: text-top;"><span class="ttl">Simple</span>
+<tr><td><a href="img/coAdv1.png">
+		<img src="img/coAdv1.png" alt="Advanced" style="border: 1px solid black; width: 350px"></a>
+	<td style="vertical-align: text-top;"><a href="img/coSim1.png">
+		<img src="img/coSim1.png" alt="Simple" style="border: 1px solid black; width: 370px"></a>
+
+</table>
+<p><u>Example 2.</u> The <span class="ttl">Advanced</span> will create collinear sets where one side has them embedded and the other side does not
+(e.g. c36 set). Also, c37 set has an extra gene because it will pair with a gene that has embedded genes.
+<br>
+<table>
+<tr><td><span class="ttl">Advanced</span><td style="vertical-align: text-top;"><span class="ttl">Simple</span>
+<tr><td><a href="img/coAdv2.png">
+		<img src="img/coAdv2.png" alt="Advanced" style="border: 1px solid black; width: 350px"></a>
+	<td style="vertical-align: text-top;"><a href="img/coSim2.png">
+		<img src="img/coSim2.png" alt="Simple" style="border: 1px solid black; width: 370px"></a>
+</table>
+<p><u>Example 3.</u> The <span class="ttl">Advanced</span> does not let a 2-hit collinear set share all genes with another set (it is removed).
+<br>
+<table>
+<tr><td><span class="ttl">Advanced</span><td style="vertical-align: text-top;"><span class="ttl">Simple</span>
+<tr><td><a href="img/coAdv3.png">
+		<img src="img/coAdv3.png" alt="Advanced" style="border: 1px solid black; width: 360px"></a>
+	<td style="vertical-align: text-top;"><a href="img/coSim3.png">
+		<img src="img/coSim3.png" alt="Simple" style="border: 1px solid black; width: 360px"></a>
+</table>
+<a id="coTedious"></a>
+<p><u>Tedious details</u> of where it looks like the results are wrong:
+<ul>
+<li>A tiny gene without a hit can separate two collinear sets; it is necessary to really zoom in to see these.
+<li>Two genes that are close but do not overlap can appear as one.
+<br>Use the <span class="ttx">Delimit genes</span> and <span class="ttx">Gene# all</span> filters to distinguish all genes.
+<li>A hit may not be shown if it is not in a collinear set or block, and either of these filters are set.
+<br>Use the <span class="ttx">Hit =2 genes (g2)</span> filter to view all valid hits.
+<li>A tiny gene can have an alignment to a large gene; these probably are incorrectly in the collinear set.
+<li>A inverted hit can be within a non-inverted collinear set.
+<li>With <span class="ttl">Cluster Algo1</span> (see <a href="UserGuide.html#term" target="_blank" class="ext">Terminology</a>),
+the hit orientations may be different than the orientations of homologous genes.
+</ul>
 
 <!-- ===================================================== -->
 <a id="hit"></a>
@@ -121,10 +206,8 @@ view these.
 <table class="tz">
 <tr>
 <td>&nbsp;&nbsp;&nbsp;
-<td><a href="#hit">Default view</a>
-<td>&nbsp;&nbsp;&nbsp;
-<td><a href="#merge">Merge</a>
-<td>&nbsp;&nbsp;&nbsp;
+<td><a href="#hit">Default view</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#merge">Merge</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#order">Order</a>
 </table>
 
@@ -163,14 +246,14 @@ e.g. the two #1 subhit aligns. An <b>#</b> on the far right implies that the ord
 <p>The <span class="ttl">Order</span> option produces another popup where the target list is sorted by
 the <b>#</b> column, and the coordinates are no longer sorted.
 <p>The existence of the <span class="ttb">Order</span> button is a quick indication that there are <i>disordered</i> subhits.
-
 </table>
 
 <!-- ========================================================= -->
 <a id="con"></a>
 <h2>3-chr conserved</h2>
 
-<div  style="text-align: center">The <span class="ttp">Explorer</span> and <span class="ttp">Queries</span> allow viewing results from 3 chromosomes.</div>
+<div  style="text-align: center">
+The <span class="ttp">Explorer</span> and <span class="ttp">Queries</span> allow viewing results from 3 chromosomes.</div>
 <p>
 <table class="tz">
 <tr>

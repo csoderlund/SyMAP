@@ -185,10 +185,10 @@ if you use SyMAP results in a paper, poster, or presentation.
 <p><i>More detailed terminology:</i>
 <table class="ty">
 	<tr><td style="white-space: nowrap;">Cluster Hit Algorithm:
-			<br><span class="ttl">Algo1</span> or <span class="ttl">Algo2</span><small><sup>1</sup></small>
+			<br><span class="ttl">Algo1</span> or <span class="ttl">Algo2</span>
 		<td>During the synteny computation, either the <span class="ttl">Algo1</span> or <span class="ttl">Algo2</span> algorithm could have
 			been selected to cluster hits.
-			<div class="hanging-indent">&bull; The original <span class="ttl">Algo1</span> was updated to be more gene-aware but does not know exon-intron structure.
+			<div class="hanging-indent">&bull; The original <span class="ttl">Algo1</span> is gene-aware but does not know exon-intron structure.
 			The new <span class="ttl">Algo2</span> knows exon-intron structure.
 			 See <a href="SystemHelp.html#clust" class="ext" target="_blank">System Parameters</a> for details. </div>
 			<div class="hanging-indent">&bull; The <a href="#report">Summary</a> specifies which was used.
@@ -219,7 +219,7 @@ if you use SyMAP results in a paper, poster, or presentation.
 	<tr><td><span class="ttx">Hit %Id</span>
 	    <td>Percent identity of the alignment. The value of the "Identity" column is from the MUMmer file.
 		If the hit has subhits, then this is an approximation.
-		<tr><td><span class="ttx">Block</span> and <span class="ttx">!Block</span>
+	<tr><td><span class="ttx">Block</span> and <span class="ttx">!Block</span>
 		<td>Hits that are in a block and hits that are not within a block, respectively.
 </table>
 
@@ -250,14 +250,22 @@ Is it also available from <span class="ttt">./symap</span>, which will include t
 
 <table class="ty">
 	<tr><td style="white-space: nowrap;vertical-align: text-top;"><span class="ttb">Selected Pair</span>
-		<td>By selecting a cell with synteny (the cell will turn green), views are activated for the
+		<td>By selecting a cell with synteny (it will turn green), the adjacent views are enabled for the
 	selected pair.
 	The views are <a href="#circle">Circle</a>, <a href="#dotplot_display">Dot Plot</a>,
 	<a href="#block">Block View</a>, and <a href="#report">Reports...</a>.
 	<tr><td style="white-space: nowrap;vertical-align: text-top;"><span class="ttb">All &#10003; Pairs</span>
-		<td>The views beside this label will be applied to all checked syntenies.
+		<td>If there is at least one synteny pair (&#10003;) in the table, the adjacent views will be enabled.
+		<br>The views will be applied to ALL syntenies pairs in the table.
+		<br>For self-synteny, it must be the only project in the table.
 		<br>The views are <a href="#explorer">Chromosome Explorer</a>,
 		<a href="#dot3">Dot Plot</a> and <a href="Query.html">Queries</a>.
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">Example<td>
+	In the above table, the views next to <span class="ttb">Selected Pair</span> would be applied
+	to A.thal and Cabbage.
+	<br>The views next to <span class="ttb">All &#10003; Pairs</span> would be applied
+	to all 3 synteny pairs (&#10003; below the diagonal).
+	<br>They all have self-synteny (&#10003; on the diagonal), but each would only be shown if it is the only project in the table.
 </table>
 
 <!-- ************* Manager content ************** -->
@@ -1108,7 +1116,6 @@ Right click on hit-wire shows additional information in the hit popup.
 	hit information along with the <span class="ttx">Gene#</span>.
 </table>
 
-
 <p><u>Popup</u>: To view the popup of a hit-wire, right click on it;
 the hit-wire must be highlighted in red from hovering over it to be clickable.
 The hit-wire and the major genes (if any) will be highlighted magenta,
@@ -1253,9 +1260,9 @@ by <span class="ttb">Sequence Filter</span>  or <span class="ttb">Hit Filter</sp
 <tr><td><img src="img/forward.gif" alt="Forward button" style="width: 20px;">
 	<td>Go forward one history event.
 <tr><td><img src="img/plus.gif" alt="Plus" style="width: 20px;">
-	<td>Doubles the base pair view region, keeping the same center.
+	<td>Zoom in - shrinks the base pair view region by 50%, keeping the same center.
 <tr><td><img src="img/minus.gif" alt="Minus" style="width: 20px;">
-	<td>Shrinks the base pair view region by 50%, keeping the same center.
+	<td>Zoom out - doubles the base pair view region, keeping the same center.
 <tr><td style="vertical-align: text-top;"><img src="img/shrink.png" alt="shrink" style="width: 20px;">
 	<td>The shrink button reduces the space between tracks. This is useful
 when viewing more than two tracks, e.g. click <a href="img/Exp_2D_B02.png">Exp_2D</a>.
@@ -1546,30 +1553,35 @@ for the <span class="ttx">Annotation</span> options.
 <table>
 <tr><td>
 	<table class="ty">
-	<tr><td><span class="ttl">Highlight</span><td>Only one of the following can be selected.
-	<tr><td><span class="ttx">Synteny blocks</span><td>Hits that are part of a synteny block.
-	<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class="ttx">Collinear sets</span>
-		<td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
-			and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
-	<tr><td><span class="ttx">Hit =2 genes</span> <td>Hits that align to genes on both ends (g2).
-	<tr><td><span class="ttx">Hit =1 genes</span> <td>Hits that align to a gene on one end (g1).
-	<tr><td><span class="ttx">Hit =0 genes</span>   <td>Hits that do not align to any gene (g0).
-
+	<tr><td colspan="2"><span class="ttl">Highlight</span>
 	<tr><td><span class="ttx">Hit popup<br>(or Query)</span> <td>
 	The following two situations are highlighted with the <span class="ttx">Popup-Query</span> color:
 	<br>(1) When a <a href="#hinfo">Hit Popup</a> is displayed, the hit-wire and any aligned major genes are highlighted.
 	<br>(2) When the <span class="ttb">2D</span> is displayed with the <span class="ttb">Query</span>
 	<a href="Query.html#view2D" class="ext" target="_blank">View 2D</a> option, the selected hit(s)
 	will be highlighted.
+	<tr><td colspan="2">Only one of the following can be selected.
+	<tr><td><span class="ttx">Synteny blocks</span><td>Hits that are part of a synteny block.<sup>1</sup>
+	<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class="ttx">Collinear sets</span>
+		<td>Hits that are part of a collinear set.<sup>2</sup> See <a href="#ex2d">example below</a>
+			and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
+	<tr><td><span class="ttx">Hit =2 genes</span> <td>Hits that align to genes on both ends (g2).
+	<tr><td><span class="ttx">Hit =1 genes</span> <td>Hits that align to a gene on one end (g1).
+	<tr><td><span class="ttx">Hit =0 genes</span>   <td>Hits that do not align to any gene (g0).
 	</table>
+	<sup>1</sup><small>The hits of each block are colored one of 4 colors; they correspond to the 'Hit Highlight1',
+'Hit Highlight2', 'Track Exon-', 'Track Exon+' colors (see <a href="#image">Color Wheel</a>); the two Track colors
+will not change for hits</small>.
+	<br><sup>2</sup><small>The hits of each collinear set are colored one of 3 colors, similar to block but
+	the 3rd color is 'Track Highlight'.</small>
 <td><a href="img/hitfilterS.png">
-	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 300px"></a>
+	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 340px"></a>
 </table>
 
 <p>
 <a id="hfshow"></a>
 <table  class="ty">
-<tr><td><span class="ttl">Show</span><td>Any number of these can be selected simultaneously.
+<tr><td colspan="2"><span class="ttl">Show</span> Any number of the following can be selected simultaneously.
 <tr><td><span class="ttx">Synteny blocks</span><td>Hits that are part of a synteny block.
 	<table class="ty">
 	<tr><td><span class="ttx">And</span><td>The hit will be shown if it has
@@ -1577,8 +1589,8 @@ for the <span class="ttx">Annotation</span> options.
 	<tr><td><span class="ttx">Or</span><td>The hit will be shown if it has <u>any</u> of the selected <span class="ttx">Show</span> options.
 	</table>
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><span class="ttx">Collinear sets</span>
-    <td>Hits that are part of a collinear set. See <a href="#ex2d">example below</a>
-        and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
+    <td>Hits that are part of a collinear set.
+    <br>See <a href="#ex2d">example below</a> and <a href="Details.html#col" target="_blank" class="ext">Details</a>.
 <tr><td><span class="ttx">Hit =2 genes</span> <td>Hits that align to genes on both ends (g2).
 <tr><td><span class="ttx">Hit =1 genes</span> <td>Hits that align to a gene on one end (g1).
 <tr><td><span class="ttx">Hit =0 genes</span> <td>Hits that do not align to any gene (g0).
@@ -1587,18 +1599,25 @@ for the <span class="ttx">Annotation</span> options.
 
 <p>
 <a id="hfother"></a>
+
 <table class="ty">
-<tr><td colspan="2"><span class="ttl">Other</span>
+<tr><td><span class="ttl">Priority</span><td> The following take precedence over the above.
 <tr><td><span class="ttx">Identity</span><td>Move the slider to view only the hits with &gt;= the specified identity.
-<br><i>Precedence:</i> This takes precedence over all other <span class="ttl">Show</span> options.
+
+<tr><td style="white-space: nowrap; vertical-align: text-top;">
+<span class="ttx">Non-inverted</span>    <td>The two alignment strands for the hit have the same orientations (++ or --).
+<tr><td><span class="ttx">Inverted</span><td>The two alignment strands for the hit have different orientations (-+ or +-).
+
 <tr><td><span class="ttx">Block#</span><td>Enter a block number and only hits from that block will be shown.
-<br><i>Precedence:</i> This takes precedence over everything but the <span class="ttl">Identity</span>.
+<br><i>Precedence:</i> This takes precedence over everything
+but the <span class="ttx">Identity</span> and <span class="ttx">Signs</span>.
 <p>While the filter window is showing, the user can enter a block number following by the <span class="ttt">Enter</span> key
 to see the block, then try the next one to see the next block. If an invalid block number is
 entered, no hits will be shown.
+
 <tr><td><span class="ttx">G2xN</span><td>This is a hit filter that occurs in the <span class="ttb">Sequence Filter</span> of the
 reference track for a 3-track display; see <a href="Details.html#2dg2"  target="_blank" class="ext">3-chr conserved</a>.
-It takes precedence over all other hit filters except <span class="ttx">Identity</span>.
+It takes precedence over all other hit filters.
 </table>
 
 <a id="hfpop"></a>
@@ -1620,23 +1639,21 @@ different <span class="ttp">2D</span> displays.
 <!-- *********************************************************** -->
 <a id="ex2d"></a>
 <h4>Filter Example</h4>
-
+The image below has the <span class="ttb">Sequence Filter</span> options to show <span class="ttx">Gene Delimiter</span>
+and <span class="ttx">Collinear#</span> on the left, <span class="ttx">Hit#</span> on the right, and the <span class="ttb">Hit Filter</span> option to highlight <span class="ttx">Collinear Hits</span>.
 <table>
-<tr><td>The image on the right has the <span class="ttb">Sequence Filter</span> options to show <span class="ttx">Gene Delimiter</span>
-and <span class="ttx">Collinear#</span>, and the <span class="ttb">Hit Filter</span> option to highlight <span class="ttx">Collinear Hits</span>.
-
-<p><span class="ttx">Show Gene Delimiter</span>: Note that the 2nd gene on the left track would blend in with the 3rd if
+<tr><td>
+<p><span class="ttx">Show Gene Delimiter</span>: Note that for Chr01, gene 791 would blend with gene 792 if
 it was not for the black line at the top.
 <p><span class="ttx">Highlight Collinear Hits</span>:
 When hits belonging to <span class="ttx">Blocks</span> or <span class="ttx">Collinear sets</span> are highlighted, subsequent blocks/sets
 will have an alternating color relative to one chromosome of the pair. For example, in the image on the right,
-the green highlighted hit-wires are part of one collinear set (c629) and the pink highlighted hit-wire are
-part of another (c630).
+the green highlighted hit-wires are part of one collinear set (c31) and the pink highlighted hit-wire are
+part of another (c32).
 See <a href="Details.html#col" class="ext" target="_blank">Details</a> for
 more information.
-
 <td><a href="img/colSetGL.png">
-	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 300px"></a>
+	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 400px"></a>
 </table>
 
 <!-- *********************************************************** -->

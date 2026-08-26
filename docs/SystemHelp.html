@@ -19,6 +19,7 @@
 <a href="#align2">&nbsp;&nbsp;Alignment</a>
 <a href="#clust">&nbsp;&nbsp;Cluster Algo</a>
 <a href="#clParam">&nbsp;&nbsp;Cluster Params</a>
+<a href="#cosets">&nbsp;&nbsp;Collinear Sets</a>
 <a href="#syn">&nbsp;&nbsp;Synteny</a>
 <a href="#synResults">Synteny Compare</a>
 <p>&nbsp;
@@ -112,7 +113,10 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <h3>1.a Start SyMAP</h3>
 <table class="tx"><tr>
 <td style="vertical-align: text-top;">To start SyMAP, type at the command line: <span class="ttt">./symap</span>
+<br>The <span class="ttp">Project Manager</span> will be displayed.
+
 <p>To view the command line options: <span class="ttt">./symap -h</span>
+
 
 <td>&nbsp;For the first time user of SyMAP, see:
 <ul>
@@ -470,10 +474,8 @@ has an option to align <span class="ttx">spliced transcripts</span>, which will 
 <br><span class="ttl">MSA</span>  <span class="ttx">unique spliced transcripts</span> option, will align the CDS sequences.
 <br><span class="ttl">Export</span> <span class="ttx">unique spliced transcripts</span> option,
 where CDSs will be used instead of exons.
-
 </ul>
 </ul>
-
 
 <p><span class="ttl">Anno keywords</span>
 <br>A comma separated list of keywords. This can be used to reduce the annotation attribute keywords
@@ -719,6 +721,7 @@ use the "-mum" command line parameter, i.e.
 	<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
 	<td><a href="#clParam">Parameter description</a>
 	<td><a href="#pseudo">Pseudo and Piles</a>
+	<td><a href="#cosets">Collinear Sets</a>
 	<td class="colrt"><a href="#top">Go to top</a>
 	</table>
 
@@ -845,7 +848,7 @@ pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
 for any uncheck categories, but in a more conservative way.
 It will retain the <span class="ttl">Top N</span> hits of a piled region that have lengths within
 80% of the longest hit.
-
+<tr><td>Collinear Sets</td><td>See <a href="#cosets">Collinear sets</a>
 </table>
 
 <a id="pseudo"></a>
@@ -896,6 +899,36 @@ must be filtered; if they are not, the synteny algorithm does not perform well.
 <td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
 </table>
 
+<a id="cosets"></a>
+<h4>3.c.III Collinear Sets</h4>
+Collinear Sets is abbreviated as "CoSet" below. A description of <span class="ttx">Collinear Sets</span>
+is given in <a href="Details.html" class="ext" target="_blank">Details</a>.
+<p><b>Parameters</b>
+<table class="tx">
+<tr><td style="vertical-align: text-top;"><span class="ttl">By Order</span> or <br><span class="ttl">By Size</span>
+<td>The 1st option numbers the CoSets in descending order by the start coordinates.
+<br>&nbsp;
+<br>The 2nd option sorts CoSets by size and then numbers then in ascending order by size.
+
+<tr><td style="vertical-align: text-top;"><span class="ttl">Advanced</span> or <br><span class="ttl">Simple</span>
+<td>The 1st option uses the advanced algorithm (released v5.8.8), which tries to find collinearity
+in complex overlapped genes areas.
+<br>The 2nd option uses the original algorithm, which does not try to resolve overlapping genes.
+</table>
+See <a href="Details.html#simple" class="ext" target="_blank">Advanced vs Simple</a>.
+<p>
+Suggestion:
+<ul>
+<li>Use <span class="ttl">Advanced</span>; if you do not like how it handles embedded genes,
+change to <span class="ttl">Simple</span>.
+<li>You can change the collinear parameters, then <i>only</i> execute the <span class="ttb">Collinear Set</span> algorithm;
+see <a href="#save2">Save</a>.
+<li>The algorithm runs very quickly, e.g. 10 seconds for mouse compared to humans.
+
+<li>If the Collinear sets have changed, and you are using the Synteny
+<span class="ttl">Strict</span> option, you should rerun it with <span class="ttb">Synteny Only</span> because it uses
+the collinear sets (see <span class="ttl">Strict</span> below).
+</ul>
 <!-- =============================================================== -->
 <a id="syn"></a>
 <h3>3.d Synteny</h3>
@@ -917,8 +950,8 @@ for draft sequence.
 	<ul>
 	<li>It used smaller gap sizes and stricter PCC cutoff.
 	<li>It first computes the blocks based on orientation.
-	<li>If <span class="ttl">Orient</span> is not checked, it checks blocks
-	and collinear sets to see if they are contained in another block, and if so, merges them regardless of orientation;
+	<li>If <span class="ttl">Orient</span> is not checked, it checks blocks and collinear sets
+	to see if they are contained in another block, and if so, merges them regardless of orientation;
 	this merge happens regardless of the <span class="ttl">Merge</span> setting.
 	</ul>
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Orient</span>
@@ -988,6 +1021,8 @@ the lower left side of the parameters window will have a drop-down with the foll
 	<a href="#syn">synteny</a> parameters, select this option.
 <tr><td><span class="ttx">Number Pseudo</span>
 	<td>If you want to add <a href="#pseudo">pseudo numbers</a>, select this option.
+<tr><td><span class="ttx">Collinear Sets</span>
+	<td>If you only want to redo the <a href="#cosets">Collinear Sets</a> computation, select this option.
 </table>
 
 <p><span class="ttp">Manager</span>: The <span class="ttb">Selected Pair</span> button
@@ -997,6 +1032,7 @@ will have its label replace to reflect the drop-down setting, as follows:
 <br>&nbsp;&nbsp;<span class="ttx">Clust&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
 <br>&nbsp;&nbsp;<span class="ttx">Synteny Only</span> &nbsp;&rarr; <span class="ttb">Synteny Only</span>
 <br>&nbsp;&nbsp;<span class="ttx">Number Pseudo</span> &rarr; <span class="ttb">Pseudo Only</span>
+<br>&nbsp;&nbsp;<span class="ttx">Collinear Sets</span> &rarr; <span class="ttb">Collinear</span>
 <p>If you have changed the <a href="#align2">alignment</a> parameters, you must remove them using the <span class="ttb">Clear Pair</span>
 option on the <span class="ttp">Manager</span> panel.
 <!-- =================================================== -->
