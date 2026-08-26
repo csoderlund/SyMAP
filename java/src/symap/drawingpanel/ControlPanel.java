@@ -72,10 +72,10 @@ public class ControlPanel extends JPanel implements HelpListener {
 
 		if (hc != null) hc.setButtons(homeButton,backButton,forwardButton); // See HistoryControl
 
-		minusButton     = Jcomp.createIconButton(this,bar,buttonListener,"/images/minus.gif",
-				"Decrease the bases shown");
 		plusButton       =  Jcomp.createIconButton(this,bar,buttonListener,"/images/plus.gif",
-				"Increase the bases shown");
+				"Zoom in - decrease the bases shown");	// CAS588 =/- were working opposite of convention
+		minusButton     = Jcomp.createIconButton(this,bar,buttonListener,"/images/minus.gif",
+				"Zoom out - increase the bases shown");			
 		shrinkButton   = Jcomp.createIconButton(this,bar,buttonListener,"/images/shrink.png",
 				"Shrink space between tracks");
 		scaleButton    =  Jcomp.createBorderIconButton(this,bar,buttonListener,"/images/scale.gif",
@@ -250,8 +250,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 				dp.drawToScale();
 			}
 	
-			else if (source == minusButton)      dp.changeShowRegion(0.5);
-			else if (source == plusButton)       dp.changeShowRegion(2.0); 
+			else if (source == minusButton)      dp.changeShowRegion(2.0); // CAS588 was 0.5
+			else if (source == plusButton)       dp.changeShowRegion(0.5); // CAS588 was 2.0
 			else if (source == shrinkButton)     dp.shrinkSpace(); 
 			
 			else if (source == editColorsButton) cdh.showX();

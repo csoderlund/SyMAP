@@ -50,7 +50,7 @@ import util.Utilities;
 public class QueryPanel extends JPanel {
 	private static final long serialVersionUID = 2804096298674364175L;
 	private int wFil1=140, wFil2=60;					// Spacing between left hand label and filters
-	private final String coDefNum = "3", groupDefNum="4";	// coset and group defaults
+	private final String coDefNum = "2", groupDefNum="4";	// coset and group defaults (CAS588 coDef was 3)
 	private final boolean AND=true;							// For mysql joins
 	
 	protected boolean isMinorOlap=true;					// viewSymap -ii show overlap or minor (Globals.INFO -ii)
@@ -95,7 +95,7 @@ public class QueryPanel extends JPanel {
 	
 	protected boolean isIncludeMinor() { 
 		return isEveryStarAnno() || isOlapAnno_ii() || (isMultiN() && chkMultiMinor.isSelected()) 
-				|| isGeneNum() || isHitNum() || isAnnoStr(); // CAS579c add isAnnoStr 
+				|| isGeneNum() || isHitNum() || isAnnoStr();  
 	}
 	protected boolean isGroup() {return isMultiN() || isClustN() || isGeneNum();} // for UtilReport
 	
@@ -150,7 +150,7 @@ public class QueryPanel extends JPanel {
 	protected boolean isBlockNum()		{return chkBlkNum.isEnabled() && chkBlkNum.isSelected();}
 	protected boolean isCollinearNum()	{return chkCoSetNum.isEnabled() && chkCoSetNum.isSelected();}
 	private   boolean isHitNum()		{return chkHitNum.isEnabled() && chkHitNum.isSelected();}
-	protected boolean isGeneNum()		{return chkGeneNum.isEnabled() && chkGeneNum.isSelected();}	// mysql for num, DBdata filter for suffix; CAS579c no chk text
+	protected boolean isGeneNum()		{return chkGeneNum.isEnabled() && chkGeneNum.isSelected();}	// mysql for num, DBdata filter for suffix
 
 	protected String getGeneNum() { // DBdata filter; Text already checked
 		if (!isGeneNum()) return null;
@@ -485,7 +485,7 @@ public class QueryPanel extends JPanel {
 		return panel;
 	}
 	/** Filter Hit attributes - active with all pair searches except Chks **/
-	private JPanel createFilterPairHitPanel() {// CAS578 add
+	private JPanel createFilterPairHitPanel() {
 		JPanel panel = Jcomp.createPagePanelNB(); 
 		JPanel row = Jcomp.createRowPanel();
 		
@@ -509,7 +509,7 @@ public class QueryPanel extends JPanel {
 		lblHitGE = Jcomp.createLabel("Hit >=  ", "Value >= input number");
 		row.add(lblHitGE);		row.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil2, lblHitGE)));
 		row.add(lblHitId); 		row.add(txtHitId); 		row.add(Box.createHorizontalStrut(w));
-		row.add(lblHitSim); 	row.add(txtHitSim); 	row.add(Box.createHorizontalStrut(w));
+		if (!qFrame.isSelf) {row.add(lblHitSim); row.add(txtHitSim); row.add(Box.createHorizontalStrut(w));}//CAS588
 		row.add(lblHitCov); 	row.add(txtHitCov); 	
 		if (!bNoAnno) {
 			row.add(Box.createHorizontalStrut(w*3));
@@ -816,7 +816,7 @@ public class QueryPanel extends JPanel {
 	}
 	// Single and Anno can both be checked at same time; both turn on locChr; 
 	// Single turns off everything else; Anno only turns off Exact
-	private void setAnnoSingleRow() {// CAS579c add 
+	private void setAnnoSingleRow() { 
 		boolean bSingle = chkSingle.isSelected();
 		boolean bAnno = isAnnoStr();
 		
@@ -920,7 +920,7 @@ public class QueryPanel extends JPanel {
 	}
 	
 	/***************************************************************
-	 * XXX Make Query: All SQL and Summary methods CAS579c
+	 * XXX Make Query: All SQL and Summary methods 
 	 */
 	private class SQL { 
 		private boolean bValidQuery=true;
@@ -1002,8 +1002,8 @@ public class QueryPanel extends JPanel {
 			if (isMultiN())   isValidMulti();   				if (!bValidQuery) return "";
 			if (isClustN())   isValidCluster(); 				if (!bValidQuery) return "";
 			if (isGeneOlap()) isValidHit(txtGeneOlap, "Olap");  if (!bValidQuery) return "";
-			if (isGroup()) 	  isOneChrChkOnly();				if (!bValidQuery) return "";// CAS579b they do not work
-			if (isNoAnno())	  isNoAnnoOnly();					if (!bValidQuery) return "";// CAS579c make sure this is not selected with anno
+			if (isGroup()) 	  isOneChrChkOnly();				if (!bValidQuery) return "";
+			if (isNoAnno())	  isNoAnnoOnly();					if (!bValidQuery) return "";// make sure this is not selected with anno
 			
 			// The where clause is fully computed, and the bValidQuery checked at the end in makeSQLclause
 			String whereClause = "\n where " + spPanel.getPairIdxWhere(); // PH.pair_idx in (...)
@@ -1188,7 +1188,6 @@ public class QueryPanel extends JPanel {
 			// First check to see if any chromosomes are selected; if not, then pairIdx is sufficient
 			if (!spPanel.hasSpSelectChr() && !spPanel.hasSpIgnoreRow()) return "";
 
-			// CAS579c was checking if species=2, and the results worked only part of the time (the ones I tested)
 			for(int p=0; p<nSpecies; p++) {
 				int index = spPanel.getSelChrIdx(p); // returns a PH.grp1_idx; returns -1 if disabled
 				if (index <= 0) continue;
@@ -1223,7 +1222,7 @@ public class QueryPanel extends JPanel {
 			}
 			return where; 
 		}
-		private boolean isOneChrChkOnly() { // CAS579b add to disallow
+		private boolean isOneChrChkOnly() { 
 			int cnt=0;
 			
 			for(int p=0; p<nSpecies; p++) {
@@ -1236,7 +1235,7 @@ public class QueryPanel extends JPanel {
 			bValidQuery=false;
 			return false;
 		}
-		private void isNoAnnoOnly() { // CAS579c add to disallow
+		private void isNoAnnoOnly() { 
 			String msg=null;
 			if (isAnnoStr())      msg = "None (no annotated) is set with annotation description";
 			else if (isGeneOlap())msg = "None (no annotated) is set with Olap (requiring gene overlap)";
@@ -1429,7 +1428,10 @@ public class QueryPanel extends JPanel {
 				}
 			}
 			if (retVal.equals("")) retVal= "Pair Hits"; 
-			
+			else {
+				retVal = retVal.trim();
+				if (retVal.startsWith(";")) retVal = retVal.substring(1); // CAS588 has ; at beginning of some
+			}
 			return retVal; 
 		}
 		// Summary for single and pairs
@@ -1480,9 +1482,9 @@ public class QueryPanel extends JPanel {
 	  *******************************************************/
 	JPanel buttonPanel, searchPanel, singlePanel, pairRadPanel, pairChkPanel, pairHitPanel, groupPanel;
 	
-	private JCheckBox  chkAnno = null;  // CAS579c add so can silence other species
+	private JCheckBox  chkAnno = null;  // to silence other species
 	private JTextField txtAnno = null; // Used with all but HitNum
-	private JRadioButton radAnnoExact = null, radAnnoStart=null, radAnnoAny=null; // CAS576 add
+	private JRadioButton radAnnoExact = null, radAnnoStart=null, radAnnoAny=null; 
 	
 	protected SpeciesPanel spPanel = null;	
 	protected int nSpecies=0;

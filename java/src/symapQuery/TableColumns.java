@@ -47,7 +47,7 @@ public class TableColumns {
 		 "Hit %Sim: Approximate percent similarity of subhits", 
 		 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
-		 "Hit St: The strands separated by a '/'",
+		 "Hit St: == if the same strand for both ends; != if different strands for the two ends", // CAS588 out-of-date comment
 		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither."
 		};
 	
@@ -162,7 +162,7 @@ public class TableColumns {
 		
 		if (isAlgo2 && Globals.bQueryOlap==false) {
 			fd.addField(Integer.class,Q.PHA, "exlap", Q.AOLAP, "Exon overlap"); 
-			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent exon overlap";				// CAS578 make specific
+			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent exon overlap";				
 		}
 		else { 
 			fd.addField(Integer.class,Q.PHA, "olap", Q.AOLAP, "Gene overlap");

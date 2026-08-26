@@ -117,7 +117,7 @@ public class ProjParams extends JDialog {
 		boolean bReload=true, bReAlign=true;
 		
 		theFields = new Field[12]; // If change #fields, change!
-		theFields[i++] = new Field(mProj.sCategory, catArr, 0, 	!bReload, !bReAlign, true);// true -> add text field; CAS582 was '1' 
+		theFields[i++] = new Field(mProj.sCategory, catArr, 0, 	!bReload, !bReAlign, true);// true -> add text field;
 		
 		theFields[i++] = new Field(mProj.sDisplay, 1, 	!bReload, !bReAlign);
 		theFields[i++] = new Field(mProj.sAbbrev, 1, 	!bReload, !bReAlign); 
@@ -437,9 +437,8 @@ public class ProjParams extends JDialog {
 			else return false;
 		}
 		
-		String msg = "The Group prefix '" + val +"' will be removed from all group display labels."
-				+ "\n   This is not reversible (i.e. it cannot be added back). "
-				+ "\n   Note, if you are going to Reload, ignore this message."
+		String msg = "The Group prefix '" + val +"' will immediately be removed from all group display labels." // CAS588 slight rewording
+				+ "\n   This is not reversible (i.e. it cannot be added back without reloading). "
 				+ "\n\nProceed with save?";
 		int n = JOptionPane.showConfirmDialog( this, msg, "", JOptionPane.YES_NO_OPTION);
 		

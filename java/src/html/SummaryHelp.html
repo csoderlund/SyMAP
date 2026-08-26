@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <title>runSingleTCW</title>
 <style>
@@ -9,118 +9,213 @@
 </head>
 <body style="padding:20px;font-family:arial;">
 
-<div style="width:500px;">
+<div style="width:900px;">
 
 <h2>Explain Summary</h2>
-<i>Clustered hits</i> have n&ge;1 MUMmer hits that may have gaps between them or overlap.
-<br><i>Subhit</i> is a MUMmer hit that is part of a clustered hit.
-<br><i>Synteny Block</i> is composed of clustered hits.
-
-<p>Abbrev: Gene (GN), Clustered hit (CH), SubHit (SH), Synteny Block (SB), Cluster hit in block (CHB)
-<br>If the second project does not have a value, then it is the same for the two projects.
+<table class="ty">
+<tr><td>Clustered hits<td> (CH) have n&ge;1 MUMmer hits that may have gaps between them or overlap.
+<tr><td>SubHit<td> (SH) is a MUMmer hit that is part of a clustered hit.
+<tr><td>Synteny Block<td> (B) is composed of clustered hits.
+<tr><td>Exon or CDS<td> (EX) either the exons or CDSs were loaded; the term 'exon' is generally used here.
+</table>
+<p>Key: Genome(G) Gene(GN) Exon(EX) Cluster Hit(CH) SubHit(SH) Block(B) CH in Block(CHB)
+<p>Covered by (c) - percent aligned bases. Aligned to (a) - regardless of cover.
+<br>e.g. GcGN genome covered by genes measured in the percent of aligned bases
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; GNaCH genes aligned to clustered hits, where the coverage can be small, e.g. 1%
+<p>
 
 <table class="ty">
-	<tr>
-		<td colspan=2 align=left>
-			<b>Genome and Annotation</b>
-	<tr>
-		<td align=left valign=top>#Genes
-		<br>~Cover
-		<br>Avg
-		<br>Max
+	<tr><td colspan=2 style="text-align: left;">
+		<b>Genome and Annotation</b>
+	<tr><td style="text-align: left;vertical-align: text-top;">#Genes
 		<td>Number of genes
-		<br>Approximate coverage of genes; it does not take into account overlapping genes
-		<br>Average length of genes
-		<br>Length of the longest gene
-	<tr>
-		<td align=left valign=top>#Exons<br>~Cover<br>Avg<br>Max
-		<td>Number of exons
-		<br>Approximate coverage of exons; it does not take into account overlapping exons
-		<br>Average length of exons
-		<br>Length of the longest exon
-	<tr>
-		<td align=left valign=top>#Seqs
+	<tr><td>GcGN
+		<td>Approximate coverage of the genome by genes; it does not take into account overlapping genes
+	<tr><td>AvgLen
+		<td>Average length of genes
+	<tr><td>MaxLen
+		<td>Length of the longest gene
+	<tr><td style="text-align: left;vertical-align: text-top;">
+		#Exons/#CDS
+		<td>Number of exons or CDSs, depending on what was loaded.
+		<br>The following uses the term 'exon' even if CDSs have been loaded.
+	<tr><td>GcEX
+		<td>Approximate coverage of the genome by exons; it does not take into account overlapping exons
+	<tr><td>AvgLen
+		<td>Average length of exons
+	<tr><td>MaxLen
+		<td>Length of the longest exon
+	<tr><td style="text-align: left;vertical-align: text-top;">#Seqs
 		<td>Total number of sequences (e.g. Chr) loaded for the project
-	<tr>
-		<td align=left valign=top>Length
+	<tr><td style="text-align: left;vertical-align: text-top;">Length
 		<td>Total length of the genome sequence
-<!--------------------------------------------------------->
-	<tr>
-		<td colspan=2 align=left>
-			<b>Clustered hits - table 1</b>
-	<tr>
-		<td align=left valign=top>#Clusters
+<!-- =============================================== -->
+	<tr><td colspan=2 style="text-align: left;"><b>Clustered Hits</b> 1st table
+	<tr><td style="text-align: left;vertical-align: text-top;">#Clusters
 		<td>Number of clustered hits
-	<tr>
-		<td align=left valign=top>#Rev
+	<tr><td style="text-align: left;vertical-align: text-top;">#Rev
 		<td>Number of clusters with opposite strand hits, i.e. +/- and -/+
-	<tr>
-		<td align=left valign=top>CHnBlock
-		<td>Percent of cluster hits in blocks
 
-	<tr>
-		<td align=left valign=top>g2
-		<td>Number of cluster hits whose alignment covers a gene on both sides
-	<tr>
-		<td align=left valign=top>g1
-		<td>Number of cluster hits whose alignment covers a gene on one side
-	<tr>
-		<td align=left valign=top>g0
-		<td>Number of cluster hits whose alignment covers zero genes
-	<tr>
-		<td align=left valign=top>#SubHits
-		<td>Total number of hits within the clustered hits
-	<tr><td align=left valign=top>Avg
+	<tr><td style="text-align: left;vertical-align: text-top;">g2
+		<td>Number of cluster hits that align to a gene on both sides
+	<tr><td style="text-align: left;vertical-align: text-top;">g1
+		<td>Number of cluster hits that align to a gene on one side
+	<tr><td style="text-align: left;vertical-align: text-top;">g0
+		<td>Number of cluster hits that align to zero genes
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgId
+		<td>Average percent identity
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgSim
+		<td>Average percent similarity
+	<tr><td style="text-align: left;vertical-align: text-top;">#SubHits
+		<td>Number of MUMmer hits within the clustered hits
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgNum
 		<td>Average number of subhits per cluster
 
-	<tr>
-		<td colspan=2 align=left>
-			<b>Clustered hits - table 2</b>
-	<tr>
-		<td align=left valign=top>GNwCH<br>(CHwGN)
-		<td>Percent of genes with at least one clustered hit aligning to it
-		<br>(Percent of clustered hits intersecting with at least one gene annotation)
+	<tr><td colspan=2 style="text-align: left;"><b>Clustered Hits</b> 2nd table
+	<tr><td style="text-align: left;vertical-align: text-top;">GNcCH<br>EXcCH
+		<td>Percent of gene bases that are covered by clustered hits.
+		<br>Percent of exon bases that are covered by clustered hits - Algo2 only
 
-	<tr>
-		<td align=left valign=top>*Cover CH<br>(SH)
-		<td>Percent of the genome sequence covered by clustered hits
-		<br>(Percent of the genome sequence covered by subhits)
-
-	<tr>
-		<td align=left valign=top>SH Size range columns
+	<tr><td style="text-align: left;vertical-align: text-top;">GNaCH<br>CHaGN
+		<td>Percent of genes with a cluster hit aligning to at least part of it
+		<br>Percent of clustered hits that align to at least part of a gene
+		<br>For both GNaCH and CHaGN, the gene and hit coverage does not matter, e.g. it could be 1%.
+	<tr><td style="text-align: left;vertical-align: text-top;">GcCH*<br>GcSH*
+		<td>Percent of the genome bases covered by clustered hits
+		<br>Percent of the genome bases covered by subhits (ignores gaps)
+	<tr><td style="text-align: left;vertical-align: text-top;">#SH
 		<td>Number of subhits having alignment lengths in the given ranges
-<!--------------------------------------------------------->
-	<tr>
-		<td colspan=2 align=left>
-			<b>Synteny Blocks</b>
-	<tr>
-		<td align=left valign=top>#Blocks
-		<td>Total number of synteny blocks
-	<tr>
-		<td align=left valign=top>Inv
+		<br>Note, both projects have the same #SubHits, but the lengths are different
+		due to indels.
+<!-- =============================================== -->
+	<tr><td colspan=2 style="text-align: left;"><b>Synteny Blocks</b>
+	<tr><td style="text-align: left;vertical-align: text-top;">#Blocks
+		<td>Number of synteny blocks
+	<tr><td style="text-align: left;vertical-align: text-top;">Inv
 		<td>Number of inverted blocks; note, blocks may contain local regions of opposite orientation
-	<tr>
-		<td align=left valign=top>GNwCHB
-		<td>Percent of genes overlapping a clustered hit in a block
-		<br>(Filter: Block hits, Every* Gene; Stats Genes:)/#Genes
-	<tr>
-		<td align=left valign=top>*Cover SB (&ge;2x)
-		<td>Percent of genome sequence covered by synteny blocks
-		<br>(Percent of genome sequence covered by two or more synteny blocks, i.e. mapping to
-				a putative duplication in the other genome)
-	<tr>
-		<td align=left valign=top>Size range columns
+	<tr><td style="text-align: left;vertical-align: text-top;">CHB
+		<td>Percent of cluster hits in blocks
+	<tr><td style="text-align: left;vertical-align: text-top;">GNaCHB
+		<td>Percent of genes aligning to at least part of a clustered hit that is in a block
+	<tr><td style="text-align: left;vertical-align: text-top;">GcB* <br>&ge;2x
+		<td>Percent of genome bases covered by synteny blocks
+		<br>Percent of genome bases covered by two or more synteny blocks,
+		<br>i.e. mapping to a putative duplication in the other genome
+	<tr><td style="text-align: left;vertical-align: text-top;">Size range
 		<td>Number of blocks whose genome coverage is in the given range
-<!--------------------------------------------------------->
-	 <tr>
-		<td colspan=2 align=left>
+<!-- =============================================== -->
+	 <tr><td colspan=2 style="text-align: left;">
 			<b>Collinear Sets</b>
-	<tr>
-		<td align=left valign=top>Size range columns
+	<tr><td style="text-align: left;vertical-align: text-top;">Size range
 		<td>Number of collinear sets within the size range
 </table>
-<br>*Cover coverage statistics take into account overlapping hits and blocks.
+<br>*Coverage statistics take into account overlapping hits and blocks.
 <p>Self-synteny statistics only show results for one side.
+
+<!-- =============================================== -->
+<!-- =============================================== -->
+<!-- =============================================== -->
+<br>__________________________________________________________________________________
+<h3>Reproducing these numbers</h3>
+NoWay: there is 'no way' to compute the associated statistic in SyMAP; it can only be computed
+using MySQL.
+<br>Most of the rest of the explanations use the <b>Queries</b>.
+<br>&nbsp;
+<table>
+	<tr><td colspan=2 style="text-align: left;">
+		<b>Genome and Annotation</b>
+	<tr><td style="text-align: left;vertical-align: text-top;">
+		#Genes
+		<td>Project Manager
+	<tr><td style="text-align: left;vertical-align: text-top;">GcGN
+		<td>Queries: Filter: Single All genes, project #1 only; select columns <tt>Glen</tt>; export to Excel;
+		<br>sum the length and take its percentage of the genome length. Repeat for project #2.
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgLen
+		<td>Queries: list all genes and lengths for a project; export to Excel;
+		average the length.
+	<tr><td style="text-align: left;vertical-align: text-top;">MaxLen
+		<td>Queries: list all genes and lengths for a project; sort on length.
+	<tr><td style="text-align: left;vertical-align: text-top;">
+		#Exons
+		<td>NoWay: This information is not available from SyMAP, except by viewing every gene popup on the
+		<b>2D</b>.
+	<tr><td style="text-align: left;vertical-align: text-top;">GcEX
+		<td>NoWay: There is no way to compute these numbers for exons without MySQL.
+	<tr><td style="text-align: left;vertical-align: text-top;">#Seqs
+		<td>Project Manager
+	<tr><td style="text-align: left;vertical-align: text-top;">Length
+		<td>Project Manager
+<!-- =============================================== -->
+	<tr><td colspan=2 style="text-align: left;"><b>Clustered Hits</b> 1st table
+	<tr><td style="text-align: left;vertical-align: text-top;">#Clusters
+		<td>Queries: show all hits (no filter).
+	<tr><td style="text-align: left;vertical-align: text-top;">#Rev
+		<td>Queries: show all hits, sort on column <tt>Hit St</tt>, sort <tt>!=</tt> to the top,
+		<br>then find what row changes from <tt>!=</tt> to <tt>==</tt>.
+	<tr><td style="text-align: left;vertical-align: text-top;">CHB
+		<td>Queries: Filter <tt>In Block Yes</tt>. Take the percent of #rows/#Clusters.
+	<tr><td style="text-align: left;vertical-align: text-top;">g2
+		<td>Queries: Filter <tt>Annotated Both</tt>.
+	<tr><td style="text-align: left;vertical-align: text-top;">g1
+		<td>Queries: Filter <tt>Annotated One</tt>.
+	<tr><td style="text-align: left;vertical-align: text-top;">g0
+		<td>Queries: Filter <tt>Annotated None</tt>.
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgId
+		<td>Queries: shows all hits; display column <tt>Hit %Id</tt>; export to Excel;
+		<br>compute average of the <tt>Hit %Id</tt> column.
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgSim
+		<td>Same as above, but use the <tt>Hit %Sim</tt> column.
+	<tr><td style="text-align: left;vertical-align: text-top;">#SubHits
+		<td>Same as above, but use the <tt>Hit #Sub</tt> column and sum them.
+	<tr><td style="text-align: left;vertical-align: text-top;">AvgNum
+		<td>Same as above, but use the <tt>Hit #Sub</tt> column and average them.
+<!-- =============================================== -->
+	<tr><td colspan=2 style="text-align: left;"><b>Clustered Hits</b> 2nd table
+	<tr><td style="text-align: left;vertical-align: text-top;">GNcCH
+		<td>This is a complex MySQL statement. It can be approximated as follows:
+		<br>Queries: Filter Every*; sort on <tt>%Olap</tt> for project#1; export to Excel;
+		<br>compute the average <tt>%Olap</tt> for all rows that have a gene for project#1.
+		<br>Repeat for project#2.
+	<tr><td style="text-align: left;vertical-align: text-top;">EXcCH
+		<td>For Algo2, the above calculation will give you EXcCH; to get GCcCH:
+		<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;start SyMAP with '-go' will use the gene <tt>%Olap</tt>.
+		<br>For Algo1, will be GNcCH. Algo1 does not have exon overlap (EXcCH).
+	<tr><td style="text-align: left;vertical-align: text-top;">GNaCH
+		<td>Queries: Filter Every*; from the <tt>Stats</tt> table, take the <tt>Genes:</tt> number;
+		<br>take the percentage of it divided by the <tt>#Genes</tt>
+	<tr><td style="text-align: left;vertical-align: text-top;">CHaGN
+		<td>Queries: Filter Every; from the <tt>Stats</tt> table, take the <tt>Annotated:</tt> number;
+		<br>take the percentage of it divided by the <tt>#Clusters</tt>
+	<tr><td style="text-align: left;vertical-align: text-top;">GcCH
+		<td>NoWay: This uses an algorithm that takes into account overlapping hits,
+		<br>which is not available as a SyMAP query.
+	<tr><td style="text-align: left;vertical-align: text-top;">GcSH
+		<td>NoWay: Same as CHcG.
+	<tr><td style="text-align: left;vertical-align: text-top;">SubHit
+		<td>NoWay: The subhits are available for the <b>2D</b> hit popup,
+		<br>but there is no easy way within SyMAP to compute these numbers.
+<!-- =============================================== -->
+	<tr><td colspan=2 style="text-align: left;"><b>Synteny Blocks</b>
+	<tr><td style="text-align: left;vertical-align: text-top;">#Blocks
+		<td>Circle: states the number of blocks and inverted blocks at the bottom.
+	<tr><td style="text-align: left;vertical-align: text-top;">Inv
+		<td>Same as above.
+	<tr><td style="text-align: left;vertical-align: text-top;">GNaCHB
+		<td>Queries: Filter: Block hits, Every* Gene; take the percentage of
+		<tt>Stats Genes:/#Genes</tt>.
+
+	<tr><td style="text-align: left;vertical-align: text-top;">GcB (&ge;2x)
+		<td>NoWay: This uses an algorithm that takes into account block overlap.
+	<tr>
+		<td style="text-align: left;vertical-align: text-top;">Size range
+		<td>View the <b>Report</b> <tt>Blocks Plus</tt> option, and these numbers can be manually
+		<br>computed from that.
+<!-- =============================================== -->
+	 <tr><td colspan=2 style="text-align: left;">
+			<b>Collinear Sets</b>
+	<tr><td style="text-align: left;vertical-align: text-top;">Size range
+		<td>Queries: Filter: Collinear Set =N; view the <tt>Stats Collinear</tt> number.
+	</table>
 </div>
 </body>
 </html>

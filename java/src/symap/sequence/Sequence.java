@@ -330,11 +330,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	    
 	    buildCntMsg = String.format("Genes: %,d", cntAnno);
 	    
-	    if (sfilObj.bShowAnnot || sfilObj.bShowAnnotHit) { // Gray anno box
-	    	if (symap.Globals.DEBUG) {
-	    		String bp = Utilities.kText((int) bpPerPixel);
-	    		buildCntMsg += String.format("\nAnnotation: if x(%s)<y(%,d)", bp, (int)distance_for_anno);
-	    	}	
+	    if (sfilObj.bShowAnnot || sfilObj.bShowAnnotHit) { // Gray anno box	
 	    	boolean ifNoShow = (sfilObj.bShowAnnot) ? ((int)bpPerPixel > distance_for_anno)
 	    			                                : ((int)bpPerPixel > (distance_for_anno*2));
 	    	if (ifNoShow) buildCntMsg += "\n\nZoom in for annotation";

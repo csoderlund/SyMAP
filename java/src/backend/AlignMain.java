@@ -56,7 +56,7 @@ public class AlignMain {
 	private boolean error = false;
 	
 	private String resultDir;
-	private String alignParams; // Set in pair_props from DoAlignSynPair;
+	private String alignParams=""; // assign value here; passed from DoAlignSynPair to Mpair for saving in db
 	private int nAlignDone=0;
 	
 	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp, int nMaxThreads, String alignLogDirName){
@@ -76,7 +76,8 @@ public class AlignMain {
 		alignList = new Vector<AlignRun>();
 		toDoQueue = new LinkedList<AlignRun>();
 	}
-	protected String getParams() {// DoAlignSynPair save to DB pairs.params
+	// passed to DoAlignSynPair onto Mpair for saving in db for summary 
+	protected String getParams() {
 		 return alignParams;
 	}
 	
@@ -91,7 +92,9 @@ public class AlignMain {
 			
 			resultDir = Constants.getNameResultsDir(proj1Dir, proj2Dir);
 			
-			if (alignExists()) return true; // must have all.done and at least one .mum file; r/w params_used
+			if (alignExists()) {
+				return true; // must have all.done and at least one .mum file; r/w params_used
+			}
 			
 			buildAlignments(); // build toDoQueue
 			
@@ -174,13 +177,12 @@ public class AlignMain {
 			if (!f.exists()) return false;	/*-- alignments to be done ... --*/
 			
 			boolean bdone = Utils.checkDoneFile(alignDir); // all.done
-			nAlignDone = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
+			nAlignDone    = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
+			usedParamsRead(Utils.getDateStr(f.lastModified()));// sets alignParams for saving to db
 			
 			if (bdone && nAlignDone>0) {// could by SyMAP or user complete
-				paramsRead(Utils.getDateStr(f.lastModified()));
-				if(!alignParams.equals("")) plog.msg(alignParams); // what was set in paramsAlign.txt; CAS587
+				plog.msg("Use existing " + nAlignDone + " MUMmer files ");
 				plog.msg("--If not correct, remove " + resultDir + " and re-align");
-				
 				return true;
 			}
 			/*-------- Alignments to be done ------*/
@@ -213,12 +215,13 @@ public class AlignMain {
 	/*********************************************************
 	 * Create alignParams for save to pairs.param for summary
 	 * If align, write to params_used, else read it. This is not in the /align directory, but its main directory
+	 * Also read in Mpair
 	 */
-	private void mummerParamsWrite() {
+	private void usedParamsWrite() {
 		try {
 			alignParams = "MUMmer files " + Utilities.getDateTime() + "   CPUs: " + nMaxCPUs + "\n";
 			alignParams += mp.getChgAlign(Mpair.FILE, true); // true, do not add command line
-			if (Ext.isMummer4Path()) alignParams += Ext.getMummerPath() + " ";
+			if (Ext.isMummer4Path()) alignParams += "\n" + Ext.getMummerPath() + " "; // CAS588 add \n
 			
 			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
 			if (pfile==null) pfile = new File(resultDir,Constants.usedFile); // create 
@@ -230,7 +233,8 @@ public class AlignMain {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Save " + Constants.usedFile); }
 	}
-	private void paramsRead(String dateTime) {
+	// for saving in db to go on summary; Mpair also reads this file for writing previous params on Manager popup
+	private void usedParamsRead(String dateTime) {
 		try {
 			alignParams = "Use previous " + nAlignDone + " MUMmer files " + dateTime; 
 			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
@@ -257,7 +261,7 @@ public class AlignMain {
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
 			FileDir.checkCreateDir(resultDir, true /* bPrt */);
-			mummerParamsWrite(); // write here after creating the directory
+			usedParamsWrite(); // write here after creating the directory
 			
 			// temporary directories to put data for alignment
 			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);

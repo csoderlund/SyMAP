@@ -42,12 +42,13 @@ public class SumFrame extends JDialog implements ActionListener {
 	private DBconn2 dbc2; 
 	
 	private Proj proj1=null, proj2=null; // contains idx and lengths of groups
-	private boolean isSelf=false;		 
+	private boolean isSelf=false, isAlgo1=false;		 
 	
 	// Called from DoAlignSynPair to create
 	public SumFrame(DBconn2 dbc2, Mpair mp) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
+		
 		bRedo=true;			// expects the summary to be regenerated if still exists
 		createSummary(false);
 	}
@@ -94,7 +95,6 @@ public class SumFrame extends JDialog implements ActionListener {
 		btnHelp.addActionListener(this);
 		JPanel buttonPanel = new JPanel();
 		
-		
 		buttonPanel.add(btnHelp); buttonPanel.add(Box.createHorizontalStrut(20));
 		buttonPanel.add(btnOK);
 		
@@ -103,6 +103,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		getContentPane().add(buttonPanel,BorderLayout.SOUTH);
 		pack();
 		
+		toFront();
 		setLocationRelativeTo(null);	
 		setVisible(true);
 	}
@@ -118,57 +119,40 @@ public class SumFrame extends JDialog implements ActionListener {
 	private String createSummary(boolean isReadOnly) {
 	try {
 		pairIdx  = mp.getPairIdx();
-		proj1Idx = mp.getProj1Idx(); 
-		proj2Idx = mp.getProj2Idx();
-		isSelf = proj1Idx==proj2Idx;
-		
-		ResultSet rs;
+	
 		if (dbc2.tableColumnExists("pairs", "summary")) { // exist if called from Summary popup
-			rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
+			ResultSet rs = dbc2.executeQuery("select summary from pairs where idx="+ pairIdx);
 			String sum = (rs.next()) ? rs.getString(1) : null; 
 			if (sum!=null && sum.length()>20 && !bArgRedo && !bRedo) return sum;
 		}
+		if (isReadOnly) System.out.println("Create Summary for display...");
+		else 			System.out.println("Creating Summary for save to database... ");
 		
+		isAlgo1 = mp.isAlgo1(Mpair.DB);
+		proj1Idx = mp.getProj1Idx(); 
+		proj2Idx = mp.getProj2Idx();
+		isSelf = proj1Idx==proj2Idx;
 		proj1 = makeProjObj(proj1Idx);
 		proj2 = makeProjObj(proj2Idx);
-		
 		proj1.name = mp.getProj1().getDisplayName();
 		proj2.name = mp.getProj2().getDisplayName();
-		if (isReadOnly) System.out.println("Create Summary for display...");
-		else System.out.println("Creating Summary for save to database... ");
+		String [] params = createParams();
 		
-		String alignDate = null, syver=null, allParams=null; // CAS579c none were null, but was checking for null
-		rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
-		if (rs.next()) { 				
-			alignDate = rs.getString(1);
-			allParams = rs.getString(2);  // these are the params that were used for align
-			syver = rs.getString(3);
-		}
-		rs.close();
+		// Build display
+		String info = (isSelf) ? proj1.name + " self-synteny" :  proj1.name + " vs. " + proj2.name;
+		info += params[0]; 		// updated\n\n
 		
-		if (allParams==null) { // if MUMmer fails...
-			allParams  = "Align Unknown";
-		}
-		else {
-			String [] x = allParams.split("\n");
-			allParams = "";
-			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
-			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params
-		}
-		String d = (alignDate==null) ? "Date Unknown"      : Utilities.getNormalizedDate(alignDate); 
-		String v = (syver==null)     ? "  Version Unknown" : ("  " + syver);
+		info += createProject()   + "\n";
+		info += createCluster()   + "\n";
+		info += createBlock()     + "\n";
+		info += createCollinear();
 		
-		String info = (isSelf) ? proj1.name + " self-synteny" :  
-			                     proj1.name + " vs. " + proj2.name;
-		info += "   Updated " + d + v + "\n\n"; 
-		info += createProject() + "\n";
-		info += createCluster()  + "\n";
-		info += createBlock()  + "\n";
-		String c = createCollinear();
-		if (c!=null) info += c + "\n";
-		info += "Abbrev: Gene (GN), Cluster Hit (CH), SubHit (SH), Synteny Block (SB), CH in Block (CHB)\n";
-		info += "________________________________________________________________________________________\n";
-		info += allParams;
+		// XXX Key
+		info += "_____________________________________________________________________________________\n";
+		info += "Key: Genome(G) Gene(GN) Exon(EX) Cluster Hit(CH) SubHit(SH) Block(B) CH in Block(CHB)\n\n";
+		info += "Covered by (c) - percent aligned bases. Aligned to (a) - regardless of cover. \n";
+		info += "_____________________________________________________________________________________\n";
+		info += params[1]; 		// params
 	
 		if (!isReadOnly) {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
@@ -200,14 +184,16 @@ public class SumFrame extends JDialog implements ActionListener {
 				gSum1 = rs.getInt(2);
 				gAvg1 = rs.getInt(3);
 				gMax1 = rs.getInt(4);
-			}
+			} else Globals.eprt("Failed Genome and Annotation query for proj1");
+			
 			rs = dbc2.executeQuery(q + proj2Idx);
 			if (rs.next()) { 
 				proj2.nGenes = rs.getInt(1);
 				gSum2   = rs.getInt(2);
 				gAvg2   = rs.getInt(3);
 				gMax2   = rs.getInt(4);
-			}
+			} else Globals.eprt("Failed Genome and Annotation query for proj2");
+			
 			q = "select count(*), sum(end-start+1), avg(end-start+1), max(end-start+1) from pseudo_annot as pa " +
 				"join xgroups as g on pa.grp_idx=g.idx where pa.type='exon' and g.proj_idx=";
 				
@@ -228,7 +214,13 @@ public class SumFrame extends JDialog implements ActionListener {
 			rs.close();
 			
 		// make table
-			String [] fields = {"","#Genes", "~Cover", "Avg", "Max", "  ", "#Exons", "~Cover",  "Avg", "Max", "#Seqs","Length (bp)"};
+			String type1 = mp.mProj1.getAnnoType(); // CAS588 add types
+			String type2 = mp.mProj2.getAnnoType();
+			if (type1.equals(type2)) type1 = "#" + type1;
+			else type1 = "#" + type1+"/"+type2;
+			
+			// XXX table 1
+			String [] fields = {"","#Genes", "GcGN", "AvgLen", "MaxLen", "  ", type1, "GcEX",  "AvgLen", "MaxLen", "#Seqs","Length (bp)"};
 			int [] justify =   {1, 0,0,0, 0,0,0, 0,0, 0, 0, 0};
 			int nRow = 2;
 		    int nCol=  fields.length;
@@ -279,6 +271,9 @@ public class SumFrame extends JDialog implements ActionListener {
 	 * CHwGN: query both+one with proj1/nHits   								does not include minors
 	 * Cover CH: if there is NO overlap, sum Hlen/genomeLen; otherwise, must take into account embedded vs overlap.
 	 * Cover SH: none of these numbers can be computed from the interface
+	 *  "pctid               TINYINT UNSIGNED NOT NULL," +   // avg %id mummer Col6     
+		"cvgpct				 TINYINT UNSIGNED NOT NULL," +   // avg %sim  mummer Col7     
+		"countpct			 INTEGER UNSIGNED default 0," +  // number of merged   
 	 ***************************************************************/
 	private String createCluster() {
 	try {
@@ -288,7 +283,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		if (isSelf) nHits /= 2;
 		
 		String sq;
-		// %Genes with hits (GNwCH); this query never checked pair_idx - fixed in CAS576
+		// %Genes with hits (GNwCH)
 		sq = "select count(distinct pha.annot_idx) "
 				+ " from pseudo_annot      as pa "
 				+ " join pseudo_hits_annot as pha on pa.idx = pha.annot_idx"
@@ -301,7 +296,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		// %Hits with genes; make sure not to count pseudo
 		int hitGene1, hitGene2;
 		int cntPseudo = dbc2.executeCount("select idx from pseudo_annot where type='pseudo' limit 1");
-		if (cntPseudo>0) {
+		if (cntPseudo>0) {			// confirmed same results between two queries
 			sq = "select count(distinct ph.idx) from pseudo_hits as ph " 
 					+ "join pseudo_hits_annot as pha on pha.hit_idx = ph.idx "
 					+ "join pseudo_annot as pa  on pa.idx = pha.annot_idx " 
@@ -312,7 +307,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			hitGene1 = dbc2.executeInteger(sq  + " and ph.annot1_idx=pha.annot_idx"); 
 			hitGene2 = dbc2.executeInteger(sq  + " and ph.annot2_idx=pha.annot_idx"); 
 		}
-		else {// pseudos can have gene_overlap=1, so cannot this simpler query
+		else {// pseudos can have gene_overlap=1, so cannot do this simpler query
 			sq = "select count(distinct idx) from pseudo_hits where gene_overlap>0 and pair_idx=" + pairIdx; 
 			
 			if (isSelf) sq += " and ((grp1_idx>grp2_idx and refidx=0) or (grp1_idx=grp2_idx and start1>start2))";
@@ -325,12 +320,43 @@ public class SumFrame extends JDialog implements ActionListener {
 		int hit1Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=1 and pair_idx=" + pairIdx);
 		int hit0Gene = dbc2.executeInteger("select count(*) from pseudo_hits where gene_overlap=0 and pair_idx=" + pairIdx);
 		
+		float avgId  = dbc2.executeFloat("select AVG(pctid) from pseudo_hits where pair_idx=" + pairIdx); // CAS588
+		float avgSim = dbc2.executeFloat("select AVG(cvgpct) from pseudo_hits where pair_idx=" + pairIdx);// CAS588
 		if (isSelf) {hit2Gene /=2; hit1Gene /= 2; hit0Gene /=2;}
 
 /* Coverage */
 		ResultSet rs;
 		int totSh=0, totRev=0;
-		
+		// Gene olap, Exon olap averages CAS588
+		float g1olap  = dbc2.executeFloat("select AVG(pha.olap) from pseudo_hits_annot as pha"
+				+ " join pseudo_hits as ph on pha.hit_idx = ph.idx "
+				+ " join pseudo_annot as pa  on pa.idx = pha.annot_idx "
+				+ " join xgroups as g on g.idx = pa.grp_idx"
+				+ " where ph.pair_idx=" + pairIdx + " and g.proj_idx=" + proj1Idx); 
+		float g2olap  = dbc2.executeFloat("select AVG(pha.olap) from pseudo_hits_annot as pha"
+				+ " join pseudo_hits as ph on pha.hit_idx = ph.idx "
+				+ " join pseudo_annot as pa  on pa.idx = pha.annot_idx "
+				+ " join xgroups as g on g.idx = pa.grp_idx"
+				+ " where ph.pair_idx=" + pairIdx + " and g.proj_idx=" + proj2Idx); 
+		float ex1olap=0.0f, ex2olap=0.0f;
+		if (!isAlgo1) {
+			ex1olap  = dbc2.executeFloat("select AVG(pha.exlap) from pseudo_hits_annot as pha"
+					+ " join pseudo_hits as ph on pha.hit_idx = ph.idx "
+					+ " join pseudo_annot as pa  on pa.idx = pha.annot_idx "
+					+ " join xgroups as g on g.idx = pa.grp_idx"
+					+ " where ph.pair_idx=" + pairIdx + " and g.proj_idx=" + proj1Idx); 
+			ex2olap  = dbc2.executeFloat("select AVG(pha.exlap) from pseudo_hits_annot as pha"
+					+ " join pseudo_hits as ph on pha.hit_idx = ph.idx "
+					+ " join pseudo_annot as pa  on pa.idx = pha.annot_idx "
+					+ " join xgroups as g on g.idx = pa.grp_idx"
+					+ " where ph.pair_idx=" + pairIdx + " and g.proj_idx=" + proj2Idx); 
+		}
+		// average of a percentage
+		String sCHcGN1 = (isAlgo1) ? String.format("%.1f%s   n/a", g1olap, "%") : 
+			                        String.format("%.1f%s  %.1f%s", g1olap, "%", ex1olap, "%"); 
+		String sCHcGN2 = (isAlgo1) ? String.format("%.1f%s   n/a", g2olap, "%") : 
+									String.format("%.1f%s  %.1f%s", g2olap, "%", ex2olap, "%"); 
+	
 	/* Loop1: proj1 chrN  **/	
 		long chCov1=0, shCov1=0;	// Cov CH (Sh)
 		int cnt11=0, cnt12=0, cnt13=0, cnt14=0;	// SH <100, etc
@@ -442,15 +468,11 @@ public class SumFrame extends JDialog implements ActionListener {
 		String pshCov1 = pct((double)shCov1, (double)proj1.genomeLen); 
 		String pshCov2 = pct((double)shCov2, (double)proj2.genomeLen);			
 	
-		int nInBlock = dbc2.executeInteger("select count(*) "
-				+ "from pseudo_hits as h " 
-				+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
-				+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
-		if (isSelf) nInBlock /= 2;
-		String pInBlock = pct((double)nInBlock, (double)nHits);
+		
 
+	// XXX table 2
 	// make cluster only table; same for both sides
-		String [] field1 = {"#Clusters", "#Rev", "CHnBlock", "#CH", "g2", "g1", "g0", " ", "#SubHits", "AvgNum"};
+		String [] field1 = {"#Clusters", "#Rev",  "  g2", "g1", "g0", " ","AvgId", "AvgSim", "  #SubHits", "AvgNum"};
 		int nCol1 = field1.length;
 		int [] justify1 =  new int [nCol1];
 		for (int i=0; i<nCol1; i++) justify1[i]=0;
@@ -460,19 +482,22 @@ public class SumFrame extends JDialog implements ActionListener {
 	    int r=0, c=0;
 	    rows1[r][c++] = String.format("%s", cntK(nHits));
 	    rows1[r][c++] = String.format("%s", cntK(totRev)); 
-	    rows1[r][c++] = String.format("%s",  pInBlock);
-	    rows1[r][c++] = "  ";
-	    rows1[r][c++] = String.format("%s", cntK(hit2Gene));  
+	   
+	    
+	    rows1[r][c++] = String.format("  %s", cntK(hit2Gene));  
 	    rows1[r][c++] = String.format("%s", cntK(hit1Gene));
 	    rows1[r][c++] = String.format("%s", cntK(hit0Gene));
-	    rows1[r][c++] = "  ";
-	    rows1[r][c++] = String.format("%s", cntK(totSh)); 
+	    rows1[r][c++] = "   "; 								// space before AvgID
+	    
+	    rows1[r][c++] = String.format("%.1f%s", avgId, "%"); 
+	    rows1[r][c++] = String.format("%.1f%s", avgSim, "%"); 
+	    rows1[r][c++] = String.format("  %s", cntK(totSh)); 
 	    rows1[r][c++] = String.format("%.1f", ((double)totSh/(double)nHits)); 
-	   
+	    
 	    String tab1 = util.Utilities.makeTable(nCol1, nRow1, field1, justify1, rows1);
 		
-	// make cover table; diff for both sides
-		String [] fields = {"","GNwCH (CHwGN)", "Cover CH (SH)", "SH", "<100b","100b-1kb","1k-5kb", ">5kb"};
+	// XXX make cover table; diff for both sides
+		String [] fields = {"", "GNcCH  EXcCH", " ", "GNaCH  CHaGN", " ", "GcCH   GcSH", "#SH <100b","100b-1kb","1k-5kb", ">5kb"};
 		int nCol = fields.length;
 		int [] justify =   new int [nCol];
 		justify[0]=1;
@@ -483,10 +508,11 @@ public class SumFrame extends JDialog implements ActionListener {
 	    r=c=0;
 	    
 	    rows[r][c++] = proj1.name;
-	    rows[r][c++] = String.format("%s (%s)", pGNwCH1, pCHwGN1);  
-	    rows[r][c++] = String.format("%s (%s)", pchCov1, pshCov1);
-	    rows[r][c++] = " "; 
-	   
+	    rows[r][c++] = sCHcGN1;  
+	    rows[r][c++] = " ";
+	    rows[r][c++] = String.format("%s  %s", pGNwCH1, pCHwGN1); 
+	    rows[r][c++] = " ";
+	    rows[r][c++] = String.format("%s  %s", pchCov1, pshCov1);
 	    rows[r][c++] = cntK(cnt11);
 	    rows[r][c++] = cntK(cnt12);
 	    rows[r][c++] = cntK(cnt13);
@@ -497,9 +523,11 @@ public class SumFrame extends JDialog implements ActionListener {
 	    	for (c=0; c<fields.length; c++) rows[r][c]="";
 	    } else {
 	    	rows[r][c++] = proj2.name;
-		    rows[r][c++] = String.format("%s (%s)", pGNwCH2, pCHwGN2);  
-		    rows[r][c++] = String.format("%s (%s)", pchCov2, pshCov2);
-		    rows[r][c++] = "  ";
+	    	rows[r][c++] = sCHcGN2; 
+	    	rows[r][c++] = " ";
+		    rows[r][c++] = String.format("%s  %s", pGNwCH2, pCHwGN2);  
+		    rows[r][c++] = " ";
+		    rows[r][c++] = String.format("%s  %s", pchCov2, pshCov2);
 		    rows[r][c++] = cntK(cnt21);
 		    rows[r][c++] = cntK(cnt22);
 		    rows[r][c++] = cntK(cnt23);
@@ -530,14 +558,19 @@ public class SumFrame extends JDialog implements ActionListener {
 	
 	/*****************************************************************
 	 * Block section
-	 * CAS575 was using original for finding coverage; same results, simpler to change, but a wee bit slower
 	 */
 	private String createBlock() {
 		try {
 			String title = "Synteny Blocks";
 			if (nHits==0) return "";
 			
-			ResultSet rs;
+			// hits in blocks
+			int nInBlock = dbc2.executeInteger("select count(*) "
+					+ "from pseudo_hits as h " 
+					+ "join pseudo_block_hits as pbh on pbh.hit_idx=h.idx " 
+					+ "where pair_idx=" + pairIdx); // Query: block hits/all hits
+			if (isSelf) nInBlock /= 2;
+			String pInBlock = pct((double)nInBlock, (double)nHits);
 			
 			// genes in blocks
 			String sq ="select count(distinct pa.idx)"
@@ -558,6 +591,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			long bcov1=0, bdcov1=0, bcov2=0, bdcov2=0; 
 			int  b11=0, b12=0, b13=0, b14=0;
 			int  b21=0, b22=0, b23=0, b24=0;
+			ResultSet rs;
 			
 			/* Proj1: count blocks for each chr-chr pair **/		
 			for (int g1=0; g1<proj1.nGrp; g1++) {
@@ -632,8 +666,8 @@ public class SumFrame extends JDialog implements ActionListener {
 			String sb2xCov1 = pct((double)bdcov1,(double)proj1.genomeLen);
 			String sb2xCov2 = pct((double)bdcov2,(double)proj2.genomeLen);
 		
-		// make block table
-			String [] fields = {"","#Blocks", "Inv","GNwCHB", "  Cover SB (2x)","<100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
+		// XXX make block table
+			String [] fields = {"","#Blocks", "Inv"," CHB", "GNaCHB", "   GcB  (2x)","  <100kb","100kb-1Mb","1Mb-10Mb",">10Mb"};
 			int nCol=  fields.length;
 			int [] justify =   new int [nCol];
 			justify[0]=1;
@@ -646,9 +680,10 @@ public class SumFrame extends JDialog implements ActionListener {
 		    rows[r][c++] = proj1.name;
 		    rows[r][c++] = String.format("%,d",nblks);   
 		    rows[r][c++] = String.format("%,d", ninv);			 
+		    rows[r][c++] = String.format("%s",  pInBlock);
 		    
 		    rows[r][c++] = String.format("%s", pBlkGene1);
-		    rows[r][c++] = String.format("%s (%s)",sbCov1,sb2xCov1);
+		    rows[r][c++] = String.format("  %s (%s)",sbCov1,sb2xCov1);
 		    
 		    rows[r][c++] = String.format("%,d", b11);
 		    rows[r][c++] = String.format("%,d", b12);
@@ -663,8 +698,9 @@ public class SumFrame extends JDialog implements ActionListener {
 		    	rows[r][c++] = proj2.name;
 			    rows[r][c++] = " ";// same for both
 			    rows[r][c++] = " ";
+			    rows[r][c++] = "";
 			    rows[r][c++] = String.format("%s", pBlkGene2);
-			    rows[r][c++] = String.format("%s (%s)",sbCov2,sb2xCov2);
+			    rows[r][c++] = String.format("  %s (%s)",sbCov2,sb2xCov2);
 			    
 			    rows[r][c++] = String.format("%,d", b21);
 			    rows[r][c++] = String.format("%,d", b22);
@@ -745,6 +781,37 @@ public class SumFrame extends JDialog implements ActionListener {
 		return title + "\n" + tab;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Making collinear summary"); return "error on collinear";}
+	}
+	/*****************************************************************/
+	private String [] createParams() {
+	String [] info = {"", "error on params"};
+	try {	
+		String alignDate = null, syver=null, allParams=null; 
+		ResultSet rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
+		if (rs.next()) { 				
+			alignDate = rs.getString(1);
+			allParams = rs.getString(2);  // these are the params that were used for align
+			syver = rs.getString(3);
+		}
+		rs.close();
+		
+		if (allParams==null) { // if MUMmer fails...
+			allParams  = "Align Unknown";
+		}
+		else {
+			String [] x = allParams.split("\n");
+			allParams = "";
+			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
+			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params
+		}
+		String d = (alignDate==null) ? "Date Unknown"      : Utilities.getNormalizedDate(alignDate); 
+		String v = (syver==null)     ? "  Version Unknown" : ("  " + syver);
+		
+		info[0] = "   Updated " + d + v + "\n\n"; 
+		info[1] = allParams;
+		return info;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Making params"); return info;}
 	}
 	/**********************************************************************/
 	private String cntK(int len) {

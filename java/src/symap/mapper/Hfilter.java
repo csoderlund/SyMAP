@@ -51,6 +51,8 @@ public class Hfilter extends JDialog {
 	private final String HIT2 = "Hit =2 genes (g2)";
 	private final String HIT1 = "Hit =1 genes (g1)";
 	private final String HIT0 = "Hit =0 genes (g0)";
+	private final String HITeq = "Non-inverted";
+	private final String HITne = "Inverted";
 	private final String ALL =  "All hits";
 	private final String POPUP ="Hit popup (or Query)";	
 	private final String NONE = "None";
@@ -72,16 +74,20 @@ public class Hfilter extends JDialog {
 	
 	// Show - any number can be selected
 	private JCheckBox sBlockCheck		= Jcomp.createCheckBoxGray(SYN, "Show all synteny hits", false);
-	private JRadioButton blockAndRadio	= Jcomp.createRadioGray("And", "Hits shown will pass ALL checks");
-	private JRadioButton blockOrRadio	= Jcomp.createRadioGray("Or", "Hits shown will pass ANY checks");
+	private JRadioButton blockAndRadio	= Jcomp.createRadioGray("And", "Must be a synteny hit AND any other selected Show filter");
+	private JRadioButton blockOrRadio	= Jcomp.createRadioGray("Or", "Must be a synteny hit OR any other selected Show filter");
 	
 	private JCheckBox sCsetCheck	= Jcomp.createCheckBoxGray(COL, "Show all collinear sets", false);
-	private JCheckBox sGene2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides", false);
-	private JCheckBox sGene1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one side", false);
-	private JCheckBox sGene0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene", false);
-	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits - overrides all but identity", false); 
+	private JCheckBox sHitg2Check	= Jcomp.createCheckBoxGray(HIT2, "Show all hits aligning to genes on both sides", false);
+	private JCheckBox sHitg1Check	= Jcomp.createCheckBoxGray(HIT1, "Show all hits aligning to genes on one side", false);
+	private JCheckBox sHitg0Check	= Jcomp.createCheckBoxGray(HIT0, "Show all hits that do not align to any gene", false);
+	private JCheckBox sAllCheck		= Jcomp.createCheckBoxGray(ALL, "Show all hits", false); 
 	
-	// Id
+	// Priority
+	private JRadioButton sSignEQradio= Jcomp.createRadioGray(HITeq, "Show non-inverted hits: equal orientations (++ or --)");
+	private JRadioButton sSignNEradio= Jcomp.createRadioGray(HITne, "Show inverted hits: not-equal orientations (+- or -+)");
+	private JRadioButton sSignIGNradio = Jcomp.createRadioGray("All", "Show all hits");
+	
 	private JSlider pctidSlider  = new JSlider(JSlider.HORIZONTAL, 0, 100, 0); // 0 to 100, start at 0
 	private JLabel  pctidText    = new JLabel("0%");
 	
@@ -147,10 +153,10 @@ public class Hfilter extends JDialog {
 		sliderRow.add(pctidText); sliderRow.add(pctidSlider);
 		pctidSlider.addChangeListener(listener); 
 		
-		JPanel rowOnly = Jcomp.createRowPanelGray();
+		JPanel blockOnly = Jcomp.createRowPanelGray();
 		blockOnlyCheck.addActionListener(listener); 
 		blockOnlyText.addActionListener(listener); 
-		rowOnly.add(blockOnlyCheck); rowOnly.add(Box.createHorizontalStrut(2)); rowOnly.add(blockOnlyText);
+		blockOnly.add(blockOnlyCheck); blockOnly.add(Box.createHorizontalStrut(2)); blockOnly.add(blockOnlyText);
 		
 		// Check boxes for menu
 		sBlockCheck.addActionListener(listener); 
@@ -161,10 +167,17 @@ public class Hfilter extends JDialog {
 		b2Group.add(blockAndRadio); b2Group.add(blockOrRadio); blockAndRadio.setSelected(true);
 		
 		sCsetCheck.addActionListener(listener);
-		sGene2Check.addActionListener(listener);
-		sGene1Check.addActionListener(listener);
-		sGene0Check.addActionListener(listener);
+		sHitg2Check.addActionListener(listener);
+		sHitg1Check.addActionListener(listener);
+		sHitg0Check.addActionListener(listener);
+		
 		sAllCheck.addActionListener(listener);	
+		
+		sSignEQradio.addActionListener(listener);
+		sSignNEradio.addActionListener(listener);
+		sSignIGNradio.addActionListener(listener);
+		ButtonGroup snGroup = new ButtonGroup();
+		snGroup.add(sSignEQradio);snGroup.add(sSignNEradio);snGroup.add(sSignIGNradio); sSignIGNradio.setSelected(true);
 		
 		hBlockRadio.addActionListener(listener);
 		hCsetRadio.addActionListener(listener);
@@ -195,9 +208,10 @@ public class Hfilter extends JDialog {
 
 		// highlight
 		int rem=GridBagConstraints.REMAINDER;
-		addToGrid(contentPane, gridbag, c1, new JLabel("  Highlight"), rem);
+		JLabel high = Jcomp.createLabelGray("  Highlight", "Highlight the selected type");
+		addToGrid(contentPane, gridbag, c1, high, rem);
 		addToGrid(contentPane, gridbag, c1, hBlockRadio, 1);
-		addToGrid(contentPane, gridbag, c1, hNoneRadio,rem); 
+		addToGrid(contentPane, gridbag, c1, hPopupCheck, rem);
 		
 		addToGrid(contentPane, gridbag, c1, hCsetRadio,1); 
 		addToGrid(contentPane, gridbag, c1, hGene2Radio, rem);
@@ -205,28 +219,37 @@ public class Hfilter extends JDialog {
 		addToGrid(contentPane, gridbag, c1, hGene1Radio, 1); 
 		addToGrid(contentPane, gridbag, c1, hGene0Radio, rem); 
 		
-		addToGrid(contentPane, gridbag, c1, hPopupCheck, rem);
+		addToGrid(contentPane, gridbag, c1, hNoneRadio,rem); // CAS588 swap with popupcheck
+		
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
 		
 		// show
-		addToGrid(contentPane, gridbag, c1, new JLabel("  Show"),rem);
+		JLabel show = Jcomp.createLabelGray("  Show", "Display the selected type(s) only; if none checked, then All");
+		addToGrid(contentPane, gridbag, c1, show,rem);
 		addToGrid(contentPane, gridbag, c1, sBlockCheck, 1);
 		addToGrid(contentPane, gridbag, c1, blockAndRadio, 2); 
 		addToGrid(contentPane, gridbag, c1, blockOrRadio, rem); 
 		
 		addToGrid(contentPane, gridbag, c1, sCsetCheck, 1);
-		addToGrid(contentPane, gridbag, c1, sGene2Check, rem); 
+		addToGrid(contentPane, gridbag, c1, sHitg2Check, rem); 
 		
-		addToGrid(contentPane, gridbag, c1, sGene1Check,1); 
-		addToGrid(contentPane, gridbag, c1, sGene0Check, rem);
+		addToGrid(contentPane, gridbag, c1, sHitg1Check,1); 
+		addToGrid(contentPane, gridbag, c1, sHitg0Check, rem);
 		
 		addToGrid(contentPane, gridbag, c1, sAllCheck, rem); 
 		
-		// %id & block#
+		// %id & block# & orientation - these are high priority
 		addToGrid(contentPane, gridbag, c1, new JSeparator(),rem);
+		JLabel prior = Jcomp.createLabelGray("  Priority", "These are like 'Show', but take priority");
+		addToGrid(contentPane, gridbag, c1, prior,rem);
+		
 		addToGrid(contentPane, gridbag, c1, sliderRow,rem);
 		
-		addToGrid(contentPane, gridbag, c1, rowOnly, 1); 
+		addToGrid(contentPane, gridbag, c1, sSignEQradio,1); 
+		addToGrid(contentPane, gridbag, c1, sSignNEradio,2);
+		addToGrid(contentPane, gridbag, c1, sSignIGNradio, rem);
+		
+		addToGrid(contentPane, gridbag, c1, blockOnly, 1); 
 		addToGrid(contentPane, gridbag, c1, new JLabel(""), rem); // only way to force to right
 		
 		// buttons
@@ -325,10 +348,14 @@ public class Hfilter extends JDialog {
 		blockOnlyText.setText(hf.getBlock()+"");
 		
 		sCsetCheck.setSelected(hf.isCset());
-		sGene2Check.setSelected(hf.is2Gene());
-		sGene1Check.setSelected(hf.is1Gene());
-		sGene0Check.setSelected(hf.is0Gene());
+		sHitg2Check.setSelected(hf.is2Gene());
+		sHitg1Check.setSelected(hf.is1Gene());
+		sHitg0Check.setSelected(hf.is0Gene());
 		sAllCheck.setSelected(hf.isAll()); 
+		
+		sSignEQradio.setSelected(hf.isSignEQ());
+		sSignNEradio.setSelected(hf.isSignNE());
+		sSignIGNradio.setSelected(hf.isSignIGN());
 		
 		hBlockRadio.setSelected(hf.isHiBlock());
 		hCsetRadio.setSelected(hf.isHiCset());
@@ -359,12 +386,15 @@ public class Hfilter extends JDialog {
 		hf.setBlockNum(n);
 		
 		hf.setCset(sCsetCheck.isSelected());
-		hf.set2Gene(sGene2Check.isSelected());
-		hf.set1Gene(sGene1Check.isSelected());
-		hf.set0Gene(sGene0Check.isSelected()); 
-		
+		hf.set2Gene(sHitg2Check.isSelected());
+		hf.set1Gene(sHitg1Check.isSelected());
+		hf.set0Gene(sHitg0Check.isSelected()); 
+	
 		hf.setAll(sAllCheck.isSelected()); 	
 		
+		hf.setSignEQ(sSignEQradio.isSelected());
+		hf.setSignNE(sSignNEradio.isSelected()); 
+		hf.setSignIGN(sSignIGNradio.isSelected()); 
 		hf.setPctid(getPctid(pctidSlider.getValue()));
 		
 		return hf;

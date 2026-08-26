@@ -243,6 +243,8 @@ public class HitData {
 	public 	  boolean is2Gene() 	{ return (geneOlp==2); } 
 	protected boolean is1Gene() 	{ return (geneOlp==1); } 
 	protected boolean is0Gene()  	{ return (geneOlp==0); } 
+	protected boolean isHitEQ()		{ return isPosOrient1==isPosOrient2;}
+	protected boolean isHitNE()		{ return isPosOrient1!=isPosOrient2;} // for Filter
 	protected boolean isInv()		{ return isPosOrient1!=isPosOrient2;} // for TextShowInfo
 	protected boolean isBlkInv()	{ return isBlkInv;} // for SeqHits block#
 	

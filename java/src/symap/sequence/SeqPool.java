@@ -27,12 +27,7 @@ public class SeqPool {
 	/** XXX database methods ***/
 	protected int loadChrSize(Sequence seqObj) {
 	try {
-		int grpIdx =   seqObj.getGroup();
-		String size_query = 
-				"SELECT (SELECT length FROM pseudos WHERE grp_idx=" + grpIdx + ") as size, "+
-				"       (SELECT name   FROM xgroups WHERE idx="     + grpIdx + ") as name; ";
-		
-		int size = dbc2.executeInteger(size_query);
+		int size = dbc2.executeInteger("SELECT length FROM pseudos WHERE grp_idx=" + seqObj.getGroup()); // CAS588 reduce
 		return size;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Cannot get genome size"); return 0;}

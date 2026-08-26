@@ -11,6 +11,7 @@ import java.util.Vector;
 
 import database.DBconn2;
 import symap.Globals;
+import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
 import util.ErrorReport;
@@ -18,7 +19,8 @@ import util.ProgressDialog;
 import util.Utilities;
 
 /**************************************************
- * Computes the collinear sets (pseudo_hits.runsize, runnum); the term 'run' is used here for collinear (run/set)
+ * Computes the collinear sets simple algo; 
+ * Database: (pseudo_hits.runsize, runnum); the term 'run' is used here for collinear (run/set)
  * NOTES: 
  * - The hits are ordered along the alphabetically lesser project name, say project A. Hence the 
  *   hits are analyzed along the project A length.
@@ -26,14 +28,16 @@ import util.Utilities;
  * - The hits for collinear may not be sequential when a gene has two hits.
  * - Only hits to two genes are downloaded from DB, hence, if a gene has a g1 and g2 hit, the g1 hit is ignored.
  * CAS577 the cosets were numbered weird, this is fixed
+ * CAS588 this is now the 'simple' algo, plus added numbering by order instead of size
  */
-public class AnchorPost {
+public class AnchorCset1 {
 	// parameters
 	private int mPairIdx; 				// project pair 
 	private Mproject mProj1, mProj2;	// two projects
 	private ProgressDialog mLog;
 	private DBconn2 dbc2;
 	private boolean isSelf=false; 
+	private boolean bNumBySz=false;
 	
 	// initial; loaded from db	
 	private Vector <Hit> fHitVec = new Vector <Hit> (); // forward set
@@ -46,16 +50,17 @@ public class AnchorPost {
 	private int totalRuns=0;
 	private int coSetNum;	// collinear set number
 	
-	private String chrs;					// ErrorReport
+	private String chrs;	// ErrorReport
 	
 	/** Called from AnchorMain **/
-	protected AnchorPost(int pairIdx, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
-		this.mPairIdx = pairIdx;
+	protected AnchorCset1(Mpair mp, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
+		this.mPairIdx = mp.getPairIdx();
 		this.mProj1 = proj1;
 		this.mProj2 = proj2;
 		this.dbc2 = dbc2;
 		this.mLog = log;
 		isSelf = proj1.getIdx()==proj2.getIdx();
+		bNumBySz = !mp.isCoSetNum(Mpair.FILE);
 	}
 	
 	protected void collinearSets() {
@@ -201,13 +206,13 @@ public class AnchorPost {
 		int row1=0, row2=0, nHits = xHitVec.size();
 		int r1G1=0, r1G2=0, r2G1=0, r2G2=0;
 		int savRow1, backRow1=0, d1=0, d2=0;
-		Hit hObj1=null, hObj2=null;
+		Hit ht1=null, ht2=null;
 		boolean bNewCo=true;
 		int cnt=0, max = xHitVec.size()*100;
 		
 		while (row1 < nHits-1 && row2 < nHits) {
-			hObj1 = xHitVec.get(row1);
-			if (hObj1.setNum>0) {
+			ht1 = xHitVec.get(row1);
+			if (ht1.setNum>0) {
 				row1++; 
 				continue;
 			}
@@ -218,18 +223,18 @@ public class AnchorPost {
 				bNewCo = false;
 			}
 			
-			r1G1 = gidxTnum.get(hObj1.gidx1);	
-			r1G2 = gidxTnum.get(hObj1.gidx2);	
+			r1G1 = gidxTnum.get(ht1.gidx1);	
+			r1G2 = gidxTnum.get(ht1.gidx2);	
 			
 			row2 = row1+1;
 			while (row2 < nHits) { // either breaks or row2++ 
-				hObj2 = xHitVec.get(row2);
-				if (hObj2.setNum>0) {
+				ht2 = xHitVec.get(row2);
+				if (ht2.setNum>0) {
 					row2++;
 					continue;	
 				}		
-				r2G1 = gidxTnum.get(hObj2.gidx1); 
-				r2G2 = gidxTnum.get(hObj2.gidx2); 
+				r2G1 = gidxTnum.get(ht2.gidx1); 
+				r2G2 = gidxTnum.get(ht2.gidx2); 
 				
 				d1 =           r2G1 - r1G1;
 				d2 = (!bInv) ? r2G2 - r1G2 : r1G2 - r2G2;
@@ -271,7 +276,7 @@ public class AnchorPost {
 			
 			if (cnt>max) { // insurance: in case a bizarre situation causes an endloop
 				symap.Globals.eprt("Too many iterations: " + cnt + " Row1: " + row1 + " of " + nHits);
-				prtLine(bInv, coHitSet,"C", hObj1, hObj2, r1G1, r1G2, r2G1, r2G2, row1, row2, d1, d2);
+				prtLine(bInv, coHitSet,"C", ht1, ht2, r1G1, r1G2, r2G1, r2G2, row1, row2, d1, d2);
 				break;
 			}
 		}
@@ -368,13 +373,21 @@ public class AnchorPost {
 	/*****************************************************************/
 	private boolean step3SaveToDB() {
 	try {
-		// Reassign coset num based on size and hitnum
-		Collections.sort(csHitVec, new Comparator<Hit>() {
-			public int compare(Hit a1, Hit a2) { 
-				if (a2.setSize==a1.setSize) return a1.hitnum - a2.hitnum;
-				return a2.setSize - a1.setSize;		  
-			}
-		});
+		if (bNumBySz) {// Reassign coset num based on size and hitnum
+			Collections.sort(csHitVec, new Comparator<Hit>() {
+				public int compare(Hit a1, Hit a2) { 
+					if (a2.setSize==a1.setSize) return a1.hitnum - a2.hitnum;
+					return a2.setSize - a1.setSize;		  
+				}
+			});
+		}
+		else {
+			Collections.sort(csHitVec, new Comparator<Hit>() {
+				public int compare(Hit a1, Hit a2) { 
+					return a1.hitnum - a2.hitnum;  
+				}
+			});
+		}	
 		coSetNum=1;
 		HashMap <Integer, Integer> numMap = new HashMap <Integer, Integer> ();
 		for (Hit ht : csHitVec) {

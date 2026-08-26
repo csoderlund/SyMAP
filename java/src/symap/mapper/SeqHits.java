@@ -19,7 +19,6 @@ import symap.closeup.TextShowInfo;
 import symap.closeup.AlignPool;
 import symap.sequence.Annotation;
 import symap.sequence.Sequence;
-import symap.Ext;
 import symap.Globals;
 
 /***********************************************
@@ -68,7 +67,7 @@ public class SeqHits  {
 		int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
 		HitData lasthd = null;
 		TreeMap <Integer, Integer> s2Map = new TreeMap <Integer, Integer>  (); // order by start2
-		
+	
 		allHitsArray = new DrawHit[hitList.size()]; // transfer hitList to allHitsArray; ordered by start1
 		for (int i = 0; i < allHitsArray.length; i++) {
 			HitData hd = hitList.get(i);
@@ -102,6 +101,43 @@ public class SeqHits  {
 				}
 			}
 		}
+		// CAS588 move this from paintComponent so that colors do not change as scroll 
+		// Create blk/coset color map; allHitArray sorted by start1; !correspond to sequential blocks (sorted sets).
+		HashMap <Integer, Integer> highMap = new HashMap <Integer, Integer> ();
+		int hcolor=1, scolor=0;
+		for (DrawHit h : allHitsArray) { 
+			int set = h.getCollinearSet();
+			if (set==0) continue;
+			
+			if (!highMap.containsKey(set)) {
+				highMap.put(set, hcolor);
+				scolor = hcolor;
+				if (hcolor==1)      hcolor=2;
+				else if (hcolor==2) hcolor=5;// 3 colors for cset, where the 3rd is different from block's 3rd
+				else if (hcolor==5) hcolor=1; 
+			}
+			else scolor = highMap.get(set);
+			
+			h.colSet = scolor;
+		}
+		
+		highMap.clear();
+		hcolor=1;
+		for (DrawHit h : allHitsArray) {
+			int blk = h.getBlock();
+			if (blk==0) continue;
+			
+			if (!highMap.containsKey(blk)) {
+				highMap.put(blk, hcolor);
+				scolor = hcolor;
+				hcolor++; 
+				if (hcolor==5) hcolor=1; // 4 colors for block  
+			}
+			else scolor = highMap.get(blk);
+			
+			h.colBlk = scolor;
+		}
+		
 		// Calc offset for display for seq2
 		lasthd = null;
 		for (int i : s2Map.values()) {
@@ -217,36 +253,13 @@ public class SeqHits  {
 		int trackPos2 = mapper.getTrackPosition(seqObj2);
 		ArrayList<DrawHit> selHits = new ArrayList<DrawHit>(); 
 		
-		TreeMap <Integer, Integer> highMap = new TreeMap <Integer, Integer> (); // if collinear or blocks is highlighted
-		int hcolor=1; 
-		
 		HfilterData hf = mapper.getHitFilter(); 
 		boolean bHiCset  = hf.isHiCset();
 		boolean bHiBlock = hf.isHiBlock();
 		boolean bHiLight = (bHiCset || bHiBlock);
 		boolean bHi = bHiLight || hf.isHi0Gene() || hf.isHi1Gene() || hf.isHi2Gene();
 		
-		// Create blk/coset color map; allHitArray sorted by start1; !correspond to sequential blocks (sorted sets).
-		if (bHiLight) {
-			for (DrawHit h : allHitsArray) {
-				if (!h.isOlapHit()) continue; 
-				
-				int set = (bHiCset) ?  h.getCollinearSet() : h.getBlock();
-				if (set!=0 && !highMap.containsKey(set)) {
-					highMap.put(set, hcolor);
-					hcolor++;  
-					if (hcolor==5) hcolor=1; // redone for cosets below;  4 colors for blocks
-				}
-			}
-			hcolor=1;
-			if (bHiCset) { //sorted by start1 does not correspond to sequence sets
-				for (int set : highMap.keySet()) {
-					highMap.put(set, hcolor);
-					hcolor++;
-					if (hcolor==3) hcolor=1;  
-				}
-			}
-		}
+		
 		// Set block 1st/last for this display
 		if (seqObj1.getShowBlock1stText() || seqObj2.getShowBlock1stText()) {
 			for (Block blk : blockMap.values()) blk.hitnum1 = blk.hitnumN = 0;
@@ -265,15 +278,14 @@ public class SeqHits  {
 		}
 		cntShowHit=cntHighHit=cntHighG2xN=cntPossG2xN=cntFiltG2xN=0; // counted in paint
 		HashSet <Integer> numSet = new HashSet <Integer> (); // count blocks/sets shown
-		hcolor=1; 
+		int hcolor=1; 
 
 		// Draw all lines but hover or selected from Query Table
 		for (DrawHit dh : allHitsArray) {
 			if (!dh.isOlapHit() || dh.isFiltered()) continue; 
 			
 			if (bHiLight) {
-				int set = (bHiCset) ?  dh.getCollinearSet() : dh.getBlock();
-				if (set!=0) hcolor = highMap.get(set);
+				hcolor = (bHiCset) ?  dh.colSet : dh.colBlk;
 			}
 			if (dh.isHover || dh.isQuerySelHit) selHits.add(dh); 
 			else {
@@ -411,6 +423,7 @@ public class SeqHits  {
 		private boolean isQuerySelHit;   // set on Query select row; From TableDataPanel
 		private boolean isDisplayed;     // isNotFiltered;
 		public int off1 = HIT_OFFSET, off2 = HIT_OFFSET;
+		private int colBlk=0, colSet=0; // compute when DrawHit array is built CAS588 
 		
 		public DrawHit(HitData hd) {
 			hitDataObj = hd;
@@ -433,35 +446,40 @@ public class SeqHits  {
 		private void setMinMax(HfilterData hf) {// for seqHits
 			hf.condSetPctid(hitDataObj.getPctid());
 		}
+		/********************************************
+		 * return true is filter; return false is not filtered
+		 * isDisplayed is set opposite of what is returned
+		 * check hf filter, and the state of hitDataObj 
+		 */
 		private boolean isFiltered() {
-			// hit filter PCT
-			 HfilterData hf = mapper.getHitFilter();
-			 boolean bIsNotPCT = (hitDataObj.getPctid()<hf.getPctid());
-			 if (bIsNotPCT) {
-				 isDisplayed=false;
-				 return true;
-			 }
-			 
-			// Sequence filter
+			// Sequence filter 
 			 if (isOnlyG2xN) {
 				 if (!hitDataObj.isHighG2xN())             {isDisplayed=false; return true;}// red and all others
 				 if (nG2xN!=2 && hitDataObj.isForceG2xN()) {isDisplayed=false; return true;} 
 			 }
 			 if (hitDataObj.isHighG2xN())  {isDisplayed=true;  return false;}
 			 if (hitDataObj.isForceG2xN()) {isDisplayed=true;  return false;}
-				
-			 // Hit filters
-			 isDisplayed=true;
-			
-			 // precedence
-			 if (hf.isAll()) return false; // Over-rides everything but G2xN and PCT
+			 
+		// Hit filters
+			 HfilterData hf = mapper.getHitFilter();
+			 
+			 // Hit priority - pct, sign, block#
+			 isDisplayed=false;		
+			 
+			 if (hitDataObj.getPctid()<hf.getPctid()) return true;
+			 
+			 if (hf.isSignEQ() && hitDataObj.isHitNE()) return true;
+			 if (hf.isSignNE() && hitDataObj.isHitEQ()) return true;
 			 
 			 if (hf.isBlockOnly() && hf.getBlock()>0) {		
-				 if (hitDataObj.getBlock() == hf.getBlock()) return false;
-				 isDisplayed=false;
-				 return true;
+				 if (hitDataObj.getBlock() != hf.getBlock()) {return true;}
+				 else 					   {isDisplayed=true; return false;}
 			 }
 			
+			 // all others
+			 isDisplayed=true;
+			 if (hf.isAll()) return false; // Over-rides everything but the above
+			 
 			 boolean noNoOtherSet = !hf.isCset() && !hf.is2Gene() && !hf.is1Gene() && !hf.is0Gene();
 			 if (!hf.isBlock() && noNoOtherSet) return false; // all hits
 			 
@@ -477,10 +495,11 @@ public class SeqHits  {
 					 return true; 				// and, !block, filter
 				 }
 			 }
-			 if (hitDataObj.isCset()  && hf.isCset())  return false; 
+			 // the following are first checked above in noNoOtherSet for block and/or
+			 if (hitDataObj.isCset()  && hf.isCset())  return false;  
 			 if (hitDataObj.is2Gene() && hf.is2Gene()) return false;
 			 if (hitDataObj.is1Gene() && hf.is1Gene()) return false;
-			 if (hitDataObj.is0Gene() && hf.is0Gene()) return false;
+			 if (hitDataObj.is0Gene() && hf.is0Gene()) return false;	 
 			 
 			 // not display
 			 isDisplayed=false;
@@ -521,6 +540,7 @@ public class SeqHits  {
 				 else if (hcolor==2)	 return Mapper.pseudoLineHighlightColor2;
 				 else if (hcolor==3)	 return Mapper.pseudoLineHighlightColor3;
 				 else if (hcolor==4)	 return Mapper.pseudoLineHighlightColor4;
+				 else if (hcolor==5)	 return Mapper.pseudoLineHighlightColor5;
 			 }
 			 
 			 if (orient.contentEquals("++")) return Mapper.pseudoLineColorPP; 

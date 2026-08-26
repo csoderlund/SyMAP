@@ -43,7 +43,6 @@ public class DoAlignSynPair extends JFrame {
 	private Mpair mp;
 	
 	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  boolean closeWhenDone,  int maxCPUs, boolean bAlignDone) {
-
 		this.dbc2 = dbc2;
 		this.mp = mp;
 		
@@ -67,7 +66,7 @@ public class DoAlignSynPair extends JFrame {
 			pseudoOnly(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (Constants.CoSET_ONLY) {
+		if (Constants.CoSET_ONLY || mp.bCoSet) { // Popup is in ManagerFrame.alignSelectedPair( ) -- already been okay
 			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
@@ -78,8 +77,8 @@ public class DoAlignSynPair extends JFrame {
 		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
 		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
-		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  // Saved to DB in SumFrame
-		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters:
+		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  
+		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters (CAS588 getChgClustSyn includes MUMmer)
 		diaLog.closeWhenDone();					
 		
 		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir);
@@ -165,7 +164,7 @@ public class DoAlignSynPair extends JFrame {
 					
 					/** Finish **/
 					String alignParams = aligner.getParams();
-					mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params
+					mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params (used in summary)
 				
 					new SumFrame(dbc2, mp);
 					
@@ -328,7 +327,7 @@ public class DoAlignSynPair extends JFrame {
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
-	/** Collinear only: -cs command line, visible when recent changed **********************/
+	/** Collinear only: -cs command line or on parameter window **********************/
 	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only run collinear set algorithm");
@@ -343,8 +342,8 @@ public class DoAlignSynPair extends JFrame {
 			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
 			dbc2.close(); return;
 		}
-		AnchorPost collinear = new AnchorPost(mPairIdx, mProj1, mProj2, dbc2, mLog);
-		collinear.collinearSets();
+		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
+		else 							new AnchorCset1(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
 			
 		mp.saveUpdate();
 		new SumFrame(dbc2, mp);

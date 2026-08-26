@@ -11,11 +11,12 @@ public class HfilterData {
 	private boolean bHiPopup=true; // Highlight popup, do not highlight; set in setDefaults; 
 	private boolean bHiBlock=false, bHiCset=false, bHi2Gene=false, bHi0Gene=false, bHi1Gene=false, bHiNone=true;
 	
-	private boolean bBlock=true; // set in setDefaults;
+	private boolean bBlock=true; 
 	private boolean bBlockAnd=true, bBlockOr=false, bBlockOnly=false; 
 	private boolean bCset=false, b2Gene=false, b1Gene=false, b0Gene=false;
 	private boolean bAll=false;	// when true, overrides all else; 
 	
+	private boolean bSignEQ=false, bSignNE=false, bSignIGN=true; // CAS588 add sign
 	private int blkNum=0;
 	private double pctid;
 	private double minPctid=NO_PCTID, maxPctid=ANY_PCTID;
@@ -24,8 +25,10 @@ public class HfilterData {
 		bHiBlock  = bHiCset = bHi2Gene = bHi0Gene = bHi1Gene = false;		
 		bHiPopup = bHiNone = true;
 		
-		bCset = b2Gene = b1Gene = b0Gene =false; 
-		bBlock = true; bBlockAnd = true; bBlockOr = false; bBlockOnly=false;
+		bCset = b2Gene = b1Gene = b0Gene = false;
+		bSignEQ = bSignNE = false; bSignIGN = true; 
+		bBlock = true;    bBlockAnd = true; 
+		bBlockOr = false; bBlockOnly=false;
 		bAll = false;					
 		
 		blkNum=0;
@@ -39,37 +42,41 @@ public class HfilterData {
 	}
 	
 	protected String getFilterText() { // called in Mapper.getHelpText for information box
-		String show = "Show";	
+		String msg="";	
+		if (pctid!=0 && pctid!=minPctid) msg = addMsg(msg, " Id=" + (int) pctid + "%"); 
+		if (bSignEQ) msg = addMsg(msg, " Sign==");
+		if (bSignNE) msg = addMsg(msg, " Sign!=");
 		
-		if (pctid!=0 && pctid!=minPctid) show += " Id=" + (int) pctid + "%"; 
-		
-		if (bBlockOnly) show += " Block#" + blkNum; 
-		else if (bAll)  show += " All";
+		if (bBlockOnly) msg = addMsg(msg, " Block#" + blkNum); 
 		else {	
-			String p = "";
+			String p="", x="";
 			if (bBlock) {
-				show += " Block";
-				p = (bBlockAnd) ? " and" : " or";
+				msg = addMsg(msg, " Block");
+				p = (bBlockAnd) ? " (and)" : " (or)";
 			}
-			String x="";
-			if (bCset)	 	x += " CoSets,";
-			if (b2Gene) 	x += " g2,";
-			if (b1Gene) 	x += " g1,";
-			if (b0Gene) 	x += " g0,";			
-			if (x.endsWith(",")) x = x.substring(0, x.length()-1);
-			if (x!="") show += p + x;
-			
-			if (show.equals("Show")) show += " All";
+			if (bCset)	x = " CoSets";
+			if (b2Gene) x = addMsg(x, " g2");
+			if (b1Gene) x = addMsg(x, " g1");
+			if (b0Gene) x = addMsg(x, " g0");	
+			if (!p.equals("") && !x.equals("")) msg = msg + p + x; // blocks (and) something
+			else if (!x.equals("")) msg = addMsg(msg, x); // no blocks, so...
 		}
-		if (bHiBlock) 		show += "; High Blocks ";	// There will always be a show; put high last
-		else if (bHiCset) 	show += "; High CoSets "; 
-		else if (bHi2Gene) 	show += "; High g2 ";
-		else if (bHi1Gene) 	show += "; High g1 ";
-		else if (bHi0Gene) 	show += "; High g0 ";
+		if (bAll) msg = addMsg(msg, " All");
+		else if (msg.equals("")) msg = " All";
 		
-		if (!bHiPopup) 		show += "; No High Popup (or Query); "; // query; 
+		if (bHiBlock) 		msg += "\nHigh Blocks ";	// There will always be a show; put high last
+		else if (bHiCset) 	msg += "\nHigh CoSets "; 
+		else if (bHi2Gene) 	msg += "\nHigh g2 ";
+		else if (bHi1Gene) 	msg += "\nHigh g1 ";
+		else if (bHi0Gene) 	msg += "\nHigh g0 ";
 		
-		return show + "\n";
+		if (!bHiPopup) 		msg += "\nNo High Popup "; // query; 
+		
+		return "Show" + msg + "\n";
+	}
+	private String addMsg(String msg, String add) {
+		if (msg.equals("")) return add;
+		else return msg + "," + add;
 	}
 	// Query block, set, region for showing synteny from query; b is blocks by default
 	public void setForQuery(int blockNum, boolean s, boolean r) { // block, set, region
@@ -77,15 +84,14 @@ public class HfilterData {
 		
 		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);} 	
 		else if (s)     {setCset(true); setHiCset(true); } 				
-		else if (r)     {setHiBlock(true);} 							
-		
+		else if (r)     {setAll(true);} 	// CAS588 was highlight blocks on region						
 	}
 	// dotplot 
 	public void setForDP(int blockNum) {
 		setBlockOnly(false); setBlock(false); setCset(false); setHiNone(false);
 		
 		if (blockNum>0) {setBlockOnly(true); setBlockNum(blockNum);}
-		else            {setAll(true); setHiBlock(true);} 	// CAS575 add setAll
+		else            {setAll(true);} 	// CAS588 was highlight blocks on region
 	}
 	
 	// this changes initial settings for dotplot and query table
@@ -103,16 +109,18 @@ public class HfilterData {
 		if (setBlockAnd(hf.bBlockAnd))  changed = true;
 		if (setBlockOr(hf.bBlockOr))    changed = true;
 		if (setBlockOnly(hf.bBlockOnly)) changed = true;
-		if (setBlockNum(hf.blkNum)) 	 changed = true;
 		
 		if (setCset(hf.bCset))        	changed = true;
 		if (set2Gene(hf.b2Gene)) 		changed = true; 
 		if (set1Gene(hf.b1Gene)) 		changed = true; 
 		if (set0Gene(hf.b0Gene))		changed = true; 
-		
 		if (setAll(hf.bAll))			changed = true; 
 		
+		if (setSignEQ(hf.bSignEQ)) 		changed = true; 
+		if (setSignNE(hf.bSignNE))		changed = true; 
+		if (setSignIGN(hf.bSignIGN))		changed = true; 
 		if (setPctid(hf.pctid))   		changed = true;
+		if (setBlockNum(hf.blkNum)) 	 changed = true;
 		
 		return changed;
 	}
@@ -274,10 +282,36 @@ public class HfilterData {
 		return false;
 	}
 	
+	
 	protected boolean isAll() {return bAll;} 
 	protected boolean setAll(boolean bFilter) { 
 		if (bFilter != bAll) {
 			bAll = bFilter;
+			return true;
+		}
+		return false;
+	}
+	
+	protected boolean isSignEQ() {return bSignEQ;}
+	protected boolean setSignEQ(boolean bFilter) { 
+		if (bFilter != bSignEQ) {
+			bSignEQ = bFilter;
+			return true;
+		}
+		return false;
+	}
+	protected boolean isSignNE() {return bSignNE;}
+	protected boolean setSignNE(boolean bFilter) { 
+		if (bFilter != bSignNE) {
+			bSignNE = bFilter;
+			return true;
+		}
+		return false;
+	}
+	protected boolean isSignIGN() {return bSignIGN;}
+	protected boolean setSignIGN(boolean bFilter) { 
+		if (bFilter != bSignIGN) {
+			bSignIGN = bFilter;
 			return true;
 		}
 		return false;

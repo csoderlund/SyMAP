@@ -233,8 +233,9 @@ public class Mapper extends JComponent implements  MouseMotionListener, MouseLis
 	public static Color pseudoLineGroupColor;		// Query group and Gene popup	
 	public static Color pseudoLineHighlightColor1;
 	public static Color pseudoLineHighlightColor2;
-	public static Color pseudoLineHighlightColor3;  // Block 3rd color;
+	public static Color pseudoLineHighlightColor3;  // Block 3rd
 	public static Color pseudoLineHighlightColor4;  // Block 4th color
+	public static Color pseudoLineHighlightColor5;  // Collinear 3rd color
 	public static Color hitRibbonBackgroundColor;	
 	public static int 	hitRibbonWidth=3; 			
 	static {
@@ -247,12 +248,14 @@ public class Mapper extends JComponent implements  MouseMotionListener, MouseLis
 		pseudoLineColorNN = 		props.getColor("pseudoLineColorNN"); 
 		pseudoLineHoverColor = 		props.getColor("pseudoLineHoverColor");
 		pseudoLineGroupColor = 		props.getColor("pseudoLineGroupColor");
-		pseudoLineHighlightColor1 = props.getColor("pseudoLineHighlightColor1"); 
-		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); 
+		pseudoLineHighlightColor1 = props.getColor("pseudoLineHighlightColor1"); // 1st collinear/block color
+		pseudoLineHighlightColor2 = props.getColor("pseudoLineHighlightColor2"); // 2nd collinear/block color
 		hitRibbonBackgroundColor = 	props.getColor("hitRibbonBackgroundColor"); 
 		
-		props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));// for 2 extra block colors
-		pseudoLineHighlightColor3 = props.getColor("exonColorP"); 
-		pseudoLineHighlightColor4 = props.getColor("exonColorN"); 
+		// these do not change when changed with the color wheel (I tried setting them above and from Annotation...)
+		props = new PropertiesReader(Globals.class.getResource("/properties/annotation.properties"));// for 3 extra block colors
+		pseudoLineHighlightColor3 = props.getColor("exonColorP");    // 3rd block color
+		pseudoLineHighlightColor4 = props.getColor("exonColorN");    // 4th block color
+		pseudoLineHighlightColor5 = props.getColor("geneHighColor"); // 3rd collinear color; CAS588 add
 	}
 }

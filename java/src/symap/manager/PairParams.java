@@ -32,12 +32,16 @@ import util.Popup;
 public class PairParams extends JDialog {
 	private static final long serialVersionUID = 1L;
 	protected static String [] mergeOpts = {"None", "Overlap", "Close"};
+	protected static String [] coSetNumOpts = {"By Order", "By Size"};
+	protected static String [] coSetAlgoOpts = {"Advanced", "Simple"};
 	
 	// ManagerFrame.alignSelectedPair and updateEnableButtons use similar text
 	private String opt0Alt =       "Align&Synteny"; // Manager button Selected Pair
 	private String[] actOptions = {"Clust&Synteny", // Manager button Selected Redo
-								   "Synteny Only","Number Pseudo"}; // Manager button sets from mp.bSynOnly...
-	private int actCnS=0, actSyn=1, actPseudo=2;
+								   "Synteny Only",
+								   "Number Pseudo",
+								   "Collinear Sets"}; // CAS588 new
+	private int actCnS=0, actSyn=1, actPseudo=2, actCoSet=3;
 	  
 	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
 	// These are NOT in the order displayed, but do not change without changing access everywhere else
@@ -50,7 +54,8 @@ public class PairParams extends JDialog {
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
 		"Top N piles", 
 		"Gene", "Exon", "Len","G0_Len", 
-		"EE", "EI", "En", "II", "In"
+		"EE", "EI", "En", "II", "In", 
+		"Collinear"				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
 	};
 	
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
@@ -63,7 +68,8 @@ public class PairParams extends JDialog {
 		"number_pseudo", "algo1", "algo2",
 		"topn",					
 		"gene_scale", "exon_scale", "len_scale","g0_scale",
-		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
+		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile", 
+		"CoSet"
 	};
 	
 	private Mpair mp = null;
@@ -175,7 +181,12 @@ public class PairParams extends JDialog {
 		chkIIpile = Jcomp.createCheckBox(LABELS[x++],"Keep II piles", false); 
 		chkInpile = Jcomp.createCheckBox(LABELS[x++],"Keep In and nI piles", false); 
 		
-		// bottom row
+		lblCset = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
+		cmbCsetNum = Jcomp.createComboBox(coSetNumOpts, "How to number the collinear sets", 0); 
+		cmbCsetAlgo = Jcomp.createComboBox(coSetAlgoOpts, "The advanced algorithm tries to resolve overlapped genes collinearity", 0); 
+				
+		//////////////////////////////////////////////////////////
+		// bottom row of bottoms
 		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); 
 		btnKeep.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -312,7 +323,13 @@ public class PairParams extends JDialog {
 		row.add(chkEnpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkIIpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkInpile);   row.add(Box.createHorizontalStrut(5));
-		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
+		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(6));}
+		
+		row = Jcomp.createRowPanel(); 
+		row.add(lblCset);  row.add(Box.createHorizontalStrut(5));
+		row.add(cmbCsetNum);   row.add(Box.createHorizontalStrut(5));
+		row.add(cmbCsetAlgo);   row.add(Box.createHorizontalStrut(5));
+		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
 	// Synteny
 		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
@@ -405,6 +422,9 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkIIpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	{
+			return cmbCsetNum.getSelectedIndex() + ":" + cmbCsetAlgo.getSelectedIndex();
+		}
 		else return "";
 	}
 	private void setValue(String symbol, String value) {// ORDER MUST BE SAME AS array
@@ -446,6 +466,15 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkIIpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++])) {
+			String [] val = value.split(":");
+			if (val.length==2) {
+				int num = Utilities.getInt(val[0]);
+				cmbCsetNum.setSelectedIndex(num);
+				int algo = Utilities.getInt(val[1]);
+				cmbCsetAlgo.setSelectedIndex(algo);
+			}
+		}
 	}
 	/************************************************************************/
 	
@@ -454,6 +483,7 @@ public class PairParams extends JDialog {
 		
 		if (mp.bSynOnly) 		cmbAction.setSelectedIndex(actSyn);
 		else if (mp.bPseudo) 	cmbAction.setSelectedIndex(actPseudo);
+		else if (mp.bCoSet) 	cmbAction.setSelectedIndex(actCoSet);
 		else 					cmbAction.setSelectedIndex(actCnS);
 	}
 	private void setParams(HashMap <String, String> valMap) {
@@ -463,15 +493,19 @@ public class PairParams extends JDialog {
 	private void setAction() {
 		int idx = cmbAction.getSelectedIndex();
 		if (idx==actCnS)      {
-			mp.bPseudo=false; mp.bSynOnly=false;
+			mp.bPseudo=false; mp.bSynOnly=false; mp.bCoSet=false;
 		}
 		else if (idx==actSyn) { 
-			mp.bPseudo=false; mp.bSynOnly=true;
+			mp.bPseudo=false; mp.bSynOnly=true; mp.bCoSet=false;
 			setSaveSynOnly();
 		}
 		else if (idx==actPseudo) {
-			mp.bPseudo=true;  mp.bSynOnly=false; 
+			mp.bPseudo=true;  mp.bSynOnly=false; mp.bCoSet=false;
 			setSavePseudo();
+		}
+		else if (idx==actCoSet) {
+			mp.bPseudo=false;  mp.bSynOnly=false; mp.bCoSet=true;
+			setSaveCoSet();
 		}
 	}
 	
@@ -481,12 +515,13 @@ public class PairParams extends JDialog {
 		
 		chkDef.setSelected(true); // Defaults should reset this, but not initial load from file
 		
-		mp.bPseudo = mp.bSynOnly = false;
+		mp.bPseudo = mp.bSynOnly = mp.bCoSet = false;
 		cmbAction.setSelectedIndex(actCnS);
 	}
 	private void setCancel() { 
 		mp.bPseudo  = bSavPseudo;
 		mp.bSynOnly = bSavSynOnly;
+		mp.bCoSet = bSavCoSet;
 		
 		manFrame.updateEnableButtons();
 
@@ -527,17 +562,27 @@ public class PairParams extends JDialog {
 		
 		mp.saveParamsToFile(fileMap); // saves to DB when run
 		
-		bSavPseudo = mp.bPseudo; bSavSynOnly = mp.bSynOnly;
+		bSavPseudo = mp.bPseudo; bSavSynOnly = mp.bSynOnly; bSavCoSet = mp.bCoSet;
 		manFrame.updateEnableButtons(); // update Selected pair label
 		
 		if (mp.bSynOnly) setSaveSynOnly();	
 		else if (mp.bPseudo) setSavePseudo();
+		else if (mp.bCoSet) setSaveCoSet();
 		
 		setVisible(false);
 	}
 	private void setSavePseudo() {
 		setParams(mp.getDbParams());
 		chkPseudo.setSelected(true);
+	}
+	private void setSaveCoSet() {
+		int num = cmbCsetNum.getSelectedIndex();
+		int alg = cmbCsetAlgo.getSelectedIndex();
+		
+		setParams(mp.getDbParams());
+		
+		cmbCsetNum.setSelectedIndex(num);
+		cmbCsetAlgo.setSelectedIndex(alg);
 	}
 	private void setSaveSynOnly() {
 		boolean isOrient = chkSameOrient.isSelected(); 
@@ -623,8 +668,11 @@ public class PairParams extends JDialog {
 	private JComboBox <String> cmbMergeBlocks = null;
 	private JRadioButton radOrdNone=null, radOrdProj1=null, radOrdProj2=null;
 	
-	private JComboBox <String> cmbAction = null;	// CAS580 was radiobuttons
+	private JLabel lblCset = null;
+	private JComboBox <String> cmbCsetNum = null, cmbCsetAlgo = null;
+	
+	private JComboBox <String> cmbAction = null;	
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
 	
-    private boolean bSavPseudo=false, bSavSynOnly=false;
+    private boolean bSavPseudo=false, bSavSynOnly=false, bSavCoSet=false;
 }

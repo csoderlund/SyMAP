@@ -1,6 +1,8 @@
 package symap.manager;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -42,7 +44,7 @@ public class Mpair {
 	private int proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
 	private String syVer="";
-	public boolean bPseudo=false, bSynOnly=false; // set in PairParams and read in ManagerFrame
+	public boolean bPseudo=false, bSynOnly=false, bCoSet=false; // set in PairParams and read in ManagerFrame
 	
 	private String resultDir;
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
@@ -59,7 +61,8 @@ public class Mpair {
 			"number_pseudo","algo1", "algo2",
 			"topn", 
 			"gene_scale", "exon_scale","len_scale","g0_scale", 
-			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile"
+			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile",
+			"CoSet"						// CAS588 add Coset params
 	};
 	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular; CAS576
 	private final int defStrict = 1, defAlgo = 16; // if annotated, [16]=0, [17]=1  
@@ -71,7 +74,8 @@ public class Mpair {
 			"0", "1", "0",				// cluster: number pseudo,  1st is algo1, 2nd is algo2
 			"2", 					    //       topn
 			"1.0", "1.0", "1.0", "1.0",	//       gene, exon, Len, G0_Len	
-			"1", "1", "1", "0", "0" 	//       EE, EI, En, II, In 
+			"1", "1", "1", "0", "0", 	//       EE, EI, En, II, In 
+			"0:0"						// Num (default order):Algo (default new)
 	};
 	
 	public Mpair(DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
@@ -121,7 +125,11 @@ public class Mpair {
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
 		
-		return cmsg + "\n" + smsg;
+		if (type==FILE) {
+			String amsg = getUseExistAlign(); // CAS588 include on initial popup
+			return amsg + "\n" + cmsg + "\n" + smsg;
+		}
+		else return cmsg + "\n" + smsg; // Summary has type=DB, so gets existing from pairs.params
 	}
 	
 	public String getChgAlign(int type, boolean forSum) {
@@ -164,6 +172,10 @@ public class Mpair {
 			if (isChg(type,"topn")) 		msg = pjoin(msg, "Top N piles = " + getTopN(type));
 			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
 			
+			if (isChg(type,"CoSet")) {
+				if (!isCoSetNum(type)) msg = pjoin(msg,  "Order Collinear by size");
+				if (!isCoSetAlgo(type)) msg = pjoin(msg, "Simple Collinear Algo");
+			}
 			if (msg.equals("")) msg = ALGO2;
 			else                msg = ALGO2 + "\n" + msg;
 		}
@@ -198,7 +210,12 @@ public class Mpair {
 		if (msg.equals("")) return smsg;
 		return smsg + "\n" + msg; 	
 	}
-	
+	protected String getChgCoSet(int type) {
+		String msg="";
+		if (!isCoSetNum(type)) msg = pjoin(msg,  "Collinear order by size");
+		if (!isCoSetAlgo(type)) msg = pjoin(msg, "Collinear Simple");
+		return msg;
+	}
 	private boolean isChg(int type, String field) {
 		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
 		if (db==null) {
@@ -215,6 +232,47 @@ public class Mpair {
 		if (m1.equals("")) return m2;
 		if (m2.equals("")) return m1;
 		return m1 + "\n" + m2; 
+	}
+	/* read align_params_used.txt file for A&S popup; 
+	 * only PROMER/NUCMER, MASK and any MUMmer args (skip No concat and M4 directory) 
+	 * Read and written in AlignMain */
+	private String getUseExistAlign() { // this is also read in AlignMain, but contains a little more info
+		String align="  Use existing MUMmer files"; 
+		try {		
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
+			if (pfile==null) return align; // okay, not written yet
+			
+			String sp="     ";
+			String line, params="", mask=sp, msg = ""; 
+			BufferedReader reader = new BufferedReader(new FileReader(pfile));
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+				if (!line.startsWith("#")) {
+					if (msg.isBlank()) {
+						msg = "  Use " + line;
+						msg = msg.substring(0, msg.indexOf("CPU")); // remove CPU
+					}
+					else if (line.startsWith("Align")) msg += line.replace("Align ", ""); // remove Align
+					else if (line.contains("Mask")) {
+						if (line.contains("/")) line = line.substring(0, line.indexOf("/")); // was writing M4 path on same line
+						mask += line + " ";		
+					}
+					else if (!line.contains("No concat") && !line.startsWith("/")){// only mummer args here
+						if (line.length()>40) line = line.substring(0, params.length()) + "...";
+						if (params.isBlank()) params = sp + line;
+						else                  params += "\n" + sp + line; // nl for each new param line
+					}
+				}
+			}
+			reader.close();
+			if (msg.isBlank()) return align;
+			
+			if (!mask.isBlank())   msg += "\n" + mask;
+			if (!params.isBlank()) msg += "\n" + params;
+			
+			return msg;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Read " + Constants.usedFile); return align;}
 	}
 	/************************************************************************************/
 	public int getPairIdx()   {return pairIdx;}
@@ -334,6 +392,18 @@ public class Mpair {
 	public boolean isOrder2(int type) {
 		String x = (type==FILE) ? fileMap.get("order_proj2") : dbMap.get("order_proj2");
 		return x.contentEquals("1");
+	}
+	public boolean isCoSetNum(int type) {
+		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
+		String [] y = x.split(":");
+		if (y.length!=2) return true;
+		return y[0].contentEquals("0");
+	}
+	public boolean isCoSetAlgo(int type) {
+		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
+		String [] y = x.split(":");
+		if (y.length!=2) return true;
+		return y[1].contentEquals("0");
 	}
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}

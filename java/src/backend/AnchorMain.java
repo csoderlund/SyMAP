@@ -84,8 +84,8 @@ public class AnchorMain {
 			
 			/** Run before pseudo **/
 			if (pj1.hasGenes() && pj2.hasGenes()) { 
-				AnchorPost collinear = new AnchorPost(pairIdx, pj1, pj2, dbc2, plog);
-				collinear.collinearSets();	
+				if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, pj1, pj2, dbc2, plog).collinearSets(); // CAS588 new
+				else 							new AnchorCset1(mp, pj1, pj2, dbc2, plog).collinearSets(); // original
 			}
 			if (Cancelled.isCancelled()) {dbc2.close(); return false; } 
 			
