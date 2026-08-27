@@ -42,7 +42,7 @@ import util.Popup;
 import util.Utilities;
 
 /**
- * Sequence filter
+ * Track filter (renamed from Sequence Fitler CAS588)
  */
 public class Sfilter extends JDialog {	
 	private static final long serialVersionUID = 1L;
@@ -119,7 +119,7 @@ public class Sfilter extends JDialog {
 	
 	// Created when 2d is displayed, one for each sequence and track 
 	public Sfilter(Frame owner, DrawingPanel dp,  Sequence sequence) { 
-		super(owner,"Sequence Filter #" + sequence.position, true); 
+		super(owner,"Track Filter #" + sequence.position, true); 
 		this.drawingPanel = dp;	
 		this.seqObj = sequence;
 		seqObj.setFilter(this); // access values from here
@@ -466,7 +466,7 @@ public class Sfilter extends JDialog {
 		}
 	}
 	/***********************************************************/
-	/*** XXX Called when Sequence Filter button clicked ***/
+	/*** XXX Called when Track Filter button clicked ***/
 	public void displaySeqFilter() {
 		if (isShowing()) { // this seems to always be false..
 			super.setVisible(true);
@@ -1117,6 +1117,6 @@ public class Sfilter extends JDialog {
 				+  "\n  Highlights, etc are often lost when view is changed."
 				;
 		}
-		Popup.displayInfoMonoSpace(this, "Sequence Filter Quick Help", msg, false);
+		Popup.displayInfoMonoSpace(this, "Track Filter Quick Help", msg, false);
 	}
 }

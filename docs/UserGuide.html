@@ -106,7 +106,7 @@
 				          &nbsp;<a href="#ginfo">Gene</a>,
 				          &nbsp;<a href="#binfo">Gene-Hit</a>
 				<li><a href="#control">Control panel and navigation</a>
-				<li><a href="#sequence_filter">Sequence Filter</a>,&nbsp;
+				<li><a href="#sequence_filter">Track Filter</a>,&nbsp;
 				<a href="#hitfilter">Hit Filter</a>
 				<li><a href="#align">Base align</a>
 				<br>&nbsp;&nbsp;<a href="#base">Graphical</a>,
@@ -969,7 +969,7 @@ highlights it in beige, clicking it again brings up the <span class="ttp">2D</sp
 <td><a href="#view2D">View<br>a region</a>
 <td><a href="#info">Hovers<br>and popups</a>
 <td><a href="#control">Control<br>panel</a>
-<td><a href="#sequence_filter">Sequence<br>Filter</a>
+<td><a href="#sequence_filter">Track<br>Filter</a>
 <td><a href="#hitfilter">Hit<br>Filter</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
@@ -984,7 +984,7 @@ Note that Cabb C1 is the <i>reference</i>
 chromosome, hence is placed in between the others.
 <p>Each chromosome is drawn as a light-blue rectangle, called <i>tracks</i>.
 The sequence length is shown at the bottom of a track; the coordinates are displayed on the side.
-Since A.thal Chr04 has been flipped using the <span class="ttb">Sequence Filters</span>, its sequence length is shown at the top of the track.
+Since A.thal Chr04 has been flipped using the <span class="ttb">Track Filter</span>, its sequence length is shown at the top of the track.
 
 <p>
 <table>
@@ -1000,7 +1000,7 @@ align to different strands (i.e. +-, -+).
 The display colors can be changed using the <a href="#wheel">Color Icon</a> in the upper right
 of the <span class="ttl">Control Panel</span> (shown at the top of the 2D display).
 The tracks and hits can be filtered; see
- <a href="#sequence_filter">Sequence Filter</a> and  <a href="#hitfilter">Hit Filter</a>.
+ <a href="#sequence_filter">Track Filter</a> and  <a href="#hitfilter">Hit Filter</a>.
 <td><a href="img/2d-3chr.png">
 	<img src="img/2d-3chr.png" alt="2d-3chr" style="border: 1px solid black; width: 550px"></a>
 </table>
@@ -1022,7 +1022,7 @@ The tracks and hits can be filtered; see
 
 The selected region shown in the image below was created by left-clicking
 on Chr04 near coordinate 11,638.48kb, dragging the mouse to 11,642.75kb and releasing.
-The <span class="ttb">Sequence Filter</span> was set to display <span class="ttl">Annotations</span>.
+The <span class="ttb">Track Filter</span> was set to display <span class="ttl">Annotations</span>.
 <p>
 <table>
 <tr><td  style="vertical-align:text-top;">
@@ -1245,10 +1245,10 @@ the exons are numbered differently; this is due to differences between NCBI and 
 <ul>
 <li>A History Event occurs when the coordinates or tracks have
 been changed by (1) any of the 4th-7th buttons (+,-,shrink,scale),
-(2) select a region with the mouse, (3) use the <span class="ttl">Sequence Filter</span> to change coordinates.
+(2) select a region with the mouse, (3) use the <span class="ttl">Track Filter</span> to change coordinates.
 <li>Any annotation, highlighting, or hit-wire display changes
-by <span class="ttb">Sequence Filter</span>  or <span class="ttb">Hit Filter</span> are NOT a history events.
-<li>When a new <span class="ttb">Sequence Filter</span> coordinate change is applied, all previous history events are cleared
+by <span class="ttb">Track Filter</span>  or <span class="ttb">Hit Filter</span> are NOT a history events.
+<li>When a new <span class="ttb">Track Filter</span> coordinate change is applied, all previous history events are cleared
      and it becomes the next history event in the list.
 <li>The first 3 buttons describe below apply to the history events.
 </ul>
@@ -1363,7 +1363,7 @@ will be performed when the mouse is released.
 <tr>
 	<td style="vertical-align: text-top;">Popup of partial set of filters&nbsp;</td>
 	<td style="white-space: nowrap; vertical-align: text-top;">Right mouse button</td>
-	<td>Position mouse over track area (for <span class="ttb">Sequence Filter</span>)
+	<td>Position mouse over track area (for <span class="ttb">Track Filter</span>)
 	or white space between tracks (for <span class="ttb">Hit Filter</span>), and click right mouse button
 	to view the respective popup filter.
 	</td></tr>
@@ -1372,7 +1372,7 @@ will be performed when the mouse is released.
 <!-- *********************************************************** -->
 <a id="sequence_track"></a> <!-- # ref in fpc html -->
 <a id="sequence_filter"></a> <!-- # ref in code -->
-<h3>Sequence Filter</h3>
+<h3>Track Filter</h3>
 
 <table class="tz"><tr>
 <td><a href="#sfhigh">Show Gene</a>
@@ -1385,7 +1385,7 @@ will be performed when the mouse is released.
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<p>Select <span class="ttb">Sequence Filter</span> button above the sequence track to change the display for the
+<p>Select <span class="ttb">Track Filter</span> button above the sequence track to change the display for the
 respective chromosome. If the sequence track does not have a given annotation (e.g. Gaps), then that item
 will be un-selectable.
 <p>&rarr; All options in the first 3 sections occur immediately; <span class="ttl">Coordinates</span> changes occur on <span class="ttb">Save</span>.
@@ -1408,7 +1408,7 @@ will be un-selectable.
 		beside each gene. This is a SyMAP assigned number; see <a href="#term2">Terminology</a>.
 
 		<tr><td style="vertical-align: text-top;"><span class="ttx">Annotation</span>
-		<td> Display of the annotation descriptions along the right side of sequence
+		<td> Display of the annotation descriptions along the right side of track
 		(e.g. <a href="img/2d-closeup2.png">2D display</a>).
 		<br>NOTE: this only works if you are zoomed in close enough that the annotation boxes can clearly be displayed.
 
@@ -1416,7 +1416,7 @@ will be un-selectable.
 		This <span class="ttx">Gene#</span> and <span class="ttx">Annotation</span> will only show if the gene has a hit.<sup>1</sup>
 	</table>
 	<td><a href="img/seqFilter.png">
-	<img src="img/seqFilter.png" alt="sequence filter" style="border: 1px solid black; width: 350px"></a>
+	<img src="img/seqFilter.png" alt="Track Filter" style="border: 1px solid black; width: 350px"></a>
 </table>
 <sup>1</sup><small>Only one of the two instances of <span class="ttx">Gene#</span> and <span class="ttx">Annotation</span> can be checked;
 checking one automatically turns off the other.
@@ -1442,7 +1442,7 @@ checking one automatically turns off the other.
 	<tr><td><span class="ttx">None</span><td>Nothing is shown (default).<td>&nbsp;
 </table>
 <sup>1</sup><small>Text will not be drawn if it will be on top of another; however,
-this does not work well when there are inverted hits among non-inverted hits.
+text does sometimes get drawn on top of each other when there are inverted hits among non-inverted hits.
 </small>
 <a id="sfgrap"></a>
 <p>
@@ -1452,19 +1452,19 @@ this does not work well when there are inverted hits among non-inverted hits.
   	<td>Display of the ruler along the side of the sequence track.
 
 	<tr><td style="vertical-align: text-top;"><span class="ttx">Gaps</span><sup>1</sup>
-   	<td>Display of sequence gaps (drawn as solid red rectangles) along the sequence.
+   	<td>Display of sequence gaps (drawn as solid red rectangles) along the track.
 	<tr><td style="vertical-align: text-top;"><span class="ttx">Centromere</span><sup>1</sup>
-   		<td> Display of the centromere (drawn as a cyan "X") on the sequence.
+   		<td> Display of the centromere (drawn as a cyan "X") on the track.
    <tr><td><span class="ttx">Genes</span>
-		<td> Display of the gene with exons along the sequence. (If unchecked, the other gene options are disabled).
+		<td> Display of the gene with exons along the track. (If unchecked, the other gene options are disabled).
 	<tr><td style="vertical-align: text-top;"><span class="ttx">Hit length</span>
-   		<td> Display the hit length line along the inner boundary of the sequence. The subhits are colored
+   		<td> Display the hit length line along the inner boundary of the track. The subhits are colored
    		brown and the gaps are colored gray (e.g. <a href="img/2d-closeup2.png">2D display</a>).
 	<tr><td style="vertical-align: text-top;"><span class="ttx">Hit %Id bar</span>
    		<td>The placement of the <span class="ttx">Hit length</span> line is proportional to the <span class="ttx">%Identity</span>.
 </table>
-<sup>1</sup><small>The <span class="ttx">Gaps</span> and <span class="ttx">Centromere</span> options are disabled in this
-example <span class="ttb">Sequence Filter</span> since there are none for its chromosome.</small>
+<sup>1</sup><small>The <span class="ttx">Gaps</span> and <span class="ttx">Centromere</span> options
+are disabled in the above <span class="ttb"><small>Track Filter</small></span> since there are none for its chromosome.</small>
 <p>
 
 <a id="sfcoor"></a>
@@ -1491,7 +1491,7 @@ example <span class="ttb">Sequence Filter</span> since there are none for its ch
 <p>&nbsp;
 <a id="sfg2"></a>
 <p><u>3-track</u>:
-The <span class="ttb">Sequence Filter</span> has two extra options, <span class="ttx">g2g2</span> and <span class="ttx">g2g1</span>
+The <span class="ttb">Track Filter</span> has two extra options, <span class="ttx">g2g2</span> and <span class="ttx">g2g1</span>
 for the <i>reference</i> track, which has both a left and right track.
 The usage of this feature is complex, see
 <a href="Details.html#2dg2" target="_blank" class="ext">3-chr conserved</a> for details.
@@ -1504,22 +1504,22 @@ The usage of this feature is complex, see
 </table>
 
 <td><a href="img/seqFilterRefOnly.png">
-	<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 300px"></a>
+	<img src="img/seqFilterRefOnly.png" alt="Track Filter reference" style="border: 1px solid black; width: 300px"></a>
 </table>
 
 <p>During a <span class="ttp">Chromosome Explorer</span> session,
-<span class="ttl">Sequence Filters</span> are reset to defaults between different <span class="ttp">2D</span> displays.
+<span class="ttl">Track Filters</span> are reset to defaults between different <span class="ttp">2D</span> displays.
 
 <a id="sfpop"></a>
 <p>
 <table class="tx" style="width: 95%">
 <tr><td class="coltop">
-<u>Sequence Filter Popup</u>: A popup of a subset of the filters is shown by right clicking in the empty space
+<u>Track Filter Popup</u>: A popup of a subset of the filters is shown by right clicking in the empty space
 of the chromosome track; the popup is shown on the right.
 <p>For the <span class="ttx">Gene# with hit</span> and <span class="ttx">Gene# all</span> options,
 just one of the two can be selected; selecting one will turn off the other if it is selected; ditto
 for the <span class="ttx">Annotation</span> options.
-<p>Changing an option here changes it in the <span class="ttb">Sequence Filter</span> and vice versa.
+<p>Changing an option here changes it in the <span class="ttb">Track Filter</span> and vice versa.
 <p>&nbsp;
 <p>&nbsp;
 <p><i>Gene highlighting summary</i>:
@@ -1532,7 +1532,7 @@ for the <span class="ttx">Annotation</span> options.
 
 <td>
 <a href="img/seqFilterPopup.png">
-	<img src="img/seqFilterPopup.png" alt="sequence filter popup" style="border: 1px solid black; width: 180px"></a>
+	<img src="img/seqFilterPopup.png" alt="Track Filter popup" style="border: 1px solid black; width: 180px"></a>
 </table>
 
 <!-- *********************************************************** -->
@@ -1569,11 +1569,10 @@ for the <span class="ttx">Annotation</span> options.
 	<tr><td><span class="ttx">Hit =1 genes</span> <td>Hits that align to a gene on one end (g1).
 	<tr><td><span class="ttx">Hit =0 genes</span>   <td>Hits that do not align to any gene (g0).
 	</table>
-	<sup>1</sup><small>The hits of each block are colored one of 4 colors; they correspond to the 'Hit Highlight1',
-'Hit Highlight2', 'Track Exon-', 'Track Exon+' colors (see <a href="#image">Color Wheel</a>); the two Track colors
-will not change for hits</small>.
-	<br><sup>2</sup><small>The hits of each collinear set are colored one of 3 colors, similar to block but
-	the 3rd color is 'Track Highlight'.</small>
+	<sup>1</sup><small>The hits of each block are colored one of 4 colors; see <a href="#image">Color Wheel</a>
+	on how to change the colors</small>.
+	<br><sup>2</sup><small>The hits of each collinear set are colored one of 3 colors; see <a href="#image">Color Wheel</a>
+	on how to change the colors</small>.
 <td><a href="img/hitfilterS.png">
 	<img src="img/hitfilterS.png" alt="hitfilterS" style="border: 1px solid black; width: 340px"></a>
 </table>
@@ -1599,7 +1598,6 @@ will not change for hits</small>.
 
 <p>
 <a id="hfother"></a>
-
 <table class="ty">
 <tr><td><span class="ttl">Priority</span><td> The following take precedence over the above.
 <tr><td><span class="ttx">Identity</span><td>Move the slider to view only the hits with &gt;= the specified identity.
@@ -1615,7 +1613,7 @@ but the <span class="ttx">Identity</span> and <span class="ttx">Signs</span>.
 to see the block, then try the next one to see the next block. If an invalid block number is
 entered, no hits will be shown.
 
-<tr><td><span class="ttx">G2xN</span><td>This is a hit filter that occurs in the <span class="ttb">Sequence Filter</span> of the
+<tr><td><span class="ttx">G2xN</span><td>This is a hit filter that occurs in the <span class="ttb">Track Filter</span> of the
 reference track for a 3-track display; see <a href="Details.html#2dg2"  target="_blank" class="ext">3-chr conserved</a>.
 It takes precedence over all other hit filters.
 </table>
@@ -1639,7 +1637,7 @@ different <span class="ttp">2D</span> displays.
 <!-- *********************************************************** -->
 <a id="ex2d"></a>
 <h4>Filter Example</h4>
-The image below has the <span class="ttb">Sequence Filter</span> options to show <span class="ttx">Gene Delimiter</span>
+The image below has the <span class="ttb">Track Filter</span> options to show <span class="ttx">Gene Delimiter</span>
 and <span class="ttx">Collinear#</span> on the left, <span class="ttx">Hit#</span> on the right, and the <span class="ttb">Hit Filter</span> option to highlight <span class="ttx">Collinear Hits</span>.
 <table>
 <tr><td>
@@ -1865,28 +1863,66 @@ to be an internet connection).
 <p><u>Color Wheel</u>
 This icon opens a menu for customizing colors; the colors changes are saved in a file
 called <span class="ttt">.symap_saved_props</span> which resides in the user's home directory. Hence, the
-changes are preserved between sessions and for different SyMAP databases. In contrast, <span class="ttl">Filters</span>
+changes are preserved between sessions. In contrast, <span class="ttl">Filters</span>
 changes only exist for the duration of the display.
 <p>Click the <span class="ttl">Color Wheel</span> in any of the displays, then:
 <ul>
-<li>Click a tab (e.g. <span class="ttx">Hit</span>) to view the associated colors.
-<li>Click a color box and a color chooser (far right image) will popup
+<li>Click a tab (e.g. <span class="ttl">Track</span>) to view the associated colors.
+<li>Click a color box (e.g. <span class="ttx">Ruler</span>) and a color chooser (<span class="ttl">Swatches</span>) will popup
 that lets you change the color.
+<ul>
 <li><span class="ttl">Ok</span>: Instantiate all changes and close the menu.
 <li><span class="ttl">Cancel</span>: Cancel any changes and close the menu.
-<li><span class="ttl">Default</span>: For the selected tab, changes all colors back to the default colors.
+<li><span class="ttl">Default</span>: For the selected tab, change all colors back to the default colors.
 </ul>
+</ul>
+
 <table class="tx">
-<tr>
-<td style="vertical-align: text-top;"><a href="img/2d-color.png">
-  <img src="img/2d-color.png" alt="Track Colors" style="border: 1px solid black; width: 270px"></a>
-<td style="vertical-align: text-top;"><a href="img/2d-color2.png">
-  <img src="img/2d-color2.png" alt="Hit Colors" style="border: 1px solid black; width: 260px"></a>
-<td><a href="img/2d-color3.png">
-   <img src="img/2d-color3.png" alt="Change Colors" style="border: 1px solid black; width: 200px"></a>
+<tr><td>
+	<table style="width: 310px">
+	<tr><td style="vertical-align: text-top;"><a href="img/2d-colorSeq.png">
+	  <img src="img/2d-colorSeq.png" alt="Sequence Colors" style="border: 1px solid black; width: 300px"></a>
+	<tr><td>Hoover the mouse over a color label (e.g. <span class="ttx">Ruler</span>) and it will explain what the color represents.
+	They are all straight-forward except the following:
+	</table>
+<td><a href="img/2d-color.png">
+   <img src="img/2d-color.png" alt="Change Colors" style="border: 1px solid black; width: 270px"></a>
 </table>
 
-<p><u>Dot Plot tab</u>:
+<p><i>Hit tab</i>:
+<table>
+	<tr><td>
+	<table  class="ty">
+		<tr><td><span class="ttx">Hit++<br>Hit--</span><td>Hits with equal orientation
+		<tr><td><span class="ttx">Hit+-<br>Hit-+</span><td>Hits with different orientation
+		<tr><td><span class="ttx">Hoover</span><td>Hoover mouse over a hit, which highlights it and shows its information.
+		<tr><td><span class="ttx">Popup</span><td>Right click a hit and the respective information box will popup, and the hit will be highlighted
+		in this color. Also, <span class="ttl">Queries</span> <span class="ttx">View 2D</span> will
+		highlight the selected hit in this color.
+	</table>
+	<td><td style="vertical-align: text-top;"><a href="img/2d-colorHit.png">
+		  <img src="img/2d-colorHit.png" alt="Hit Colors" style="border: 1px solid black; width: 340px"></a>
+</table>
+
+<table><tr><td>
+<table class="ty" style="width: 550px">
+	<tr><td colspan="2"><span class="ttl">Hit Filter</span>
+		<span class="ttx">Highlight Synteny blocks or Collinear sets</span>
+	<tr><td><span class="ttx">Highlight1</span><td>The 1st block or collinear set will be highlighted in
+		this color.
+	<tr><td><span class="ttx">Highlight2</span><td>The 2nd block or collinear set will be highlighted in
+		this color.
+		<tr><td><span class="ttx">HighCoSet3</span><td>The 3rd collinear set will be highlighted in
+		this color.
+		<tr><td><span class="ttx">HighBlock3</span><td>The 3rd synteny block will be highlighted in
+		this color.
+		<tr><td><span class="ttx">HighBlock4</span><td>The 4th synteny block will be highlighted in
+		this color.
+</table>
+<td>Note that highlighting blocks and collinear sets share the first two
+	colors, but have their own settings for the remaining colors.
+</table>
+<p><i>Dot Plot tab</i>:
 <table>
 	<tr><td>
 	<table  class="ty">

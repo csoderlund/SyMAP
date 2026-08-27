@@ -359,7 +359,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	static final private String FIL_help = "History Events (Home, > and <):" 
 			+ "\n Changing the coordinates of the display is a history event."
 			+ "\n Coordinates are changed by any of the icons in the Control panel up to the first '|',"
-			+ "\n     plus the Sequence Filter coordinate changes."
+			+ "\n     plus the Track Filter coordinate changes."
 			+ "\n Use < and > icons to go back and forward through history events."
 			+ "\n Use the home icon to go back to starting display."
 			+ "\n\n";

@@ -40,7 +40,7 @@ public class FilterHandler implements ActionListener {
 		sFilter = null;
 		if (seqObj != null) {
 			sFilter = new Sfilter(drawingPanel.getFrame(),drawingPanel, (Sequence) seqObj);
-			button.setText("Sequence Filter"); 
+			button.setText("Track Filter"); // CAS588 rename from sequence 
 		}
 	}
 	public void hide() {

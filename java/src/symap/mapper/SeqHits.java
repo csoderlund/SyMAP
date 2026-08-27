@@ -538,9 +538,9 @@ public class SeqHits  {
 				 if (bCnt) cntHighHit++;
 				 if (hcolor==1) 		 return Mapper.pseudoLineHighlightColor1;		
 				 else if (hcolor==2)	 return Mapper.pseudoLineHighlightColor2;
-				 else if (hcolor==3)	 return Mapper.pseudoLineHighlightColor3;
-				 else if (hcolor==4)	 return Mapper.pseudoLineHighlightColor4;
-				 else if (hcolor==5)	 return Mapper.pseudoLineHighlightColor5;
+				 else if (hcolor==3)	 return Mapper.pseudoLineHighlightBlock3;
+				 else if (hcolor==4)	 return Mapper.pseudoLineHighlightBlock4;
+				 else if (hcolor==5)	 return Mapper.pseudoLineHighlightCoset3;
 			 }
 			 
 			 if (orient.contentEquals("++")) return Mapper.pseudoLineColorPP; 

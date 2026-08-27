@@ -95,10 +95,9 @@ does not. Some examples are shown <a href="#simple">below</a>.
 <tr><td  style="vertical-align: text-top;">
 In the image on the right, two different sets are shown where the pink highlighted hits is the 1st set,
 green is the 2nd. The sets were broken by an extra gene on Human Chr01.
-<p>There are 3 colors used for sets which are the
-<a href="UserGuide.html#wheel" class="ext" target="_blank">Color Wheel</a>
-<span class="ttl">Hit</span> <span class="ttx">Highlight1</span>, <span class="ttx">Highlight2</span>
-and the <span class="ttl">Track</span> <span class="ttx">Highlight</span> colors; the <span class="ttl">Track</span> color will not change for hits.
+
+<p>There are 3 colors used for sets which can be changed by the
+<a href="UserGuide.html#wheel" class="ext" target="_blank">Color Wheel</a>.
 
 <p>A collinear set either has all hits/genes to the same strand (+/+, -/-) or different (+/-, -/+).
 In the image on the right, all genes in both sets are on different strands.
@@ -125,7 +124,7 @@ explains them, using the symbols g0 (hit 0 genes), g1 (hit 1 gene), g2 (hit pair
 <tr><td>6<td>g2<td>This could start a new set, but is not followed by another paired gene.
 </table>
 
-<p>Sometimes two genes look as one (e.g. gene 791 and 792 on Chr01 below), so the <span class="ttb">Sequence Filter</span>
+<p>Sometimes two genes look as one (e.g. gene 791 and 792 on Chr01 below), so the <span class="ttb">Track Filter</span>
 <span class="ttx">Gene Delimiter</span> option can be used to delimit the genes with a black bar.
 <p><a href="img/colSetGL.png">
 	<img src="img/colSetGL.png" alt="Collinear Highlight and Gene Lines" style="border: 1px solid black; width: 370px"></a>
@@ -275,7 +274,7 @@ The <span class="ttp">Explorer</span> and <span class="ttp">Queries</span> allow
 The <span class="ttp">Dot plot</span> can show 3 chromosomes, as illustrated on the upper below (click image for a better view).
 <p>The <span class="ttp">2D</span> can show a 3-track view, as illustrated on the upper right and discussed below.
 
-<p><span class="ttp">2D</span>: The <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Sequence Filters</a>
+<p><span class="ttp">2D</span>: The <a href="UserGuide.html#sequence_filter" class="ext" target="_blank">Track Filters</a>
 for the <i>reference</i> track will have an extra section of filters as shown below.
 <table>
 <tr><td>
@@ -285,7 +284,7 @@ for the <i>reference</i> track will have an extra section of filters as shown be
 <tr><td><span class="ttx">Show</span><td>Only the g2x2 or g2x1 hit-wires will be shown.
 </table>
 <td><a href="img/seqFilterRefOnly.png">
-		<img src="img/seqFilterRefOnly.png" alt="sequence filter reference" style="border: 1px solid black; width: 350px"></a>
+		<img src="img/seqFilterRefOnly.png" alt="Track Filter reference" style="border: 1px solid black; width: 350px"></a>
 </table>
 <p>
 The <span class="ttx">g2</span> implies the hit has a gene on both ends, and the <span class="ttx">x2</span> indicates it exists for both sets of
@@ -313,13 +312,13 @@ and the other has a g1 (but a possible g2 if it is missing the gene annotation).
 </ul>
 <a href="img/seqG2xN.png">
 	<img src="img/seqG2xN.png" alt="g2xN" style="border: 1px solid black; width: 780px"></a>
-<p>The <span class="ttb">Sequence Filter</span> of <span class="ttx">Show Gene# with Hit</span> is used in the above display.
+<p>The <span class="ttb">Track Filter</span> of <span class="ttx">Show Gene# with Hit</span> is used in the above display.
 
 <p><span class="red">Caveats of display: Nothing is refreshed or recalculated!</span>
 <ul>
 <li>Suggestion: Set the filters from the "full sequence" view, then you can zoom in and back out and the highlight will
 remain.
-<li>If the highlighting looks wrong after zooming, open <span class="ttb">Sequence Filter</span>,
+<li>If the highlighting looks wrong after zooming, open <span class="ttb">Track Filter</span>,
 click <span class="ttx">None</span> and re-click <span class="ttx">g2x2</span> or <span class="ttx">g2x1</span>.
 </ul>
 
