@@ -67,7 +67,7 @@
    <tr><td>&nbsp;&nbsp;<td><u>Input files</u>
    <tr><td>&nbsp;&nbsp;<td><a href="#seqprep">Sequence</a>
     <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#seqid">Identifier (seqid)</a>
-    <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#mask">Masking</a>
+    <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#mask">Masking for MUMmer</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#annot">Annotation</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#dir">Location of files</a> <!-- ref# in code -->
     <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#load">Load Project</a>
@@ -108,10 +108,14 @@
    <td><a href="#iloc">Location of files</a>
    <td class="colrt"><a href="#top">Go to top</a>
 </table>
-<p>
-The input is one or more FASTA files of sequences (genome, scaffold, contig), with optional GFF formatted
+<p>The hits can be computed with MUMmer or input from a Blast tabular file:
+<ul>
+<li>MUMmer: The input is one or more FASTA files of sequences (chromosome, scaffold, contig), with optional GFF formatted
 annotation file(s).
-<p>
+<p><li>Blast tabular file: The input is one or more FASTA files of chromsomes and a GFF file. See
+<a href="../LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details of creating the blast tabular file.
+</ul>
+<p>Original GFF vs <span class="ttp">xToSymap</span> converted GFF:
 <ul>
 <li>As of v5.5.7, most NCBI and Ensembl files can be loaded directly.
 See <a href="#orig2">Tested genomes - Load Originals</a> for what NCBI/Ensembl files
@@ -121,9 +125,9 @@ did not work and why. Regardless, it is MUCH better to convert using <span class
 i.e. <i>it is superior</i> than directly loading the files;
 see <a href="./ncbi.html" class="ext" target="_blank">NCBI</a> and <a href="./ensembl.html"  class="ext" target="_blank">Ensembl</a>.
 If you are using files from another source, see <a href="./other.html" class="ext" target="_blank">Other</a>.
-<p>
-<li>The documentation and SyMAP interface assumes a knowledge of the Linux directory (folder) structure.
 </ul>
+<p>The documentation and SyMAP interface assumes a knowledge of the Linux directory (folder) structure.
+
 
 <a id="seqprep"></a> <!-- accessed in SystemHelp -->
 <h3>Sequence files</h3>
@@ -177,7 +181,7 @@ see <a href="#second">Secondary name</a>.
 </table>
 
 <a id="mask"></a>
-<h4>Masking</h4>
+<h4>Masking for MUMmer</h4>
 <i>Masked sequence:</i>
 <ul>
 <li>SyMAP does not perform the repeat-masking so it must be done with another program.
@@ -188,7 +192,7 @@ to change it to hard-masked.
 <li>Ensembl provides both soft and hard-masked sequences.
 </ul>
 <p>
-<li>Masking reduces alignment time and false-positive hits,
+<li>Masking reduces MUMmer alignment time and false-positive hits,
 but also runs a risk of concealing true hits due to inaccurate masking.
 Masking is not really necessary unless the genome is highly repetitive
 <i>and</i> those repeats are shared with other genomes being aligned.
@@ -289,7 +293,7 @@ To load the CDSs instead of the default exons,
 	change it on the <a href="../SystemHelp.html#projParams"  class="ext" target="_blank">Project Parameter</a> panel.
 <hr>
 <!-- ===================================================== -->
-<a id="dir"></a>
+<a id="dir"></a> <!-- ref in code -->
 <h3>Location of files</h3>
 
 <u>Project name and directory</u>:
@@ -742,7 +746,7 @@ For example, Cabbage had 'C' before its chromosome number, e.g.
 <br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ttt">&gt;NC_027748.1 Brassica oleracea var. oleracea cultivar TO1000 chromosome C1, BOL...</span>
 <br>so the chromosome names will be C1, C2, etc.
 
-<p>See <a href="../SystemGuide.html#time"  class="ext" target="_blank">Tested datasets and timings</a>
+<p>See <a href="../Results.html"  class="ext" target="_blank">Tested datasets and timings</a>
 for the <span class="ttl">Alignment&amp;Synteny</span> compute times for a range of species pairs.
 
 <!-- ==================================================== -->

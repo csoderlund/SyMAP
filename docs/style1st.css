@@ -13,6 +13,11 @@
 	.ttl  {font-family: Serif, monospace; font-size: 14px; font-weight: 600; color: DarkSlateGrey;}
 	.ttx  {font-family: courier, monospace; font-size: 14px; font-weight: 500; color: DarkSlateGrey;}
 	.ttt  {font-size:13px}
+	.ttps  {font-family: Arial, monospace; font-size: 12px; font-weight: 600; color: #556B2F; }
+	.ttbs  {font-family: SanSerif, monospace; font-size: 12px; font-weight: 600; color: #454545;}
+	.ttls  {font-family: Serif, monospace; font-size: 12px; font-weight: 600; color: DarkSlateGrey;}
+	.ttxs  {font-family: courier, monospace; font-size: 12px; font-weight: 500; color: DarkSlateGrey;}
+	.ttts  {font-size:13px}
 	.small {font-size: 10px;} /* <ol class="small" or <li> */
 	.center {margin-left: auto; margin-right: auto;}
 	pre  {font-size:13px; margin-top: 0;padding: 0px 12px 0px 12px; /* top, right, bottom, left */}

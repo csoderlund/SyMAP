@@ -44,16 +44,56 @@ For existing databases, there are no database or build changes since <a href="#v
 
 <h3>Summary of recent major releases</h3>
 <table>
-<tr><td><a href="#v585">v5.8.3</a><td>(28-Apr-26)<td>New <span class="ttp">Linear</span> display.
+<tr><td><a href="#v589">v5.8.9</a><td>(30-Sept-26)<td>Use <span class="ttx">Blast Tabular file</span> for hits instead of running <span class="ttx">MUMmer</span>.
+<tr><td><a href="#v588">v5.8.8</a><td>(27-Aug-26)<td>Improved <span class="ttx">Collinear set</span> algorithm.
+First update <a href="#v556">v5.5.6</a> (14-July-24)
+<tr><td><a href="#v586">v5.8.6</a><td>(15-July-26)
+<td>Update <span class="ttl">xToSymap</span> to include CDSs.
+First release <a href="#v557">v5.5.7</a> (8-Aug-24).
+<tr><td><a href="#v585">v5.8.5</a><td>(1-June-26)<td>Update <span class="ttp">Linear</span> display.
+First release <a href="#v583">v5.8.3</a> (28-Apr-26).
 <tr><td><a href="#v575">v5.7.5</a><td>(15-Oct-25)<td>Self-synteny has almost complete support.
-<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improve synteny algorithm using new <span class="ttx">Strict</span> option.
+<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improved <span class="ttx">Synteny</span> algorithm using new <span class="ttx">Strict</span> option.
 <tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>New <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo2</span>,
 which is aware of the exon-intron structure.
-<tr><td><a href="#v557">v5.5.7</a><td>(08-Aug-24)<td>Add <span class="ttl">xToSymap</span> and improve ease of input.
-Updated <a href="#v586">v5.8.6 (15-July-26)</a>.
-<tr><td><a href="#v556">v5.5.6</a><td>(14-July-24)<td>Improved the collinear set algorithm. Updated <a href="#v588">v5.8.8 (27-Aug-26)</a>.
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
 </table>
+
+<a id="v589"></a>
+<h3>Release: v5.8.9 (30-Sept-2026)</h3>
+Use <span class="ttl">Blast Tabular file</span> for hits instead of running <span class="ttx">MUMmer</span>.
+
+<p><ul>
+<li><span class="ttp">Pair Parameters</span> has a new option to load a blast file of gene hits.
+This is much faster, but does not have exon-intron information.
+See <a href="./LoadBlast.html" class="ext" target="_blank">Load Blast</a>.
+
+<p><li><span class="ttp">View</span> has a new option
+(see <a href="./img/viewExport.png">View</a>) to export the translated sequences.
+
+<p><li><span class="ttp">Reports...</span> has a new option
+<a href="./UserGuide.html#bexport" class="ext" target="_blank">Export...</a>,
+which exports the blocks with gene pairs.
+
+<p><li><span class="ttp">2D</span> has a new <span class="ttp">Track Filter</span> option to show the
+<span class=ttx>GFF ID</span> instead of the <span class=ttx>Gene#</span>.
+
+<p><li><small>Tiny interface:</small>
+<ol>
+<li><small>If blast hits were loaded, disabled hit export and alignment; i.e.
+<span class="ttps">Queries</span> <span class="ttbs">MSA</span> and <span class="ttbs">Export</span>,
+ and <span class="ttps">2D</span> Hit popup <span class="ttbs">Align</span> and <span class="ttbs">Show</span> option.</small>
+
+<li><small><span class="ttps">Queries</span>:
+ The <span class="ttbs">Export</span> has a new option to use <span class="ttxs">GFF ID</span> in the FASTA output;
+ also, it quit writing comment lines at the beginning of FASTA files.</small>
+The <span class="ttxs">%Sim</span> column will not be shown in the query panel of table columns if nucleotide alignment was performed.
+<li><small><span class="ttls">Pairs Params</span> <span class="ttxs">Mask</span>:
+For self-synteny, only one instance of the <span class="ttxs">Mask</span> will be shown.</small>
+<li><small><span class="ttls">Project Params</span> <span class="ttxs">Exon/CDS</span>: If this is changed after load,
+a popup will occur on <span class="ttls">Save</span> stating the project needs to be reloaded.</small>
+</ol>
+</ul>
 
 <a id="v588"></a>
 <h3>Release: v5.8.8 (27-Aug-2026)</h3>
@@ -76,11 +116,11 @@ Improvements to Collinear algorithm and the <span class="ttp">Summary</span>.
 
 <li><small>Minor improvements in Manager:</small>
 <ul>
-<li><small><span class="ttl"><small>All &#10004; pairs</small></span> did not work
+<li><small><span class="ttls">All &#10004; pairs</span> did not work
 consistently for all 3 views, it does now.</small>
-<li><small><span class="ttl"><small>Redo Cluster&Synteny</small></span>: Includes whether PROMER or NUCMER were used,
+<li><small><span class="ttls">Redo Cluster&Synteny</span>: Includes whether PROMER or NUCMER were used,
 and whether MASKING was used for the alignment files.</small>
-<li><small><span class="ttl"><small>viewSymap</small></span>: Will show loaded projects now even if they do not have synteny.</small>
+<li><small><span class="ttls">viewSymap</span>: Will show loaded projects now even if they do not have synteny.</small>
 </ul>
 
 <li><small>Minor improvements in 2D:</small>
@@ -534,7 +574,7 @@ The synteny algorithm has new <span class="ttx">Strict</span> that greatly impro
 synteny blocks for two complete genome sequence synteny.
 <p>
 <ul>
-<li><span class="ttp">Synteny</span> computation: See <a href="SystemHelp.html#over2" class="ext" target="_blank">Pair parameters</a>.
+<li><span class="ttp">Synteny</span> computation: See <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair parameters</a>.
 	<ul>
 	<li><span class="ttx">Strict</span> <b>New</b>: This option provides the following changes to the original
 	algorithm:

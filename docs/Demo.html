@@ -18,6 +18,7 @@
 <a href="#draft">&nbsp;&nbsp;Draft</a>
 <a href="#self">&nbsp;&nbsp;Self-synteny</a>
 <a href="#slog">&nbsp;&nbsp;symap.log</a>
+
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -93,6 +94,9 @@ is recommended when there is good gene annotation provided.
 <p>
 <li><span class="ttl">Synteny Original</span> or <span class="ttl">Synteny Strict</span>:
 The second is recommended for complete genome sequence; it does not perform well for draft.
+<p>
+<li><span class="ttl">Load Blast Hits</span>:
+The blast tabular file was created using Diamond. See <a href="LoadBlast.html" class=ext target="_blank">Load Blast</a>
 </ul>
 <p>
 
@@ -109,6 +113,11 @@ The second is recommended for complete genome sequence; it does not perform well
        <img src="img/demoSum2.png" alt="demo Sum algo2" style="border: 1px solid black; width: 390px"></a>
      <td style="vertical-align: text-top;"><a href="img/demoDotplot2.png">
 	     <img src="img/demoDotplot2.png" alt="demoDotplot2" style="border: 1px solid black; width: 390px"></a>
+<tr><td colspan="2"><span class="ttl">Load Blast File</span> and <span class="ttl">Synteny Strict</span>
+<tr><td style="vertical-align: text-top;"><a href="img/demoSumBlast.png">
+       <img src="img/demoSumBlast.png" alt="demo Sum blast" style="border: 1px solid black; width: 390px"></a>
+     <td style="vertical-align: text-top;"><a href="img/demoDotplotBlast.png">
+	     <img src="img/demoDotplotBlast.png" alt="demoDotplot blast" style="border: 1px solid black; width: 390px"></a>
 <tr><td colspan="2">
 <br>There is very little difference between the <span class="ttp">Dot Plots</span>. The
 difference in the synteny algorithm are obvious on the more complicated examples, as shown in
@@ -316,6 +325,7 @@ Finding synteny for demoArab and demoBrap
             7 Collinear Sets not in blocks (14 total hits)
 Finish Synteny                       4s
 </small></pre>
+
 
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>

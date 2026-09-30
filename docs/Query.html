@@ -118,7 +118,7 @@ If there is a list in parenthesis, it contains the list of pairs that do <i>not<
 <p>Open the <span class="ttb">Query Setup</span> window by clicking on its tab in the left panel.
 
 <!-- ================ Query Setup ================ -->
-<a id="query"></a>
+<a id="query"></a> <!-- ref in code -->
 <h2><small>&gt;</small> Query Setup</h2>
 
 <table class="tz"><tr>
@@ -586,7 +586,7 @@ using all hits.
 <hr>
 <!-- ======================================================================== -->
 <!-- ======================================================================== -->
-<a id="result"></a>
+<a id="result"></a> <!-- ref in code -->
 <h2>Result Panel</h2>
 
 <table class="tz"><tr>
@@ -826,7 +826,10 @@ The text in the popup can be copied.
 <a id="msaAlign"></a>
 <h4>4.2 MSA...</h4>
 
-Below is an image of a multiple alignment of gene sequences, where CDSs were loaded for all species.
+<i>If the hits are from Blast results for any project pair, the MSA of hit sequences is disabled!!</i>
+The end of <a href="UserGuide.html#sum" class="ext" target="_blank">Summary</a> will state whether a blast file of hits was used.
+
+<p>Below is an image of a multiple alignment of gene sequences, where CDSs were loaded for all species.
 <br>The right half shows the sequence, where the
 first row is the consensus: A 'n' (purple) is used where there is no majority base.
 Lowercase (green) is used if there is a least one mismatch.
@@ -963,10 +966,10 @@ The region displayed can be specified by the drop-down beside the <span class="t
 <a id="export"></a>
 <h4>4.4 Export...</h4>
 One or more rows can be selected for the following exports; or if no rows are selected, the entire table is exported.
-
+<p>
 <table class="tx">
 <tr><td>
-	<b>Table row and columns</b>
+	<span class="ttb">Table row and columns</span>
 	<p class="hanging-indent"><span class="ttb">CSV</span>:
 	Export the rows using the selected set of columns to a CSV format suitable for import into Excel.
 	<p class="hanging-indent"><span class="ttb">HTML</span>:
@@ -975,19 +978,22 @@ One or more rows can be selected for the following exports; or if no rows are se
 	<p class="hanging-indent"><span class="ttb">Include Row column</span>: This option is available because column
 	<span class="ttt">Row</span> is alway present, but it may be desirable to exclude it in the output.
 
-	<p><b>Table FASTA</b>
+	<p><span class="ttb">Table FASTA</span>
 	<p class="hanging-indent"><span class="ttb">All pair hit sequences</span>: (Pairs Only)
 	For each row, the two hit sequences from the <span class="ttx">Hstart</span> to <span class="ttx">Hend</span>
-	are written to file.
+	are written to file. <i>Disabled if blast hits were used as input</i>.
 	<p class="hanging-indent"><span class="ttb">Unique spliced transcripts</span>:
 	For each row, output the spliced transcripts.
-	This is very slow to execute! For example, it took 1m15s for 500 rows.
-
-	<td><a href="img/query_export.png"><img src="img/query_export.png" alt="result export" style="border: 1px solid black; width: 260px"></a>
+	<i>This is very slow to execute!</i> For example, it took 1m15s for 500 rows.
+	<td><a href="img/query_export.png" style="vertical-align: text-top;"><img src="img/query_export.png" alt="result export" style="border: 1px solid black; width: 260px"></a>
 </table>
+<p class="hanging-indent"><span class="ttb">Header line</span>: The line before each sequence starts with ">" and
+	is followed by an identifier. By default, it uses the SyMAP generated <span class="ttx">Gene#</span>. Selecting
+	<span class="ttx">GFF ID</span> uses the <span class="ttt">ID=</span> value from the GFF file (if there is none,
+	the identifier with be "No ID").
 <!-- ************************************************************************ -->
 <!-- ********************* REPORT ******************************************** -->
-<p>&nbsp;
+
 <a id="report"></a>
 <h4>4.5 Report...</h4>
 

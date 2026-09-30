@@ -288,7 +288,7 @@ menu.
 <p>The <span class=ttp>Circle</span> and <span class=ttp>Dot Plot</span> have a <b>#1</b> after them indicating they are
 the first of multiple types of the specified graphical display, and contain most of the explanation.
 <!-- ************* Manager Circle section ************* -->
-<a id="circle"></a>
+<a id="circle"></a> <!-- ref in code -->
 <h2>Circle #1 (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#ccp">Control Panel</a>
@@ -443,7 +443,7 @@ the group circle of ribbon colors to your desire.
 </table>
 
 <!-- ********* Linear *************** -->
-<a id="linear"></a>
+<a id="linear"></a> <!-- ref in code -->
 <h2>Linear (Two Genome)</h2>
 <table class="tz"><tr>
 <td><a href="#lcp">Control Panel</a>
@@ -565,7 +565,7 @@ The area capture keys were used to snapshot the image.
 </table>
 
 <!-- ************** Manager dot plot *************** -->
-<a id="dotplot_display"></a>
+<a id="dotplot_display"></a> <!-- ref in code -->
 <h2>Dot Plot #1 (Two Genome)</h2>
 
 <table class="tz"><tr>
@@ -759,7 +759,8 @@ selecting <u>Reverse</u>.
 <table>
 <tr><td>Select <span class="ttb">Reports...</span> which
 popups a menu as shown on the right.
-<p>The options are <a href="#sum">Summary</a> and <a href="#breport">Block Report</a>.
+<p>The options are <a href="#sum">Summary</a>, <a href="#breport">Block Report...</a> and
+<a href="#bexport">Export...</a>.
 <td><a href="img/reportMenu.png">
 	<img src="img/reportMenu.png" alt="report menu" style="border: 1px solid black; width: 100px"></a>
 </table>
@@ -853,6 +854,15 @@ is the percentage of genes that have a hit.
 </table>
 </table>
 
+<a id="bexport"></a>
+<h3>Export...</h3>
+<table>
+<tr><td>A file of blocks and their gene pairs will be written. If there are hits in a block that do not
+align to two genes, they are not written.
+The file format is described in <a href="./LoadBlast.html#pfile" class="ext" target="_blank">Load Blocks</a>.
+<td><a href="img/reportExport.png">
+	<img src="img/reportExport.png" alt="Export blocks" style="border: 1px solid black; width: 150px"></a>
+</table>
 <!-- *********************************************************** -->
 <!-- *********************************************************** -->
 <!-- *********************************************************** -->
@@ -961,7 +971,7 @@ highlights it in beige, clicking it again brings up the <span class="ttp">2D</sp
 </table>
 
 <!-- *********************************************************** -->
-<a id="alignment_display_2d"></a>
+<a id="alignment_display_2d"></a> <!-- ref in code -->
 <h3>2D Display (Multi-chromosome)</h3>
 
 <table class="tz"><tr>
@@ -1394,33 +1404,35 @@ will be un-selectable.
 <a id="sfhigh"></a>
 <table><tr><td>
 	<table class="ty">
-		<tr><td colspan="2"><span class="ttl">Highlight</span>
+	<tr><td colspan="2"><span class="ttl">Highlight</span>
 		<tr><td style="white-space: nowrap;"><span class="ttx">Gene popup</span>
-		<td> Highlight the gene when its <a href="#ginfo">Gene Popup</a> is displayed.
+		    <td> Highlight the gene when its <a href="#ginfo">Gene Popup</a> is displayed.
 
-		<tr><td><span class="ttl">Show Gene</span><td>Any number of the following can be selected simultaneously.<sup>1</sup>
-
-		<tr><td style="vertical-align: text-top;"><span class="ttx">Delimiter</span><td> When the zoom is close enough to view the exons, a black line will
+	<tr><td colspan="2"><span class="ttl">Show Gene</span>
+		<tr><td style="vertical-align: text-top;"><span class="ttx">Delimiter</span>
+		    <td> When the zoom is close enough to view the exons, a black line will
 		be drawn over the top end of each gene. This helps delimit genes that do not overlap (so are not staggered),
 		but are close enough to appear one gene (see <a href="#ex2d">example below</a>).
 
+	<tr><td colspan="2"><span class="ttl">Gene Text</span><sup>1, 2</sup>
 		<tr><td style="vertical-align: text-top;"><span class="ttx">Gene#</span><td>Display the <span class="ttx">Gene#</span>
 		beside each gene. This is a SyMAP assigned number; see <a href="#term2">Terminology</a>.
-
+		<tr><td style="vertical-align: text-top;"><span class="ttx">GFF ID</span><td>Display the <span class="ttx">GFF ID</span>
+		beside each gene. This is the value of the "ID=" keyword in the last column of the GFF file.
 		<tr><td style="vertical-align: text-top;"><span class="ttx">Annotation</span>
 		<td> Display of the annotation descriptions along the right side of track
 		(e.g. <a href="img/2d-closeup2.png">2D display</a>).
 		<br>NOTE: this only works if you are zoomed in close enough that the annotation boxes can clearly be displayed.
-
-		<tr><td style="vertical-align: text-top;"><span class="ttx">Has Hit</span><td>
-		This <span class="ttx">Gene#</span> and <span class="ttx">Annotation</span> will only show if the gene has a hit.<sup>1</sup>
 	</table>
 	<td><a href="img/seqFilter.png">
 	<img src="img/seqFilter.png" alt="Track Filter" style="border: 1px solid black; width: 350px"></a>
 </table>
-<sup>1</sup><small>Only one of the two instances of <span class="ttx">Gene#</span> and <span class="ttx">Annotation</span> can be checked;
-checking one automatically turns off the other.
+<sup>1</sup> <small>Only one of the four instances of <span class="ttx">Gene#</span> and <span class="ttx">GFF ID</span> can be checked;
+checking one automatically turns off any other.
+<br>&nbsp;&nbsp;&nbsp;Only one of the two instances of <span class="ttx">Annotation</span> can be checked; checking one automatically turns of the other.
 </small>
+<br><sup>2</sup> <span class="ttl"><small>Has Hit</small></span><small>: The <span class="ttx">Gene#</span>, <span class="ttx">GFF ID</span> and
+<span class="ttx">Annotation</span> will only show if the gene has a hit.</small>
 
 <p>
 <a id="sfhit"></a>
@@ -1428,8 +1440,6 @@ checking one automatically turns off the other.
 	<tr><td><span class="ttl">Show Text</span><sup>1</sup>
 	<td>Only one of the following options can be selected.
 	<br>Show the option's value along the edge of the sequence track (e.g. <a href="img/colSetGL.png">2D display c629</a>).
-	<br>A value of '0' is not shown.
-
 	<td>Symbol
 	<tr><td><span class="ttx">Block# 1st</span><td>Put the block number above the first hit of the visible block. <td>&nbsp;&nbsp;bN
 	<tr><td><span class="ttx">Block# All</span><td>If the hit is in a block, its block number will be shown. <td>&nbsp;&nbsp;bN
@@ -1443,6 +1453,7 @@ checking one automatically turns off the other.
 </table>
 <sup>1</sup><small>Text will not be drawn if it will be on top of another; however,
 text does sometimes get drawn on top of each other when there are inverted hits among non-inverted hits.
+A value of '0' is not shown.
 </small>
 <a id="sfgrap"></a>
 <p>
@@ -1672,7 +1683,10 @@ which can produce a slightly different alignment.
 
 <a id="base"></a>
 <h4>Graphical Align (Show pull-down)</h4>
-
+<i>
+If the hits are from Blast results, alignments are turned off!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
+If more than 2 tracks are shown and one  of the two pairs used blast hits, the alignments are turned off for everything.
+<p>
 Check <span class="ttb">Show</span> on the <a href="#control">2D control bar</a>, then select a region of maximum 50kb,
 <i>which must have hits</i>. To select a region,  drag the
 mouse along the sequence and release when the desired range is highlighted.
@@ -1709,8 +1723,9 @@ occurrences have been fixed in v5.4.8, but a few will have slipped through.
 <!-- *********************************************************** -->
 <a id="btext"></a>
 <h4>Text Align (Hit popup)</h4>
-
-Hover over a hit-wire and right click, which will result in the information popup (e.g. <span class="ttt">Hit #100</span> below).
+If the hits are from Blast results, alignments are turned off!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
+If more than 2 tracks are shown and one  of the two pairs used blast hits, the alignments are turned off for everything.
+<p>Hover over a hit-wire and right click, which will result in the information popup (e.g. <span class="ttt">Hit #100</span> below).
 <br>Click the <span class="ttl">Align...</span> for the <span class="ttl">Align options</span>.
 The left alignment shows the <span class="ttl">Align hit sequences</span> and the right side
 shows the <span class="ttl">Align gene sequences</span>. The <span class="ttl">Align gene sequences</span>

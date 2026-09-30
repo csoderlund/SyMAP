@@ -74,7 +74,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <td style="vertical-align: text-top;">
 2. <a href="#projParams"><u>Load Project Parameters</u></a> 			<!-- in code -->
 <ol type="a">
-<li style="margin: 0.4em 0;"><a href="#start">Parameter panel</a>
+<li style="margin: 0.4em 0;"><a href="#projPanel">Parameter panel</a>
 <li style="margin: 0.4em 0;"><a href="#display">Display</a>
 <li style="margin: 0.4em 0;"><a href="#project">Load project</a>
 <li style="margin: 0.4em 0;"><a href="#anno">Load annotation</a>
@@ -85,7 +85,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <td style="vertical-align: text-top;">
 3. <a href="#pairParams"><u>A&amp;S Pair Parameters</u></a>  			<!-- in code pre-v546 -->
 <ol type="a">
-<li style="margin: 0.4em 0;"><a href="#over2">Parameter panel</a>
+<li style="margin: 0.4em 0;"><a href="#pairPanel">Parameter panel</a>
 <li style="margin: 0.4em 0;"><a href="#align2">Alignment</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#clust">Cluster Hits</a>		<!-- in code v546 -->
 <li style="margin: 0.4em 0;"><a href="#syn">Synteny</a>				<!-- in code v546 -->
@@ -147,9 +147,11 @@ The possible functions vary with the state, as listed below:
 
 <tr><td style="vertical-align: text-top;">&nbsp;&nbsp;
 	<span class="ttb">Remove from disk</span>
-    <td><span class="ttx">Only: Remove alignment directories from disk</span>
-    <br><span class="ttx">All: Remove alignment and project directory from disk</span>
-    <p><span class="ttx">Remove alignments</span> removes alignments from <span class="ttt">data/seq_results</span> for this project. You will
+    <td><span class="ttx">Only: Remove results (MUMmer/Blast) directories from disk</span>
+    <br><span class="ttx">All: Remove results (MUMmer/Blast) and project directory from disk</span>
+    <p><span class="ttx">Remove results</span> removes the
+    MUMmer <span class=ttt>/align</span> and or the <span class=ttt>/blast</span> directories
+    from <span class="ttt">data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;</span> for this project . You will
     be prompted for each one to confirm you want it removed.
     <p>If there are no alignments, you will only see the prompt <span class="ttx">Remove project</span> to remove the project directory from disk.
     <p><span class="ttx">Remove project directory</span> remove  <span class="ttt">data/seq/&lt;project-name&gt;</span> from disk.
@@ -176,7 +178,7 @@ The possible functions vary with the state, as listed below:
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;
 	<span class="ttb">Reload project</span>
     <td><span class="ttx">Only: reload project only.</span>
-    <br><span class="ttx">All: reload project and remove alignments from disk.</span>
+    <br><span class="ttx">All: reload project and remove MUMmer/Blast files from disk.</span>
 	<p>If <span class="ttl">All</span> is selected, it first prompts for each alignment directory for this project before it is removed.
 		It removes the alignments, but it leaves the <span class="ttt">params.txt</span> file. You will need to remove the
 		alignment(s) if (1) there is a change in sequence, or (2) there is a change in the <span class="ttl">Minimal length</span> parameter;
@@ -206,11 +208,8 @@ on each one.
 <a id="avail"></a>
 <h3>1.c Available Syntenies</h3>
 
-Sequence alignments are performed with
-<a href="http://mummer.sourceforge.net/manual" class="ext" target="_blank">MUMmer3</a>,
-but can be changed to use
-<a href="https://mummer4.github.io"  class="ext" target="_blank">MUMmer4</a> (see SyMAP
-<a href="./MUMmer.html#mum4" class="ext" target="_blank">MUMmer</a>).
+Sequence alignments are performed with <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>
+or protein alignments with <a href="./LoadBlast.html" class="ext" target="_blank">Blast/Diamond</a>.
 
 <p>This section shows a table with the status of alignments between
 the selected <i>loaded</i> projects.
@@ -227,16 +226,20 @@ the buttons that can be selected are activated.
 		&#10004;
 	<td>Synteny for this project pair is ready to view.
 <tr><td><b>A</b>
-	<td>The MUMmer alignment has been performed but the synteny computation has not been run.
-		This status occurs if a pair is completed but then annotations are re-loaded for one of the projects,
-		or if the MUMmer files have been added by the user.
+	<td>The MUMmer alignment has been performed but the <span class="ttl">Clust&amp;Synteny</span> needs to be run;
+	select <span class="ttl">Selected Redo</span>.
 <tr><td><b>?</b>
 	<td>The alignment have not been completed. In this case, select <span class="ttl">Selected Redo</span> and the
 		alignments will be completed followed by the synteny computation.
+<tr><td><b>B</b>
+	<td>A blast tabular file is available but the <span class="ttl">Load&amp;Synteny</span> needs to be run;
+	select <span class="ttl">Selected Redo</span>.
+	<tr><td><b>A/B</b>
+	<td>Both MUMmer and Blast files are available; select which to use on the <a href="#pairPanel">Pair Parameters</a> window.
 <tr><td>&nbsp;
 	<td>The alignment has not been started.
 </table>
-<p>See <a href="#over2">Pair Parameters</a> for additional information on the <span class="ttb">Available Syntenies</span> and codes.
+<p>See <a href="#pairPanel">Pair Parameters</a> for additional information on the <span class="ttb">Available Syntenies</span> and codes.
 
 <a id="fun"></a>
 <h3>1.d Align&amp;Synteny</h3>
@@ -255,7 +258,7 @@ as the process has 2 distinct algorithms.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Clear Pair</span>
 	<td><span class="ttx">Only: remove synteny from database</span>
-	<br><span class="ttx">All: remove synteny and alignments from disk for this pair</span>
+	<br><span class="ttx">All: remove synteny and MUMmer/Blast files from disk for this pair</span>
 	<p>If you have changed the <span class="ttl">Alignment</span> parameters, or loaded new sequence for one
 	of the projects, you need to have the alignments removed and redone; otherwise, you can just remove the synteny
 	from database.
@@ -274,6 +277,7 @@ as the process has 2 distinct algorithms.
 it will perform 4 at a time.
 <li>Alternatively, the number of CPUs may be entered in the <span class="ttt">symap.config</span> file or
 <br>using the command line argument <span class="ttt">./symap -p</span>.
+<li>Multiple CPUs are used for (1) <span class=ttp>symap</span> running MUMmer and (2) the <span class=ttp>viewSymap</span> MSA alignment in <span class=ttp>Queries</span>.
 </ul>
 	<p><span class="ttl">Verbose</span> checkbox:
 	<ul><li>If checked, detailed summary information is written as
@@ -308,6 +312,7 @@ Neither of these are saved with the <span class="ttb">Pair parameters</span> <a 
 <td class="colrt"><a href="#top">Go to top</a></td></tr>
 </table>
 
+<a id="projPanel"></a>
 <h3>2.a Parameter panel</h3>
 <table>
 <tr><td style="vertical-align: text-top;">
@@ -455,17 +460,20 @@ select <span class="ttb">Clear Pair</span> and remove the alignment files, then 
 <!-- ============================================ -->
 <a id="anno"></a>
 <h3>2.d Load annotation</h3>
-The following parameters are under the <u>Load annotation</u> section of the <a href="#start">parameters</a> panel.
+The following parameters are under the <u>Load annotation</u> section of the <a href="#projParams">parameters</a> panel.
 
 <p><span class="ttl">Exon/CDS</span> toggle (v5.8.7 or later)
 <ul>
-<li>The associated type will be loaded (if it exists in the gff file).
-<li>There will be places where the term "Exon" is used, even if "CDS" are loaded; this is partially because
-one project can load exons and another can load CDS, and this has no effect on the synteny.
-<li>The loading of CDSs versus Exons are shown in the following places:
+<li>The associated type of Exon or CDS will be loaded.
+<br><a href="./input/index.html" class="ext" target="_blank">xToSymap</a> started including CDSs in the GFF file in release v5.8.6.
+<p><li>There will be places where the term "Exon" is used to represent either Exon or CDS.
+<br>However, whether Exons or CDSs were loaded are shown in the following places:
 <ul>
-<li>The <span class="ttp">Manager</span> <span class="ttl">Selected projects</span> will state CDS or Exon.
-The <span class="ttp">View</span> will state CDS or Exon.
+<li><span class="ttp">View</span> (e.g. click <a href="./img/viewArab.png">View panel</a>):
+<br>This popup of loaded project information will state CDS or Exon.
+<br>When CDSs are loaded, this display has a <span class="ttl">Export</span> button which allows exporting the <span class="ttx">protein</span> sequences.
+This is necessary to <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a>.
+
 <li><span class="ttp">2D</span>:
 <br>The gene graphics will show the CDSs instead of exons.
 <br>The <span class="ttl">Align</span>
@@ -547,7 +555,7 @@ Do not edit <span class="ttt">params.txt</span> with a standard editor.
 
 <table class="tz">
 <tr>
-<td><a href="#over2">Parameter<br>panel</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#pairPanel">Parameter<br>panel</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#align2"><i>Alignment</i></a>
 <td><a href="#clust"><i>Cluster<br>Hits</i></a>
 <td><a href="#syn"><i>Synteny</i></a>&nbsp;&nbsp;&nbsp;
@@ -556,7 +564,7 @@ Do not edit <span class="ttt">params.txt</span> with a standard editor.
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
-<a id="over2"></a>
+<a id="pairPanel"></a>
 <h3>3.a Parameter panel</h3>
 The <a href="#avail">Available Syntenies</a> section explains the table in the lower right. The following provides
 more information in the context of the pair parameters.
@@ -568,7 +576,7 @@ more information in the context of the pair parameters.
 	<p><table class="ty">
 	<tr><td><i>Value</i><td><i>Alignment</i><td><i>Synteny</i>
 	<tr><td>blank<td>No<td>No
-	<tr><td><b>A</b><td>Yes<td>No
+	<tr><td><b>A</b>, <b>B</b> or<br><b>A/B</b><td>Yes<td>No
 	<tr><td>&#10004;<td>Yes<td>Yes
 	</table>
 	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 500px"></a>
@@ -577,14 +585,15 @@ more information in the context of the pair parameters.
 <table>
 <tr>
 	<td style="vertical-align: text-top;">
-	<p>&nbsp;<p>Alignment will not be redone if the cell contains an <b>A</b>. This is important because MUMmer
+	<p>&nbsp;<p>If <span class=ttl>Use MUMmer</span> is selected (see panel on right) and the cell contains an <b>A</b>,
+	alignment will not be redone. This is important because MUMmer
 is very time-consuming, but the synteny computation is not
-(see <a href="SystemGuide.html#time" class="ext" target="_blank">timing results</a>); hence,
+(see <a href="Results.html#time" class="ext" target="_blank">timing results</a>); hence,
 one can make changes to the cluster or synteny parameters and re-run without redoing the alignments.
 <p>
 Select a pair cell in the <span class="ttb">Available Syntenies</span> table followed by the <span class="ttl">Parameters</span>
 button, which will popup the panel shown on the right.
-	<p>If a &#10004; or <b>A</b> in pair cell exists and the parameters for a section
+	<p>If a value in the pair cell exists and the parameters for a section
 	are changed, do the following:
 
 	<table class="ty">
@@ -609,12 +618,17 @@ button, which will popup the panel shown on the right.
 	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
 
 <a id="align"></a>
-<a id="align2"></a>
+<a id="align2"></a> <!-- ref in code -->
 <h3>3.b Alignment</h3>
+<a id="blast"></a>
+<h4>Load Blast Hits</h4>
+If blast hits are loaded instead of running MUMmer,
+see <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details.
+<br>There is no clustering step, so ignore the <i><b>Cluster Hits</b></i> section.
 
 <a id="mask"></a>
 <a id="concat"></a> <!-- this is referenced elsewhere -->
-<h4>Preparing the sequences</h4>
+<h4>Use MUMmer - Preparing the sequences </h4>
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
 <tr><td><span class="ttl">Concat</span>
@@ -714,7 +728,7 @@ use the "-mum" command line parameter, i.e.
 <pre> ./symap -mum</pre>
 <!-- ============================================================= -->
 <!-- ============================================================= -->
-<a id="clust"></a>
+<a id="clust"></a> <!-- ref in code -->
 <h3>3.c Cluster Hits</h3>
 	<table class="tz">
 	<tr>
@@ -930,7 +944,7 @@ see <a href="#save2">Save</a>.
 the collinear sets (see <span class="ttl">Strict</span> below).
 </ul>
 <!-- =============================================================== -->
-<a id="syn"></a>
+<a id="syn"></a> <!-- ref in code -->
 <h3>3.d Synteny</h3>
 
 <table class="tx">
@@ -943,7 +957,7 @@ for draft sequence.
 
 <table class="ty">
 <tr><td><i>Parameter</i><td><i>Description</i>
-<tr><td>&nbsp;&nbsp;<span class="ttl">Min Hits</span>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Min Hits</span>
 	<td>Minimum number of anchors required to define a synteny block.
 <tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Strict</span>
 	<td>This uses the <span class="ttl">Original</span> algorithm with the following changes:

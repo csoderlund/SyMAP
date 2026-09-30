@@ -14,6 +14,7 @@
 <p class=sidetit>&nbsp;&nbsp;MUMmer</p>
 <p>
 <a href="#mfiles">MUMmer files</a>
+<a href="#disk">Disk space and timing</a>
 <a href="#find">Finding the problem</a>
 <a href="#mem">&nbsp;&nbsp;Out of Memory</a>
 <a href="#suffix">&nbsp;&nbsp;No suffix tree</a>
@@ -54,7 +55,7 @@
 
 <!-- =================== bulk of page ===================== -->
 <div class="main">
-<p>This document discusses how to deal with one or more MUMmer alignments failing.
+<p>This document discusses MUMmer with SyMAP and how to deal with one or more MUMmer alignments failing.
 The corresponding MUMmer documentation is
 <a href="http://mummer.sourceforge.net" class="ext" target="_blank">v3</a> and
 <a href="https://mummer4.github.io" class="ext" target="_blank">v4</a>.
@@ -64,6 +65,7 @@ The corresponding MUMmer documentation is
 <tr><td style="vertical-align: text-top;" class="tx">
 	<table>
 	<tr><td><a href="#mfiles">MUMmer files</a>
+	<tr><td><a href="#disk">Disk space and timing</a>
 	<tr><td><a href="#find">Finding the problem</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Executables</a>
 	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#log">Log files</a>
@@ -94,23 +96,90 @@ The corresponding MUMmer documentation is
 <a id="mfiles"></a>
 <h2>MUMmer files</h2>
 
-When <span class="ttp">symap</span> executes MUMmer, the resulting alignment files are in:
+SyMAP executes MUMmer on
+<span class="ttt">&lt;species1&gt;</span> and <span class="ttt">&lt;species2&gt;</span>,
+which are the respective directories in  <span class="ttt">/data/seq</span>,
+which contain the genomic sequence files or information as to where they are.
+The resulting alignment files are in:
 <pre>
-   /data/seq_results/&lt;project-name1&gt;-to-&lt;project-name2&gt;/align
+   /data/seq_results/&lt;species1&gt;-to-&lt;species2&gt;/align
 </pre>
 For example,
 <pre>
-   data/seq_results/demo_seq_to_demo_seq2/align> ls
-   all.done				demo_seq_c1.demo_seq2_f2.mum
-   demo_seq_c1.demo_seq2_f1.mum		demo_seq_c1.demo_seq2_f2.mum.done
-   demo_seq_c1.demo_seq2_f1.mum.done
+   data/seq
+   data/seq/demoArab
+   data/seq/demoBrap
+
+   data/seq_results/demoArab_to_demoBrap/align
+   all.done				demoArab_c1.demoBrap_f2.mum
+   demoArab_c1.demoBrap_f1.mum		demoArab_c1.demoBrap_f2.mum.done
+   demoArab_c1.demoBrap_f1.mum.done
 </pre>
 
 <p>All MUMmer files but those with the <span class="ttt">.mum</span> suffix are removed by <span class="ttp">symap</span>. If you prefer them not to be removed,
 use the "-mum" command line parameter, i.e.
 <pre> ./symap -mum</pre>
 
-<p>The log files are in the <span class="ttt">/logs/&lt;project-name1&gt;-to-&lt;project-name2&gt;</span> directory.
+<p>The log files are in the <span class="ttt">/logs/&lt;species1&gt;-to-&lt;species2&gt;</span> directory.
+
+<a id="disk"></a>
+<h2>Disk space and timing</h2>
+<ul><li>The time and memory for MUMmer depends on the genomes sizes, complexity and similarity.
+<p><li>If MUMmer fails, it is often due to insufficient memory; see  <a href="#mem">Out of Memory</a>, which
+explains how to determine the problem and ways around it.
+<p><li>For large genomes, <i>it is essential that the machine has at least 6Gb of RAM and disk space
+for each CPU used</i>.
+<p><li>If gene discovery is not important, then masking all but the gene sequences <i>greatly</i> reduces
+the time and memory.  Alternatively, create a
+<a href="LoadBlast.html" class="ext" target="_blank">Blast tabular file for input</a>.
+
+<p><li>When MUMmer is running, the temporary files can take up to 6G of disk space, hence, if you have 12 CPUs/threads
+running, this could use 72G of disk space.
+</ul>
+
+<p>MUMmer produces a <span class="ttt">.mum</span> and <span class="ttt">.delta</span> file.
+SyMAP only uses the <span class="ttt">.mum</span> file so it removes the <span class="ttt">.delta</span> file.
+<br>If you do not want SyMAP to remove the  <span class="ttt">.delta</span>, start <span class="ttp">symap</span>
+with the "-mum" command line argument.
+
+<p>The following are sizes
+of MUMmer result <span class="ttt">data/seq_results/&lt;species1&gt;-to-&lt;species2&gt;/align</span> directory:
+<p>&nbsp;</p>
+<table style="border: 0px; padding: 5px; border-spacing: 5px;">
+<tr><th>Species
+    <th>&nbsp;&nbsp;&nbsp;&nbsp;Genome sizes
+    <th>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ttt">/align size</span>
+<tr><td><i>Arabidopsis thaliana</i> x <i>Brassica oleracea</i>
+    <td style="text-align: right">&nbsp;&nbsp;&nbsp;&nbsp;119Mb x 447Mb
+    <td style="text-align: right">23M
+<tr><td><i>Homo sapiens</i> x <i>Mus musculus</i>
+    <td style="text-align: right">&nbsp;&nbsp;&nbsp;&nbsp;3Gb x 2.7Gb
+    <td style="text-align: right">573M
+<tr><td><i>Homo sapiens</i> x <i>Pan troglodytes</i>
+    <td style="text-align: right">&nbsp;&nbsp;&nbsp;&nbsp;3Gb x 3Gb
+    <td style="text-align: right">12G<sup>*</sup>
+</table>
+<sup>*</sup><small>These closely related species result in many hits!</small>
+
+<p>You can remove the <span class="ttt">data/seq_results/&lt;species1&gt;-to-&lt;species2&gt;</span> directory after SyMAP has finished the synteny
+computation, but <i><b>it is strongly recommended</b></i> that you leave them if you have the space. There
+are frequent SyMAP updates with improvements to the clustering and synteny computations; if you have
+kept these files, then you can update the synteny in very little time as SyMAP will reuse the
+MUMmer files (e.g. Hsa x Mus took >30 hours for MUMmer
+versus ~5 minutes for the synteny). Also, if you have saved the MUMmer files, you can easily try different parameters for the clustering
+and synteny stages.
+
+<p>The alignments can be compressed while not in use.
+The following was executed from the <span class="ttt">data/seq_results/Hsa_to_Pan</span> directory, where
+the <span class="ttt">/align</span> files took 12G of disk space:
+<pre>
+
+tar -czf align.tar.gz align
+rm -rf align				# this removes the directory
+</pre>
+The resulting <span class="ttt">align.tar.gz</span> file take 3.5G of space (reduced from the 12G).
+
+<p>See <a href="Results.html"  class="ext" target="_blank">Tested platforms and timing results</a>
 
 <!-- ======================================================= -->
 <a id="find"></a>
@@ -161,7 +230,7 @@ See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External
 
 <a id="log"></a>
 <h4>Log files</h4>
-<p>Using <span class="ttt">p1</span> = <span class="ttt">project-name1</span> and <span class="ttt">p2</span> = <span class="ttt">project-name2</span>
+<p>Using <span class="ttt">p1</span> = <span class="ttt">species1</span> and <span class="ttt">p2</span> = <span class="ttt">species2</span>
 
 <pre>
    symap_5/
@@ -174,11 +243,11 @@ See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External
           symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
 </pre>
 
-e.g. <span class="ttt">p1</span> = <span class="ttt">demo_seq</span> and <span class="ttt">p2</span> = <span class="ttt">demo_seq2</span>
+e.g. <span class="ttt">p1</span> = <span class="ttt">demoArab</span> and <span class="ttt">p2</span> = <span class="ttt">demoBrap</span>
 <pre>
-       demo_seq_to_demo_seq2/
-         demo_seq_c1.demo_seq2_f1.log  # MUMmer output directed to this file for process 1
-         demo_seq_c1.demo_seq2_f2.log  # MUMmer output directed to this file for process 2
+       demoArab_to_demoBrap/
+         demoArab_c1.demoBrap_f1.log  # MUMmer output directed to this file for process 1
+         demoArab_c1.demoBrap_f2.log  # MUMmer output directed to this file for process 2
          symap.log                     # SyMAP terminal output
 </pre>
 <u>Known problems:</u> If an alignment is listed as failed in the <span class="ttt">error.log</span> file,
@@ -199,9 +268,9 @@ The command will look similar to the following, though it will all be on one lin
 <p>
 <pre>
   > ext/mummer/mac/promer
-    -p data/seq_results/demo_seq_to_demo_seq2/align/demo_seq_c1.demo_seq2_f2.promer
-     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq2/demo_seq2_f2.fa
-     data/seq_results/demo_seq_to_demo_seq2/tmp/demo_seq/demo_seq_c1.fa
+    -p data/seq_results/demoArab_to_demoBrap/align/demoArab_c1.demoBrap_f2.promer
+     data/seq_results/demoArab_to_demoBrap/tmp/demoBrap/demoBrap_f2.fa
+     data/seq_results/demoArab_to_demoBrap/tmp/demoArab/demoArab_c1.fa
 </pre>
 This shows <span class="ttt">promer</span> output directly on the terminal and provides a better description of the problem.
 
@@ -318,8 +387,8 @@ you will see a "?" for the pair as shown on the below.
 <span class="ttb">Selected Pair</span> and it will complete the failed processes.
 </table>
 
-<p><u>Incomplete alignment</u>:
-If SyMAP completed the alignment, e.g. the demo <span class="ttt">/align</span> directory
+<p><u>Complete alignment</u>:
+If SyMAP completed the alignment, e.g. the <span class="ttt">/align</span> directory
 will have the following files:
 <p><pre>
 -rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
@@ -416,39 +485,39 @@ the files in the directory ending with ".mum".
 
 <a id="example"></a>
 <h3>Example</h3>
-This example will use MUMmer for the loaded projects <span class="ttt">demo_seq</span> and <span class="ttt">demo_seq2</span>.
+This example will use MUMmer for the loaded projects <span class="ttt">demoArab</span> and <span class="ttt">demoBrap</span>.
 <br>If you want to try this and you have already run the demo, remove the synteny results
 from the database using the <span class="ttp">symap</span>
-<span class="ttb">Clear Pair</span> along with the directory <span class="ttt">data/seq_results/demo_seq_to_demo_seq2</span>.
+<span class="ttb">Clear Pair</span> along with the directory <span class="ttt">data/seq_results/demoArab_to_demoBrap</span>.
 
 <p>Input:
 <ul>
-<li>Project <span class="ttt">demo_seq</span> has file <span class="ttt">genomic.fa</span> (containing 2 chromosomes).
-<li>Project <span class="ttt">demo_seq2</span> has files <span class="ttt">chr1.seq.gz</span> and <span class="ttt">chr3.seq</span>.
-<li>Note that <span class="ttt">demo_seq</span> is alphanumerically less than <span class="ttt">demo_seq2</span>.
+<li>Project <span class="ttt">demoArab</span> has file <span class="ttt">genomic.fa</span> (containing 2 chromosomes).
+<li>Project <span class="ttt">demoBrap</span> has files <span class="ttt">chr1.seq.gz</span> and <span class="ttt">chr3.seq</span>.
+<li>Note that <span class="ttt">demoArab</span> is alphanumerically less than <span class="ttt">demoBrap</span>.
 </ul>
 <p>The commands are as follows:
 <p>
 <pre>
-   gunzip data/seq/demo_seq2/sequence/chr1.seq.gz  # MUMmer does not process zipped files
+   gunzip data/seq/demoBrap/sequence/chr1.seq.gz  # MUMmer does not process zipped files
    cd data/seq_results
-   mkdir demo_seq_to_demo_seq2
-   mkdir demo_seq_to_demo_seq2/align
-   touch demo_seq_to_demo_seq2/align/all.done
+   mkdir demoArab_to_demoBrap
+   mkdir demoArab_to_demoBrap/align
+   touch demoArab_to_demoBrap/align/all.done
 
    # from symap directory, execute the following (the indented line are part of the previous line)
-   ext/mummer/mac/promer  -p data/seq_results/demo_seq_to_demo_seq2/align/results.promer
-         data/seq/demo_seq2/sequence/chr1.seq data/seq/demo_seq/sequence/genomic.fa
+   ext/mummer/mac/promer  -p data/seq_results/demoArab_to_demoBrap/align/results.promer
+         data/seq/demoBrap/sequence/chr1.seq data/seq/demoArab/sequence/genomic.fa
    ext/mummer/mac/show-coords
-        -dlkTH data/seq_results/demo_seq_to_demo_seq2/align/results.promer.delta
-         &gt;data/seq_results/demo_seq_to_demo_seq2/align/seq1chr1.mum
+        -dlkTH data/seq_results/demoArab_to_demoBrap/align/results.promer.delta
+         &gt;data/seq_results/demoArab_to_demoBrap/align/seq1chr1.mum
 </pre>
 See <a href="input/logs/mummer.html">script</a> for the full set of MUMmer commands to process the demo sequence data.
 <br>It is easiest to run the demo by copying the contents of the script
 into a file (e.g. <span class="ttt">./symap/demo.txt</span>),
 <br>then from the <span class="ttt">symap</span> directory, execute it (e.g. <span class="ttt">sh demo.txt</span>).
 
-<p>When <span class="ttt">./symap</span> is started, select <span class="ttt">demo_seq</span> and <span class="ttt">demo_seq2</span>.
+<p>When <span class="ttt">./symap</span> is started, select <span class="ttt">demoArab</span> and <span class="ttt">demoBrap</span>.
 There will be a "A" in their cell; select it followed by
 <span class="ttb">Selected Pair</span> and it will load the alignments and compute the synteny.
 
@@ -459,7 +528,7 @@ There will be a "A" in their cell; select it followed by
 <h2>MUMmer parameters</h2>
 
 When setting parameters for MUMmer in
-<a href="SystemHelp.html#over2" target="_blank" class="ext">pairs parameters</a>,
+<a href="SystemHelp.html#pairParams" target="_blank" class="ext">pairs parameters</a>,
 they are <b>NOT</b> checked for correctness.
 <p>
 To see the parameters for the default MUMmer V3 on MacOS, from the <span class="ttt">symap</span> directory:
@@ -493,15 +562,15 @@ email <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>
 with the following files (described in <a href="#mfiles">MUMmer files</a>):
 <ol>
 <li><span class="ttt">error.log</span>
-<li><span class="ttt">logs/&lt;p1&gt;-to-&lt;p2&gt;/symap.log</span>
-<li><span class="ttt">logs/&lt;p1&gt;-to-&lt;p2&gt;/&lt;p1_cn.p2.fm&gt;.log</span> where n and m are the input file number.
+<li><span class="ttt">logs/&lt;species1&gt;_to_&lt;species2&gt;/symap.log</span>
+<li><span class="ttt">logs/&lt;species1&gt;_to_&lt;species2&gt;/&lt;species1_cn.species2.fm&gt;.log</span> where n and m are the input file number.
 <li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
 </ol>
 For example, email the terminal output and:
 <pre>
   symap/error.log
-  symap/logs/demo_seq_to_demo_seq2/symap.log
-  symap/logs/demo_seq_to_demo_seq2/demo_seq_c1.demo_seq2_f2.log
+  symap/logs/demoArab_to_demoBrap/symap.log
+  symap/logs/demoArab_to_demoBrap/demoArab_c1.demoBrap_f2.log
 </pre>
 <!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
