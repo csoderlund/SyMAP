@@ -2,24 +2,27 @@ package backend;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
 import symap.Globals;
+import symap.manager.Mpair;
 import util.ErrorReport;
+import util.FileDir;
 import util.ProgressDialog;
 import util.Utilities;
 
 /********************************************************
  * Utils for A&S
- * msgToFile prints to file and terminal, but not ProgressDialog
- * msg and appendText  prints to file, terminal, ProgressDialog
+ * msgToFile          prints to file, terminal, but not ProgressDialog
+ * msg and appendText prints to file, terminal, ProgressDialog
  */
 public class Utils {
 	public static void sleep(int milliseconds) {
@@ -77,6 +80,12 @@ public class Utils {
 		return String.format("Memory %s\n\n", mem);
 	}
 	// no time
+	// CAS589 added so will go to file, terminal, progress -- this is all a mess
+	public static void prtIndentMsg(ProgressDialog prog, int indent, String msg) {
+		String x = "";
+		for (int i=0; i<indent; i++) x +="   ";
+		prog.appendText(x + msg);
+	}
 	public static void prtMsgFile(ProgressDialog prog, String msg) { 
 		prog.msgToFile(msg);
 	}
@@ -96,10 +105,33 @@ public class Utils {
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
 		prog.appendText(String.format("%,10d %s           ", num, msg));
 	}
-	public static void prtNumMsgNZx(ProgressDialog prog, int num, String msg) { // CAS575 add prog
+	public static void prtNumMsgNZx(ProgressDialog prog, int num, String msg) { 
 		if (num>0) prtNumMsg(prog, num, msg);
 	}
-	
+	////////////////////////////////////////////////////////////////////////////
+	public static void prtToFileHeader(FileWriter fw, String msg) { // CAS589 added
+		try {
+			String x =  String.format("%-40s  %s", msg, ErrorReport.getDate());
+			Globals.prt(x);
+			fw.append(x+"\n");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Write to file");}
+	}
+	public static void prtToFileNano(FileWriter fw, String msg, long time) {
+		try {
+			String x =  String.format("%-40s  %s", msg, Utilities.getNanoTimeStr(time));
+			Globals.prt(x);
+			fw.append(x+"\n");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Write to file");}
+	}
+	public static void prtToFile(FileWriter fw, String msg) {
+		try {
+			Globals.prt(msg);
+			fw.append(msg+"\n");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Write to file");}
+	}
 	public static void prtNumMsg(int num, String msg) {
 		Globals.prt(String.format("%,10d %s           ", num, msg));
 	}
@@ -142,7 +174,15 @@ public class Utils {
 	/********************************************************
 	 * DONE 
 	 */
-	public static boolean checkDoneFile(String dir)  {
+	public static boolean checkDoneBlast(String dir)  {// CAS589 for Load Blast
+		File d = new File(dir);
+		if (!d.exists() || d.isFile()) return false;
+		
+		ArrayList <String> files = FileDir.getFilesFromDir(dir);
+		if (files == null || files.size()==0) return false;
+		return true;
+	}
+	public static boolean checkDoneMUMmer(String dir)  {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return false;
 		
@@ -176,6 +216,29 @@ public class Utils {
 			d.createNewFile();
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
+	}
+	// Get .tab file in resultDir/blast; CAS589 add
+	public static String getBlastFile(String dir) {
+	try {
+		String fileName="";
+		
+		String blastDir = dir + Constants.blastDir;
+		ArrayList <String> files = util.FileDir.getFilesFromDir(blastDir);
+		if (files.size()==0) return null;
+		
+		if (files.size()==1) fileName = files.get(0);
+		else {
+			for (String f : files) {
+				if (f.endsWith(".tab")) {
+					fileName = f;
+					break;
+				}
+			}
+			if (fileName.isBlank()) fileName = files.get(0);
+		}
+		return fileName;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Cannot access " + dir); return null;}
 	}
 	public static String getDateStr(long l) {
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");

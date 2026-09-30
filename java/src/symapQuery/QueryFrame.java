@@ -22,6 +22,7 @@ import props.PersistentProps;
 import util.Popup;
 import util.Utilities;
 import util.ErrorReport;
+import symap.Globals;
 import symap.closeup.MsaMainPanel;
 import symap.manager.ManagerFrame;
 import symap.manager.Mpair;
@@ -42,21 +43,40 @@ public class QueryFrame extends JFrame {
 	static private String propNameAll = "SyMapColumns1"; // 0&1's; use if match number of columns in current DB
 	static private String propNameSingle = "SyMapColumns2"; 
 	
-	protected String title=""; 								// for Export
+	protected String title="";// for Export
+	
+	private Vector<Mproject> mProjs = null;
+	protected boolean bUseAlgo2=false, isSelf=false, isAlignNT=false, bUseBlast=false;			
+	protected int cntUsePseudo=0, cntSynteny=0; // for Overview
+	
 	/******************************************************
 	 * ManagerFrame creates this object, add the projects, then calls build.
 	 */
-	public QueryFrame(ManagerFrame mFrame, String title, DBconn2 dbc2, Vector <Mproject> mProjVec, 
-			boolean useAlgo2, int cntUsePseudo, int cntSynteny, boolean isSelf) {
+	public QueryFrame(ManagerFrame mFrame, String title, DBconn2 dbc2, Vector <Mproject> mProjVec, boolean isSelf) {
 		setTitle("Query " + title); // title has: SyMAP vN.N.N - dbName
 		
 		this.mFrame = mFrame;  //  for getMpair
 		this.title = title;
 		this.tdbc2= new DBconn2("Query-" + DBconn2.getNumConn(), dbc2);
+		this.isSelf = isSelf;
 		
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
 		
+		bUseBlast = bUseAlgo2 = false;
+		for (int i=0; i<mProjs.size()-1; i++) { // CAS589 moved from ManagerFrame
+			for (int j=i+1; j<mProjs.size(); j++) {
+				Mpair mp = getMpair(mProjs.get(i).getIdx(), mProjs.get(j).getIdx());
+				if (mp.getPairIdx()<0) continue; 
+				
+				if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
+				if (mp.isBlast(Mpair.DB)) bUseBlast = true; // if one is true, its true for all
+				if (mp.isAlgo2(Mpair.DB)) bUseAlgo2 = true;
+				isAlignNT = mp.isAlignNT();
+				cntSynteny++;				  // if more than 2 projects, some pairs may not have synteny
+			}
+		}
+
 		String [] ab = getAbbrevNames();
 		for (int i=0; i<ab.length-1; i++) {// This is now checked in ProjParams, but to be sure...
 			for (int j=i+1; j<ab.length; j++) {
@@ -71,11 +91,6 @@ public class QueryFrame extends JFrame {
 			if (new Version(tdbc2).isVerLt(pairIdx, 575)) 
 				Popup.showWarning("Self-synteny must be updated with A&S v5.7.5 or later to work in Queries");
 		}
-		
-		this.bUseAlgo2 = useAlgo2; 		
-		this.cntUsePseudo = cntUsePseudo;
-		this.cntSynteny = cntSynteny;
-		this.isSelf = isSelf; // abbrev are diff, all else the same
 		
 		// for column saving, including cookies
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -353,20 +368,21 @@ public class QueryFrame extends JFrame {
 	protected DBconn2 getDBC() {return tdbc2;}
 	protected QueryPanel getQueryPanel() {return qPanel;}
 	protected Vector<Mproject> getProjects() {return mProjs;}
-	protected boolean isAlgo2() {return bUseAlgo2;};
+	protected boolean isAlgo2() {return bUseAlgo2 && !bUseBlast;}
 	protected boolean isSelf() {return isSelf;}
+	protected boolean isAlignNT() {return isAlignNT;}
 	
 	protected Mpair getMpair(int idx1, int idx2) { 
 		return mFrame.getMpair(idx1, idx2);
 	}
-	protected boolean isOneHasAnno() { // CAS579b
+	protected boolean isOneHasAnno() { 
 		int cnt=0;
 		for (Mproject mp : mProjs) {
 			if (mp.hasGenes()) cnt++;
 		}
 		return (cnt==1);
 	}
-	protected boolean isAllNoAnno() { // CAS579b
+	protected boolean isAllNoAnno() { 
 		int cnt=0;
 		for (Mproject mp : mProjs) {
 			if (mp.hasGenes()) cnt++;
@@ -378,10 +394,6 @@ public class QueryFrame extends JFrame {
 	private ManagerFrame mFrame;
 	private QueryPanel qPanel = null;
 	
-	private Vector<Mproject> mProjs = null;
-	protected boolean bUseAlgo2=false;
-	protected boolean isSelf=false;			
-	protected int cntUsePseudo=0, cntSynteny=0; // for Overview
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;

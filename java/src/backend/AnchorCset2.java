@@ -48,8 +48,6 @@ public class AnchorCset2 {
 	
 	private String chrs;	// ErrorReport and Trace
 	
-	
-	
 	/** Called from AnchorMain **/
 	protected AnchorCset2(Mpair mp, Mproject proj1, Mproject proj2, DBconn2 dbc2, ProgressDialog log) {
 		this.mPairIdx = mp.getPairIdx();
@@ -173,7 +171,7 @@ public class AnchorCset2 {
 			geneMap1.put(gidx, gObj);
 			
 			if (lastg!=null && lastg.isOlap && gObj.isOlap && lastg.bContains(gObj)) {
-				gObj.parentID = lastg.gidx; 
+				gObj.isEmbed = true; 
 				cntEmbed++;
 			}
 			else {
@@ -192,7 +190,7 @@ public class AnchorCset2 {
 			geneMap2.put(gidx, gObj);
 			
 			if (lastg!=null && lastg.isOlap && gObj.isOlap && lastg.bContains(gObj)) {
-				gObj.parentID = lastg.gidx; 
+				gObj.isEmbed = true; 
 				cntEmbed++;
 			}
 			else {
@@ -430,8 +428,8 @@ public class AnchorCset2 {
 				if (h1g1.cntSet>1) usedCnt++;	if (h1g2.cntSet>1) usedCnt++;
 				if (h2g1.cntSet>1) usedCnt++;	if (h2g2.cntSet>1) usedCnt++;
 				
-				if (h1g1.genenum != h2g1.genenum && (h1g1.isEmbed() || h2g1.isEmbed())) embedCnt++;
-				if (h1g2.genenum != h2g2.genenum && (h1g2.isEmbed() || h2g2.isEmbed())) embedCnt++;
+				if (h1g1.genenum != h2g1.genenum && (h1g1.isEmbed || h2g1.isEmbed)) embedCnt++;
+				if (h1g2.genenum != h2g2.genenum && (h1g2.isEmbed || h2g2.isEmbed)) embedCnt++;
 					
 				if (usedCnt>2 || embedCnt>0) { 
 					if (TRACE) {
@@ -654,8 +652,8 @@ public class AnchorCset2 {
 			if (bInv  && d2!=0 && d2!=-1) return false;
 			
 			// Check each hit ends to make sure one is not embedded where the other does not even overlap
-			if ((gH1g1.isEmbed() && !gH1g2.isOlap) || (!gH1g1.isOlap && gH1g2.isEmbed())) {if (TRACE) prtdt("EM"); return false;}
-			if ((gH2g1.isEmbed() && !gH2g2.isOlap) || (!gH2g1.isOlap && gH2g2.isEmbed())) {if (TRACE) prtdt("EM"); return false;}
+			if ((gH1g1.isEmbed && !gH1g2.isOlap) || (!gH1g1.isOlap && gH1g2.isEmbed)) {if (TRACE) prtdt("EM"); return false;}
+			if ((gH2g1.isEmbed && !gH2g2.isOlap) || (!gH2g1.isOlap && gH2g2.isEmbed)) {if (TRACE) prtdt("EM"); return false;}
 			
 			boolean g1=true, g2=true;
 			if (t1!=0) {
@@ -728,10 +726,10 @@ public class AnchorCset2 {
 			String h2g1 = (gH2g1.isOlap) ? gH2g1.tag : gH2g1.tag+" ";
 			String h2g2 = (gH2g2.isOlap) ? gH2g2.tag : gH2g2.tag+" ";
 			String s1="-", s2="-", s3="-", s4="-";
-			if (gH1g1.isEmbed()) s1="E"; else if (gH1g1.isOlap) s1= "O";
-			if (gH2g1.isEmbed()) s2="E"; else if (gH2g1.isOlap) s2= "O";
-			if (gH1g2.isEmbed()) s3="E"; else if (gH1g2.isOlap) s3= "O";
-			if (gH2g2.isEmbed()) s4="E"; else if (gH2g2.isOlap) s4= "O";
+			if (gH1g1.isEmbed) s1="E"; else if (gH1g1.isOlap) s1= "O";
+			if (gH2g1.isEmbed) s2="E"; else if (gH2g1.isOlap) s2= "O";
+			if (gH1g2.isEmbed) s3="E"; else if (gH1g2.isOlap) s3= "O";
+			if (gH2g2.isEmbed) s4="E"; else if (gH2g2.isOlap) s4= "O";
 			
 			dprt(String.format("%s #%4d #%4d   %s %3d %3d   %s %3d %3d   Tag %6s %6s   %6s %6s  Tnum %3d %3d  %3d %3d  %s %s %s %s", 
 					msg, ht1.hitnum, ht2.hitnum,  Globals.toTF(b1), d1x, t1x, Globals.toTF(b2),  d2x, t2x, 	
@@ -825,15 +823,13 @@ public class AnchorCset2 {
 			isOlap = !tag.endsWith(Globals.DOT);
 		}
 		private boolean bContains(Gene g) {return start<=g.start && end>=g.end;} 
-		private boolean isEmbed() { return parentID>0;}
 		
 		private String tag="";	
 		private int gidx, genenum,  start, end;
 		private int tnum;
 		
 		private int cntSet=0;
-		private boolean isOlap=false;
-		private int parentID=0;
+		private boolean isOlap=false, isEmbed=false; // CAS589 change parentid back to isEmbed
 	} 
 	/*********************************************
 	 * Created and used in setMergeOlap

@@ -1,0 +1,427 @@
+package backend;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.ArrayList;
+
+import database.DBconn2;
+import symap.Globals;
+import symap.manager.Mpair;
+import symap.manager.Mproject;
+import util.ErrorReport;
+import util.ProgressDialog;
+
+/*********************************************************
+ * This takes as input a blast -m8 tab file and uses them as hits. Add CAS589
+ * They may be merged into a cluster if they hit the same gene pair.
+ * The top 5 are taken, regardless of the number.
+ * This could be a NCBI/Ensembl transcript file, in which case many of the transcripts will
+ * not be in the SyMAP GFF file.
+ * 
+ * 1. For the selected gene pair: load the genes from the database
+ * 2. Load hits from the data/seq_results/<proj1_to_proj2> directory
+ * 
+ * Parameters: Gene#, or GFF ID
+ */
+public class UseBlast {
+	private final String HTYPE = "BH"; // instead of EE..., or g2
+	private final String SEP = ":";    // key for hitMap (geneIdxs) and blockMap (chrNames)
+	
+	private boolean isID=true;			// will be pairs parameters if this is good 
+	private boolean isPR=true;			// ditto
+	private int pairIdx, projIdx1, projIdx2;
+	private Mpair mp;
+	private Mproject mProj1, mProj2;
+	private ProgressDialog mLog;
+	private boolean bSuccess=true;
+	private AccessDB aDB;
+	private DBconn2 dbc;
+	
+	private HashMap <String, Integer> idIdxMap1   = new HashMap <String, Integer> ();// GFF Id, idx
+	private HashMap <String, Integer> idIdxMap2   = new HashMap <String, Integer> ();// ditto
+	private HashMap <Integer, Gene>   geneIdxMap1 = new HashMap <Integer, Gene> ();// loaded in loadAnno
+	private HashMap <Integer, Gene>   geneIdxMap2 = new HashMap <Integer, Gene> ();// ditto
+	private HashMap <String, Hit>     hitPairMap  = new HashMap <String, Hit> (); // key geneIdx1:geneIdx2
+	
+	public UseBlast(DBconn2 dbc, ProgressDialog mLog,  Mpair mp) {
+		this.mLog = mLog;
+		this.mp = mp;
+		this.dbc = dbc;
+		
+		aDB = new AccessDB(dbc);
+		pairIdx = mp.getPairIdx();
+		mProj1  = mp.mProj1;		
+		mProj2  = mp.mProj2;
+		projIdx1 = mProj1.getIdx();	
+		projIdx2 = mProj2.getIdx();
+	}
+	protected boolean run() {
+		long time = Utils.getTime();
+		TreeMap <Integer, String> grpMap1 = mProj1.getGrpIdxFullMap(); // grpIdx, grpFullName, e.g. Chr01
+		TreeMap <Integer, String> grpMap2 = mProj2.getGrpIdxFullMap();		
+		
+		String fileName= Utils.getBlastFile(mp.getResultDir());
+		String tmp = fileName.contains("data") ? fileName.substring(fileName.indexOf("data")) : fileName;
+		
+		Utils.prtIndentMsg(mLog, 1, String.format("Load Blast for %s and %s", mProj1.getDBName(), mProj2.getDBName()));
+		Utils.prtIndentMsg(mLog, 2, String.format("from %s", tmp));
+		
+		// Process
+		aDB.loadGenes(mProj1.strDisplayName, grpMap1, idIdxMap1, geneIdxMap1); if (!bSuccess) return false;
+		aDB.loadGenes(mProj2.strDisplayName, grpMap2, idIdxMap2, geneIdxMap2); if (!bSuccess) return false;
+		
+		readBlast(fileName);	if (!bSuccess) return false;
+		finish();				if (!bSuccess) return false;
+			
+		aDB.saveHits(grpMap1, grpMap2);	if (!bSuccess) return false;
+		mp.saveParamsToDB("Load " + tmp); // goes in summary
+		
+		// Compute Collinear and NumHits; Summary is done in DoAlignSynPair
+		AnchorMain anchors = new AnchorMain(dbc, mLog, mp);
+		anchors.saveHitNum();
+		anchors.saveAnnoHitCnt(true);
+		
+		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc, mLog).collinearSets(); 
+		else 							new AnchorCset1(mp, mProj1, mProj2, dbc, mLog).collinearSets(); 
+		
+		Utils.prtMsgTimeDone(mLog, "Finish Load Blast", time); 
+		return true;
+	}
+	/********************************************************************
+	 * qseqid       sseqid     %id   len     mm    gapopen   qs 	 qe	     ss      se      evalue    bitscore
+	 * LOC103862735 AT2G42710  40.0  215     123     2       126     334     188     402     1.93e-46  160
+	 * 0            1          2     3       4       5       6       7       8       9       10        11
+	 */
+	private void readBlast(String fileName) {
+	try {
+		BufferedReader fhIn = new BufferedReader (new FileReader (fileName));
+		String line;
+		int cntPair=0, cntSkip=0, cntDup=0, cnt=0;
+		boolean bSwap = false, bSetSwap=false;
+		int t = (isPR) ? 3 : 1;
+		
+		while ((line = fhIn.readLine()) != null) {
+			if (line.isBlank() || line.startsWith("//") || line.startsWith("#")) continue;
+			
+			String [] tok = line.trim().split("\\s+");
+			String qid = tok[0];
+			String sid = tok[1];
+			if (!bSetSwap) { // read until the first found qseqid or sseqid, set swap if necessary
+				if      (idIdxMap1.containsKey(qid)) bSetSwap = true;
+				else if (idIdxMap2.containsKey(qid)) bSetSwap = bSwap =  true;
+				else if (idIdxMap2.containsKey(sid)) bSetSwap = true;
+				else if (idIdxMap1.containsKey(sid)) bSetSwap = bSwap = true;
+				else { // both not in; if only one is not in, not caught until below
+					if (cntSkip<3)       prtMsg("No ID's in database: " + qid + " or " + sid);
+					else if (cntSkip==3) prtMsg("Additional messages will be surpressed");
+					cntSkip++; 
+					continue;
+				}		
+				if (bSwap) prtMsg("Projects Gene IDs in reverse order - swapping");
+				else       prtMsg("Projects Gene IDs in correct order");
+			}
+			int idx1=0, idx2=0;
+			Gene gn1=null, gn2=null;
+			if (bSwap) {String tmp=qid; qid=sid; sid=tmp;}
+			
+			if (idIdxMap1.containsKey(qid)) {
+				idx1 = idIdxMap1.get(qid);
+				gn1  = geneIdxMap1.get(idx1);
+			}
+			if (idIdxMap2.containsKey(sid)) {
+				idx2 = idIdxMap2.get(sid);
+				gn2  = geneIdxMap2.get(idx2);
+			}
+			if (idx1==0 || idx2==0) {
+				if (cntSkip<3)       prtMsg("No ID's in database: " + qid + " or " + sid);
+				else if (cntSkip==3) prtMsg("Additional messages will be surpressed");
+				cntSkip++; 
+				continue; 
+			}
+				
+			cntPair++;	
+			Hit ht;
+			String key = gn1.idx + SEP + gn2.idx;
+			if (hitPairMap.containsKey(key)) ht = hitPairMap.get(key);
+			else {
+				ht = new Hit(gn1, gn2);
+				hitPairMap.put(key, ht);
+			}
+			int bit = toInt(tok[11]); 
+			if (ht.add(bit)) {
+				ht.pid = toInt(tok[2]); 
+				ht.len = toInt(tok[3])*t; // skip mm and gapopen
+				if (bSwap) {
+					ht.s2  = toInt(tok[6])   + gn2.cdsStart;
+					ht.e2  = toInt(tok[7])*t + gn2.cdsStart;
+					ht.s1  = toInt(tok[8])   + gn1.cdsStart;
+					ht.e1  = toInt(tok[9])*t + gn1.cdsStart; 
+				}
+				else {
+					ht.s1  = toInt(tok[6])   + gn1.cdsStart;
+					ht.e1  = toInt(tok[7])*t + gn1.cdsStart;
+					ht.s2  = toInt(tok[8])   + gn2.cdsStart;
+					ht.e2  = toInt(tok[9])*t + gn2.cdsStart; 
+				}
+				ht.bit = bit;	if (!bSuccess) {fhIn.close(); return;} // for any toInt or interrupt
+			} else cntDup++;
+			
+			if (cnt++ == 10000) {Globals.rprt(" Load " + cntPair); cnt=0;}
+		}
+		fhIn.close();
+		Globals.rclear();
+		if (cntDup>0) prtMsg(String.format("%,8d Multi-hits to gene pair (uses best bitscore)", cntDup));
+		if (cntSkip>0)prtMsg(String.format("%,8d Ignore hits - no corresponding gene pair", cntSkip));
+		if (cntSkip>0 && cntPair==0) {
+			String name1="", name2="";
+			for (Gene x : geneIdxMap1.values()) {name1 = x.name; break;} // get first one
+			for (Gene x : geneIdxMap2.values()) {name2 = x.name; break;}
+			prtMsg("Example IDs in database: " + name1 + " " + name2) ;
+		} 
+	}
+	catch (Exception e) {ErrorReport.print(e, "Load file"); bSuccess=false;}
+	}
+	private void finish() {
+	try {
+		for (Hit ht : hitPairMap.values()) {
+			ht.gn1.olap = (ht.len<ht.gn1.len) ? (int) Math.round((((double)ht.len/(double)ht.gn1.len)*100.0)) : 100;
+			ht.gn2.olap = (ht.len<ht.gn2.len) ? (int) Math.round((((double)ht.len/(double)ht.gn2.len)*100.0)) : 100;
+		}
+	}
+	catch (Exception e) {ErrorReport.print(e, "Load file"); bSuccess=false;}
+	}
+	/***********************************************************/
+	///////////////////////////
+	private void prtErr(String msg) {
+		Utils.prtIndentMsg(mLog, 1, msg + " -- cannot continue");
+		bSuccess=false;
+	}
+	private void prtMsgAll(String msg) {
+		Utils.prtIndentMsg(mLog, 1, msg);
+	}
+	private void prtMsg(String msg) {
+		Utils.prtIndentMsgFile(mLog, 1, msg);
+	}
+	private int toInt(String i) {
+		try {
+			if (i.contains(".")) return (int) Math.round(Double.parseDouble(i));
+			return Integer.parseInt(i);
+		} 
+		catch (Exception e) {ErrorReport.print(e, "To integer"); bSuccess=false; return -1;}
+	}
+	protected void interrupt() {
+		bSuccess=false;
+		Utils.prtIndentMsgFile(mLog, 1, "Load Blast was interrupted");
+	}
+	/********************************************************************/
+	// Created in loadAnno
+	private class Gene {
+		private Gene(int idx, int grpIdx, int start, int end, String strand, String name) {
+			this.idx=idx; 	
+			this.grpIdx=grpIdx;
+			this.len = end-start+1;
+			this.strand=strand;
+			this.name = name;	
+		}
+		private void addCDS(int cstart) {
+			if (cdsStart==0 || cstart<cdsStart) cdsStart=cstart;
+		} 
+		private int idx, grpIdx;	 // hit uses idx and grpIdx
+		private int len;			 
+		private String strand, name; // strand is used for hit; name is used in idIdxMap
+		private int cdsStart=0;		 // hits relative to first CDS
+		private int olap=0;
+	}
+	// created during load hits
+	private class Hit {	
+		private Hit (Gene gn1, Gene gn2) {this.gn1=gn1; this.gn2=gn2;}
+		private int hidx; 				// assigned in saveNewHit
+		
+		private Gene gn1, gn2;			// geneIdx and grpIdx come from these
+		
+		private int s1, s2, e1=0, e2=0;     
+		private int pid, len, bit=0;
+		private int numHits=0; 			// in case there is more than one hit between 2 genes; not used yet...
+		private boolean add(int bit) {numHits++; return this.bit<bit;}
+	}	
+	
+	/**************************************************************************/
+	private class AccessDB {
+		DBconn2 dbc;
+		
+		private AccessDB(DBconn2 dbc) {this.dbc = dbc;}
+		
+		/* *******************************************************************/
+		private void loadGenes(String species, TreeMap <Integer, String> grpMap, 
+				HashMap <String, Integer> idIdxMap, HashMap <Integer, Gene> geneIdxMap) {
+		try {
+			int cntNoId=0, cntGene=0;
+			
+			String grps=null;
+			for (int ix : grpMap.keySet()) {
+				if (grps==null) grps = ix+"";
+				else grps += "," + ix;
+			}
+			
+			ResultSet rs = dbc.executeQuery(
+				"SELECT idx, grp_idx, start, end, strand, tag, name FROM pseudo_annot  "
+				+ " where type='gene' and grp_idx in (" + grps + ")" );
+		
+			while (rs.next()){
+				int i=1;
+				int idx 		= rs.getInt(i++);
+				int grpIdx 		= rs.getInt(i++);
+				int s 			= rs.getInt(i++);
+				int e 			= rs.getInt(i++);
+				String strand 	= rs.getString(i++);
+				String tag 		= rs.getString(i++);
+				String anno 	= rs.getString(i++);
+				
+				String name="";
+				if (isID) {
+					if (!anno.isBlank() && anno.contains(Globals.idKey)) {
+						String [] tok = anno.split(";");
+						for (String tuple : tok) {
+							if (tuple.startsWith(Globals.idKey)) {
+								name = tuple.split("=")[1];
+								
+								break;
+							}
+						}
+					} else {cntNoId++; continue;}
+				}
+				else name = tag.substring(0, tag.indexOf("("));
+					
+				idIdxMap.put(name, idx);
+				Gene gn = new Gene(idx, grpIdx, s, e, strand, name);
+				geneIdxMap.put(idx, gn);
+				cntGene++;
+			}
+			
+			if (idIdxMap.size()==0 && cntNoId>0 && isID) {
+				prtErr("Genes do not have a GFF ID"); bSuccess=false;
+				return;
+			}
+			// exons/cds can be ascending or descending, so need to check all; addCDS takes lowest value
+			rs = dbc.executeQuery("SELECT gene_idx, start FROM pseudo_annot  "
+					+ " where type='exon' and grp_idx in (" + grps + ")" );
+			while (rs.next()) {
+				Gene gn = geneIdxMap.get(rs.getInt(1));
+				gn.addCDS(rs.getInt(2));
+			}
+			if (cntNoId>0) prtMsg(String.format("%s: %,d genes have no GFF ID from %,d total", species, cntNoId, cntGene));
+			else 		   prtMsg(String.format("%-15s %,d genes", species, cntGene));
+		}
+		catch (Exception e) {ErrorReport.print(e, "loadAnno"); bSuccess=false;}
+		}
+		/* ****************************************************************** */
+		private void saveHits(TreeMap <Integer, String> grpMap1, TreeMap <Integer, String> grpMap2) {
+		try {
+			// pseudo_hits
+			String sql = "insert into pseudo_hits (hitnum, pair_idx,"
+					+ "proj1_idx, proj2_idx, grp1_idx, grp2_idx,"
+					+ "pctid, cvgpct, countpct, score, htype, gene_overlap, strand,"
+					+ "annot1_idx, annot2_idx, start1, end1, start2, end2, query_seq, target_seq)";
+	
+			PreparedStatement ps = dbc.prepareStatement(sql 
+				+ "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ");
+			
+			HashMap <Integer, Hit> hitIdxMap = new HashMap <Integer, Hit> ();
+			int countBatch=0, cntSave=0;
+			int hitnum = dbc.getMaxValue("hitnum", "pseudo_hits")+1;
+		
+			for (Hit ht : hitPairMap.values()) {
+				int i=1;
+				ps.setInt(i++, hitnum);
+				hitIdxMap.put(hitnum, ht);
+				hitnum++;
+				
+				ps.setInt(i++, pairIdx);
+				ps.setInt(i++, projIdx1);
+				ps.setInt(i++, projIdx2);
+				ps.setInt(i++, ht.gn1.grpIdx);
+				ps.setInt(i++, ht.gn2.grpIdx);
+			
+				ps.setInt(i++, ht.pid);			// pctid Avg%Id
+				ps.setInt(i++, 0); 				// cvgpct;  unsigned tiny int; now Avg%Sim
+				ps.setInt(i++, 1); 	// countpct; unsigned tiny int; now #SubHits; ht.numHits has >1, but since not merging yet...
+				ps.setInt(i++, ht.len); 		// score; max coverage 
+				ps.setString(i++, HTYPE) ;		// htype usually EE or g2
+				ps.setInt(i++, 2);				// geneOlap 0,1,2
+				ps.setString(i++, ht.gn1.strand+"/"+ht.gn2.strand); 		// Strand
+				ps.setInt(i++, ht.gn1.idx);
+				ps.setInt(i++, ht.gn2.idx); 
+				ps.setInt(i++, ht.s1);
+				ps.setInt(i++, ht.e1);
+				ps.setInt(i++, ht.s2);
+				ps.setInt(i++, ht.e2);
+				ps.setString(i++, "");			// s:e, s:e ... for query; none if no subhits
+				ps.setString(i++, "");			// s:e, s:e ... for target; none if no subhits
+				
+				ps.addBatch(); 
+				countBatch++; cntSave++;
+				if (countBatch==1000) {
+					countBatch=0;
+					ps.executeBatch();
+				}
+				if (cntSave%10000==0) Globals.rprt(cntSave + " loaded"); 
+			}
+			if (countBatch> 0) ps.executeBatch();
+			ps.close();
+			
+			/* Get new hit indices */
+			ResultSet rs = dbc.executeQuery("select idx, hitnum from pseudo_hits where htype='" + HTYPE + "'"
+					+ " and pair_idx=" + pairIdx);
+			while(rs.next()) {
+				int idx = rs.getInt(1);
+				int hnum = rs.getInt(2);
+				
+				if (hitIdxMap.containsKey(hnum)) hitIdxMap.get(hnum).hidx=idx;
+				else {prtErr("No hitnum " + hnum); rs.close(); return; }
+			}
+			rs.close();
+			
+			// pseudo_hits_annot
+			ps = dbc.prepareStatement("insert ignore into pseudo_hits_annot "
+					+ "(hit_idx, annot_idx, olap, exlap, annot2_idx) values (?,?,?,?,?)");
+			
+			int cntBatch=0, cntAll=0;
+			for (Hit ht : hitPairMap.values()) { 
+				ps.setInt(1, ht.hidx); 
+				ps.setInt(2, ht.gn1.idx); 
+				ps.setInt(3, ht.gn1.olap); 
+				ps.setInt(4, 0); 
+				ps.setInt(5, ht.gn2.idx);
+				ps.addBatch();
+				cntBatch++;
+				cntAll++;
+			
+				ps.setInt(1, ht.hidx); 
+				ps.setInt(2, ht.gn2.idx); 
+				ps.setInt(3, ht.gn2.olap); 
+				ps.setInt(4, 0); 
+				ps.setInt(5, ht.gn1.idx);
+				
+				ps.addBatch();
+				cntBatch++;  cntAll++;
+				
+				if (cntBatch>=1000) {
+					cntBatch=0;
+					ps.executeBatch();
+				}
+				if (cntAll%10000 ==0) Globals.rprt("   " + cntAll + " loaded hit annotations"); 
+			}
+			if (cntBatch>0) ps.executeBatch();
+			ps.close();
+			Globals.rclear();
+			prtMsgAll(String.format("Save %,d hits    ", hitIdxMap.size()));
+		}
+		catch (Exception e) {ErrorReport.print(e, "save New Hits"); bSuccess=false;}
+		}
+	}
+
+}

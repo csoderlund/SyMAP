@@ -70,10 +70,11 @@ public class TableMainPanel extends JPanel {
 		qPanel 				= qFrame.getQueryPanel();
 		this.isAllNoAnno	= qFrame.isAllNoAnno();
 		this.isNoPseudo		= qFrame.cntUsePseudo==0;
+		this.bLoadBlast		= qFrame.bUseBlast;
 		this.isSingle		= isSingle;
 		this.theQuery 		= query;
 		this.theSummary 	= sum;
-		this.isBlock		= qPanel.isBlock() || qPanel.isBlockNum();
+		this.isBlock		= qPanel.isBlock()     || qPanel.isBlockNum();
 		this.isCollinear	= qPanel.isCollinear() || qPanel.isCollinearNum();
 		this.isMultiN		= qPanel.isMultiN();
 		this.isClustN		= qPanel.isClustN();
@@ -458,7 +459,8 @@ public class TableMainPanel extends JPanel {
     			chkGeneralFields[x].setSelected(true);
     			chkGeneralFields[x].setEnabled(false); // cannot remove because doesn't work to
     		}
-    		row.add(chkGeneralFields[x]);
+    		boolean nt = qFrame.isAlignNT() && genCols[x].contains(Q.simCol); // CAS589 add
+    		if (!nt) row.add(chkGeneralFields[x]); // uses wrong column for width, so the alignment is off
     	}
     	retVal.add(row);
     	
@@ -951,7 +953,7 @@ public class TableMainPanel extends JPanel {
 		if (isSingle) return;
 		if (theTable.getSelectedRowCount() == 0)  return;
 		
-		new UtilSelect(this).msaAlign();	
+		new UtilSelect(this, bLoadBlast).msaAlign();	
     }
     public void setMsaButton(boolean b) {// stops 2 from running at once; set F in UtilSelect, set T in MsaMainPanel.buildFinish
     	if (b) {btnShowMSA.setText("MSA... "); bMSArun=false; btnShowMSA.setEnabled(true);}
@@ -975,7 +977,7 @@ public class TableMainPanel extends JPanel {
 			int selIndex = cmb2Dopts.getSelectedIndex();
 			int pad = (selIndex==showREGION) ? (int) Double.parseDouble(txt2Dregion.getText()) * 1000 : 500;  
 			
-			UtilSelect uObj = new UtilSelect(this);
+			UtilSelect uObj = new UtilSelect(this, bLoadBlast);
 			boolean bGene = chk2Dgene.isSelected();
 			uObj.synteny2D(numRows, selIndex,  pad, bGene, isSelf, grpIdxVec); // hitNum1, hitNum2 get set
 			
@@ -1034,7 +1036,7 @@ public class TableMainPanel extends JPanel {
       *  calls setPanelEnabled(false) before comp and setPanelEnabled(true) after; FASTA is threaded
       *********************************************************************/
      private void showExport() { 
-		final UtilExport ex = new UtilExport(this, qFrame.title ); // add title for 1st line of export
+		final UtilExport ex = new UtilExport(this, qFrame.title, bLoadBlast ); // add title for 1st line of export
 		ex.setVisible(true);
 		final int mode = ex.getSelection();
 		
@@ -1371,11 +1373,11 @@ public class TableMainPanel extends JPanel {
     
 	private static int nTableID = 0;
 	
-	protected int hitNum1=0, hitNum2=0; // Highlight 2D; set in UtilSelect; 
+	protected int hitNum1=0, hitNum2=0; 									// Highlight 2D; set in UtilSelect; 
 	private Vector <Integer> grpIdxVec = new Vector <Integer> (); 			// to highlight groups
 	protected boolean isCollinear=false, isMultiN=false, isClustN=false;	// for UtilReport; the QueryPanel can change, so need to save this
-	protected boolean isBlock=false, isGroup=false;			// set 2d pull-down based on query; 
-	protected boolean isSelf=false, isAllNoAnno=true, isNoPseudo=false; 
+	protected boolean isBlock=false, isGroup=false;							// set 2d pull-down based on query; 
+	protected boolean isSelf=false, isAllNoAnno=true, isNoPseudo=false, bLoadBlast=false; 
 	
 	// for Stop 
 	private boolean bMSArun=false; 					// MSA can be running, and the rest of the buttons enabled.

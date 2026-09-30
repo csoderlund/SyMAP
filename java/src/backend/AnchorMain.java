@@ -43,6 +43,8 @@ public class AnchorMain {
 		if (mp!=null) {						// Null for Mproject.removeProjectFromDB;
 			this.pairIdx = mp.getPairIdx(); 
 			doAlgo1 = (mp.isAlgo1(Mpair.FILE));
+			
+			isSelf = mp.getProj1Idx()==mp.getProj2Idx();
 		}
 	}
 	
@@ -54,7 +56,7 @@ public class AnchorMain {
 			
 			String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
 			if (isSelf) plog.msg("\nStart calculating cluster hits for " + proj1Name + " self synteny"); 
-			else plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);
+			else        plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);
 			
 			String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
 			if (!util.FileDir.pathExists(resultDir)) {
@@ -106,8 +108,9 @@ public class AnchorMain {
 	/***************************************************************
 	 * Assign hitnum, with them ordered by start1 ASC, len DESC
 	 * isSelf: just do upper part of diagonal: only number if refidx=0
+	 * CAS589 called by UseBlast
 	 */
-	private boolean saveHitNum() { 
+	protected boolean saveHitNum() { 
 	try {
 		Globals.rprt("Compute and save hit#"); 
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
@@ -164,6 +167,7 @@ public class AnchorMain {
 	/********************************************************************
 	 * Count number of hits per gene; these include all pairwise projects
 	 * This includes isSelf, but self hits get counted for both sides of the diagonal
+	 * CAS589 called by UseBlast
 	 */
 	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB; also called for command line -nh
 		if (bPrt) Globals.rprt("Compute and save gene numHits..."); 

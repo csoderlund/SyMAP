@@ -204,7 +204,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		if (hasBuild) return true;
 		if (!hasLoad) return false;
 		if (chrDisplayEnd==0 || chrDisplayEnd==chrDisplayStart) return false; // Timing issue from dotplot
-		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = false;
+		if (allAnnoVec.size() == 0) sfilObj.bShowAnnot = sfilObj.bShowGeneNum = sfilObj.bShowGffId = false;
 			
 		if (firstBuild) {
 			bpPerPixel = (chrDisplayEnd - chrDisplayStart) / getAvailPixels();
@@ -319,8 +319,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			}
 			if (offset>0 && isRight) offset = -offset;
 			
-			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, sfilObj.bFlipped, offset,
-				sfilObj.bHighGenePopup, sfilObj.bShowGeneLine, sfilObj.bShowGeneNum, sfilObj.bShowGeneNumHit, nG2xN); 
+			annot.setRectangle(centRect, chrDisplayStart, chrDisplayEnd,bpPerPixel, dwidth, hwidth, offset, nG2xN, sfilObj);
 			
 			if (last!=null) annot.setLastY(last); // annotation are separated, used during paint;  
 			last=annot;
@@ -1378,9 +1377,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		if (hitsObj1!=null) {
 			if (!annot.hasHitList()) { 
-				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
+				boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx);//CAS589 add blast
 				TreeMap <Integer, String> scoreMap = 
-						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType()); // CAS587 add annoType
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType()); // CAS587 add annoType
 				if (scoreMap.size()>0) {
 					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList(hits, scoreMap);
@@ -1389,9 +1388,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		if (hitsObj2!=null) {// for 3-track
 			if (!annot.hasHitList2()) { 
-				boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
+				boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx);//CAS589 add blast
 				TreeMap <Integer, String> scoreMap = 
-						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType());
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType());
 				if (scoreMap.size()>0) {
 					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList2(hits, scoreMap);
@@ -1402,9 +1401,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	// The following allow the GeneNum or Annot box to only be shown if a gene has a hit that is visible
 	protected boolean hasAnnoHit(int x, Annotation annot) { // Called from Annot to display GeneNum if has hit
 		if (x==2 && hitsObj2==null) return false;
-		
-		boolean isAlgo1 = propDB.isAlgo1(projIdx, otherProjIdx);
-		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo1, annot.getAnnoType());
+
+		boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx); // CAS589 add blast
+		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType());
 		if (scoreMap.size()==0) return false;
 		
 		SeqHits hitObj = (x==1) ? hitsObj1 : hitsObj2;
@@ -1419,7 +1418,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		else return (hitsObj2==null ||  hitsObj2.hasVisHit(hitIdxList));
 	}
 	/************************************************************************/
-	private class Rule { // was separate file; CAS575 cleanup
+	private class Rule { // was separate file;
 		private Color unitColor;
 		private Font unitFont;
 		private Line2D.Double line;

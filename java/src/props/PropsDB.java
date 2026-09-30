@@ -59,6 +59,8 @@ public class PropsDB {
 			for (Pair pp : pairs) {// for Sequence popup
 				String x = dbc2.executeString("select value from pair_props where name='algo1' and pair_idx=" + pp.pid);
 				pp.isAlgo1 = (x!=null) ? x.equals("1") : true; 
+				x = dbc2.executeString("select value from pair_props where name='Blast' and pair_idx=" + pp.pid); // CAS589
+				pp.isBlast = (x!=null) ? x.equals("1") : false; 
 				x = dbc2.executeString("select value from pair_props where name='number_pseudo' and pair_idx=" + pp.pid);
 				pp.hasPseudo = (x!=null) ? x.equals("1") : false;
 			}
@@ -75,6 +77,11 @@ public class PropsDB {
 	public boolean isAlgo1(int pp1, int pp2) {
 		if (hasPair(pp1, pp2)) return getPair(pp1, pp2).isAlgo1;
 		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).isAlgo1;
+		return false;
+	}
+	public boolean isBlast(int pp1, int pp2) { // CAS589 add
+		if (hasPair(pp1, pp2)) return getPair(pp1, pp2).isBlast;
+		if (hasPair(pp2, pp1)) return getPair(pp2, pp1).isBlast;
 		return false;
 	}
 	public String getProperty(int projectID, String property) { // Sequence
@@ -132,7 +139,7 @@ public class PropsDB {
 	private class Pair {
 		private int p1, p2;
 		private int pid;
-		private boolean isAlgo1=false;
+		private boolean isAlgo1=false, isBlast=false;
 		private boolean hasPseudo=false;	// for MapperPool to know if need to set annot_hits annot_idx to 0
 
 		protected Pair(int pid, int p1, int p2) {

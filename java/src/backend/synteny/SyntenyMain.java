@@ -125,8 +125,8 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;} 
 		
 	/** Main loop through chromosome pairs ***************************************/
-		int nGrpGrp = mProj1.getGrpSize() * mProj2.getGrpSize();
-		int maxGrp = nGrpGrp;
+		int nGrpGrp = 0; // CAS589 count up instead of down
+		int maxGrp =  mProj1.getGrpSize() * mProj2.getGrpSize();
 		
 		if (bVerbose) 	Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
 		else 			Globals.rprt("group-x-group pairs to analyze");
@@ -134,7 +134,7 @@ public class SyntenyMain {
 		
 		for (int grpIdx1 : mProj1.getGrpIdxMap().keySet()) {
 			for (int grpIdx2 : mProj2.getGrpIdxMap().keySet()) {
-				nGrpGrp--;
+				nGrpGrp++;
 				if (isSelf && grpIdx1<grpIdx2) continue; // DIR_SELF (old >) must match direction of loadHitsForGrpPair; mirror later
 				
 				SyBlock.cntBlk = 1;
@@ -203,6 +203,7 @@ public class SyntenyMain {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }
 	}
+	public void interrupt() {bSuccess=false;} // CAS589 add
 	
 //  Pearson correlation coefficient (PCC) of midpoints; used for BuildBlock and for saving final to DB
 	private float hitCorrelation(Vector<SyHit> hits) {

@@ -76,7 +76,7 @@ public class SeqDataInfo {
     static protected int cntMergeNeg=0, cntDisorder; // TextShowInfo access this to determine whether to show Merge
     
     static protected String formatHit(int X, String name, Annotation aObj, 
-    		String hitListStr, String title, boolean bIsInv, boolean bSort) { 
+    		String hitListStr, String title, boolean bIsInv, boolean bSort, boolean bLoadBlast) { 
     	
     	if (hitListStr==null || hitListStr.equals("")) return "hitListStr Error";
     	
@@ -84,7 +84,8 @@ public class SeqDataInfo {
     	boolean bOrder = title.startsWith(TextShowInfo.titleOrder);
     	
     	String colType;
-    	if (bMerge) 					 colType = "Merged subhits";
+    	if (bLoadBlast) 				 colType = "Blast hit"; // CAS589
+    	else if (bMerge) 				 colType = "Merged subhits";
     	else if (bOrder && X==Globals.T) colType = "Unsorted subhits";
     	else 							 colType = "Sorted subhits";
     	

@@ -73,7 +73,7 @@ public class ProjParams extends JDialog {
 	public ProjParams(Frame parentFrame,  Mproject mProj, 
 			Vector <Mproject> projVec, String [] catArr, boolean isLoaded, boolean existAlign) { 
 		
-		super(parentFrame, Constants.seqDataDir + mProj.getDBName() + "/params file"); // title
+		super(parentFrame, Constants.seqDataDir + mProj.getDBName() + "/params.txt"); // header
 		
 		this.mProj = mProj;
 		this.mProjVec = projVec;
@@ -104,7 +104,7 @@ public class ProjParams extends JDialog {
 		
 		setLocationRelativeTo(parentFrame); 
 	}
-	public boolean wasSave() {return bWasSave;} // ManagerFrame.doReloadParams, doSetParamsNotLoaded
+	protected boolean wasSave() {return bWasSave;} // ManagerFrame.doReloadParams, doSetParamsNotLoaded
 	
 	private ProjParams getInstance() { return this; }
 	
@@ -132,7 +132,7 @@ public class ProjParams extends JDialog {
 		theFields[i++] = new Field(mProj.lSeqFile,		  bReload,  bReAlign, false);
 		
 		startAnno=i-1; 
-		theFields[i++] = new Field(mProj.lAnnoType, typeArr, 0, !bReload, !bReAlign, false); // false --> do not add text field
+		theFields[i++] = new Field(mProj.lAnnoType, typeArr, 0, bReload, !bReAlign, false); // CAS589 !bReLoad; false --> do not add text field
 		theFields[i++] = new Field(mProj.lANkeyword, 1,  bReload, !bReAlign);  	
 		theFields[i++] = new Field(mProj.lAnnoFile, 	 bReload, !bReAlign, false);
 		
@@ -223,7 +223,7 @@ public class ProjParams extends JDialog {
 	 ***************************************************************/
 	
 	private void setFieldsFromProj() {
-		HashMap <String, String> pMap = mProj.getParams();
+		HashMap <String, String> pMap = mProj.getParams(); // This takes from params.txt, unless it does not exist
 		for (String label : pMap.keySet()) {
 			setField(label, pMap.get(label));
 		}
@@ -249,10 +249,8 @@ public class ProjParams extends JDialog {
 	 * XXX Save
 	 */
 	private void save() {
-		if (!FileDir.dirExists(Constants.dataDir)) {
-			util.Popup.showWarningMessage("The /data directory does not exist, cannot save parameters.");
-			return;
-		}
+		Constants.checkCreateDataDir();
+		
 		if (!saveCheckFields()) return;
 		
 		if (!saveIsRequired())	return;
@@ -274,7 +272,7 @@ public class ProjParams extends JDialog {
 		String msg=null;
 		
 		for(int x=0; x<theFields.length; x++) {
-			int index = theFields[x].index;
+			int index  = theFields[x].index;
 			String val = theFields[x].getValue().trim();
 			String lab = theFields[x].getLabel();
 		
@@ -514,7 +512,7 @@ public class ProjParams extends JDialog {
 	/***************************************************************
 	 * Each parameter has a field object
 	 ************************************************************/
-	public class Field extends JPanel{
+	private class Field extends JPanel{
 		private static final long serialVersionUID = -6643140570421332451L;
 		
 		private static final int MODE_TEXT = 0, MODE_COMBO = 1, MODE_MULTI = 2, MODE_FILE = 3;

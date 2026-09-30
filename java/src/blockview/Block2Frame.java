@@ -526,7 +526,7 @@ public class Block2Frame extends JFrame {
 	private void show2DBlock(Block b) {
 		Jcomp.setCursorBusy(this, true); 
 		try {	
-			SyMAP2d symap = new SyMAP2d(tdbc2, null); // makes new conn
+			SyMAP2d symap = new SyMAP2d(tdbc2, null, true); // makes new conn (CAS589 never show the aligns on this; rarely used)
 			symap.getDrawingPanel().setTracks(2); 
 			
 			HfilterData hd = new HfilterData (); 

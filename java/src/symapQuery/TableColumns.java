@@ -23,7 +23,7 @@ public class TableColumns {
 	
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nHits", Q.cosetCol, Q.grpCol, 
-		Q.hitCol,  Q.hitPrefix+"\nCov", Q.hitPrefix+"\n%Id", Q.hitPrefix+"\n%Sim",
+		Q.hitCol,  Q.hitPrefix+"\nCov", Q.hitPrefix+"\n%Id", Q.hitPrefix+"\n"+Q.simCol,
 		Q.hitPrefix+"\n#Sub", Q.hitSt, Q.hitPrefix+"\nType"}; 
 	
 	private static final Class <?> []  GENERAL_TYPES = 					

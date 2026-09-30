@@ -11,6 +11,7 @@ public class Q {
 	static final String GROUP = "-", COSET = "."; 
 	static final String DOT = Globals.DOT,    // dot used between chr.chr.block and chr.chr.CoSz and Chr.gene#; hard-coded everywhere
 			            SDOT = Globals.SDOT; // this is for split
+	static final String simCol = "%Sim";     // disabled for NT align; CAS589 add
 	
 	static final String empty    = 	".";		// Changed from "-" because was confused with negative strand
 	static final String dash	 =  "-"; 		// empty

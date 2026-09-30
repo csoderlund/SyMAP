@@ -57,7 +57,8 @@ public class ControlPanel extends JPanel implements HelpListener {
 	private HistoryControl hc;
 	private ColorDialogHandler cdh;
 	
-	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar, boolean bIsCE){
+	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar, 
+			boolean bIsCE, boolean bLoadBlast){ // CAS589 add bLoadBlast
 		super();
 		this.dp = dp;
 		this.hc = hc;
@@ -120,13 +121,14 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(row, gbl, gbc, shrinkButton, sp2);	
 		addToGrid(row, gbl, gbc, scaleButton, sp2);
 			
-		addToGrid(row, gbl, gbc, zoomBox,    sp0);
+		if (!bLoadBlast) addToGrid(row, gbl, gbc, zoomBox,    sp0);
 		addToGrid(row, gbl, gbc, zoomPopupButton, sp1);
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
 		
-		addToGrid(row, gbl, gbc, showBox,    sp0);
-		addToGrid(row, gbl, gbc, showPopupButton, sp1); 
-		
+		if (!bLoadBlast) {
+			addToGrid(row, gbl, gbc, showBox,    sp0);
+			addToGrid(row, gbl, gbc, showPopupButton, sp1); 
+		}
 		addToGrid(row, gbl, gbc, editColorsButton, sp2); 
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // End edit display 
 		
@@ -349,7 +351,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 			+ "\n   in the 3rd track."
 			+ "\n\n";
 
-	static final private String HIT_help = "Hit-wire Information:"
+	static final private String HIT_help = "Hit-wire Information: ***"
 			+ "\n Hover on hit-wire for information (it will be highlighted)."
 			+ "\n Right-click on hit-wire for popup for full information "
 			+ "\n     (it must be highlighted to be clickable)."
@@ -373,14 +375,18 @@ public class ControlPanel extends JPanel implements HelpListener {
 			+ "\n  Zoom: " 
 			+ "\n    " + MOUSE_FUNCTION_ZOOM_ALL + ":   zoom the region and all tracks to match (default)."
 			+ "\n    " + MOUSE_FUNCTION_ZOOM_SINGLE + ": only zoom the selected region."
-			+ "\n  Show: " 
+			+ "\n  Show: ***" 
 			+ "\n    " + MOUSE_FUNCTION_CLOSEUP + ":  the region will be aligned with the "
 			+ "\n                       opposite track in a popup window (default)."
 			+ "\n    " + MOUSE_FUNCTION_SEQ + ":       a popup menu will provide options to"
 			+ "\n                       view the underlying sequence in a popup window."
 			+ "\n\n";
 			;	
-	static final String Q_HELP = "See ? for details\n";
+	static final String Q_HELP = 
+			     "*** If Blast hits were used as input (see Summary), the corresponding hit sequence is wrong."
+		      +"\n    Hence, the Hit popup 'Align hit sequences' will be disabled. " 
+		      +"\n    And the Show option will not be shown. " 
+				+ "\nSee ? for details\n";
 			
 	private void popupHelp() {
 		util.Popup.displayInfoMonoSpace(this, "2d Control Quick Help", 

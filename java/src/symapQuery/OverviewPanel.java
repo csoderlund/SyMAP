@@ -73,12 +73,15 @@ public class OverviewPanel extends JPanel {
 				mainPanel.add(Jcomp.createLabel(head + gene + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 			}
 			String algo = qFrame.isAlgo2() ? "<i>Algo2:</i>&nbsp;  " : "<i>Algo1:</i>&nbsp;  "; 
+			if (qFrame.bUseBlast) algo = "<i>Blast:</i>&nbsp;  "; // CAS589
+			
 			algo += "The Olap column is ";
-			if  (qFrame.isAlgo2() && Globals.bQueryOlap==false) 
+			if  (qFrame.bUseAlgo2 && !qFrame.bUseBlast && Globals.bQueryOlap==false) 
 										algo += "exon overlap; Olap may be 0 if hits only overlap intron.";
 			else {
-				if (Globals.bQueryOlap) algo += "gene overlap; flag -go was used.";
-				else 					algo += "gene overlap; at least one project used Algo1 or has no genes.";
+				if (Globals.bQueryOlap)     algo += "gene overlap; flag -go was used.";
+				else if (projVec.size()<=2) algo += "gene overlap";
+				else 					    algo += "gene overlap; at least one project used Algo1/Blast.";
 			}
 			mainPanel.add(Jcomp.createLabel(head + algo + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 		}

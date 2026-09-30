@@ -2,7 +2,10 @@ package util;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+
+import symap.Globals;
 
 public class FileDir {
 	/********************************************************************
@@ -77,6 +80,26 @@ public class FileDir {
 		return numFiles;
 	}
     
+    public static File checkCreateDirs(String dir, boolean bPrt) {
+		try {
+			File f = new File(dir);
+			if (f.exists() && f.isFile()) {
+				Popup.showErrorMessage("Please remove file " + f.getName()
+					+ " as SyMAP needs to create a directory at this path");
+				return null;
+			}
+			if (!f.exists()) {
+				f.mkdirs();	// creates any parents
+				if (bPrt) System.out.println("Create directory " + dir); 
+			}
+			return f;
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Create dir " + dir);
+			return null;
+		}
+	}
+    
 	public static File checkCreateDir(String dir, boolean bPrt) {
 		try {
 			File f = new File(dir);
@@ -95,6 +118,32 @@ public class FileDir {
 			ErrorReport.print(e, "Create dir " + dir);
 			return null;
 		}
+	}
+	// CAS589 added for PairParams; this is now considered an out-of-date -- but its simple
+	public static ArrayList <String> getFilesFromDir(String dir) {
+	try {
+		File dirFH = new File(dir);
+		if (!dirFH.exists()) {
+			Globals.prt("Directory does not exist - " + dir);
+			return null;
+		}
+		if (!dirFH.isDirectory()) {
+			Globals.prt("This is not an directory - " + dir);
+			return null;
+		}
+        File[] listOfFiles = dirFH.listFiles(); // Returns top-level files and subdirectories
+        ArrayList <String> files = new ArrayList <String> ();
+        if (listOfFiles != null) {
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    files.add(file.getAbsolutePath());
+                }
+            }
+        }
+        return files;
+	}
+	catch (Exception e) {ErrorReport.print(e, "get files from " + dir); }
+	return null;
 	}
 	public static void checkCreateFile(String path, String trace){
 		File f = new File(path);
@@ -168,4 +217,5 @@ public class FileDir {
 		
 		return p + f;
 	}
+	
 }

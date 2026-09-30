@@ -368,12 +368,33 @@ public class AlignPool  {
 	/************************************************************************
 	 * Database calls
 	 */
+	// For ViewProj -- it adds >ID 
+	public String loadProtein(int annotIdx, int grpIdx, String strand) {
+		try {
+			int [] num = new int [4]; 
+			String seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
+			String aa = SeqData.translate(seq);
+			return mkLines(aa, lineLen);
+		}
+		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
+		return null;
+	}
+	public String loadSpliced(int annotIdx, int grpIdx, String strand) {
+		try {
+			int [] num = new int [4];
+			String seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
+			return mkLines(seq, lineLen);
+		}
+		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
+		return null;
+	}
+	
 	/**************************************************************
 	 * Exon spliced sequence; CAS586 add
 	 * Read DB for idx and strand; read DB for exons/CDS; read DB for each splice CDS
 	 * Very slow
 	 */
-	public String loadGeneSeq(String genetag, int grpIdx, String annoType) { // For query export and MSA
+	public String loadGeneSeq(String genetag, int grpIdx, String annoType) { // For view export, query export, MSA
 		String seq="", query="";
 		if (genetag.isEmpty()) {Globals.prt("No genetag"); return null;}
 		
@@ -411,15 +432,17 @@ public class AlignPool  {
 			rs.close();
 			if (annotIdx==0) {Globals.prt("Fail: " + genetag + " (" + tag + ") " + query);return null;}
 			
-			// header is first line, where > geneTag will be put in front from calling routine
 			int [] num = new int [4]; 
 			seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
 			
 			seq = mkLines(seq, lineLen);
 			
-			// >ID will be put in from of header for output for export; nothing for MSA
-			String header  = (annoType==null) ? "" 
-					: String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
+			// header is first line, where > geneTag will be put in front from calling routine
+			// queries MSA annoType=null;  queries Export annoType is CDS or Exon  
+			String header=""; 
+			if (annoType!=null) { // MSA is null
+				header = String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
+			}
 			return header + seq; 
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + genetag); Globals.prt(query);} 	
@@ -430,6 +453,7 @@ public class AlignPool  {
 	// num[0]=#exons, num[1]=length, num[2]=start, num[3]=end (if CDS, not the same as gene start/end)
 	public String loadGeneSplice(int annotIdx, String strand, int grpIdx, int [] num) { // For query export and MSA
 		String seq="", query="";
+		ResultSet rs=null;
 		try {
 			num[2]=Integer.MAX_VALUE; num[3]=0;
 			
@@ -439,10 +463,10 @@ public class AlignPool  {
 					+ " and grp_idx= " + grpIdx + " order by start";
 		
 			// GFF coordinates are 1-based and fully closed (the start position is the exact position of the first base, and the end position is the exact position of the last base).
-			ResultSet rs2 = dbc2.executeQuery(query); // loadPseudoSeq does db calls, so cannot be in the loop
-			while (rs2.next()) {
-				int start = rs2.getInt(1); // loadPseudoSeq adds one assuming zero-based coords
-				int end   = rs2.getInt(2);
+			rs = dbc2.executeQuery(query); // loadPseudoSeq does db calls, so cannot be in the loop
+			while (rs.next()) {
+				int start = rs.getInt(1); // loadPseudoSeq adds one assuming zero-based coords
+				int end   = rs.getInt(2);
 				
 				coords.add(start + ":" + end);
 				
@@ -451,7 +475,7 @@ public class AlignPool  {
 				num[2] = Math.min(num[2], start);
 				num[3] = Math.max(num[3], end);
 			}
-			rs2.close();
+			rs.close();
 			
 			// get splice strings and concatenate 
 			StringBuffer seqbuf = new StringBuffer();
@@ -464,7 +488,10 @@ public class AlignPool  {
 			
 			return seq;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + annotIdx); Globals.prt(query);} 
+		catch (Exception e) {
+			ErrorReport.print(e, "Getting gene seq for: " + annotIdx); 
+			try {if (rs!=null) rs.close();} catch (Exception ee) {};
+		} 
 		
 		return "#error\n" + seq;
 	}

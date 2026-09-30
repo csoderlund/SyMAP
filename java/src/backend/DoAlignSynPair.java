@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Date;
 import java.util.TreeMap;
+
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 
 import backend.synteny.SyntenyMain;
@@ -74,15 +76,21 @@ public class DoAlignSynPair extends JFrame {
 			numHitsOnly(diaLog, mProj1, mProj2);
 			return;
 		}
+		if (Constants.LOAD_BLOCKS) {
+			loadBlocks(diaLog, mProj1, mProj2);
+			return;
+		}
 		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
-		else mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
+		else 			 mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
 		
 		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  
 		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters (CAS588 getChgClustSyn includes MUMmer)
 		diaLog.closeWhenDone();					
 		
-		final AlignMain aligner = new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir);
-		if (aligner.mCancelled) return;
+		final boolean bLoadBlast = mp.isBlast(Mpair.FILE);
+		
+		final UseBlast loadBlast = (bLoadBlast)  ? new UseBlast(dbc2, diaLog, mp) : null;
+		final AlignMain aligner =  (!bLoadBlast) ? new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir) : null;
 		
 		final AnchorMain anchors = new AnchorMain(dbc2, diaLog, mp );
 		
@@ -90,6 +98,7 @@ public class DoAlignSynPair extends JFrame {
 		
 		final Thread statusThread = new Thread() {
 			public void run() {
+				if (aligner==null) return;
 				
 				while (aligner.notStarted() && !Cancelled.isCancelled()) Utils.sleep(1000);
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
@@ -128,7 +137,8 @@ public class DoAlignSynPair extends JFrame {
 					long timeStart = Utils.getTime();
 					
 					/** Align **/
-					success &= aligner.run(); 
+					if (bLoadBlast) success = loadBlast.run(); 
+					else         success = aligner.run(); 
 					
 					if (Cancelled.isCancelled()) {
 						diaLog.setVisible(false);
@@ -144,7 +154,7 @@ public class DoAlignSynPair extends JFrame {
 					
 					/** Anchors **/
 					long synStart = Utils.getTime(); // need time for symap part only
-					success = (mp.bSynOnly) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
+					success = (mp.bSynOnly || bLoadBlast) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
 					
 					if (Cancelled.isCancelled()) return;
 					if (!success) {
@@ -160,18 +170,22 @@ public class DoAlignSynPair extends JFrame {
 						diaLog.finish(false);
 						return;
 					}
-					Utils.prtMsgTimeDone(diaLog, "Complete Clustering + Synteny", synStart);
-					
+					if (mp.bSynOnly)  Utils.prtMsgTimeDone(diaLog, "Complete SyMAP", synStart);
+					else if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, "Complete Load & SyMAP", synStart);
+					else              Utils.prtMsgTimeDone(diaLog, "Complete Align & SyMAP", synStart);
+
 					/** Finish **/
-					String alignParams = aligner.getParams();
-					mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params (used in summary)
-				
+					if (!bLoadBlast) { // UseBlast writes from its run
+						String alignParams = aligner.getParams();
+						mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params (used in summary)
+					}
+					
 					new SumFrame(dbc2, mp);
 					
 					diaLog.appendText(">> Summary for " + toName + "\n");
-					printStats(diaLog, mProj1, mProj2);
+					printStats(diaLog);
 					
-					Utils.prtMsgTimeDone(diaLog, "Complete MUMmer + SyMAP", timeStart);
+					Utils.prtMsgTimeDone(diaLog, "Complete processing", timeStart);
 				}
 				catch (OutOfMemoryError e) {
 					success = false;
@@ -191,9 +205,14 @@ public class DoAlignSynPair extends JFrame {
 		diaLog.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println(e.getActionCommand());
+				
 				// Stop aligner and wait on monitor threads to finish
-				aligner.interrupt();
-				anchors.interrupt();
+				if (aligner!=null) 			aligner.interrupt();
+				else if (loadBlast!=null) 	loadBlast.interrupt();
+				
+				if (anchors!=null) anchors.interrupt();
+				if (synteny!=null) synteny.interrupt(); // CAS589 add synteny interrupt
+				
 				try {
 					alignThread.wait(5000);
 					statusThread.wait(5000);
@@ -267,7 +286,7 @@ public class DoAlignSynPair extends JFrame {
 		return ret;
 	}
 
-	private void printStats(ProgressDialog prog, Mproject p1, Mproject p2)  {
+	private void printStats(ProgressDialog prog)  {
 		int pairIdx = mp.getPairIdx();
 		if (pairIdx<=0) return;
 
@@ -305,17 +324,12 @@ public class DoAlignSynPair extends JFrame {
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}
 		return null;
 	}
-	/*** Add Pseudo - parameters pull-down - permanent ***/ 
+	/**************************************************************/
+	/*** Add Pseudo - pair parameters pull-down  ***/ 
 	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only add pseudo-genes");
 		
-		String st = "SELECT idx FROM pairs WHERE proj1_idx='" + mProj1.getIdx() + "' AND proj2_idx='" + mProj2.getIdx() +"'";
-		int mPairIdx = dbc2.getIdx(st); 
-		if (mPairIdx<=0) {
-			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
-			dbc2.close(); return;
-		}
 		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
 		anchors.addPseudoFromFlag();
 			
@@ -327,21 +341,15 @@ public class DoAlignSynPair extends JFrame {
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
-	/** Collinear only: -cs command line or on parameter window **********************/
+	/** Collinear only: -cs command line or pair parameter pull-down  **********************/
 	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only run collinear set algorithm");
 		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
 			mLog.msg("Both projects must have genes for the collinear set algorithm");
-			dbc2.close(); return;
+			return;
 		}
 		
-		String st = "SELECT idx FROM pairs WHERE proj1_idx='" +  mProj1.getIdx() + "' AND proj2_idx='" +  mProj2.getIdx() +"'";
-		int mPairIdx = dbc2.getIdx(st); 
-		if (mPairIdx<=0) {
-			mLog.msg("Cannot find project pair in database for " + mProj1.getDisplayName() + "," + mProj2.getDisplayName());
-			dbc2.close(); return;
-		}
 		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
 		else 							new AnchorCset1(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
 			
@@ -351,14 +359,47 @@ public class DoAlignSynPair extends JFrame {
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
+	/*** Load Blocks Pair --blk ; CAS589 *************/
+	private void loadBlocks(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	try {
+		mLog.msg("Load blocks from file");
+		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
+			mLog.msg("Both projects must have genes to load blocks");
+			return;
+		}
+		String defaultDir = Constants.getNameResultsDir(mProj1.getDBName(), mProj2.getDBName());
+		
+		JFileChooser cf = new JFileChooser();
+		cf.setMultiSelectionEnabled(false);
+		cf.setCurrentDirectory(new File(defaultDir));
+		String path=null;
+		
+		if (cf.showOpenDialog(getInstance()) == JFileChooser.APPROVE_OPTION) 
+			path = cf.getSelectedFile().getAbsolutePath().trim();
+		else {
+			Utils.prtIndentMsgFile(mLog, 1, "Abort Load Blocks");
+			return;
+		}
+		
+		new UserBlocks(mLog, dbc2, mp, path);
+		
+		mp.saveLoad("Load Blocks " + path);
+		new SumFrame(dbc2, mp);
+		printStats(mLog);
+		System.out.println("--------------------------------------------------");
+	}
+	catch (Exception e){ErrorReport.print(e, "Load block file"); }
+	}
 	
-	/*** Update NumHits: -nh command line, visible when recent change ***/ 
+	private DoAlignSynPair getInstance() {return this;}
+	
+	/*** Update NumHits: -nh command line, not visible  ***/ 
 	private void numHitsOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Compute NumHits Only...");
 		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
 			mLog.msg("Both projects must have genes to have numHits");
-			dbc2.close(); return;
+			return;
 		}
 		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
 		anchors.saveAnnoHitCnt(true);

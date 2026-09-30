@@ -176,7 +176,7 @@ public class AlignMain {
 			File f = new File(alignDir);
 			if (!f.exists()) return false;	/*-- alignments to be done ... --*/
 			
-			boolean bdone = Utils.checkDoneFile(alignDir); // all.done
+			boolean bdone = Utils.checkDoneMUMmer(alignDir); // all.done
 			nAlignDone    = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
 			usedParamsRead(Utils.getDateStr(f.lastModified()));// sets alignParams for saving to db
 			

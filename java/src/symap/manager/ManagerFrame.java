@@ -52,7 +52,7 @@ import util.LinkLabel;
  * Note that the Display name can change along with the order; that does not change the DB pairs record.
  * CAS588 moved stuff around and tried to make things more systematic; 
  */
-@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID
+@SuppressWarnings("serial") // Prevent compiler warning for missing serialVersionUID for all Components in file
 public class ManagerFrame extends JFrame implements ComponentListener {
 	/************************************************
 	 * Command line arguments; set in symapCE.SyMAPmanager main 
@@ -63,7 +63,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	public static int maxCPU=-1;			// SyMAPmanager -p; used in mummer and symapQuery
 	
 	private final String DB_ERROR_MSG = "A database error occurred, please see the Troubleshooting Guide at:\n" + Jhtml.TROUBLE_GUIDE_URL;	
-	private final String DATA_PATH = Constants.dataDir;
 	private final int MIN_CWIDTH = 825, MIN_CHEIGHT = 900;  // Circle; (same as 2D)
 	private final int MIN_WIDTH = 850, MIN_HEIGHT = 600;	// Manager
 	private final int MIN_DIVIDER_LOC = 220; 				  
@@ -75,14 +74,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private final Color textColor = new Color(0,100,0,255); // dark green for "Select a Pair..." 
 	
 	// If changed - don't make one a substring of another!!
-	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_QDONE = "?";
+	private final String TBL_DONE = "\u2713", TBL_ADONE = "A", TBL_BDONE = "B",  TBL_QDONE = "?";
 	private final String symapLegend = "Table Legend:\n"
 			+ TBL_DONE 	+ " : synteny has been computed, ready to view.\n"
 			+ TBL_ADONE + " : alignment is done, synteny needs to be computed.\n"
-			+ TBL_QDONE + "  : alignment is partially done.";
+			+ TBL_BDONE + " : blast file is available, synteny needs to be computed.\n"
+			+ TBL_QDONE + " : alignment is partially done.";
 	private final String selectPairText = "Select a Pair by clicking\ntheir shared table cell.";// Click a lower diagonal cell to select the project pair.
-		
-	private final String pseudoOnly = "Pseudo Only";
 	
 	protected String frameTitle="SyMAP " + Globals.VERSION; // all frames use same title
 	protected DBconn2  dbc2 = null; // master, used for local loads, and used as template for processes
@@ -257,7 +255,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		for (String cat : categories) {
 			for (Mproject p : cat2Proj.get(cat)) {
 				if (inReadOnlyMode && !p.isLoaded()) continue; // CAS588 at least show this on left
-				//if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // nothing to view
 				
 				if (showMap.containsKey(cat)) showMap.put(cat, showMap.get(cat)+1);
 				else 						  showMap.put(cat, 1);
@@ -550,8 +547,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			}
 		});
 		
-		btnSelReports = Jcomp.createButton("Reports...", "Select 'Summary' or 'Block Report'");
-		showReports(); // adds drop-down
+		btnSelReports = Jcomp.createButton("Reports...", "Summary, Block Report or Export Blocks");
+		showReportPopup(); // adds drop-down
 		
 		// last row
 		btnAllChrExp = Jcomp.createButton("Chromosome Explorer", "Select chromosomes from all pairs for the 2D display"); 
@@ -650,37 +647,37 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			columnNames.add( p1.getDisplayName() );
 			
 			Vector<String> row = new Vector<String>();
-			row.add( p1.getDisplayName() );
+			row.add(p1.getDisplayName());
 		
 			for (Mproject p2 : tableProjVec) {
 				if (p2.getStatus() == Mproject.STATUS_ON_DISK) continue; // skip if not in DB	
 				int id2 = p2.getIdx();
 
 				Mproject[] ordP = orderProjName(p1,p2); // order indices according to DB pairs table
-				String resultDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-				
-				boolean isDone=false;
 				
 				Mpair mp = getMpair(id1, id2);
 				if (mp!=null && mp.pairIdx>0) {	
 					row.add(TBL_DONE); 
-					isDone=true;
 				}
-				else if (Utils.checkDoneFile(resultDir)) {	
-					row.add(TBL_ADONE); 
-				}
-				else if (Utils.checkDoneMaybe(resultDir)>0) {
-					row.add( TBL_QDONE); 
-				}
-				else row.add(null);
-				
-				if (!isDone) { // cannot do anything without an mpair
+				else {
 					String key = ordP[0].getIdx() + ":" + ordP[1].getIdx();
 					if (!pairObjMap.containsKey(key)) {
-						mp = new Mpair(dbc2, -1, ordP[0], ordP[1], inReadOnlyMode);
+						mp = new Mpair(dbc2, -1, ordP[0], ordP[1], inReadOnlyMode); // setAligns
 			        	pairObjMap.put(key, mp);
 					}
-				}
+					else {
+						mp = pairObjMap.get(key);
+						mp.setAligns(); // in case contents changed
+					}
+					if (mp.hasMUMmer && mp.hasBlast) row.add(TBL_ADONE + "/" + TBL_BDONE);
+					else if (mp.hasMUMmer) 		     row.add(TBL_ADONE); 
+					else if (mp.hasBlast) 		     row.add(TBL_BDONE); 
+					else {
+						String alignDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
+						if (Utils.checkDoneMaybe(alignDir)>0) row.add( TBL_QDONE);
+						else 					row.add(null);
+					}
+				}				
 			}
 			rowData.add( row );
 		}
@@ -757,17 +754,18 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			String val = (String)pairTable.getValueAt(nRow, nCol);
 			
 			boolean allDone =  (val!=null && val.contains(TBL_DONE));
-			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_QDONE)));
+			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_BDONE) || !val.contains(TBL_QDONE)));
 			
-			if (allDone) { // Similar labels in PairParams
-				btnSelAlign.setText("Selected Redo");
+			if (Constants.LOAD_BLOCKS) btnSelAlign.setText("Load Blocks"); // Hidden command line option -blk
+			else if (allDone) { 		
 				Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
-				if (mp!=null) {
-					if (mp.bSynOnly) btnSelAlign.setText("Synteny Redo");
-					else if (mp.bPseudo) btnSelAlign.setText(pseudoOnly);
-					
-					if (Constants.CoSET_ONLY || mp.bCoSet)  btnSelAlign.setText("Collinear");
-					if (Constants.NUMHITS_ONLY) btnSelAlign.setText("NumHits");
+				
+				btnSelAlign.setText("Selected Redo"); 			// default
+				if (mp!=null) {									// Similar labels in PairParams
+					if 		(mp.bSynOnly)                        btnSelAlign.setText("Synteny Redo");
+					else if (mp.bPseudo)                         btnSelAlign.setText("Pseudo Only");
+					else if (mp.bCoSet || Constants.CoSET_ONLY)  btnSelAlign.setText("Collinear");
+					else if (Constants.NUMHITS_ONLY)             btnSelAlign.setText("NumHits");
 				}
 			}	
 			else {
@@ -953,19 +951,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
         	int proj1Idx = Utilities.getInt(tmp[0]);
         	int proj2Idx = Utilities.getInt(tmp[1]);
         	
-        	Mproject mp1=null, mp2=null;
+        	Mproject pj1=null, pj2=null;
         	for (Mproject mp : projVec) {
-        		if (mp.getIdx() == proj1Idx) mp1 = mp;
-        		if (mp.getIdx() == proj2Idx) mp2 = mp;
+        		if (mp.getIdx() == proj1Idx) pj1 = mp;
+        		if (mp.getIdx() == proj2Idx) pj2 = mp;
         	}
-        	if (mp1==null || mp2==null) System.out.println("SYMAP error: no " + pidx + " projects");
+        	if (pj1==null || pj2==null) System.out.println("SYMAP error: no " + pidx + " projects");
         	else {
-	        	Mpair mp = new Mpair(dbc2, pidx, mp1, mp2, inReadOnlyMode); // reads database
-	        	pairObjMap.put(proj1Idx + ":" + proj2Idx, mp); // do not know if proj1Idx>proj2Idx or proj1Idx<proj2Idx
+	        	Mpair mp = new Mpair(dbc2, pidx, pj1, pj2, inReadOnlyMode); // reads database
+	        	pairObjMap.put(proj1Idx + ":" + proj2Idx, mp); 
         	}
         }
+        
 	}catch (Exception e) {ErrorReport.print(e,"Load projects pairs"); }
 	}
+	
 	/**********************************************************/
 	/************* XXX Listeners ********************/
 	private ItemListener checkboxListener = new ItemListener() { // left panel change
@@ -1043,7 +1043,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					true, mProj.hasExistingAlignments(true)); // only exist true if /align
+					true, mProj.hasAlignBlast(true)); // only exist true if /align or /blast
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu();		
@@ -1054,7 +1054,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
 			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					false, mProj.hasExistingAlignments(true)); // only exist true if /align
+					false, mProj.hasAlignBlast(true)); // only exist true if /align
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu(); 
@@ -1063,16 +1063,19 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	
 	private MouseListener doViewProj = new MouseAdapter() { 
 		public void mouseClicked(MouseEvent e) {
-			Mproject theProject = ((ProjectLinkLabel)e.getSource()).getProject();
-			String info = theProject.loadProjectForView();
-			
-			Popup.displayInfoMonoSpace(getInstance(), "View " + theProject.getDisplayName(), info, false);	
+			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
+			viewProject(mProj);
 		}
 	};
 	
 	/*****************************************************************
 	 * Project actions
 	 ******************************************************/
+	public FileWriter getLoadLog() { return openLoadLog();} // CAS589 for view export
+	
+	private void viewProject(Mproject mProj) {
+		new ViewProj(dbc2, mProj, getInstance()); // CAS589 change to Dialog so could have Export button
+	}
 	private void loadAllProjects() {
 		try {
 			DoLoadProj lpObj = new DoLoadProj(this, dbc2, openLoadLog());
@@ -1109,7 +1112,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	// Reload
 	private void reloadAnno(Mproject mProj) {
 	try {
-		String msg = "Reload annotation " + mProj.getDisplayName() + "\n" + mProj.getLoadParameters(); // CAS587 add info
+		String msg = "Reload annotation " + mProj.getDisplayName() + "\n" + mProj.getLoadParameters(); 
 		
 		if (!Popup.showConfirm2("Reload annotation", msg +							
 			"\n\nYou will need to re-run the synteny computations for this project," +  
@@ -1135,8 +1138,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (selProjs==null) return;
 		
 		int nCPU = getCPUs();
-		if (nCPU == -1) return;           // it says to enter valid number in getCPU;
-		if (!alignCheckProjDir()) return; // error written in calling routine
+		if (nCPU == -1) return;           			 // it says to enter valid number in getCPU;
+		if (!Constants.checkCreateDataDir()) return; // error written in calling routine
 	
 		Mpair mp = getMpair(selProjs[0].getIdx(), selProjs[1].getIdx());
 		if (mp==null) return; 			 // shouldn't happen
@@ -1151,26 +1154,20 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		else  title = selProjs[0].getDisplayName() + " and " + selProjs[1].getDisplayName(); // Pair
 		
-		// Special cases
-		if (mp.bPseudo)  { 
-			if (!Popup.showConfirm2(title, "Pseudo only")) return;
-			
-			new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, true); // align has been done
-			new Version(dbc2).updateReplaceProp();
-			return;
-		}
-		if (!alignCheckOrderAgainst(mp)) return; 
+		if (!alignCheckOrderAgainst(mp)) return; // For ordering contigs
 		
 		// Compose confirm popup
 		boolean bAlignDone = isSelectedAligned();
-		
 		String msg;
 		
-		if (bAlignDone) {				 
+		if (Constants.LOAD_BLOCKS)						msg = "Load Blocks from file\n"; // either no align or align done
+		else if (bAlignDone) {				 
 			if (mp.bSynOnly) 							msg = "Synteny" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
-			else if (Constants.CoSET_ONLY || mp.bCoSet) msg = "Collinear Only\n" + mp.getChgCoSet(Mpair.FILE); // flag -cs; CAS588 set in params
-			else if (Constants.NUMHITS_ONLY) 			msg = "NumHits Only\n";   										// For v5.7.9c,flag -nh
-			else 					        			msg = "Clust&Synteny\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
+			else if (mp.isBlast(Mpair.FILE))			msg = "Load&Synteny\n" + mp.getChgLoad(Mpair.FILE) + "\n";
+			else if (mp.bPseudo)						msg = "Pseudo Only";
+			else if (Constants.CoSET_ONLY || mp.bCoSet) msg = "Collinear Only\n" + mp.getChgCoSet(Mpair.FILE); // flag -cs; CAS588 set in params	
+			else if (Constants.NUMHITS_ONLY) 			msg = "NumHits Only\n";   					    	   // For v5.7.9c,flag -nh
+			else										msg = "Clust&Synteny\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
 		}
 		else {
 			msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
@@ -1187,6 +1184,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		new Version(dbc2).updateReplaceProp();
 	}
+	/************************************************/
 	private void removeClearPair() {
 		Mproject[] mprojs = getSelectedPair();
 		if (mprojs==null) return;
@@ -1285,7 +1283,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		Jcomp.setCursorBusy(this, false);
 	}
 	// Report popup
-	private void showReports() {
+	private void showReportPopup() {
 		JPopupMenu popup = new JPopupMenu();
 		
 		JMenuItem popupTitle = new JMenuItem();
@@ -1295,12 +1293,14 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		popup.addSeparator();
 		
 		JMenuItem menuItem1 = new JMenuItem("Summary");
-	    JMenuItem menuItem2 = new JMenuItem("Block Report");
-	    JMenuItem menuItem3 = new JMenuItem("Cancel");
+	    JMenuItem menuItem2 = new JMenuItem("Block Report...");
+	    JMenuItem menuItem3 = new JMenuItem("Export...");
+	    JMenuItem menuItem4 = new JMenuItem("Cancel");
 	    
 	    popup.add(menuItem1); popup.addSeparator();
 	    popup.add(menuItem2); popup.addSeparator();
-	    popup.add(menuItem3);
+	    popup.add(menuItem3); popup.addSeparator();
+	    popup.add(menuItem4);
 	    
 	    menuItem1.addActionListener(e -> {
 	        showSummary();
@@ -1309,9 +1309,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	        showReport();
 	    });
 	    menuItem3.addActionListener(e -> {
-	      
+	    	showExportBlocks();
 	    });
-	    
+	    menuItem4.addActionListener(e -> {
+		      
+	    });
 	    btnSelReports.setComponentPopupMenu(popup); 
 		btnSelReports.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -1350,6 +1352,23 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mp==null) return;
 				
 		new Report(dbc2, p, mp); // dialog made visible in Report; 
+		
+		Jcomp.setCursorBusy(this, false);		
+	}
+	// Export blocks with hit genes
+	private void showExportBlocks(){ 
+		Jcomp.setCursorBusy(this, true);
+		
+		Mproject[] p = getSelectedPair();
+		if (p==null) return;
+		
+		int projXIdx = p[0].getIdx();
+		int projYIdx = (p.length>1) ? p[1].getIdx() : projXIdx; 
+		
+		Mpair mp = getMpair(projXIdx, projYIdx);
+		if (mp==null) return;
+				
+		new ReportExport(dbc2, mp); 
 		
 		Jcomp.setCursorBusy(this, false);		
 	}
@@ -1404,7 +1423,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				Popup.showErrorMessage("No synteny pairs. ");
 				return;
 			}
-	
 			boolean isSelf = (tableProjVec.size()==1 && pVec.size()==1);// self synteny
 			if (isSelf)  { // create second Mproject
 				Mproject p = pVec.get(0);
@@ -1419,24 +1437,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				
 				pVec.add(cp);					
 			}
-				
-			boolean useAlgo2=true; // used for Exon/Gene Olap column
-			int cntUsePseudo=0;    // Instructions; 
-			int hasSynteny=0;
-			for (int i=0; i<pVec.size()-1; i++) {
-				for (int j=i+1; j<pVec.size(); j++) {
-					Mpair mp = getMpair(pVec.get(i).getIdx(), pVec.get(j).getIdx());
-					if (mp.pairIdx<0) continue; 
-					
-					if (!mp.isAlgo2(Mpair.DB)) 	  useAlgo2=false;
-					if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
-					hasSynteny++;				  // if more than 2 projects, some pairs may not have synteny
-				}
-			}
-			sortProjDisplay(pVec); // loses order; causes Columns to be wrong if one is not annotated; 
+	
+			sortProjDisplay(pVec); // loses order; causes Columns to be wrong if one is not annotated; CAS589 moved flags to QueryFrame
 			
-			QueryFrame qFrame = new QueryFrame(getInstance(), frameTitle, dbc2, 
-					pVec, useAlgo2, cntUsePseudo, hasSynteny, isSelf);
+			QueryFrame qFrame = new QueryFrame(getInstance(), frameTitle, dbc2, pVec, isSelf);
 			qFrame.build();
 			qFrame.setVisible(true);
 		} 
@@ -1502,7 +1506,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		int nCol = pairTable.getSelectedColumn();
 		String val = (String)pairTable.getValueAt(nRow, nCol);
 		
-		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_DONE))); // A or Check
+		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_BDONE) || val.contains(TBL_DONE))); // A or Check; CAS589 add B
 	}
 	
 	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame 
@@ -1603,19 +1607,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (maxCPU <= 0) maxCPU = 1;
 		return maxCPU;
 	}
-	/***************************************************************/
-	// Create directories if alignment is initiated; 
-	// An alignment may be in the database, yet no /data directory. The files will be rewritten, so the directories are needed.
-	private boolean alignCheckProjDir() { 
-		try {
-			FileDir.checkCreateDir(DATA_PATH, true);
-			FileDir.checkCreateDir(Constants.seqRunDir,  true);
-			FileDir.checkCreateDir(Constants.seqDataDir, true); 
-			
-			return true;
-		}
-		catch (Exception e){return false;}
-	}
+	
 	 // Checks before starting order against project; 
 	private boolean alignCheckOrderAgainst(Mpair mp) {
 		if (!mp.isOrder1(Mpair.FILE) && !mp.isOrder2(Mpair.FILE)) return true;
@@ -1838,10 +1830,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	    		}
 	    	}
 			// Create /data in case it does not exist
-			String strDataPath = DATA_PATH;
-			FileDir.checkCreateDir(strDataPath, true);
-			FileDir.checkCreateDir(Constants.seqDataDir, true /* bPrt */); 
-			FileDir.checkCreateDir(Constants.seqRunDir,  true);
+			Constants.checkCreateDataDir();
 			FileDir.checkCreateDir(seqDir, true);
 			refreshMenu();
 			

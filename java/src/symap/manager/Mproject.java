@@ -40,8 +40,10 @@ public class Mproject implements Comparable <Mproject> {
 	private String strDate="";
 	private DBconn2 dbc2;
 	
-	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0, numSynteny=0, numDraft=0; // numDraft to see !strict by default
-	private long length=0; 		// genome length - must be long
+	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0; 
+	private int numSynteny=0, numDraft=0; // need numDraft for !strict by default
+	protected String alignStr=null;		  // used by remove; set in hasExistingAlignments; MUMmer/Blast, MUMmer, Blast
+	private long length=0; 				  // genome length - must be long
 	
 	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
 	private TreeMap <Integer, String> grpIdx2Name = new TreeMap <Integer, String> ();	  // name, e.g. 01
@@ -107,7 +109,7 @@ public class Mproject implements Comparable <Mproject> {
 		return false;
 	}
 	
-	public String getAnnoStr() {// written on manager right panel
+	protected String getAnnoStr() {// written on manager right panel
 		String msg= ""; 
 		if (numGene>0) msg += String.format("Genes: %,d  ", numGene);
 		String type = getDBVal(lAnnoType);
@@ -117,10 +119,11 @@ public class Mproject implements Comparable <Mproject> {
 		
 		return msg;
 	}
-	public String getCntSyntenyStr() {
+	protected String getCntSyntenyStr() {
 		if (numSynteny==0) return "";
 		else return "[" + numSynteny + "]";
 	}
+	
 	
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() 	{return numGene>0;}
@@ -143,12 +146,13 @@ public class Mproject implements Comparable <Mproject> {
 	public short getStatus() 	{return nStatus; }
 	public boolean isLoaded() 	{return (nStatus==STATUS_IN_DB);}
 	
+	public boolean isLoadCDS()  	{ return getDBVal(lAnnoType).equals("CDS");} // CAS589 add
 	public String getdbDesc() 		{ return getDBVal(sDesc); }
 	public String getdbGrpName() 	{ return getDBVal(sGrpType);}
 	public String getdbCat() 		{ return getDBVal(sCategory); }
 	public String getdbAbbrev() 	{ return getDBVal(sAbbrev); }
 	public String getdbAnnoType() 	{ return getDBVal(lAnnoType);}
-	public int getdbMinKey() {return Utilities.getInt(getDBVal(sANkeyCnt));}
+	public int getdbMinKey() 		{ return Utilities.getInt(getDBVal(sANkeyCnt));}
 	
 	public String getAnnoType()		{ return getProjVal(lAnnoType); }
 	public String getKeywords()     { return getProjVal(lANkeyword); }
@@ -161,13 +165,14 @@ public class Mproject implements Comparable <Mproject> {
 		if (val.contains(",")) val = val.replace(",",""); 
 		return Utilities.getInt(val);
 	}
-	public void setIsSelf(String display, String abbrev) { // for isSelf
+	protected void setIsSelf(String display, String abbrev) { // for isSelf
 		setProjVal(sDisplay, display); strDisplayName = display;
 		setProjVal(sAbbrev, abbrev); 
 	} 
 	
 	public int getGrpSize() { return grpIdx2Name.size();}
 	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} 
+	public TreeMap <Integer, String> getGrpIdxFullMap() {return grpIdx2FullName;} // CAS589 add 
 	
 	public String getGrpFullNameFromIdx(int idx) {
 		if (grpIdx2FullName.containsKey(idx)) return grpIdx2FullName.get(idx);
@@ -202,7 +207,7 @@ public class Mproject implements Comparable <Mproject> {
 		return msg;
 	}
 	///////////////////////
-	public String getLoadParameters() {
+	protected String getLoadParameters() {
 		String msg="Parameters: ";
 		if (getProjVal(lSeqFile).contentEquals("")) 	msg += "Default file locations; ";
 		else 											msg += "User file locations; ";
@@ -220,9 +225,9 @@ public class Mproject implements Comparable <Mproject> {
 		
 		return msg;
 	}
-	// false: cnt all; true: only cnt if have /align;
-	// used for all project related links (not pair)
-	public boolean hasExistingAlignments(boolean bCheckAlign) { 
+	// false: cnt all; true: only cnt if have /align or /blast;
+	// used for all project related links 
+	protected boolean hasAlignBlast(boolean bCheckSubDir) { 
 		try {
 			File top = new File(Constants.getNameResultsDir());
 			
@@ -230,21 +235,32 @@ public class Mproject implements Comparable <Mproject> {
 		
 			// e.g. for brap; arab_to_brap  or brap_to_cabb
 			String pStart = strDBName + Constants.projTo, pEnd = Constants.projTo + strDBName;
-			int cnt=0;
+			
+			int cntTop=0, cntBlast=0, cntMum=0;
 			for (File f : top.listFiles()) {
 				if (!f.isDirectory()) continue;
 				
 				String dir = f.getName();
 				if	(!dir.startsWith(pStart) && !dir.endsWith(pEnd)) continue;
+				cntTop++;
 				
-				if (bCheckAlign) {
-					String alignDir = f.getAbsolutePath() + Constants.alignDir;
-					File d = new File(alignDir);
-					if (d.exists()) cnt++;  
-				}
-				else cnt++; 
-			}				
-			return (cnt>0);
+				String alignDir = f.getAbsolutePath() + Constants.alignDir;
+				File d = new File(alignDir);
+				if (d.exists()) cntMum++;  
+				
+				alignDir = f.getAbsolutePath() + Constants.blastDir;
+				d = new File(alignDir);
+				if (d.exists()) cntBlast++;  
+			}	
+			
+			alignStr = ""; 
+			if (cntBlast>0 && cntMum>0) alignStr = "MUMmer/Blast";
+			else if (cntBlast>0)        alignStr = "Blast";
+			else if (cntMum>0)          alignStr = "MUMmer";
+			
+			if (!bCheckSubDir) return (cntTop>0);
+			
+			return (cntBlast+cntMum>0);
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Check existing alignment files"); return false;} 
 	}
@@ -252,7 +268,7 @@ public class Mproject implements Comparable <Mproject> {
 	/*********************************************************
 	 * Special method to remove GrpPrefix
 	 */
-	public void updateGrpPrefix() {
+	protected void updateGrpPrefix() {
 		try {
 			Vector <Integer> idxSet = new Vector <Integer> ();
 			Vector <String> nameSet = new Vector <String> ();
@@ -285,7 +301,7 @@ public class Mproject implements Comparable <Mproject> {
 	/*************************************************************************
 	 * The View button on MF
 	 */
-	public String loadProjectForView() { 
+	protected String loadProjectForView() { 
 	try {
 		TreeMap <Integer, Integer> chrLenMap = new TreeMap <Integer, Integer> ();// idx, chrName
 		
@@ -459,8 +475,7 @@ public class Mproject implements Comparable <Mproject> {
 	catch (Exception e) {ErrorReport.print(e, "Save project param " + name + " " + val); }
 	}
 	
-	// CAS586 saved from SeqLoadMain based on initial comment in FASTA file
-	// type was fpc/pseudo: but NCBI/Ens is more useful than fpc (though still not used except when I look at DB)
+	// Saved from SeqLoadMain based on initial comment in FASTA file; types NCBI/Ens (not used except for looking at db tables)
 	public void saveType(String type) { 
 	try {
 		dbc2.executeUpdate("update projects set type='" + type + "' where idx=" + projIdx);	
@@ -471,7 +486,7 @@ public class Mproject implements Comparable <Mproject> {
 	/**********************************************************/
 	public void createProject() throws Exception {
 	try {
-		dbc2.tableCheckModifyColumn("projects", "type", "VARCHAR(10) default 'other'"); // CAS586 was enum
+		dbc2.tableCheckModifyColumn("projects", "type", "VARCHAR(10) default 'other'"); 
 		
 		projIdx = dbc2.getIdx("select idx from projects where name='" + strDBName + "'");
 		
@@ -502,7 +517,7 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	public void removeProjectFromDB() {
 	try {
-		Globals.prt("Removing " + strDisplayName + " from database...");  // CAS586 was rprt
+		Globals.prt("Removing " + strDisplayName + " from database...");  
 		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
@@ -586,7 +601,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 	
 		String msg = "";
-		PropertiesReader props = new PropertiesReader( pfile);
+		PropertiesReader props = new PropertiesReader(pfile);
 		for (int i=0; i<paramKey.length; i++) {
 			String name =  paramKey[i];
 			if (props.getProperty(name) != null) {
@@ -725,14 +740,14 @@ public class Mproject implements Comparable <Mproject> {
 	public String getDef(int iLabel)  {return paramDef[iLabel];}
 	public String getDesc(int iLabel) {return paramDesc[iLabel];}
 	
-	public HashMap <String, String> getParams() {
+	protected HashMap <String, String> getParams() {
 		HashMap <String, String> pMap = new HashMap <String, String> ();
 		for (String key : pLabelMap.keySet()) {
-			pMap.put(key, pLabelMap.get(key).projVal);
+			pMap.put(key, pLabelMap.get(key).projVal); 
 		}
 		return pMap;
 	}
-	public String getParam(String label) {
+	protected String getParam(String label) {
 		if (!pLabelMap.containsKey(label)) return null;
 		return pLabelMap.get(label).key;
 	}
@@ -830,7 +845,7 @@ public class Mproject implements Comparable <Mproject> {
 			return dbVal.equals(defVal);
 		}
 		String key="", label="";
-		String defVal="", projVal="", dbVal="";
+		String defVal="", projVal="", dbVal=""; // projVal is DB, then replaced with File
 		boolean isSum=false, isLoad=false;
 	}
 }

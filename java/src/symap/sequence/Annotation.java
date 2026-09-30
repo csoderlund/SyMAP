@@ -37,6 +37,7 @@ public class Annotation {
 					tag, 		// for exons
 					fullTag, 	// 'Gene' geneTag ('#Exons' n exon-len)
 					annoType;   // CDS, Exon
+	private String gffID="";	// extract from description; CAS589 add
 	private boolean bStrandPos;
 	private int gene_idx=0;  	// If this is an exon, it is the gene_idx (pseudo_annot.idx) that it belongs to
 	private int annot_idx=0; 	// pseudo_annot.idx
@@ -55,8 +56,8 @@ public class Annotation {
 	
 	private boolean bGeneLineOpt=false; 		// Show line on all genes
 	private boolean bHighPopup=false;			// Highlight gene if popup
-	private boolean bShowGeneNum=false;			// Show text genenum
-	private boolean bShowGeneNumHit=false;		// Show text genenum
+	private boolean bShowGeneNum=false, bShowGeneNumHit=false;			// Show text genenum
+	private boolean bShowGffId=false,   bShowGffIdHit=false;		// Show text gff ID
 	private boolean isPopup=false; 				// Gene has popup - highlight if bHighPopup
 	private boolean isHitPopup=false;			// Hit Popup highlights gene too, though gene Popup has precedence
 	
@@ -92,6 +93,15 @@ public class Annotation {
 			fullTag =    Utilities.createFullTagFromDBtag(tag, annoType); // create: 'Gene' geneTag ('#Exons' n exon-len)
 			exonVec = new Vector <Annotation> ();
 		}
+		if (!description.isBlank() && description.contains(Globals.idKey)) {
+			String [] tok = description.split(";");
+			for (String tuple : tok) {
+				if (tuple.startsWith(Globals.idKey)) {
+					gffID = tuple.split("=")[1];
+					break;
+				}
+			}
+		} else gffID = "NoID";
 		
 		rect = new Rectangle2D.Double();
 		hoverGeneRect = new Rectangle2D.Double();
@@ -105,14 +115,15 @@ public class Annotation {
 	protected void setRectangle(
 			Rectangle2D boundry,      // center of chromosome rectangle (rect.x+1,rect.y,rect.width-2,rect.height)
 			int startBP, int endBP,   // display start and end of chromosome 
-			double bpPerPixel, double dwidth, double hoverWidth, boolean flip, int offset, 
-			boolean bHighPopup, boolean bGeneLineOpt, boolean bShowGeneNum, boolean bShowGeneNumHit, int nG2xN) 
+			double bpPerPixel, double dwidth, double hoverWidth, int offset, int nG2xN, Sfilter sf) // was listing each of the below; CAS589
 	{
-		this.bGeneLineOpt=bGeneLineOpt; // used these 3 in paintComponent
-		this.bHighPopup=bHighPopup;
-		this.bShowGeneNum=bShowGeneNum;  this.bShowGeneNumHit=bShowGeneNumHit;
-		if (bShowGeneNum && nG2xN!=0 && !isG2xN)  this.bShowGeneNum=false; 
-
+		this.bGeneLineOpt=sf.bShowGeneLine; // used these in paintComponent
+		this.bHighPopup=sf.bHighGenePopup;
+		this.bShowGeneNum=sf.bShowGeneNum;  this.bShowGeneNumHit=sf.bShowGeneNumHit;
+		this.bShowGffId  =sf.bShowGffId;    this.bShowGffIdHit  =sf.bShowGffIdHit;
+		if (bShowGeneNum && nG2xN!=0 && !isG2xN)  this.bShowGeneNum=false; // show all be checked?
+		
+		boolean flip = sf.bFlipped;
 		double x, y, height;
 		double chrX=boundry.getX(), upChrY=boundry.getY(), chrHeight=boundry.getHeight(), chrWidth=boundry.getWidth();
 		double lowChrY = upChrY + chrHeight; // lowest chromosome edge
@@ -188,14 +199,15 @@ public class Annotation {
 				g2.drawLine((int)rect.x, (int)rect.y, (int)rect.x + (int)rect.width, (int)rect.y); 
 		}
 	}
-	public void paintText(Graphics2D g2) { // separate loop so text goes on top; CAS580
+	public void paintText(Graphics2D g2) { // separate loop so text goes on top
 		if (itype >= numTypes || itype == CENTROMERE_INT) return;
 		
 		g2.setPaint(getColor());
 		
 		// XXX Gene#      LastR is Rect, not text (Gray box drawn in Sequence.buildGraphics)
 		boolean doGeneNum = (bShowGeneNum && itype==GENE_INT) || (bShowGeneNumHit && showGeneHasHit());
-		if (doGeneNum) { 
+		boolean doGffId = !doGeneNum && (bShowGffId && itype==GENE_INT) || (bShowGffIdHit && showGeneHasHit());
+		if (doGeneNum || doGffId) { 
 			 g2.setPaint(Color.black);
 			 g2.setFont(Globals.textFont);
 			 
@@ -212,9 +224,10 @@ public class Annotation {
 			 }
 			 int y = (int)rect.y + (Globals.textHeight/2);
 			 if (lastR!=null && Math.abs(lastR.y-rect.y)<Globals.textHeight) { 
-				 y += Globals.textHeight - Math.abs(lastR.y-rect.y);	// move it down; CAS580 was -3
+				 y += Globals.textHeight - Math.abs(lastR.y-rect.y);	
 			 }	 
-			 g2.drawString(strGeneNum, x, y);
+			 if (doGeneNum) g2.drawString(strGeneNum, x, y);
+			 else           g2.drawString(gffID, x, y);
 		}
 	}
 	private Color getColor() {
@@ -302,10 +315,11 @@ public class Annotation {
 	protected boolean isGap() 	  { return itype == GAP_INT; }
 	protected boolean isCentromere() { return itype == CENTROMERE_INT; }
 	
-	protected int getGeneLen()	{ return Math.abs(end-start)+1;} // ditto
-	protected int getGeneNum() { return genenum;}				 // for sorting in SeqPool
+	protected int getGeneLen()	{return Math.abs(end-start)+1;} // ditto
+	protected int getGeneNum()  {return genenum;}				 // for sorting in SeqPool
 	public String getFullGeneNum() {return strGeneNum;}          // has suffix
-	public String getAnnoType()		{ return annoType;}			 // CDS/Exon CAS587
+	public String getAnnoType()	{return annoType;}			 // CDS/Exon CAS587
+	public String getgffID()	{return gffID;}					 // CAS589 add
 	
 	/*******************************************
 	 * XXX hover and box and closeup info

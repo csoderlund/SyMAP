@@ -460,4 +460,22 @@ public class Version {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
 	}
+	/**********************************************
+	 * There is no where to shared database routines. 
+	 */
+	public static boolean isLoadBlast(DBconn2 dbc2, int [] projIDs) { // CAS589 add; dotPlot.data, frame.ChrExpFrame, closeup.TextShowInfo
+		try {
+			for (int i=0; i<projIDs.length-1; i++) {
+				for (int j=1; j<projIDs.length; j++) {
+					int idx = dbc2.executeCount("select idx from pairs where proj1_idx=" + projIDs[i] + " and proj2_idx=" + projIDs[j]);
+					if (idx!= -1) {
+						String k = dbc2.executeString("select value from pair_props where name='Blast'");
+						if (k!=null && k.equals("1")) return true;
+					}
+				}
+			}
+			return false;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Check if blast hit were loaded"); return false;}
+	}
 }

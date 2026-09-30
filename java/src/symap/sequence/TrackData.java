@@ -15,7 +15,7 @@ public  class TrackData {
 	private int grpIdx;
 	
 	private boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowHitLen, bShowScoreLine;
-	private boolean bShowGeneNum,  bShowAnnot, bShowGeneNumHit,  bShowAnnotHit;
+	private boolean bShowGeneNum,  bShowAnnot, bShowGeneNumHit,  bShowAnnotHit, bShowGffId, bShowGffIdHit;
 	private boolean bShowGeneLine, bHighPopupGene;
 	private boolean bShowScoreText, bShowHitNumText, bShowBlockText, bShowBlock1stText, bShowCsetText, bShowNoText;   
 
@@ -52,6 +52,9 @@ public  class TrackData {
 		
 		bShowGeneNum    = sf.bShowGeneNum;
 		bShowGeneNumHit = sf.bShowGeneNumHit;
+		bShowGffId    	= sf.bShowGffId;
+		bShowGffIdHit 	= sf.bShowGffIdHit;
+		bShowAnnot   	= sf.bShowAnnot;
 		bShowAnnotHit   = sf.bShowAnnotHit;
 		bShowGeneLine  	= sf.bShowGeneLine;
 		bHighPopupGene  = sf.bHighGenePopup;
@@ -98,6 +101,8 @@ public  class TrackData {
 		
 		sf.bShowGeneNum    = bShowGeneNum;
 		sf.bShowGeneNumHit = bShowGeneNumHit;
+		sf.bShowGffId	   = bShowGffId;
+		sf.bShowGffIdHit   = bShowGffIdHit;
 		sf.bShowAnnot      = bShowAnnot;
 		sf.bShowAnnotHit   = bShowAnnotHit;
 		sf.bShowGeneLine   = bShowGeneLine;

@@ -39,9 +39,10 @@ import util.Utilities;
  */
 public class UtilSelect {
 	private TableMainPanel tPanel;
-	
-	protected UtilSelect(TableMainPanel tdp) {
+	private boolean bLoadBlast;	// CAS589 add to disable hit sequence optios
+	protected UtilSelect(TableMainPanel tdp, boolean bLoadBlast) {
 		this.tPanel = tdp;
+		this.bLoadBlast = bLoadBlast;
 	}
 	protected void msaAlign() {
 		new MsaAlign();
@@ -107,7 +108,7 @@ public class UtilSelect {
 					Popup.showWarning("The selected row does not belong to a group.");
 					return;
 				}
-				if (isSelf) {// CAS579c add
+				if (isSelf) {
 					Popup.showWarning("Group-chr does not work for self-synteny; change to Region.");
 					return;
 				}
@@ -139,7 +140,7 @@ public class UtilSelect {
 			int grp2Idx = rd.chrIdx[1];
 			
 			// create new drawing panel; 				
-			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel);
+			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel, tPanel.bLoadBlast); // CAS589 add
 			symap.getDrawingPanel().setTracks(2); 		
 			symap.getDrawingPanel().setHitFilter(1,hd); 
 			
@@ -238,7 +239,7 @@ public class UtilSelect {
 	 			tPanel.hitNum1 = rd[0].hitnum; tPanel.hitNum2 = rd[1].hitnum;
 				
 	 			// create new drawing panel; 
-	 			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel);
+	 			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel, bLoadBlast);
 	 			symap.getDrawingPanel().setTracks(3); 
 	 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
 	 			symap.getDrawingPanel().setHitFilter(2,hd1);
@@ -367,6 +368,7 @@ public class UtilSelect {
 		}
 		private void popupHelp() {
 			String msg = "Align hit sequences";
+			msg += "\n   This option is not available if the input was Blast hits (see Summary)";
 			msg += "\n   Merge overlapping seqs: When multiple rows contain the same gene, "
 				 + "\n         or overlapping hits, the hits will be merged.";
 			msg += "\n   Use gapless hits: Remove gaps between subhits. This is good when there are long gaps"
@@ -479,6 +481,9 @@ public class UtilSelect {
 					bTrim  = chkTrim.isSelected();
 				}
 			});
+			if (bLoadBlast) {
+				radHit.setEnabled(false);radMerge.setEnabled(false); radGapLess.setEnabled(false); radNone.setEnabled(false);
+			}
 			// Build page
 			page.add(Box.createVerticalStrut(5)); 	
 			page.add(radHit); 		page.add(Box.createVerticalStrut(3));

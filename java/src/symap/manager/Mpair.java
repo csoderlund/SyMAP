@@ -31,8 +31,12 @@ import util.FileDir;
 public class Mpair {
 	public  static final int FILE = 0;
 	public  static final int DB = 1;
+	private static final String promer = "PROmer"; // Also hardcoded in PairParams - no where else
+	private static final String nucmer = "NUCmer";
+	
 	// sections
-	private static final String ALIGN   = "  Align";
+	private static final String ALIGN   = "  Align "; // space before PROmer or NUCmer
+	private static final String LOAD	= "  Load Blast File";
 	private static final String ALGO1   = "  Cluster Algo1 (modified original)";
 	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
 	private static final String SYNORIG = "  Synteny Original";
@@ -43,14 +47,17 @@ public class Mpair {
 	protected int pairIdx=-1; 		// accessed in ManagerFrame; 
 	private int proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
-	private String syVer="";
+	
+	protected boolean hasMUMmer=false, hasBlast=false;
+	protected String alignStr="";
+	
 	public boolean bPseudo=false, bSynOnly=false, bCoSet=false; // set in PairParams and read in ManagerFrame
 	
-	private String resultDir;
+	private String resultDir;									// data/seq_results/mProj1_to_mProj2
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
-	private boolean isSelf=false;
+	private boolean isSelf=false, isAlignNT=false; 				// CAS589 add isAlignNT
 	
 	// These must be in same order as PairParam.SYMBOLS arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated in PairParams and below
@@ -62,9 +69,9 @@ public class Mpair {
 			"topn", 
 			"gene_scale", "exon_scale","len_scale","g0_scale", 
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile",
-			"CoSet"						// CAS588 add Coset params
+			"CoSet", "MUMmer", "Blast"					// CAS588 add Coset params; CAS589 add blast
 	};
-	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular; CAS576
+	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular
 	private final int defStrict = 1, defAlgo = 16; // if annotated, [16]=0, [17]=1  
 	private String [] paramDef = {  
 			"7", "1", "0",	"0",        // synteny:  hits, strict, orient, merge; strict is default except for when there are many contigs
@@ -75,7 +82,8 @@ public class Mpair {
 			"2", 					    //       topn
 			"1.0", "1.0", "1.0", "1.0",	//       gene, exon, Len, G0_Len	
 			"1", "1", "1", "0", "0", 	//       EE, EI, En, II, In 
-			"0:0"						// Num (default order):Algo (default new)
+			"0:0",						// Num (default order):Algo (default new)
+			"1", "0"					// Use MUMmer, Load Blast
 	};
 	
 	public Mpair(DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
@@ -108,9 +116,20 @@ public class Mpair {
 		if (!isReadOnly)  loadFromFile(); // loads into FileMap
 		if (pairIdx!= -1) loadFromDB();  //  loads into dbMap
 		
-		loadSyVer();
+		setAligns();
 	}
-	
+	protected void setAligns() {// check here so can reuse values; called from ManagerFrame for updates; CAS589 add; 
+	try {
+		hasMUMmer 		 = Utils.checkDoneMUMmer(resultDir + Constants.alignDir);
+		hasBlast 		 = Utils.checkDoneBlast(resultDir + Constants.blastDir);
+		
+		if (hasBlast && hasMUMmer) alignStr = "MUMmer/Blast files";
+		else if (hasBlast)         alignStr = "Blast files";
+		else if (hasMUMmer)        alignStr = "MUMmer files";
+		else alignStr="";
+	}
+	catch (Exception e) {ErrorReport.print(e, "check align/blast directories");  }
+	}
 	/************************************************************************************/
 	// ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgAllParams(int type) {
@@ -122,6 +141,8 @@ public class Mpair {
 	}
 	// ManagerFrame.alignSelectedPair popup when no align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgClustSyn(int type) { 
+		if (isNotDefault(type, "Blast")) return getChgLoad(type); // Load Blast selected
+		
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
 		
@@ -131,48 +152,63 @@ public class Mpair {
 		}
 		else return cmsg + "\n" + smsg; // Summary has type=DB, so gets existing from pairs.params
 	}
-	
+	public String getChgLoad(int type) {
+		String cmsg = getChgAlign(type, false);
+		String smsg = getChgSynteny(type); 
+		return cmsg + "\n" + smsg;
+	}
 	public String getChgAlign(int type, boolean forSum) {
 		String msg="";
-		if (isChg(type,"concat")) 			msg = pjoin(msg, "No concat");	
-		if (isChg(type,"mask1")) 			msg = pjoin(msg, "Mask " + mProj1.getDisplayName());	
-		if (isChg(type,"mask2")) 			msg = pjoin(msg, "Mask " + mProj2.getDisplayName());	
+		if (isNotDefault(type, "Blast")) { // blast selected; CAS589 
+			msg = LOAD;
+			if (!hasBlast) return msg + "\n" + spp + "NO BLAST FILE!!";
+			
+			String name = Utils.getBlastFile(resultDir);
+			if (name==null) return msg + "\n" + spp + "NO BLAST FILE!!";
+			
+			if (name.contains("/")) name = name.substring(name.lastIndexOf("/"));
+			return msg + "\n" + spp + name;
+		}
+			
+		if (isNotDefault(type,"concat")) 			msg = pjoin(msg, "No concat");	
+		if (isNotDefault(type,"mask1")) 			msg = pjoin(msg, "Mask " + mProj1.getDisplayName());	
+		if (isNotDefault(type,"mask2")) 			msg = pjoin(msg, "Mask " + mProj2.getDisplayName());	
 		
-		if (isChg(type,"promer_only")) 		msg = pjoin(msg, "PROmer only  ");
-		else if (isChg(type,"nucmer_only")) msg = pjoin(msg, "NUCmer only  ");
+		if (isNotDefault(type,"promer_only")) 		msg = pjoin(msg, "Use PROmer ");// CAS589 was 'PROmer only'
+		else if (isNotDefault(type,"nucmer_only"))  msg = pjoin(msg, "Use NUCmer ");
 		
-		if (isChg(type,"self_args")) 		msg = pjoin(msg, "Self args: "   + getSelfArgs(type)); 
-		else if (isChg(type,"promer_args")) msg = pjoin(msg, "PROmer args: " + getPromerArgs(type));
-		else if (isChg(type,"nucmer_args")) msg = pjoin(msg, "NUCmer args: " + getNucmerArgs(type));
+		if (isNotDefault(type,"self_args")) 		msg = pjoin(msg, "Self args: "   + getSelfArgs(type)); 
+		else if (isNotDefault(type,"promer_args"))  msg = pjoin(msg, "PROmer args: " + getPromerArgs(type));
+		else if (isNotDefault(type,"nucmer_args"))  msg = pjoin(msg, "NUCmer args: " + getNucmerArgs(type));
 		
-		if (!forSum && Constants.MUM_NO_RM) msg = pjoin(msg, "Keep MUMmer .delta file"); 
+		if (!forSum && Constants.MUM_NO_RM)     msg = pjoin(msg, "Keep MUMmer .delta file"); 
 		
 		if (!msg.equals("")) {
-			if (msg.contains("PROmer") || msg.contains("NUCmer")) return ALIGN + "\n" + msg;
-			else if (isSelf)                                      return ALIGN + " NUCmer" + "\n" + msg;
-			else                                                  return ALIGN + " PROmer" + "\n" + msg;
+			if (msg.contains(promer) || msg.contains(nucmer)) return ALIGN + "\n" + msg;
+			else if (isSelf)                                  return ALIGN + nucmer + "\n" + msg;
+			else                                              return ALIGN + promer + "\n" + msg;
 		}
-		if (isSelf) return ALIGN + " NUCmer" ; // always remind what is being used
-		return ALIGN + " PROmer";
+		if (isSelf) return ALIGN + nucmer ; // always remind what is being used
+		return ALIGN + promer;
 	}
 	
 	private String getChgCluster(int type) {
 		String msg="";
 		if (isAlgo2(type)) {
-			if (isChg(type,"exon_scale")) 	msg = pjoin(msg, "Exon scale = " + getExonScale(type)); 
-			if (isChg(type,"gene_scale")) 	msg = pjoin(msg, "Gene scale = " + getGeneScale(type));
-			if (isChg(type,"len_scale")) 	msg = pjoin(msg, "Length scale = " + getLenScale(type));
-			if (isChg(type,"g0_scale")) 	msg = pjoin(msg, "G0 length scale = " + getG0Scale(type));
+			if (isNotDefault(type,"exon_scale")) 	msg = pjoin(msg, "Exon scale = " + getExonScale(type)); 
+			if (isNotDefault(type,"gene_scale")) 	msg = pjoin(msg, "Gene scale = " + getGeneScale(type));
+			if (isNotDefault(type,"len_scale")) 	msg = pjoin(msg, "Length scale = " + getLenScale(type));
+			if (isNotDefault(type,"g0_scale")) 	msg = pjoin(msg, "G0 length scale = " + getG0Scale(type));
 			
-			if (isChg(type,"EE_pile"))		msg = pjoin(msg, "Limit Exon-Exon piles");
-			if (isChg(type,"EI_pile"))		msg = pjoin(msg, "Limit Exon-Intron piles"); 
-			if (isChg(type,"En_pile"))		msg = pjoin(msg, "Limit Exon-intergenic piles");
-			if (isChg(type,"II_pile"))		msg = pjoin(msg, "Allow Intron-Intron piles");
-			if (isChg(type,"In_pile"))		msg = pjoin(msg, "Allow Intron-intergenic piles");
-			if (isChg(type,"topn")) 		msg = pjoin(msg, "Top N piles = " + getTopN(type));
-			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
+			if (isNotDefault(type,"EE_pile"))		msg = pjoin(msg, "Limit Exon-Exon piles");
+			if (isNotDefault(type,"EI_pile"))		msg = pjoin(msg, "Limit Exon-Intron piles"); 
+			if (isNotDefault(type,"En_pile"))		msg = pjoin(msg, "Limit Exon-intergenic piles");
+			if (isNotDefault(type,"II_pile"))		msg = pjoin(msg, "Allow Intron-Intron piles");
+			if (isNotDefault(type,"In_pile"))		msg = pjoin(msg, "Allow Intron-intergenic piles");
+			if (isNotDefault(type,"topn")) 		msg = pjoin(msg, "Top N piles = " + getTopN(type));
+			if (isNotDefault(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
 			
-			if (isChg(type,"CoSet")) {
+			if (isNotDefault(type,"CoSet")) {
 				if (!isCoSetNum(type)) msg = pjoin(msg,  "Order Collinear by size");
 				if (!isCoSetAlgo(type)) msg = pjoin(msg, "Simple Collinear Algo");
 			}
@@ -180,9 +216,9 @@ public class Mpair {
 			else                msg = ALGO2 + "\n" + msg;
 		}
 		else if (isAlgo1(type)) {
-			if (isChg(type,"topn")) msg = pjoin(msg,"Top N piles =" + getTopN(type));
+			if (isNotDefault(type,"topn")) msg = pjoin(msg,"Top N piles =" + getTopN(type));
 			if (Group.bSplitGene)   msg = pjoin(msg,"Split gene");
-			if (isChg(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); // algo will come after
+			if (isNotDefault(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); // algo will come after
 			
 			if (msg.equals("")) msg = ALGO1;
 			else                msg = ALGO1 +  "\n" + msg; 				
@@ -196,16 +232,16 @@ public class Mpair {
 		if (isStrict(type))  smsg = SYNSTRI;
 		else                 smsg = SYNORIG;
 		
-		if (isChg(type,"mindots")) 		msg = pjoin(msg, "Min hits=" + getMinDots(type));
-		if (isChg(type,"same_orient"))  msg = pjoin(msg, "Same orient");
-		if (isChg(type,"merge_blocks")) {// has a choice of 3 where 0 is default
+		if (isNotDefault(type,"mindots")) 		msg = pjoin(msg, "Min hits=" + getMinDots(type));
+		if (isNotDefault(type,"same_orient"))  msg = pjoin(msg, "Same orient");
+		if (isNotDefault(type,"merge_blocks")) {// has a choice of 3 where 0 is default
 			String idx  = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
 			int ix = Utilities.getInt(idx);
 			msg = pjoin(msg, "Merge blocks: " + PairParams.mergeOpts[ix]);
 		}
 		
-		if (isChg(type, "order_proj1"))	msg = pjoin(msg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName()); 
-		if (isChg(type, "order_proj2"))	msg = pjoin(msg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName());
+		if (isNotDefault(type, "order_proj1"))	msg = pjoin(msg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName()); 
+		if (isNotDefault(type, "order_proj2"))	msg = pjoin(msg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName());
 		
 		if (msg.equals("")) return smsg;
 		return smsg + "\n" + msg; 	
@@ -216,7 +252,7 @@ public class Mpair {
 		if (!isCoSetAlgo(type)) msg = pjoin(msg, "Collinear Simple");
 		return msg;
 	}
-	private boolean isChg(int type, String field) {
+	private boolean isNotDefault(int type, String field) {
 		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
 		if (db==null) {
 			Globals.prt("No parameter in database: " + field);
@@ -283,11 +319,16 @@ public class Mpair {
 	public Mproject getProj2() {return mProj2;}
 	
 	protected boolean isPairInDB() {return pairIdx>0;}
-	public boolean hasSynteny()    {return pairIdx>0;} // if A&S fails, it will not be in database
+	
+	public String getResultDir() {return resultDir;}
 	
 	public boolean isNumPseudo(int type) {
 		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
 		return x.contentEquals("1");
+	}
+	public boolean isAlgoX(int type) { // neither have exLap
+		if (isBlast(type)) return true;
+		return isAlgo1(type);
 	}
 	public boolean isAlgo1(int type) {
 		String x = (type==FILE) ? fileMap.get("algo1") : dbMap.get("algo1");
@@ -369,6 +410,10 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
 		return x;
 	}
+	public boolean isBlast(int type) { // CAS589 add
+		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");
+		return x.contentEquals("1");
+	}
 	public int getMinDots(int type) {
 		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
 		return Utilities.getInt(x);
@@ -405,6 +450,8 @@ public class Mpair {
 		if (y.length!=2) return true;
 		return y[1].contentEquals("0");
 	}
+	public boolean isAlignNT() {return isAlignNT;}
+	
 	/************************************************************************************/
 	public HashMap <String, String> getFileParams() { return fileMap;}
 	public HashMap <String, String> getDbParams() { return dbMap;} // for PairParams Pseudo
@@ -466,8 +513,7 @@ public class Mpair {
 	}
 	/********** called by PairParams on save; write all ***********/
 	public void saveParamsToFile(HashMap <String, String> valMap) { 
-		FileDir.checkCreateDir(Constants.dataDir, true); 
-		FileDir.checkCreateDir(Constants.seqRunDir, true); 
+		if (!Constants.checkCreateDataDir()) return; 
 		FileDir.checkCreateDir(resultDir, true); 
 		
 		File pfile = new File(resultDir,Constants.paramsFile);
@@ -487,8 +533,18 @@ public class Mpair {
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
 	/*********************************************************************/
+	public void saveLoad(String params) {
+		try { 
+			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
+					+ "syver='" + Globals.VERSION + "', params='" + params + "'" 
+					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
+					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")");
+		}
+		catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
+	}
+	
 	public void saveUpdate() {
-	try {
+	try { 
 		dbc2.executeUpdate("update pairs set aligndate=NOW(), syver='" + Globals.VERSION + "'"
 				+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 				+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
@@ -570,38 +626,26 @@ public class Mpair {
 		for (int i=0; i<paramKey.length; i++) 	// any other further additions
 			if (!dbMap.containsKey(paramKey[i]))
 				dbMap.put(paramKey[i], paramDef[i]);
+		
+		// set isAlignNT; CAS589 add for query
+		String params = dbc2.executeString("select params from pairs where idx=" + pairIdx);
+		if (params!=null && !params.equals("")) {
+			if (params.contains(promer))      {isAlignNT=false; return;}
+			else if (params.contains(nucmer)) {isAlignNT=true; return;}
+		}
+		// will only search all on self
+		int cnt = dbc2.executeCount("select idx from pseudo_hits where cvgpct>0 and pair_idx=" + pairIdx + " limit 1");
+		isAlignNT = (cnt<=0);
 	}
 	catch (Exception e) {ErrorReport.print(e, "load from db"); }
 	}
+	
 	private void makeParams() {
 		for (int i=0; i<paramKey.length; i++) {
 			defMap.put(paramKey[i],  paramDef[i]);	// never changes
 			dbMap.put(paramKey[i],   paramDef[i]);	// can changes
 			fileMap.put(paramKey[i], paramDef[i]);
 		}
-	}
-	/////////////////////////////////////////////////////
-	private void loadSyVer() {
-	try {
-		ResultSet rs = dbc2.executeQuery("select syver from pairs where idx=" + pairIdx);
-		if (rs.next()) syVer = rs.getString(1);
-		rs.close();
-	}
-	catch (Exception e) {ErrorReport.print(e, "load syVer"); }
-	}
-	// v should be number like 547, so anything version >547
-	public boolean isPostVn(int v) { //v546 had bug that added bad pseudo_hit_annot, which only shows up in Every+
-	try {
-		if (syVer.equals("")) return false;
-		
-		String x = syVer.substring(1, syVer.length());
-		x = x.replaceAll("\\.", "");
-		int y = Utilities.getInt(x);
-		if (y>v) return true;
-		
-		return false;
-	}
-	catch (Exception e) {ErrorReport.print(e, "post v546"); return false;}
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
 }

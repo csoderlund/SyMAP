@@ -25,13 +25,13 @@ import javax.swing.event.HyperlinkListener;
 
 /*********************************************************
  */
-public class Jhtml {
+public class Jhtml { 
+	// CAS589 confirmed all links and commented in html <!-- ref in code -->
 	public static final String BASE_HELP_URL = 	"https://csoderlund.github.io/SyMAP/"; 
 	public static final String TROUBLE_GUIDE_URL = BASE_HELP_URL + "TroubleShoot.html";
 	public static final String macVerify = "#macos"; 									
 	
 	public static final String SYS_GUIDE_URL =    BASE_HELP_URL + "SystemGuide.html"; 
-	// public static final String create = "#create"; // CAS580 changed to input/index.html#dir
 	public static final String ext = "#ext";								
 	
 	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; 
@@ -42,14 +42,13 @@ public class Jhtml {
 	public static final String param2Syn = "#syn";
 	
 	public static final String USER_GUIDE_URL =  BASE_HELP_URL + "UserGuide.html"; 
-	public static final String exp = 		"#explorer"; // CAS580 add for Link on Explorer left side
+	public static final String exp = 		"#explorer"; // Link on Explorer left side
 	public static final String view =  		"#views";	// viewSymap right side of manager
 	public static final String circle =  	"#circle";	
-	public static final String linear =  	"#linear";	// CAS583 new
+	public static final String linear =  	"#linear";	
 	public static final String dotplot = 	"#dotplot_display";
 	public static final String align2d = 	"#alignment_display_2d";
 	public static final String colorIcon =  "#wheel";
-	//public static final String control = 	"#control"; // CAS580 not used
 	public static final String hitfilter =  "#hitfilter";
 	public static final String seqfilter =  "#sequence_filter";
 	public static final String dotfilter =	"#dotplot_filter";
@@ -59,8 +58,8 @@ public class Jhtml {
 	public static final String result = "#result";
 	
 	public static final String CONVERT_GUIDE_URL =  BASE_HELP_URL + "input/index.html"; 
-	public static final String xtosymap = "#if";		// CAS580 add for xToSymap
-	public static final String addproj = "#dir";		// CAS580 add for Add Project
+	public static final String xtosymap = "#if";		
+	public static final String addproj = "#dir";		
 	
 	public static JButton createHelpIconSysSm(String main, String id) { 
 		return createHelpIcon("/images/helpSm.png", main + id);
@@ -238,8 +237,6 @@ public class Jhtml {
 	public static JComponent createInstructionsPanel(InputStream str, Color background) {
 		StringBuffer sb = new StringBuffer();
 		try {
-			//InputStream str = this.getClass().getResourceAsStream(HTML);
-			
 			int ci = str.read();
 			while (ci != -1) {
 				sb.append((char)ci);

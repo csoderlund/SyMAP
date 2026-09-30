@@ -2,6 +2,7 @@ package backend;
 
 import backend.anchor1.Proj;
 import symap.manager.Mpair;
+import util.FileDir;
 
 public class Constants {
 	
@@ -14,6 +15,7 @@ public static boolean MUM_NO_RM = false;		// -mum on A&S ONLY do not remove any 
 public static boolean VERBOSE = false; 			// -v on 
 public static boolean CoSET_ONLY = false;		// -cs on A&S ONLY execute AnchorPosts; on -hhh, leave for possible updates
 public static boolean NUMHITS_ONLY = false;		// -nh  on A&S only execute in AnchorMain for v5.7.9c
+public static boolean LOAD_BLOCKS = false;		// -blk on A&S, load blocks from file; CAS589 add
 
 // Anchor1 constants; Anchor2 constants are in Anchor2.Arg
 public static final int TARGET=0, QUERY=1, EITHER=2;
@@ -64,7 +66,7 @@ public static final String mumSuffix = 		".mum";
 public static final String doneSuffix = 	".done";
 public static final String selfPrefix = 	"self.";
 public static final String finalDir = 		"/final/"; // has been discontinued; still exists in order to Remove
-
+public static final String blastDir = 		"/blast/"; // add CAS589 to load blast hits from
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";
 
@@ -91,10 +93,10 @@ public static final String tmpRunDir = 		 "/tmp/";
 	}
 
 	// Results NOTES: XXX 
-	//   1. Cannot use "Project p" as argument as two Project.java
-	//   2  see ProjectManagerFrameCommon.orderProjects
+	//   1. Cannot use "Mproject p" as argument
+	//   2  see ManagerFrame.orderProjects
 	public static String getNameResultsDir(String n1, String n2) {
-		return seqRunDir +  n1 + projTo + n2;
+		return seqRunDir +  n1 + projTo + n2; // data/seq_results/proj1_to_proj2
 	}
 	
 	public static  String getNameAlignDir(String n1, String n2) {
@@ -118,5 +120,15 @@ public static final String tmpRunDir = 		 "/tmp/";
 		if (mp.isOrder1(Mpair.FILE)) return mp.mProj1.getDBName() + Constants.orderDelim + mp.mProj2.getDBName();
 		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDBName() + Constants.orderDelim + mp.mProj1.getDBName();
 		return null;
+	}
+	public static boolean checkCreateDataDir() { // added CAS589 for routines to share
+		try {
+			FileDir.checkCreateDir(dataDir, true);
+			FileDir.checkCreateDir(seqDataDir, true); 
+			FileDir.checkCreateDir(seqRunDir,  true);
+			
+			return true;
+		}
+		catch (Exception e){util.ErrorReport.print(e, "Error creating /data directories"); return false;}
 	}
 }

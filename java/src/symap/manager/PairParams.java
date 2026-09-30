@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -20,10 +21,12 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
 import backend.Constants;
+import symap.Globals;
 import util.Jcomp;
 import util.Jhtml;
 import util.Utilities;
 import util.Popup;
+import util.FileDir;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
@@ -49,13 +52,14 @@ public class PairParams extends JDialog {
 		"Min hits", "Strict", "Orient", "Merge:", 
 		"None", "Order1", "Order2", 			 
 		"Concat",  "Mask1", "Mask2", 		
-		"NUCmer args", "PROmer args", "Self args", "NUCmer only","PROmer only", // mummer:
+		"NUCmer args", "PROmer args", "Self args", "Use NUCmer","Use PROmer", 
 		"Number pseudo", 											
 		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
 		"Top N piles", 
 		"Gene", "Exon", "Len","G0_Len", 
 		"EE", "EI", "En", "II", "In", 
-		"Collinear"				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
+		"Collinear",				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
+		"Use MUMmer", "Load Blast File" // CAS589 new
 	};
 	
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
@@ -69,7 +73,7 @@ public class PairParams extends JDialog {
 		"topn",					
 		"gene_scale", "exon_scale", "len_scale","g0_scale",
 		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile", 
-		"CoSet"
+		"CoSet", "MUMmer", "Blast", "blast_file"
 	};
 	
 	private Mpair mp = null;
@@ -185,6 +189,12 @@ public class PairParams extends JDialog {
 		cmbCsetNum = Jcomp.createComboBox(coSetNumOpts, "How to number the collinear sets", 0); 
 		cmbCsetAlgo = Jcomp.createComboBox(coSetAlgoOpts, "The advanced algorithm tries to resolve overlapped genes collinearity", 0); 
 				
+		radMummer = Jcomp.createRadio(LABELS[x++], "Run MUMmer or use existing MUMmer files");
+		radBlast  = Jcomp.createRadio(LABELS[x++], "Load Blast Tab file");
+		
+		ButtonGroup xgroup = new ButtonGroup();
+		xgroup.add(radMummer); xgroup.add(radBlast); radMummer.setSelected(true);
+		
 		//////////////////////////////////////////////////////////
 		// bottom row of bottoms
 		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); 
@@ -207,7 +217,7 @@ public class PairParams extends JDialog {
 		});
 		
 		String [] acts;
-		if (!isAlignDone || !mp.hasSynteny()) {
+		if (!isAlignDone || !mp.isPairInDB()) {
 			acts = new String [1];			// not going to be shown
 			acts[0] = opt0Alt; 
 		}
@@ -224,8 +234,9 @@ public class PairParams extends JDialog {
 		/*-------- Create Layout ------------------*/
 		//////////////////////////////////////////////////////////////////////////
 		JPanel row = Jcomp.createRowPanel();
-		String plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") & " + 
+		String plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") x " + 
 					  mProj2.strDisplayName + " (" + mProj2.getdbAbbrev() + ")";
+		if (isSelf) plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") x Self"; // CAS589 add
 		row.add(Jcomp.createLabel(plab)); 
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5)); 
 	
@@ -236,33 +247,38 @@ public class PairParams extends JDialog {
 		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
-		row.add(chkConcat);								
-		row.add(Box.createHorizontalStrut(15));
+		row.add(radBlast); row.add(Box.createHorizontalStrut(5)); // CAS589 add
+		row.add(Jcomp.createLabel("(Skips Cluster Hits)"));
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		
+		row = Jcomp.createRowPanel();
+		row.add(radMummer); row.add(Box.createHorizontalStrut(5));
+		row.add(chkConcat);	row.add(Box.createHorizontalStrut(15));
 														
 		row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	
-		row.add(chkMask2);						
+		if (!isSelf) row.add(chkMask2);	// CAS589 add					
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
 		int colWidth = 100;
-		row = Jcomp.createRowPanel();
+		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(10));
 		row.add(lblProMerArgs);
 		if (lblProMerArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblProMerArgs.getPreferredSize().width));
 		row.add(txtProMerArgs);
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 		
-		row = Jcomp.createRowPanel();
-		row.add(lblNucMerArgs);
+		row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(10));
+		row.add(lblNucMerArgs); row.add(Box.createHorizontalStrut(10));
 		if (lblNucMerArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblNucMerArgs.getPreferredSize().width));
 		row.add(txtNucMerArgs);
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 	
-		row = Jcomp.createRowPanel();
-		row.add(lblSelfArgs);
+		row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(10));
+		row.add(lblSelfArgs); row.add(Box.createHorizontalStrut(10));
 		if (lblSelfArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblSelfArgs.getPreferredSize().width));
 		row.add(txtSelfArgs);
 		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
 
-		row = Jcomp.createRowPanel();
+		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
 		row.add(chkProOnly); mainPanel.add(row);mainPanel.add(Box.createHorizontalStrut(20));
 		row.add(chkNucOnly); mainPanel.add(row);mainPanel.add(Box.createHorizontalStrut(20));
 		row.add(chkDef);     mainPanel.add(row);mainPanel.add(Box.createVerticalStrut(5));
@@ -384,7 +400,6 @@ public class PairParams extends JDialog {
 		setResizable(false);
 		setLocationRelativeTo(null); 
 	}
-	
 	/************************************************************************/
 	private String getValue(String symbol) {// ORDER MUST BE SAME AS array
 		int x=0;
@@ -422,9 +437,9 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkIIpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	{
-			return cmbCsetNum.getSelectedIndex() + ":" + cmbCsetAlgo.getSelectedIndex();
-		}
+		else if (symbol.equals(SYMBOLS[x++]))	return cmbCsetNum.getSelectedIndex() + ":" + cmbCsetAlgo.getSelectedIndex();
+		else if (symbol.equals(SYMBOLS[x++]))	return radMummer.isSelected()?"1":"0"; 
+		else if (symbol.equals(SYMBOLS[x++]))	return radBlast.isSelected()?"1":"0"; 
 		else return "";
 	}
 	private void setValue(String symbol, String value) {// ORDER MUST BE SAME AS array
@@ -475,6 +490,8 @@ public class PairParams extends JDialog {
 				cmbCsetAlgo.setSelectedIndex(algo);
 			}
 		}
+		else if (symbol.equals(SYMBOLS[x++])) radMummer.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++])) radBlast.setSelected(value.equals("1"));
 	}
 	/************************************************************************/
 	
@@ -549,6 +566,7 @@ public class PairParams extends JDialog {
 				if (ret == 0) return ;
 			}
 		}
+		
 		if (!checkInt("Min Hits", txtMinDots.getText(), 1)) return; 
 		if (!checkInt("Top N piles", txtTopN.getText(), 1)) return;		
 		if (!checkDouble("G0_Len", txtNoGene.getText(), 0)) return;		 
@@ -556,6 +574,18 @@ public class PairParams extends JDialog {
 		if (!checkDouble("Exon", txtExon.getText(), 0)) return;	
 		if (!checkDouble("Length", txtLen.getText(), 0)) return;	
 		
+		if (radBlast.isSelected()) { // CAS589
+			Constants.checkCreateDataDir();
+			
+			String dir = Constants.getNameResultsDir(mProj1.getDBName(), mProj2.getDBName());
+			FileDir.checkCreateDir(dir, true);
+			
+			dir = dir + Constants.blastDir;
+			FileDir.checkCreateDir(dir, true);
+			
+			ArrayList <String> files = FileDir.getFilesFromDir(dir);
+			if (files == null || files.size()==0) Globals.prt("No files in " + dir);
+		}
 		HashMap <String, String> fileMap = mp.getFileParams();
 		
 		for (String key : SYMBOLS) fileMap.put(key, getValue(key));
@@ -563,11 +593,11 @@ public class PairParams extends JDialog {
 		mp.saveParamsToFile(fileMap); // saves to DB when run
 		
 		bSavPseudo = mp.bPseudo; bSavSynOnly = mp.bSynOnly; bSavCoSet = mp.bCoSet;
-		manFrame.updateEnableButtons(); // update Selected pair label
+		manFrame.updateEnableButtons(); 		// update Selected pair label
 		
-		if (mp.bSynOnly) setSaveSynOnly();	
-		else if (mp.bPseudo) setSavePseudo();
-		else if (mp.bCoSet) setSaveCoSet();
+		if (mp.bSynOnly) 		setSaveSynOnly();	
+		else if (mp.bPseudo) 	setSavePseudo();
+		else if (mp.bCoSet) 	setSaveCoSet();
 		
 		setVisible(false);
 	}
@@ -644,6 +674,8 @@ public class PairParams extends JDialog {
 
 	/************************************************************************/
 	private JPanel mainPanel = null;
+	
+	private JRadioButton radMummer = null, radBlast = null;
 	
 	private JCheckBox chkConcat = null, chkMask1 = null, chkMask2 = null;
 	private JLabel lblNucMerArgs = null, lblProMerArgs = null, lblSelfArgs = null;

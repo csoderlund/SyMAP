@@ -458,6 +458,13 @@ public class DBconn2 {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Reset auto-increment for " + table);}
 	}
+	public int getMaxValue(String col, String table) { // CAS589 add for convenience
+	try {
+		int max = getIdx("select max(" + col + ") from " + table);	
+		return max;
+	}
+	catch (Exception e) {ErrorReport.print(e, "get last index " + table); return -1;}
+	}
     /****************************************************************************
    	 * Check database settings when mysql database is created
    	 */

@@ -191,8 +191,8 @@ public class Schema {
 		sql = "CREATE TABLE pseudo_hits_annot (" +
 		    "hit_idx             INTEGER NOT NULL," +	// pseudo_hits.idx
 		    "annot_idx           INTEGER NOT NULL," +	// pseudo_annot.idx
-		    "olap	             INTEGER default 0," +   // gene overlap; algo1 basepairs; algo2 percent
-		    "exlap	             tinyint default 0," +   // exon percentoverlap
+		    "olap	             tinyint default 0," +   // gene %overlap; algo1 basepairs; algo2 percent; CAS578 was int
+		    "exlap	             tinyint default 0," +   // exon %overlap
 		    "annot2_idx			 INTEGER default 0," +   // not present for type pseudo; 
 		    "UNIQUE (hit_idx, annot_idx)," +
 		    "INDEX (annot_idx)," +

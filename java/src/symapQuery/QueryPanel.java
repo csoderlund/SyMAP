@@ -86,12 +86,12 @@ public class QueryPanel extends JPanel {
 		setClearDefaults(); // No matter on they get set on create, they all start out cleared
 	}
 	protected DBconn2 getDBC()  {return qFrame.getDBC();} // DBdata needs this for Gene#
-	protected boolean isAlgo2() {return qFrame.isAlgo2();}
+	protected boolean isOlap()  {return !qFrame.bUseAlgo2 || qFrame.bUseBlast;}
 	    
 	/*************************************************************
 	 * XXX State and get
 	 */
-	protected boolean isSelf() {return qFrame.isSelf();} // for DBdata
+	protected boolean isSelf() {return isSelf;} // for DBdata
 	
 	protected boolean isIncludeMinor() { 
 		return isEveryStarAnno() || isOlapAnno_ii() || (isMultiN() && chkMultiMinor.isSelected()) 
@@ -501,15 +501,15 @@ public class QueryPanel extends JPanel {
 		
 		lblGeneOlap = Jcomp.createLabel(olapDesc + " %Olap ", olapDesc + " overlap");
 		txtGeneOlap = Jcomp.createTextField("0", olapDesc + " overlap", w, true);
-		radOlapOr   = Jcomp.createRadio("Either", "At least one has %Olap>=N");
-		radOlapAnd  = Jcomp.createRadio("Both", "Both have %Olap>=N");
+		radOlapOr   = Jcomp.createRadio("Either", "At least one hit end aligns to a gene with %Olap>=N");
+		radOlapAnd  = Jcomp.createRadio("Both",   "Both hit ends align to genes with %Olap>=N");
 		ButtonGroup o = new ButtonGroup(); o.add(radOlapOr); o.add(radOlapAnd); radOlapOr.setSelected(true);
 		
 		w=15;
 		lblHitGE = Jcomp.createLabel("Hit >=  ", "Value >= input number");
 		row.add(lblHitGE);		row.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil2, lblHitGE)));
 		row.add(lblHitId); 		row.add(txtHitId); 		row.add(Box.createHorizontalStrut(w));
-		if (!qFrame.isSelf) {row.add(lblHitSim); row.add(txtHitSim); row.add(Box.createHorizontalStrut(w));}//CAS588
+		if (!qFrame.isAlignNT) {row.add(lblHitSim); row.add(txtHitSim); row.add(Box.createHorizontalStrut(w));}//CAS588 add,CAS589 was isSelf
 		row.add(lblHitCov); 	row.add(txtHitCov); 	
 		if (!bNoAnno) {
 			row.add(Box.createHorizontalStrut(w*3));

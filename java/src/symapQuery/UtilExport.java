@@ -3,9 +3,9 @@ package symapQuery;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.util.Vector;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -36,19 +36,22 @@ import util.Utilities;
  */
 public class UtilExport extends JDialog {
 	private static final long serialVersionUID = 1L;
-	private static String filePrefix = "tableExport";
+	private static String filePrefix = "queries"; // CAS589 was tableExport
 	protected final int ex_csv = 0, ex_html = 1, ex_fa_pairs= 2,  ex_fa_genes = 3, ex_cancel= 4; // Referenced in TableDataPanel
    
 	private TableMainPanel tPanel;
 	private String title, projs=""; 
 	private Vector<Mproject> projVec;
 	
-	private JRadioButton btnYes;
-	private int nMode = -1;    
+	private JRadioButton btnYes, btnID; // CAS589 add ID for FASTA
+	private boolean bLoadBlast=false;
+	
+	private int nMode = -1;  
 	    
-	protected UtilExport(TableMainPanel tdp, String title) {
+	protected UtilExport(TableMainPanel tdp, String title, boolean bLoadBlast) {
 		this.tPanel = tdp;
 		this.title = title;
+		this.bLoadBlast = bLoadBlast;
 		
 		projVec = tdp.qFrame.getProjects();
 		for (Mproject mp : projVec) projs += mp.getDisplayName() + " (" + mp.getdbAbbrev() + "); ";
@@ -99,7 +102,7 @@ public class UtilExport extends JDialog {
 				nMode = ex_fa_pairs;
 			}
 		});
-		if (tPanel.isSingle) btnFASTA.setEnabled(false);
+		if (tPanel.isSingle || bLoadBlast) btnFASTA.setEnabled(false);
    	  
 		JRadioButton btnGENES = Jcomp.createRadio("Unique spliced transcripts", 
 				"Export the spliced exons/CDS sequence of unique transcripts");
@@ -109,6 +112,18 @@ public class UtilExport extends JDialog {
 			}
 		});
 		
+		JPanel row2Panel = Jcomp.createRowPanel();
+        row2Panel.add(Box.createHorizontalStrut(15));
+        row2Panel.add(new JLabel("Header line:")); rowPanel.add(Box.createHorizontalStrut(5));
+        
+		btnID = Jcomp.createRadio("GFF ID", "Use GFF ID for header line (if exists)"); 
+	    JRadioButton btnNSy = Jcomp.createRadio("Gene#", "Use SyMAP gene# for header line"); 
+	    ButtonGroup id = new ButtonGroup();
+		id.add(btnNSy); id.add(btnID);
+		btnNSy.setSelected(true); 
+		row2Panel.add(btnNSy); row2Panel.add(Box.createHorizontalStrut(5));
+		row2Panel.add(btnID);
+			
 		ButtonGroup grp = new ButtonGroup();
 		grp.add(btnCSV);
 		grp.add(btnHTML);
@@ -126,7 +141,8 @@ public class UtilExport extends JDialog {
         selectPanel.add(new JSeparator());
         selectPanel.add(new JLabel("Table FASTA")); selectPanel.add(Box.createVerticalStrut(5));
         selectPanel.add(btnFASTA); selectPanel.add(Box.createVerticalStrut(5));
-        selectPanel.add(btnGENES); 
+        selectPanel.add(btnGENES); selectPanel.add(Box.createVerticalStrut(5));
+        selectPanel.add(row2Panel);
         
     // buttons
     	JButton btnOK = Jcomp.createButton("Export", "Perform export");
@@ -171,7 +187,7 @@ public class UtilExport extends JDialog {
     	if (nSelRows>0) {
     		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
-		PrintWriter outFH = getFileHandle(ex_csv, filePrefix + ".csv", true);
+		BufferedWriter outFH = getFileHandle(ex_csv, filePrefix + ".csv", true);
 		if (outFH==null) return;
 		
 		if(nSelRows == 0) {
@@ -180,9 +196,9 @@ public class UtilExport extends JDialog {
 		}
 		int [] selRows = tPanel.theTable.getSelectedRows();
 		
-		outFH.println("### " + title);
-		outFH.println("### " + projs);
-		outFH.println("### Filter: " + tPanel.theSummary); 
+		outFH.write("### " + title + "\n");
+		outFH.write("### " + projs + "\n");
+		outFH.write("### Filter: " + tPanel.theSummary + "\n"); 
 		boolean incRow = btnYes.isSelected();
 		tPanel.setPanelEnabled(false);
 		
@@ -190,22 +206,25 @@ public class UtilExport extends JDialog {
 		for(int x=0; x<tPanel.theTable.getColumnCount()-1; x++) {
 			if (!incRow && x==0) continue; // for row check
 			
-			outFH.print(reloadCleanString(tPanel.theTable.getColumnName(x)) + ",");
+			outFH.write(reloadCleanString(tPanel.theTable.getColumnName(x)) + "," );
 		}
-		outFH.println(reloadCleanString(tPanel.theTable.getColumnName(tPanel.theTable.getColumnCount()-1)));
+		outFH.write(reloadCleanString(tPanel.theTable.getColumnName(tPanel.theTable.getColumnCount()-1)));
+		outFH.newLine();
 		
 		// rows
 		for(int x=0; x<selRows.length; x++) {
 			for(int y=0; y<tPanel.theTable.getColumnCount()-1; y++) {
 				if (!incRow && y==0) continue; 
 				
-				outFH.print(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)) + ",");
+				outFH.write(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)) + ",");
 			}
-			outFH.println(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], tPanel.theTable.getColumnCount()-1)));
+			outFH.write(reloadCleanString(tPanel.theTable.getValueAt(selRows[x], tPanel.theTable.getColumnCount()-1)));
+			outFH.newLine();
 			outFH.flush();
+			if (x>0 && x%1000 == 0) Globals.rprt("Wrote " + x + " of " + selRows.length);
 		}
-		System.out.println("Wrote " + selRows.length + " rows                  ");
 		outFH.close();
+		Globals.prt("Wrote " + selRows.length + " rows                        ");
 		
 		if(reset)
 			tPanel.theTable.getSelectionModel().clearSelection();
@@ -220,7 +239,7 @@ public class UtilExport extends JDialog {
     		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
     	
-    	PrintWriter outFH = getFileHandle(ex_html, filePrefix + ".html", false);
+    	BufferedWriter outFH = getFileHandle(ex_html, filePrefix + ".html", false);
 		if (outFH==null) return;
 	
 		boolean incRow = btnYes.isSelected();
@@ -234,7 +253,7 @@ public class UtilExport extends JDialog {
 		int [] selRows = tPanel.theTable.getSelectedRows();
 		
 		// html header; CAS586 make it HTML5 compliant
-		outFH.print("<!DOCTYPE html><html lang=\"en\">\n<head>\n"
+		outFH.write("<!DOCTYPE html><html lang=\"en\">\n<head>\n"
 				+ "<title>SyMAP Query Table Results</title>\n"
 				+ "<style>\n"
 				+  "body {font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 14px; }\n"
@@ -243,35 +262,36 @@ public class UtilExport extends JDialog {
 				+ "</style>\n</head>\n<body>\n"
 				+ "<a id='top'></a>\n");
 	 
-		outFH.println("<p style=\"text-align: center; font-size: 16px;\"><b>" + title + "</b></p>\n"); 
-		outFH.println("<p style=\"text-align: center;\">" + projs + "</p>\n"); 
-		outFH.println("<p style=\"text-align: center;\">Filter: " + tPanel.theSummary + "</p>\n");
-		outFH.print("<p><table class='ty'>\n<tr>");
+		outFH.write("<p style=\"text-align: center; font-size: 16px;\"><b>" + title + "</b></p>\n"); 
+		outFH.write("<p style=\"text-align: center;\">" + projs + "</p>\n"); 
+		outFH.write("<p style=\"text-align: center;\">Filter: " + tPanel.theSummary + "</p>\n");
+		outFH.write("<p><table class='ty'>\n<tr>");
 		
 		// Columns names
 		for(int x=0; x<tPanel.theTable.getColumnCount(); x++) {
 			if (!incRow && x==0) continue; 
 			String col = reloadCleanString(tPanel.theTable.getColumnName(x));
 			col = col.replace(" ","<br>");
-			outFH.print("<th>" + col + "</th>");
+			outFH.write("<th>" + col + "</th>");
 		}
 		
 		// rows
 		for(int x=0; x<selRows.length; x++) {
-			outFH.print("\n<tr>");
+			outFH.write("\n<tr>");
 			for(int y=0; y<tPanel.theTable.getColumnCount(); y++) {
 				if (!incRow && y==0) continue; 
 				
-				outFH.print("<td>" + reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)));
+				outFH.write("<td>" + reloadCleanString(tPanel.theTable.getValueAt(selRows[x], y)));
 			}
 			outFH.flush();
+			if (x>0 && x%1000 == 0) Globals.rprt("Wrote " + x + " of " + selRows.length);
 		}
-		outFH.print("\n</table>\n");
-		if (selRows.length>100) outFH.print("<p><a href='#top'>Go to top</a>\n");
-		outFH.print("</body></html>\n");
-		symap.Globals.prt("Wrote " + selRows.length + " rows                  ");
+		outFH.write("\n</table>\n");
+		if (selRows.length>100) outFH.write("<p><a href='#top'>Go to top</a>\n");
+		outFH.write("</body></html>\n");
 		outFH.close();
 		
+		Globals.prt("Wrote " + selRows.length + " rows                         ");
 		if(reset)
 			tPanel.theTable.getSelectionModel().clearSelection();
 		tPanel.setPanelEnabled(true);
@@ -287,7 +307,7 @@ public class UtilExport extends JDialog {
     	if (nSelRows>0) {
     		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
-    	PrintWriter outFH = getFileHandle(ex_fa_pairs, filePrefix + "Pairs.fa", true);
+    	BufferedWriter outFH = getFileHandle(ex_fa_pairs, filePrefix + "Pairs.fa", true);
 		if (outFH==null) return;
 	
     	Thread inThread = new Thread(new Runnable() {
@@ -316,8 +336,9 @@ public class UtilExport extends JDialog {
 				}
 			}
 			int seqNum = 1, pairNum=1;
+			boolean useID = btnID.isSelected();
 				
-			outFH.println("### " + title + " ### Subhits merged, taking overlap subhits into account; gaps=nnnnn");
+			// outFH.write("### " + title + " ### Subhits merged, taking overlap subhits into account; gaps=nnnnn\n");
 			for(int x=0; x<selNum; x++) {
 				if (!rd.loadRow(selRows[x])) {// CAS586 was using x, so not getting selected rows
 					outFH.close();
@@ -328,27 +349,35 @@ public class UtilExport extends JDialog {
 				for (int i=0; i<2; i++) {
 					String seq = aPool.loadSeq(rd.start[i] + ":" + rd.end[i], rd.chrIdx[i]);
 					
-					String id = getId(rd.geneTag[i], rd.chrNum[i], rd.spAbbr[i], seqNum);
-					
+					String idStr;
+					if (!useID) {
+						idStr = getId(rd.geneTag[i], rd.chrNum[i], rd.spAbbr[i], seqNum);
+					}
+					else {
+						String idkey = rd.getAnnoFromKey(rd.spAbbr[i], selRows[x]);
+						idStr = getAnnoID(idkey);
+					}
 					String coords = String.format("  Start %,d  End %,d  Len %,d", 
 							rd.start[i], rd.end[i], (rd.end[i]-rd.start[i])+1); // CAS576 add commas and Len
 					
-					String outStr = id + "  " + rd.spName[i] + coords + " Pair#" + pairNum;		
-					outFH.println(outStr);
-					outFH.println(seq);
+					String outStr = idStr + "  " + rd.spName[i] + coords + " Pair#" + pairNum;		
+					outFH.write(outStr+"\n");
+					outFH.write(seq+"\n");
 					outFH.flush();
 					seqNum++;
 				}
 				pairNum++;
-				Globals.rprt("Wrote " + x + " of " + selNum + " pairs");
+				if (x>0 && x % 10 == 0) Globals.rprt("Wrote: " + x + " of " + selNum + " pairs");
 			}
-			outFH.close();
+			outFH.close(); 
+			dbc.close();
 			
+			Globals.rclear();
 			Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
 			
-			if(reset)
-				tPanel.theTable.getSelectionModel().clearSelection();
+			if(reset) tPanel.theTable.getSelectionModel().clearSelection();
 			tPanel.setPanelEnabled(true);
+			
 		} catch(Exception e) {ErrorReport.print(e, "Write fasta");}
 		}});
 		inThread.start();
@@ -372,6 +401,21 @@ public class UtilExport extends JDialog {
 		}
     	return id;
     }
+    // e.g. ID=AT1G09580;rnaID=NM_100830.5 (1);desc=emp24/gp25L/p24 family/GOLD family protein
+    // return AT1G09580; CAS589 add
+    private String getAnnoID(String idkey) {
+		String [] tok = idkey.split(";");
+		if (tok.length==0) return "No ID";
+		String id=null;
+		for (String tuple : tok) {
+			if (tuple.startsWith("ID=")) {
+				id = tuple.split("=")[1];
+				break;
+			}
+		}
+		if (id==null) id=idkey;
+		return String.format("> %-15s", id);
+    }
     /******************************************************************
      * Write fasta pairs
      */
@@ -382,7 +426,7 @@ public class UtilExport extends JDialog {
     	if (nSelRows>0) {
     		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
-    	PrintWriter outFH = getFileHandle(ex_fa_genes, filePrefix + "Genes.fa", true);
+    	BufferedWriter outFH = getFileHandle(ex_fa_genes, filePrefix + "Genes.fa", true);
 		if (outFH==null) return;
 	
     	Thread inThread = new Thread(new Runnable() {
@@ -410,14 +454,15 @@ public class UtilExport extends JDialog {
 					return;
 				}
 			}
-			
+			boolean useID = btnID.isSelected();
+
 			HashMap <Integer, String> spAnnoType = new HashMap <Integer, String> ();
 			for (Mproject mp : projVec) spAnnoType.put(mp.getID(), mp.getdbAnnoType()); // getID is projIdx
 			
 			HashSet <String> geneSet = new HashSet <String> ();
 			int cntDup=0, cntIgn=0;
 			
-			outFH.println("### " + title + "   ### Gene sequences");
+			// CAS589 outFH.write("### " + title + "   ### Gene sequences\n");
 		
 			// Loop through rows
 			for(int x=0; x<selNum; x++) {
@@ -432,28 +477,33 @@ public class UtilExport extends JDialog {
 				for (int i=0; i<loop; i++) {
 					String tag = rd.geneTag[i]; // Chr.tag
 					
-					if (tag.contains("~")) 		{cntIgn++; continue;}
+					if (tag.contains(Globals.pseudoChar)) {cntIgn++; continue;}
 					if (geneSet.contains(tag)) 	{cntDup++; continue;}
 					geneSet.add(tag);
 					
 					String geneNum = tag.substring(tag.indexOf(Globals.DOT)+1, tag.length()); // remove chr from beginning
 					
-					String seq = aPool.loadGeneSeq(geneNum, rd.chrIdx[i], spAnnoType.get(rd.spIdx[i])); // spIdx is projIdx
+					String annotype = (useID) ? "ID" : spAnnoType.get(rd.spIdx[i]);
+					String seq = aPool.loadGeneSeq(geneNum, rd.chrIdx[i], annotype); // spIdx is projIdx
 					if (seq==null) {
 						Globals.prt("Failed obtaining sequence");
 						return;
 					}
 					if (tag.endsWith(".")) tag = tag.substring(0, tag.length()-1);
-					String id = String.format(">%-15s", rd.spAbbr[i] + "_" + tag); 
 					
-					// 1st line of seq is ' # strand ID\n'; so header is >id   origID (strand coords)		
-					outFH.println(id + "  " + seq);
-					outFH.flush();		
+					if (!useID) {// 1st line of seq is ' # strand ID\n'; so header is >id   origID (strand coords)
+						String idStr = String.format(">%-15s", rd.spAbbr[i] + "_" + tag);
+						outFH.write(idStr + "  " + seq +"\n");
+					}
+					else {
+						outFH.write(seq+"\n");
+					}
+					outFH.flush();	// this does not slow it down much, and if user cancelled, will at least get part of file	
 				}		
-				Globals.rprt("Wrote: " + x + " of " + selNum + " rows");
+				if (x>0 && x % 10 == 0) Globals.rprt("Wrote: " + x + " of " + selNum + " rows");
 			}
 			outFH.close();
-			
+			Globals.rclear();
 			String msg = String.format("Wrote %,d genes", geneSet.size());
 			if (cntDup>0) msg += String.format("; duplicates %,d", cntDup);
 			if (cntIgn>0) msg += String.format("; not a gene %,d", cntIgn);
@@ -468,10 +518,11 @@ public class UtilExport extends JDialog {
 	}
 	catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
     }
-   
+    
     ////////////////////////////////////////////////////////////////////////
-    // these two methods repeated in UtilReport
-    private PrintWriter getFileHandle(int type, String fname, boolean bAppend) {
+    // All Exports use this
+    // CAS589 change from PrintWriter for speed, which made no difference 
+    private BufferedWriter getFileHandle(int type, String fname, boolean bAppend) {
     	String saveDir = Globals.getExport(); 
 		
 		JFileChooser chooser = new JFileChooser(saveDir);
@@ -479,6 +530,7 @@ public class UtilExport extends JDialog {
 		if(chooser.showSaveDialog(tPanel.qFrame) != JFileChooser.APPROVE_OPTION) return null;
 		if(chooser.getSelectedFile() == null) return null;
 		
+		int bufsz = 1024;
 		String saveFileName = chooser.getSelectedFile().getAbsolutePath();
 		if (type==ex_csv) {
 			if(!saveFileName.endsWith(".csv")) saveFileName += ".csv";
@@ -490,7 +542,8 @@ public class UtilExport extends JDialog {
 		}
 		else {
     		if(!saveFileName.endsWith(".fasta") && !saveFileName.endsWith(".fa")) saveFileName += ".fa";
-    		symap.Globals.prt("Exporting Fasta to " + saveFileName);	
+    		symap.Globals.prt("Exporting Fasta to " + saveFileName);
+    		bufsz = 128 * 1024;
 		}
 		boolean append=true;
 		if (new File(saveFileName).exists()) {
@@ -504,10 +557,9 @@ public class UtilExport extends JDialog {
 				append=false;
 			}
 		}
-		
-		PrintWriter out=null;
+		BufferedWriter out=null;
 		try {
-			out = new PrintWriter(new FileOutputStream(saveFileName, append));
+			out = new BufferedWriter(new FileWriter(saveFileName, append), bufsz);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
 		return out;

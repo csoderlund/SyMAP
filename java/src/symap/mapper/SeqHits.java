@@ -13,6 +13,9 @@ import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Vector;
+
+import database.DBconn2;
+
 import java.util.ArrayList;
 
 import symap.closeup.TextShowInfo;
@@ -245,7 +248,7 @@ public class SeqHits  {
 	 public void paintComponent(Graphics2D g2) {
 		lastText1=lastText2=0;
 		
-		mapper.setHelpText(null); // will be set if hover; CAS577
+		mapper.setHelpText(null); // will be set if hover
 		
 		Point stLoc1 = seqObj1.getLocation();
 		Point stLoc2 = seqObj2.getLocation();
@@ -321,7 +324,7 @@ public class SeqHits  {
 		infoMsg =  String.format("Hits:   %,d", cntShowHit);
 		
 		if (bHi)          infoMsg += String.format("\nHigh:   %,d",  cntHighHit);// after hits since it high hits
-		if (cntGrpHits>0) infoMsg += String.format("\nGroup Hits: %,d",  cntGrpHits);// only from Queries Group
+		if (cntGrpHits>1) infoMsg += String.format("\nGroup Hits: %,d",  cntGrpHits);// only from Queries Group (always has select CAS589)
 		
 		if (bHiBlock)     infoMsg += String.format("\nBlocks: %,d", numSet.size());
 		else if (bHiCset) infoMsg += String.format("\nCosets: %,d", numSet.size());
@@ -371,7 +374,7 @@ public class SeqHits  {
 	}
 	public void mouseMoved(MouseEvent e) {
 		for (DrawHit h : allHitsArray)
-			if (h.mouseMovedHit(e)) return; // once wire is highlighted, do not need to check the rest; CAS577
+			if (h.mouseMovedHit(e)) return; // once wire is highlighted, do not need to check the rest
 	}
 	// Need to do this otherwise hits will stay highlighted when exited.
 	public void mouseExited(MouseEvent e) { 
@@ -842,7 +845,7 @@ public class SeqHits  {
 			String proj1 = seqObj1.getTitle(); //Proj Chr
 			String proj2 = seqObj2.getTitle(); 
 			Annotation aObj1 = seqObj1.getAnnoObj(hitDataObj.getAnnot1(), hitDataObj.getAnnot2()); // check seqObj1 geneVec
-			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot2(), hitDataObj.getAnnot1()); // put 2 1st; CAS580 for self-chr
+			Annotation aObj2 = seqObj2.getAnnoObj(hitDataObj.getAnnot2(), hitDataObj.getAnnot1()); // put 2 1st; for self-chr
 			
 			String trailer = "";
 			if (Globals.INFO) {
@@ -850,12 +853,16 @@ public class SeqHits  {
 				trailer += "\nAnnot " + hitDataObj.getAnnots(); 
 			}
 	
-			AlignPool ap = new AlignPool(mapper.getDrawingPanel().getDBC());
+			DBconn2 dbc = mapper.getDrawingPanel().getDBC(); // CAS589 to disable hit alignment
+			int [] idx = {seqObj1.getProjIdx(), seqObj2.getProjIdx()};
+			boolean bLoadBlast = database.Version.isLoadBlast(dbc, idx);
+			
+			AlignPool ap = new AlignPool(dbc);
 			
 			new TextShowInfo(ap, hitDataObj, title, 
 				theInfo, trailer, st1LTst2, proj1, proj2, aObj1, aObj2, 
 				hitDataObj.getQuerySubhits(), hitDataObj.getTargetSubhits(),
-				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/); 	
+				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/, bLoadBlast); 	
 		}
 		public String toString() {return hitDataObj.createHover(true);}
 	 } // End class DrawHit

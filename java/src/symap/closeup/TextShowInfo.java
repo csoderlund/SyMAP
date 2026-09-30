@@ -51,6 +51,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private boolean isQuery;    // isQuery for runAlign;
 	private boolean st1LTst2;   // T query on left; F query on right
 	private boolean isInvHit;	// !strands (but the block may be Inv)
+	private boolean bLoadBlast; // disable aligning hits
 	
 	private AlignPool alignPool;
 	
@@ -82,7 +83,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		closeButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
+		closeButton = Jcomp.createButton(Jcomp.close, "Close window"); 
 		closeButton.addActionListener(this);
 		
 		JPanel buttonPanel = new JPanel(); buttonPanel.setBackground(Color.white);
@@ -104,7 +105,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	 */
 	public TextShowInfo (AlignPool alignPool, HitData hitDataObj, String title, String theInfo, String trailer,
 			boolean st1LTst2, String proj1, String proj2, Annotation aObj1, Annotation aObj2, String queryHits, String targetHits, 
-			boolean isQuery, boolean isInv, boolean bSort) {
+			boolean isQuery, boolean isInv, boolean bSort, boolean bLoadBlast) {
 		
 		super();
 		setModal(false);
@@ -122,6 +123,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		this.aObj1 = aObj1;				this.aObj2 = aObj2;  
 		this.queryHits = queryHits;		this.targetHits = targetHits;
 		this.isQuery = isQuery;			this.st1LTst2 = st1LTst2;	this.isInvHit = isInv; 
+		this.bLoadBlast = bLoadBlast;
 		
 		String gene1 = (aObj1!=null) ? "   #" + aObj1.getFullGeneNum() : "";	
 		String gene2 = (aObj2!=null) ? "   #" + aObj2.getFullGeneNum() : "";
@@ -134,10 +136,10 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		String name2 = String.format("%-16s %s", proj2, gene2);
 		
 		/** Text - the tables and info **/
-		String table1 = SeqDataInfo.formatHit(Globals.Q, name1, aObj1, queryHits, title, false, false);
+		String table1 = SeqDataInfo.formatHit(Globals.Q, name1, aObj1, queryHits, title, false, false, bLoadBlast);
 		int cntNegGap = SeqDataInfo.cntMergeNeg;
 		
-		String table2 = SeqDataInfo.formatHit(Globals.T, name2, aObj2, targetHits, title, isInv, bSort);
+		String table2 = SeqDataInfo.formatHit(Globals.T, name2, aObj2, targetHits, title, isInv, bSort, bLoadBlast);
 		cntNegGap += SeqDataInfo.cntMergeNeg;
 		
 		// theInfo
@@ -161,7 +163,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		messageArea.setEditable(false);
 		messageArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
-		closeButton = Jcomp.createButton(Jcomp.ok, "Close window"); 
+		closeButton = Jcomp.createButton(Jcomp.close, "Close window"); 
 		closeButton.addActionListener(this);
 		
 		// Hit only
@@ -226,7 +228,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		new TextShowInfo(alignPool, hitDataObj, titleMerge + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				queryShow, targetShow, isQuery, isInvHit, true); 
+				queryShow, targetShow, isQuery, isInvHit, true, bLoadBlast); 
 	}
 	/*************************************************************
 	 * retain target ordered by query - the '#' will be out-of-order;
@@ -234,7 +236,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private void runOrder() { 	
 		new TextShowInfo(alignPool, hitDataObj, titleOrder + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				queryHits, targetHits, isQuery, isInvHit, false /* keep order */); 
+				queryHits, targetHits, isQuery, isInvHit, false /* keep order */, bLoadBlast); 
 	}
 	/*************************************************************
 	 * run after runOrder to remove disordered hits
@@ -244,7 +246,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		new TextShowInfo(alignPool, hitDataObj, titleRemove + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */); 
+				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */, bLoadBlast); 
 	}
 	/****************************************************************/
 	private class Align extends JDialog {
@@ -283,8 +285,16 @@ public class TextShowInfo extends JDialog implements ActionListener {
 			});
 			ButtonGroup rg = new ButtonGroup();
 			rg.add(radHit); rg.add(radGene); 
-			radHit.setSelected(true);
-			bGene = false;
+			
+			if (bLoadBlast) {// CAS589 add
+				radHit.setEnabled(false);
+				radGene.setSelected(true);
+				bGene = true;
+			}
+			else {
+				radHit.setSelected(true);
+				bGene = false;
+			}
 			if (!hitDataObj.is2Gene()) radGene.setEnabled(false);
 			
 			JCheckBox chkTrim = Jcomp.createCheckBox("Trim", "Trim end bases that have no match", bTrim);

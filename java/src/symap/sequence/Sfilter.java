@@ -62,7 +62,8 @@ public class Sfilter extends JDialog {
 	// Current values - many shared between Filter and Popup; accessed in Sequence and TrackData
 	// Copied in trackdata for history back/forth; this is serious rats nest...
 	protected boolean bShowRuler, bShowGap, bShowCentromere, bShowGene, bShowScoreLine, bShowHitLen;
-	protected boolean bShowGeneNum, bShowGeneNumHit,  bShowAnnotHit, bShowAnnot, bShowGeneLine, bHighGenePopup; 	
+	protected boolean bShowGeneNum, bShowGeneNumHit,  bShowAnnotHit, bShowAnnot, bShowGeneLine, bHighGenePopup; 
+	protected boolean bShowGffId, bShowGffIdHit;
 	protected boolean bShowScoreText, bShowHitNumText; 				
 	protected boolean bShowBlockText, bShowBlock1stText, bShowCsetText, bShowNoText;    
 	protected boolean bFlipped;
@@ -72,6 +73,7 @@ public class Sfilter extends JDialog {
 	// Save values for Cancel
 	private boolean	bSavRuler, bSavGap, bSavCentromere, bSavGene, bSavScoreLine, bSavHitLen;
 	private boolean bSavGeneNum, bSavGeneNumHit, bSavAnnot, bSavAnnotHit, bSavGeneLine, bSavGeneHigh;
+	private boolean bSavGffId, bSavGffIdHit;
 	private boolean bSavScoreText, bSavHitNumText, bSavBlockText, bSavBlock1stText, bSavCsetText, bSavNoText, bSavFlipped;
 	private boolean bSavHighG2x2, bSavHighG2x1, bSavHighG2x0, bSavShowG2xN;
 	
@@ -99,7 +101,7 @@ public class Sfilter extends JDialog {
 	
 	private JCheckBox rulerCheck, gapCheck, centromereCheck, geneCheck, scoreLineCheck, hitLenCheck;
 	private JCheckBox geneLineCheck, geneHighCheck; // delimiter, gene popup highlight gene
-	private JCheckBox geneNumCheck, annotCheck,  geneNumHitCheck, annotHitCheck;					
+	private JCheckBox geneNumCheck, gffIdCheck, annotCheck,  geneNumHitCheck, gffIdHitCheck, annotHitCheck;					
 	private JRadioButton scoreTextRadio, hitNumTextRadio, blockTextRadio,block1stTextRadio, csetTextRadio, noTextRadio; 
 	
 	private JRadioButton highG2x2Radio, highG2x1Radio, highG2x0Radio;  // set in Ref track, highlights genes/hits in L/Ref/R-tracks	
@@ -158,10 +160,14 @@ public class Sfilter extends JDialog {
 						annotCheck.addChangeListener(listener);
 		geneNumCheck 	= Jcomp.createCheckBoxGray("Gene#", "Show the Gene# beside the gene", false);    
 						geneNumCheck.addChangeListener(listener);  
+		gffIdCheck 	= Jcomp.createCheckBoxGray("GFF ID", "Show the ID from the GFF file", false);    
+						gffIdCheck.addChangeListener(listener);  
 		annotHitCheck 	= Jcomp.createCheckBoxGray("Annotation", "Only show the annotation if the gene has a hit (zoom in to show)", false);	
 						annotHitCheck.addChangeListener(listener);
 		geneNumHitCheck = Jcomp.createCheckBoxGray("Gene#", "Only show the Gene# if it has a hit", false);   
 						geneNumHitCheck.addChangeListener(listener); 
+		gffIdHitCheck = Jcomp.createCheckBoxGray("GFF ID", "Only show the GFF ID if it has a hit", false);   
+						gffIdHitCheck.addChangeListener(listener); 
 		geneLineCheck 	= Jcomp.createCheckBoxGray("Delimiter", "Separate gene graphics with a horizonal bar", false);	
 						geneLineCheck.addChangeListener(listener);
 				
@@ -284,25 +290,27 @@ public class Sfilter extends JDialog {
 		int rem = GridBagConstraints.REMAINDER;
 		 
 		// section 1
-		JLabel retain = Jcomp.createMonoLabelGray(" Save to retain changes", "Does not create new history event");
+		JLabel retain = Jcomp.createMonoLabelGray(" Save to retain changes", "These do not create new history event");
 		addToGrid(contentPane, gbl, gbc, retain, rem);
 		
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Highlight"), 1); 
-		addToGrid(contentPane, gbl, gbc, geneHighCheck, rem); 
-
+		addToGrid(contentPane, gbl, gbc, geneHighCheck, 1); 
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Show Gene"), 1); 
-		addToGrid(contentPane, gbl, gbc, geneLineCheck, 1); 
+		addToGrid(contentPane, gbl, gbc, geneLineCheck, rem); 
+	
+		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Gene Text"), 1); 
 		addToGrid(contentPane, gbl, gbc, geneNumCheck,  1); 
+		addToGrid(contentPane, gbl, gbc, gffIdCheck,  1);
 		addToGrid(contentPane, gbl, gbc, annotCheck, rem); 
 		
-		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"  "), 1); 
-		addToGrid(contentPane, gbl, gbc, new JLabel(" Has hit"), 1); 
+		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"   Has Hit"), 1); 
 		addToGrid(contentPane, gbl, gbc, geneNumHitCheck,  1); 
-		addToGrid(contentPane, gbl, gbc, annotHitCheck, rem); 
+		addToGrid(contentPane, gbl, gbc, gffIdHitCheck, 1); 
+		addToGrid(contentPane, gbl, gbc, annotHitCheck, rem);
 		
 		// section 2
 		addToGrid(contentPane, gbl, gbc, new JSeparator(), rem);
-		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Show Text"), 1); 
+		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Hit Text"), 1); 
 		addToGrid(contentPane, gbl, gbc, block1stTextRadio, 1);
 		addToGrid(contentPane, gbl, gbc, blockTextRadio, 1);
 		addToGrid(contentPane, gbl, gbc, csetTextRadio, rem);
@@ -326,7 +334,7 @@ public class Sfilter extends JDialog {
 		
 		// section 4
 		addToGrid(contentPane, gbl, gbc, new JSeparator(),rem);
-		JLabel apply = Jcomp.createMonoLabelGray(" Save to apply changes", "Create new history event");
+		JLabel apply = Jcomp.createMonoLabelGray(" Save to apply changes", "These create a new history event");
 		addToGrid(contentPane, gbl, gbc, apply, rem);
 		
 		addToGrid(contentPane, gbl, gbc, new JLabel(b1+"Coordinates   "), 1);
@@ -435,6 +443,7 @@ public class Sfilter extends JDialog {
 		b = !(annotTypeCounts[Annotation.GENE_INT] == 0 && annotTypeCounts[Annotation.EXON_INT] == 0);
 		geneCheck.setEnabled(b);
 		geneNumCheck.setEnabled(b); 	geneNumHitCheck.setEnabled(b);
+		gffIdCheck.setEnabled(b); 		gffIdHitCheck.setEnabled(b);
 		geneLineCheck.setEnabled(b);
 		annotCheck.setEnabled(b);		annotHitCheck.setEnabled(b);
 		highG2x2Radio.setEnabled(b);	
@@ -480,6 +489,8 @@ public class Sfilter extends JDialog {
 		geneNumHitCheck.setSelected(bSavGeneNumHit && geneNumHitCheck.isEnabled());
 		annotCheck.setSelected(bSavAnnot && annotCheck.isEnabled());
 		annotHitCheck.setSelected(bSavAnnotHit && annotHitCheck.isEnabled());
+		gffIdCheck.setSelected(bSavGffId && gffIdCheck.isEnabled());
+		gffIdHitCheck.setSelected(bSavGffIdHit && gffIdHitCheck.isEnabled());
 		geneLineCheck.setSelected(bSavGeneLine && geneLineCheck.isEnabled()); 
 		
 		block1stTextRadio.setSelected(bSavBlock1stText);
@@ -532,6 +543,8 @@ public class Sfilter extends JDialog {
 		bSavGeneNumHit =  bShowGeneNumHit&& geneNumHitCheck.isEnabled();
 		bSavAnnot = 	  bShowAnnot     && annotPopup.isEnabled();
 		bSavAnnotHit = 	  bShowAnnotHit  && annotHitPopup.isEnabled();
+		bSavGffId = 	  bShowGffId   && gffIdCheck.isEnabled();
+		bSavGffIdHit =    bShowGffIdHit&& gffIdHitCheck.isEnabled();
 		bSavGeneLine =    bShowGeneLine  && geneLinePopup.isEnabled(); 
 	
 		bSavScoreText =   bShowScoreText;
@@ -619,8 +632,9 @@ public class Sfilter extends JDialog {
 		hitLenCheck.setSelected(bSavHitLen);
 		scoreLineCheck.setSelected(bSavScoreLine);
 		
-		annotCheck.setSelected(bSavAnnot);     annotHitCheck.setSelected(bSavAnnotHit);
-		geneNumCheck.setSelected(bSavGeneNum); geneNumHitCheck.setSelected(bSavGeneNumHit);
+		annotCheck.setSelected(bSavAnnot);     	annotHitCheck.setSelected(bSavAnnotHit);
+		geneNumCheck.setSelected(bSavGeneNum); 	geneNumHitCheck.setSelected(bSavGeneNumHit);
+		gffIdCheck.setSelected(bSavGffId); 		gffIdHitCheck.setSelected(bSavGffIdHit);
 		geneLineCheck.setSelected(bSavGeneLine);
 		geneHighCheck.setSelected(bSavGeneHigh);
 		highG2x2Radio.setSelected(bSavHighG2x2);
@@ -657,6 +671,7 @@ public class Sfilter extends JDialog {
 		
 		annotCheck.setSelected(bDefAnnot);     annotHitCheck.setSelected(bDefAnnot);
 		geneNumCheck.setSelected(bDefGeneNum); geneNumHitCheck.setSelected(bDefGeneNum);
+		gffIdCheck.setSelected(bDefGeneNum);   gffIdHitCheck.setSelected(bDefGeneNum);
 		geneLineCheck.setSelected(bDefGeneLine);
 		geneHighCheck.setSelected(bDefGeneHigh);
 		highG2x2Radio.setSelected(bDefHighG2xN);
@@ -823,6 +838,7 @@ public class Sfilter extends JDialog {
 				boolean b = geneCheck.isSelected();
 				annotCheck.setEnabled(b);	annotHitCheck.setEnabled(b);
 				geneNumCheck.setEnabled(b);	geneNumHitCheck.setEnabled(b);
+				gffIdCheck.setEnabled(b);	gffIdHitCheck.setEnabled(b);
 				geneLineCheck.setEnabled(b); 
 				geneHighCheck.setEnabled(b);
 				highG2x2Radio.setEnabled(b);
@@ -840,11 +856,35 @@ public class Sfilter extends JDialog {
 			}
 			else if (src == geneNumCheck) 	{
 				bDiff = xShowGeneNum(geneNumCheck.isSelected());
-				if (geneNumCheck.isSelected()) geneNumHitCheck.setSelected(false);
+				if (geneNumCheck.isSelected()) {
+					geneNumHitCheck.setSelected(false);
+					gffIdCheck.setSelected(false);
+					gffIdHitCheck.setSelected(false);
+				}
 			}
 			else if (src == geneNumHitCheck) {
 				bDiff = xShowGeneNumHit(geneNumHitCheck.isSelected());
-				if (geneNumHitCheck.isSelected()) geneNumCheck.setSelected(false);
+				if (geneNumHitCheck.isSelected()) {
+					geneNumCheck.setSelected(false);
+					gffIdCheck.setSelected(false);
+					gffIdHitCheck.setSelected(false);
+				}
+			}
+			else if (src == gffIdCheck) 	{
+				bDiff = xShowGffId(gffIdCheck.isSelected());
+				if (gffIdCheck.isSelected()) {
+					gffIdHitCheck.setSelected(false);
+					geneNumHitCheck.setSelected(false);
+					geneNumCheck.setSelected(false);
+				}
+			}
+			else if (src == gffIdHitCheck) {
+				bDiff = xShowGffIdHit(gffIdHitCheck.isSelected());
+				if (gffIdHitCheck.isSelected()) {
+					gffIdCheck.setSelected(false);
+					geneNumHitCheck.setSelected(false);
+					geneNumCheck.setSelected(false);
+				}
 			}
 			else if (src == geneLineCheck) 	bDiff = xShowGeneLine(geneLineCheck.isSelected());
 			else if (src == geneHighCheck)	bDiff = xHighGenePopup(geneHighCheck.isSelected());
@@ -914,6 +954,7 @@ public class Sfilter extends JDialog {
 		bShowScoreLine  = bDefScoreLine;
 	
 		bShowGeneNum    = bShowGeneNumHit = bDefGeneNum;
+		bShowGffId    	= bShowGffIdHit = bDefGeneNum;
 		bShowAnnot      = bShowAnnotHit = bDefAnnot;
 		bShowGeneLine   = bDefGeneLine;
 		bHighGenePopup  = bDefGeneHigh;
@@ -999,6 +1040,24 @@ public class Sfilter extends JDialog {
 		if (bShowGeneNumHit != show) {
 			bShowGeneNumHit = show; 
 			if (show) bShowGeneNum = false;
+			seqObj.setTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	private boolean xShowGffId(boolean show) {  
+		if (bShowGffId != show) {
+			bShowGffId = show; 
+			if (show) bShowGffIdHit = false;
+			seqObj.setTrackBuild();
+			return true;
+		}
+		return false;
+	}
+	private boolean xShowGffIdHit(boolean show) {  
+		if (bShowGffIdHit != show) {
+			bShowGffIdHit = show; 
+			if (show) bShowGffId = false;
 			seqObj.setTrackBuild();
 			return true;
 		}

@@ -283,10 +283,9 @@ public class DBdata implements Cloneable {
 		// Fill in other side from DB for geneNum
 		if (geneNum!=null) { 			
 			DBconn2 dbc = qPanel.getDBC(); 
-			boolean isAlgo2 = qPanel.isAlgo2();
-	
+		
 			for (DBdata dd : rows) {
-         		if (!dd.loadGeneFromDB(dbc, isAlgo2)) {bSuccess=false; return;}
+         		if (!dd.loadGeneFromDB(dbc, qPanel.isOlap())) {bSuccess=false; return;}
 			}
      	}
 		// Create block string, chromosome strings and make anno keys 	
@@ -371,7 +370,7 @@ public class DBdata implements Cloneable {
 					boolean bCS = qPanel.isCollinear();
 					
 					for(int x=0; x<n && retval == 0; x++) { // copied from TableData
-						if (bCS && x==2) continue; 				// ignore size; cosets numbered by size CAS577
+						if (bCS && x==2) continue; 				// ignore size; cosets numbered by size 
 						
 						boolean valid = true;
 						Integer leftVal = -1, rightVal = -1; 
@@ -790,7 +789,7 @@ public class DBdata implements Cloneable {
 	 * In QueryPanel, search for actual genenum or annotation string; that only returns one half of hit 
 	 *		but is fast and allows the de-activation of a species
 	 ***********************************************************************/
-	private boolean loadGeneFromDB(DBconn2 dbc, boolean isAlgo2) {
+	private boolean loadGeneFromDB(DBconn2 dbc, boolean isOlap) {
 	try {
 		int idx=-1;
 		
@@ -800,14 +799,14 @@ public class DBdata implements Cloneable {
 		
 		if (annotIdx[idx]==0) return true; // one side
 		
-		String sql = "SELECT PHA.exlap, PHA.olap, PA.start, PA.end, PA.strand, PA.tag, PA.name  "
+		String sql = "SELECT PHA.olap, PHA.exlap,  PA.start, PA.end, PA.strand, PA.tag, PA.name  "
 				+ " from pseudo_hits_annot AS PHA"
 				+ " LEFT JOIN pseudo_annot AS PA  ON PHA.annot_idx = PA.idx"
 				+ " where PHA.hit_idx = " + hitIdx + " and PA.idx=" + annotIdx[idx];
 		
 		ResultSet rs = dbc.executeQuery(sql);
 		if (rs.next() ) {
-			golap[idx] = isAlgo2 ? rs.getInt(1) : rs.getInt(2);
+			golap[idx]  = isOlap ? rs.getInt(1) : rs.getInt(2);
 			gstart[idx] = rs.getInt(3);
 			gend[idx] 	= rs.getInt(4);
 			glen[idx]	= gend[idx]-gstart[idx] +1;

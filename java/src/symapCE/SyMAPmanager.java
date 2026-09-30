@@ -44,8 +44,8 @@ public class SyMAPmanager extends ManagerFrame {
 
 	/** Args **/
 	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
-	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  		// symap
-	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat"}; 	    // hidden
+	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  				// symap
+	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat", "-blk"}; 	    // hidden
 	
 	private static void argPrint(String args[]) {
 		if (isReadOnly) System.out.println("Usage:  ./viewSymap [options]");
@@ -78,6 +78,7 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -s   Regenerate summary");
 		System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
 		System.out.println("  -ncat Do not concat any sequence files for v5.8.1");
+		System.out.println("  -blk  Load Blocks from file (the interface will prompt for the filename)"); // CAS589 
 	}
 	private static void argSet(String args[]) { 
 		if (args.length ==0) return;
@@ -126,6 +127,7 @@ public class SyMAPmanager extends ManagerFrame {
 			Constants.VERBOSE = true;		
 			System.out.println("-v A&S verbose output");
 		}
+		
 		if (equalOption(args, "-mum")) { 
 			System.out.println("-mum  MUMmer: Do not remove any mummer result files");
 			Constants.MUM_NO_RM = true;
@@ -171,6 +173,10 @@ public class SyMAPmanager extends ManagerFrame {
 		if (equalOption(args, "-s")) { 
 			System.out.println("-s  Regenerate summary");
 			Globals.bRedoSum = true;
+		}
+		if (equalOption(args, "-blk")) { 
+			System.out.println("-blk   Load Blocks from file");
+			Constants.LOAD_BLOCKS = true;
 		}
 		// not shown on -h; leave for possible updates
 		if (equalOption(args, "-sg")) { 
