@@ -37,9 +37,13 @@ public class Jhtml {
 	public static final String SYS_HELP_URL =    BASE_HELP_URL + "SystemHelp.html"; 
 	public static final String build = 	"#build";
 	public static final String param1 = "#projParams";
-	public static final String param2Align = "#align2";
-	public static final String param2Clust = "#clust";
+	public static final String param2Align = "#align2"; 
+	public static final String param2Clust = "#clust";  // still in SystemHelp for pre-v590, but now uses MUMmer.html#clust
 	public static final String param2Syn = "#syn";
+	public static final String paramCoset = "#cosets"; // CAS590 add
+	
+	public static final String SYS_MUM_URL =    BASE_HELP_URL + "MUMmer.html"; // contains MUMmer align&clust CAS590
+	public static final String mumClust = "#clust";
 	
 	public static final String USER_GUIDE_URL =  BASE_HELP_URL + "UserGuide.html"; 
 	public static final String exp = 		"#explorer"; // Link on Explorer left side

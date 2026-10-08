@@ -27,11 +27,11 @@ public class SyMAP2d {
 	private ColorDialogHandler colorDialogHandler;
 
 	/** Dotplot, Block2Frame, Query **/
-	public SyMAP2d(DBconn2 dbc2, TableMainPanel theTablePanel, boolean bLoadBlast)  {
-		this(dbc2, null, theTablePanel, bLoadBlast);
+	public SyMAP2d(DBconn2 dbc2, TableMainPanel theTablePanel)  {
+		this(dbc2, null, theTablePanel);
 	}
 	/** symap.frame.ChrExpFrame ***/
-	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableMainPanel theTablePanel, boolean bLoadBlast) // CAS589 add bLoadBlast
+	public SyMAP2d(DBconn2 dbc2, HelpBar hb, TableMainPanel theTablePanel) 
 	{	
 		String type = (hb==null) ? "P" : "E";
 		this.tdbc2 = new DBconn2("SyMAP2d" + type + "-" + DBconn2.getNumConn(), dbc2);
@@ -49,7 +49,7 @@ public class SyMAP2d {
 
 		colorDialogHandler = new ColorDialogHandler(persistentProps); // This sets changed colors
 
-		controlPanel = new ControlPanel(drawingPanel, historyControl, colorDialogHandler, helpBar, (hb!=null), bLoadBlast);
+		controlPanel = new ControlPanel(drawingPanel, historyControl, colorDialogHandler, helpBar, (hb!=null));
 		
 		frame = new Frame2d(this, controlPanel, drawingPanel, helpBar, hb==null, persistentProps);
 		

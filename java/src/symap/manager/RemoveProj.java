@@ -183,7 +183,7 @@ public class RemoveProj {
 			}
 			if (mp.isPairInDB()) {
 				mp.removePairFromDB(true); // True = redo numHits; 
-				Globals.prt("Removed from database " + p1.getDBName() + " to " + p2.getDBName()); 
+				Globals.prt("Finish remove " + p1.getDBName() + "-" + p2.getDBName() + " from database"); 
 			}	
 			close();
 		}

@@ -125,16 +125,16 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;} 
 		
 	/** Main loop through chromosome pairs ***************************************/
-		int nGrpGrp = 0; // CAS589 count up instead of down
+		int nGrpGrp = 1; // CAS589 count up instead of down
 		int maxGrp =  mProj1.getGrpSize() * mProj2.getGrpSize();
 		
-		if (bVerbose) 	Utils.prtNumMsg(mLog, nGrpGrp, "group-x-group pairs to analyze");
-		else 			Globals.rprt("group-x-group pairs to analyze");
-		String grpMsg = nGrpGrp + " of " + maxGrp;
+		if (bVerbose) 	Utils.prtNumMsg(mLog, maxGrp, "group-x-group pairs to analyze");
+		else 			Globals.rprt(maxGrp + " group-x-group pairs to analyze");
+		String grpMsg = " (" + nGrpGrp + " of " + maxGrp + " pairs)"; // updated below with time
 		
 		for (int grpIdx1 : mProj1.getGrpIdxMap().keySet()) {
 			for (int grpIdx2 : mProj2.getGrpIdxMap().keySet()) {
-				nGrpGrp++;
+				
 				if (isSelf && grpIdx1<grpIdx2) continue; // DIR_SELF (old >) must match direction of loadHitsForGrpPair; mirror later
 				
 				SyBlock.cntBlk = 1;
@@ -159,8 +159,8 @@ public class SyntenyMain {
 					if (isSelf && cntTrRmDiag>0 && bTrace) msg += String.format("  Remove close to diagonal %3d ", cntTrRmDiag);
 					Utils.prtIndentNumMsgFile(mLog, 1, blockVec.size(), msg);	
 				}
+				nGrpGrp++;
 				String t = Utilities.getDurationString(Utils.getTime()-startTime);
-				
 				grpMsg = " (" + nGrpGrp + " of " + maxGrp + " pairs  " + t + ")";
 				Globals.rprt(nGrpGrp + " of " + maxGrp + " pairs remaining (" + t + ")"); 
 				blockVec.clear();
@@ -339,8 +339,11 @@ public class SyntenyMain {
 				int high1 = (i > 0 ? gap1list.get(i-1) : low1);
 				int high2 = (i > 0 ? gap2list.get(i-1) : low2);
 
-				while (hasGoodChain(low1, low2)) 				// if there is at least one good chain
+				int loop=0; // CAS590 adding to see where its hanging
+				while (hasGoodChain(low1, low2)) {			// if there is at least one good chain
 					binarySearch(low1, high1, low2, high2);		// search them all
+					if (++loop % 1000 == 0) Globals.rprt("Search " + loop + "x for " + title);
+				}
 			}
 			cosetBlocks(); 	   // Use HitVec, if bStrict, make cosets not in blocks into blocks; otherwise, just count for output
 		}
@@ -365,6 +368,7 @@ public class SyntenyMain {
 				}
 			}
 			// Final blocks
+			int loop=0; // CAS590 adding to see where its hanging
 			SyBlock blk = new SyBlock(orient, grpIdx1, grpIdx2);
 			while (longestChain(2, low1, low2, blk)){  
 				if (isGoodCorr(blk)){
@@ -376,6 +380,7 @@ public class SyntenyMain {
 					Globals.rprt(blockVec.size() + " blocks for " + title + grpMsg); 
 				}
 				else blk.clear();
+				if (++loop % 1000 == 0) Globals.rprt("Longest chain " + loop + "x");
 			}
 			resetDPUsed();
 		}

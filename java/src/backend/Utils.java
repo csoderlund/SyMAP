@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
 import symap.Globals;
-import symap.manager.Mpair;
 import util.ErrorReport;
 import util.FileDir;
 import util.ProgressDialog;
@@ -217,29 +216,34 @@ public class Utils {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
 	}
-	// Get .tab file in resultDir/blast; CAS589 add
-	public static String getBlastFile(String dir) {
+	// Get .tab file in resultDir/blast; CAS589 add; CAS590 change to read all files
+	public static String getBlastFileList(String dir) {
 	try {
-		String fileName="";
-		
 		String blastDir = dir + Constants.blastDir;
 		ArrayList <String> files = util.FileDir.getFilesFromDir(blastDir);
-		if (files.size()==0) return null;
+		if (files==null || files.size()==0) return null;
 		
-		if (files.size()==1) fileName = files.get(0);
-		else {
-			for (String f : files) {
-				if (f.endsWith(".tab")) {
-					fileName = f;
-					break;
-				}
-			}
-			if (fileName.isBlank()) fileName = files.get(0);
+		String fileList=null;
+		for (String f : files) {
+			String name = f;
+			if (name.contains("/")) name = name.substring(name.lastIndexOf("/"));
+			
+			if (fileList==null) fileList = name;
+			else fileList += ", " + name;
 		}
-		return fileName;
+		return fileList;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Cannot access " + dir); return null;}
 	}
+	public static ArrayList <String >getBlastFiles(String dir) {
+		try {
+			String blastDir = dir + Constants.blastDir;
+			ArrayList <String> files = util.FileDir.getFilesFromDir(blastDir);
+			return files;
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot access " + dir); return null;}
+	}
+	
 	public static String getDateStr(long l) {
 		DateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy hh:mm a");
 		return sdf.format(l);

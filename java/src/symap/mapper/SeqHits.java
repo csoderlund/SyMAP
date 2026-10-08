@@ -442,7 +442,7 @@ public class SeqHits  {
 		}
 		
 		private void getHit(Vector <HitData> hitList, int start, int end, boolean swap) { 
-			if ( isContained(start, end, swap) )
+			if (!hitDataObj.getHtype().startsWith(Globals.blastHit) && isContained(start, end, swap) ) // CAS590 no BH
 				hitList.add(hitDataObj);
 		}
 		
@@ -853,16 +853,13 @@ public class SeqHits  {
 				trailer += "\nAnnot " + hitDataObj.getAnnots(); 
 			}
 	
-			DBconn2 dbc = mapper.getDrawingPanel().getDBC(); // CAS589 to disable hit alignment
-			int [] idx = {seqObj1.getProjIdx(), seqObj2.getProjIdx()};
-			boolean bLoadBlast = database.Version.isLoadBlast(dbc, idx);
-			
+			DBconn2 dbc = mapper.getDrawingPanel().getDBC(); // CAS590 was getting blastHit, but changed to get from htype; 
 			AlignPool ap = new AlignPool(dbc);
 			
 			new TextShowInfo(ap, hitDataObj, title, 
 				theInfo, trailer, st1LTst2, proj1, proj2, aObj1, aObj2, 
 				hitDataObj.getQuerySubhits(), hitDataObj.getTargetSubhits(),
-				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/, bLoadBlast); 	
+				seqObj1.isQuery(), hitDataObj.isInv(), true /*bsort*/); 	
 		}
 		public String toString() {return hitDataObj.createHover(true);}
 	 } // End class DrawHit

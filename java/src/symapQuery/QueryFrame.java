@@ -46,7 +46,7 @@ public class QueryFrame extends JFrame {
 	protected String title="";// for Export
 	
 	private Vector<Mproject> mProjs = null;
-	protected boolean bUseAlgo2=false, isSelf=false, isAlignNT=false, bUseBlast=false;			
+	protected boolean bUseAlgo2=false, isSelf=false, isAlignNT=false, bUseBlast=false, bOnlyBlast=false;			
 	protected int cntUsePseudo=0, cntSynteny=0; // for Overview
 	
 	/******************************************************
@@ -63,19 +63,22 @@ public class QueryFrame extends JFrame {
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
 		
-		bUseBlast = bUseAlgo2 = false;
+		bUseBlast = bUseAlgo2 = bOnlyBlast = false;
+		int cntBlast=0;
 		for (int i=0; i<mProjs.size()-1; i++) { // CAS589 moved from ManagerFrame
 			for (int j=i+1; j<mProjs.size(); j++) {
 				Mpair mp = getMpair(mProjs.get(i).getIdx(), mProjs.get(j).getIdx());
 				if (mp.getPairIdx()<0) continue; 
 				
 				if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
-				if (mp.isBlast(Mpair.DB)) bUseBlast = true; // if one is true, its true for all
+				if (mp.isBlast(Mpair.DB)) bUseBlast = true; // if one is true
 				if (mp.isAlgo2(Mpair.DB)) bUseAlgo2 = true;
+				if (mp.isOnlyBlast()) cntBlast++;
 				isAlignNT = mp.isAlignNT();
 				cntSynteny++;				  // if more than 2 projects, some pairs may not have synteny
-			}
+			}	
 		}
+		bOnlyBlast = (cntSynteny==cntBlast); // CAS590 add
 
 		String [] ab = getAbbrevNames();
 		for (int i=0; i<ab.length-1; i++) {// This is now checked in ProjParams, but to be sure...

@@ -132,7 +132,7 @@ public class SeqPool {
 		catch (Exception e) {ErrorReport.print(e, "Getting number of annotations for " + grpIdx); return 0;}
 	}
 	// for popup
-	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx, boolean isAlgo2, String annoType) {
+	protected TreeMap<Integer, String> getGeneHits(int geneIdx, int grpIdx, String annoType) {
 		TreeMap <Integer, String> hitMap = new TreeMap <Integer, String> ();
 		try {
 			ResultSet rs = dbc2.executeQuery("select pha.hit_idx, pha.olap, pha.exlap "
@@ -144,7 +144,7 @@ public class SeqPool {
 				int olap = rs.getInt(2);
 				int exlap = rs.getInt(3);
 				String scores = "Gene " + olap + "%";
-				if (isAlgo2) scores +=  "  " + annoType + " " + exlap + "%"; 
+				if (exlap!=0) scores +=  "  " + annoType + " " + exlap + "%"; // could be BH or EE...; CAS590 check 0 instead of isAlgo1/isBlast
 				hitMap.put(hitIdx, scores);
 			}
 			return hitMap;

@@ -24,7 +24,7 @@ public class TableColumns {
 	private static final String [] GENERAL_COLUMNS =	 
 		{Q.rowCol, Q.blockCol, "Block\nHits", Q.cosetCol, Q.grpCol, 
 		Q.hitCol,  Q.hitPrefix+"\nCov", Q.hitPrefix+"\n%Id", Q.hitPrefix+"\n"+Q.simCol,
-		Q.hitPrefix+"\n#Sub", Q.hitSt, Q.hitPrefix+"\nType"}; 
+		Q.hitPrefix+"\n#Sub", Q.hitSt, Q.hitType}; // CAS590 hitType accessed in TmpRowData
 	
 	private static final Class <?> []  GENERAL_TYPES = 					
 		{Integer.class, Integer.class, Integer.class, String.class, String.class, 
@@ -47,8 +47,8 @@ public class TableColumns {
 		 "Hit %Sim: Approximate percent similarity of subhits", 
 		 
 		 "Hit #Sub: Number of subhits in the cluster, where 1 is a single hit",
-		 "Hit St: == if the same strand for both ends; != if different strands for the two ends", // CAS588 out-of-date comment
-		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither."
+		 "Hit St: == if the same strand for both ends; != if different strands for the two ends", 
+		 "Algo1: g2, g1, g0; Algo2: E is exon, I is intron, n is neither; Blast: BH."
 		};
 	
 /* Prefixed with Species */

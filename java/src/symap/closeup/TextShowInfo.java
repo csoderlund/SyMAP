@@ -105,7 +105,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	 */
 	public TextShowInfo (AlignPool alignPool, HitData hitDataObj, String title, String theInfo, String trailer,
 			boolean st1LTst2, String proj1, String proj2, Annotation aObj1, Annotation aObj2, String queryHits, String targetHits, 
-			boolean isQuery, boolean isInv, boolean bSort, boolean bLoadBlast) {
+			boolean isQuery, boolean isInv, boolean bSort) {
 		
 		super();
 		setModal(false);
@@ -123,7 +123,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		this.aObj1 = aObj1;				this.aObj2 = aObj2;  
 		this.queryHits = queryHits;		this.targetHits = targetHits;
 		this.isQuery = isQuery;			this.st1LTst2 = st1LTst2;	this.isInvHit = isInv; 
-		this.bLoadBlast = bLoadBlast;
+		this.bLoadBlast = hitDataObj.getHtype().startsWith(Globals.blastHit); // CAS590
 		
 		String gene1 = (aObj1!=null) ? "   #" + aObj1.getFullGeneNum() : "";	
 		String gene2 = (aObj2!=null) ? "   #" + aObj2.getFullGeneNum() : "";
@@ -228,7 +228,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		new TextShowInfo(alignPool, hitDataObj, titleMerge + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				queryShow, targetShow, isQuery, isInvHit, true, bLoadBlast); 
+				queryShow, targetShow, isQuery, isInvHit, true); 
 	}
 	/*************************************************************
 	 * retain target ordered by query - the '#' will be out-of-order;
@@ -236,7 +236,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 	private void runOrder() { 	
 		new TextShowInfo(alignPool, hitDataObj, titleOrder + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				queryHits, targetHits, isQuery, isInvHit, false /* keep order */, bLoadBlast); 
+				queryHits, targetHits, isQuery, isInvHit, false /* keep order */); 
 	}
 	/*************************************************************
 	 * run after runOrder to remove disordered hits
@@ -246,7 +246,7 @@ public class TextShowInfo extends JDialog implements ActionListener {
 		
 		new TextShowInfo(alignPool, hitDataObj, titleRemove + " " + title, 
 				theInfo, "", st1LTst2, proj1, proj2, aObj1, aObj2, 
-				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */, bLoadBlast); 
+				sort[Globals.Q], sort[Globals.T], isQuery, isInvHit, false /* keep order */); 
 	}
 	/****************************************************************/
 	private class Align extends JDialog {

@@ -53,7 +53,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		createSummary(false);
 	}
 	// do not need to regenerate summary with 'Number Pseudo' or NumHits, 
-	// just add to end; keep current version as not major update; CAS579; CAS579c add action
+	// just add to end; keep current version as not major update
 	public SumFrame(DBconn2 dbc2, Mpair mp, String action) { 
 		this.mp = mp;
 		this.dbc2 = dbc2;
@@ -66,7 +66,7 @@ public class SumFrame extends JDialog implements ActionListener {
 				return;
 			}
 			if (sum.contains(action)) return;
-			sum += "\n  " + action + " " + Utilities.getDateOnly(); // CAS579c add date
+			sum += "\n  " + action + " " + Utilities.getDateOnly(); 
 			dbc2.executeUpdate("update pairs set summary='" + sum + "' where idx=" + mp.getPairIdx());
 		}
 		catch (Exception e) {ErrorReport.print("Updating summary for pseudo"); }
@@ -158,6 +158,7 @@ public class SumFrame extends JDialog implements ActionListener {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
 			dbc2.executeUpdate("update pairs set summary='" + info + "' where idx=" + pairIdx);
 		}
+		System.out.println("Finish Summary");
 		return info;
 	}
 	catch(Exception e){ErrorReport.print(e, "Create summary"); return "summary error";}
@@ -169,6 +170,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private String createProject() {
 		try {
 			String title = "Genome and Annotation";
+			Globals.rprt(title);
 			ResultSet rs;
 			
 		// genes
@@ -278,6 +280,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private String createCluster() {
 	try {
 		String title = "Cluster Hits";
+		Globals.rprt(title);
 		nHits = dbc2.executeInteger("select count(*) from pseudo_hits where pair_idx=" + pairIdx); 
 		if (nHits<=0) return title + "\n No hits";
 		if (isSelf) nHits /= 2;
@@ -562,6 +565,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	private String createBlock() {
 		try {
 			String title = "Synteny Blocks";
+			Globals.rprt(title);
 			if (nHits==0) return "";
 			
 			// hits in blocks
@@ -719,6 +723,7 @@ public class SumFrame extends JDialog implements ActionListener {
 	try {
 		String title = "Collinear Sets";
 		if (nHits==0) return "";
+		Globals.rprt(title);
 		int nSetsHits = dbc2.executeInteger("SELECT count(*) FROM pseudo_hits WHERE runnum>0 and pair_idx=" + pairIdx);
 		if (nSetsHits==0) return "Collinear \n   None\n";
 	
@@ -786,24 +791,19 @@ public class SumFrame extends JDialog implements ActionListener {
 	private String [] createParams() {
 	String [] info = {"", "error on params"};
 	try {	
-		String alignDate = null, syver=null, allParams=null; 
+		String alignDate = null, syver=null, pairParams=null; 
 		ResultSet rs = dbc2.executeQuery("select aligndate, params, syver from pairs where idx=" + pairIdx);
 		if (rs.next()) { 				
 			alignDate = rs.getString(1);
-			allParams = rs.getString(2);  // these are the params that were used for align
+			pairParams = rs.getString(2);  // these are the params that were used for align
 			syver = rs.getString(3);
 		}
 		rs.close();
 		
-		if (allParams==null) { // if MUMmer fails...
-			allParams  = "Align Unknown";
-		}
-		else {
-			String [] x = allParams.split("\n");
-			allParams = "";
-			for (int i=0; i<x.length; i++) if (x[i]!=null) allParams += x[i] + "\n"; // update collinear leaves this null
-			allParams += mp.getChgClustSyn(Mpair.DB); // includes cluster params
-		}
+		String allParams = "";
+		if (pairParams==null) allParams  = "Align Unknown";
+		else                  allParams  = mp.getParamsForSum(pairParams); // CAS590 create line in Mpair to add cluster/synteny
+		
 		String d = (alignDate==null) ? "Date Unknown"      : Utilities.getNormalizedDate(alignDate); 
 		String v = (syver==null)     ? "  Version Unknown" : ("  " + syver);
 		

@@ -1,6 +1,9 @@
 package symap.manager;
 
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -8,7 +11,10 @@ import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -30,6 +36,7 @@ import util.FileDir;
 
 /**********************************************
  * The parameter window for Alignment&Synteny
+ * CAS590 add collapse panels and put parameters in order
  */
 
 public class PairParams extends JDialog {
@@ -39,49 +46,66 @@ public class PairParams extends JDialog {
 	protected static String [] coSetAlgoOpts = {"Advanced", "Simple"};
 	
 	// ManagerFrame.alignSelectedPair and updateEnableButtons use similar text
-	private String opt0Alt =       "Align&Synteny"; // Manager button Selected Pair
-	private String[] actOptions = {"Clust&Synteny", // Manager button Selected Redo
-								   "Synteny Only",
-								   "Number Pseudo",
-								   "Collinear Sets"}; // CAS588 new
+	private String [] actAlt0 =    {"Align&Synteny   ", // blank if not exist;  Selected Pair
+			                        "Cluster&Synteny ", // A if exists and MUMmer selected
+			                        "Load&Synteny  "};  // B exists and Load selected
+	
+	private String[]  actOptions = {"Cluster&Synteny  ", // if Check; may be replaced with Load&Synteny; Selected Redo; 
+								    "Synteny Only     ",
+								    "Number Pseudo    ",
+								    "Collinear Sets   "}; 
 	private int actCnS=0, actSyn=1, actPseudo=2, actCoSet=3;
-	  
-	// Order MUST be same in createMainPanel and setValue and getValue; defaults are in Mpair
-	// These are NOT in the order displayed, but do not change without changing access everywhere else
+	private String [] actions;
+	
+	// Order MUST be same in LABELS, SYMBOLS, createMainLabels, setValue, getValue; 
+	//                       Mpair.paramKey and Mpair.paramDef
+	// Do not change without changing access everywhere else!! (7 places)
 	private String [] LABELS = { // Order must be same as createMainPanel
-		"Min hits", "Strict", "Orient", "Merge:", 
-		"None", "Order1", "Order2", 			 
-		"Concat",  "Mask1", "Mask2", 		
+		"Use MUMmer",
+		"Concat",  "Mask1", "Mask2", 
 		"NUCmer args", "PROmer args", "Self args", "Use NUCmer","Use PROmer", 
+		"Load Blast files",  // must start with the word 'Load';  CAS589 new
+		
 		"Number pseudo", 											
-		"Algorithm 1 (modified original)", "Algorithm 2 (exon-intron)",  
+		"Algorithm 1 (modified original)", 
 		"Top N piles", 
+		"Algorithm 2 (exon-intron)",  
 		"Gene", "Exon", "Len","G0_Len", 
 		"EE", "EI", "En", "II", "In", 
-		"Collinear",				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
-		"Use MUMmer", "Load Blast File" // CAS589 new
+		"Algorithm",				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
+		
+		"Min hits", "Strict", "Orient", "Merge:", 
+		"None", "Order1", "Order2", 			 
 	};
 	
 	// if change, change in Mpair too; defaults are in Mpair; written to DB and file
 	// order the same as above; constant strings are repeated multiple times in MPair
 	private static final String [] SYMBOLS = { // Mpairs.paramKey
-		"mindots",  "strict_blocks", "same_orient", "merge_blocks",
-		"order_none", "order_proj1", "order_proj2",			// none, proj1, proj2
-		"concat","mask1", "mask2", 
+		// Alignment
+		"MUMmer", "concat", "mask1", "mask2",
 		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-		"number_pseudo", "algo1", "algo2",
-		"topn",					
-		"gene_scale", "exon_scale", "len_scale","g0_scale",
-		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile", 
-		"CoSet", "MUMmer", "Blast", "blast_file"
+		"Blast",
+		// Cluster
+		"number_pseudo",
+		"algo1", "topn", 
+		"algo2", 
+		"gene_scale", "exon_scale","len_scale","g0_scale", 
+		"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile",
+		// Collinear sets	
+		"CoSet", 	// two booleans together, e.g. 1:0 
+		// synteny
+		"mindots", "strict_blocks", "same_orient", "merge_blocks",
+		// Order
+		"order_none", "order_proj1", "order_proj2",		
 	};
-	
+
 	private Mpair mp = null;
 	private Mproject mProj1 = null, mProj2 = null;
 	private ManagerFrame manFrame=null;
-	private boolean isAlignDone;	// Could be A or check; mp.hasSynteny() determines which
+	private boolean isAlignDone;	// Could be A, B or check
 	private boolean isSelf=false;
 	
+	/******************************************************************/
 	protected PairParams(Mpair mp, ManagerFrame manFrame, boolean alignDone) {
 		this.mp = mp;
 		this.mProj1 = mp.mProj1;
@@ -90,15 +114,17 @@ public class PairParams extends JDialog {
 		this.isAlignDone = alignDone;
 		isSelf = mProj1.getIdx()==mProj2.getIdx();
 		
-		createMainPanel();
+		createMainLabels();
+		createMainPanels();
 		setInit();
+		setEnabled();
 		
 		setModal(true);
 		setTitle(mProj1.strDBName + Constants.projTo + mProj2.strDBName + Constants.paramsFile); 
 	}
 	/*********************************************************************/
-	private void createMainPanel() {
-		int numWidth = 2, decWidth = 2, textWidth = 15;
+	private void createMainLabels() {
+		int numWidth = 2, decWidth = 2, textWidth = 20;
 		
 		for (int i=0; i<LABELS.length; i++) {
 			if (LABELS[i].equals("Mask1"))       LABELS[i] = "Mask " + mProj1.getdbAbbrev();
@@ -109,29 +135,9 @@ public class PairParams extends JDialog {
 		mainPanel = Jcomp.createPagePanel();
 		
 		int x=0;	// SAME ORDER AS array
-		// synteny
-		lblMinDots = Jcomp.createLabel(LABELS[x++], "Miniumum hits in a block"); 
-		txtMinDots = Jcomp.createTextField("7",     "Miniumum hits in a block", numWidth);
-		
-		chkStrictBlocks = Jcomp.createCheckBox(LABELS[x++], "Smaller gaps allowed and stricter mixed blocks", true); 
-		chkSameOrient  = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
-		
-		lblMerge = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
-		cmbMergeBlocks = Jcomp.createComboBox(mergeOpts, "Each option includes the previous", 0); 
-		
-		String tip1 =  mProj1.strDisplayName + " order against " + mProj2.strDisplayName;
-		String tip2 =  mProj2.strDisplayName + " order against " + mProj1.strDisplayName;
-		radOrdNone  = Jcomp.createRadio(LABELS[x++], "None");
-		radOrdProj1 = Jcomp.createRadio(LABELS[x++], tip1);
-		radOrdProj2 = Jcomp.createRadio(LABELS[x++], tip2);
-		
-		ButtonGroup group = new ButtonGroup();
-		group.add(radOrdNone); group.add(radOrdProj1); group.add(radOrdProj2);
-		radOrdNone.setSelected(true);
-		
-		// prepare
-		chkConcat = Jcomp.createCheckBox(LABELS[x++],"Concat 1st project sequences into one file", false);
-		
+		// alignment
+		radMummer = Jcomp.createRadio(LABELS[x++], "Run MUMmer or use existing MUMmer files");
+		chkConcat = Jcomp.createCheckBox(LABELS[x++],"Concat 1st project sequences into one file", true);
 		String tipm1 = "Gene mask sequence for " + mProj1.strDisplayName + "; there must be a .gff file";
 		String tipm2 = "Gene mask sequence for " + mProj2.strDisplayName + "; there must be a .gff file";
 		chkMask1  = Jcomp.createCheckBox(LABELS[x++], tipm1, false);
@@ -139,31 +145,46 @@ public class PairParams extends JDialog {
 		chkMask2  = Jcomp.createCheckBox(LABELS[x++], tipm2, false);
 		if (!mProj2.hasGenes()) chkMask2.setEnabled(false); 
 		
-		// mummer
 		lblNucMerArgs = Jcomp.createLabel(LABELS[x++], "NUCmer parameters"); txtNucMerArgs = Jcomp.createTextField("",textWidth);
 		lblProMerArgs = Jcomp.createLabel(LABELS[x++], "PROmer parameters"); txtProMerArgs = Jcomp.createTextField("",textWidth);
 		lblSelfArgs   = Jcomp.createLabel(LABELS[x++], "NUCmer parameters for self-chromosome"); txtSelfArgs = Jcomp.createTextField("",textWidth);
+		
 		chkNucOnly    = Jcomp.createRadio(LABELS[x++], "Use NUCmer for this alignment");
 		chkProOnly    = Jcomp.createRadio(LABELS[x++], "Use PROmer for this alignment");
 		chkDef        = Jcomp.createRadio("Defaults", "Use NUCmer for self-synteny, otherwise use PROmer");		// not saved
+		
+		radBlast  = Jcomp.createRadio(LABELS[x++], "Load one or more Blastp b6 files");
+		
+		ButtonGroup xgroup = new ButtonGroup();
+		xgroup.add(radMummer); xgroup.add(radBlast); // set selected below
+		
 		ButtonGroup sgroup = new ButtonGroup();
 		sgroup.add(chkNucOnly); sgroup.add(chkProOnly); sgroup.add(chkDef);
 		chkDef.setSelected(true);
 		
-		// Cluster
+		radBlast.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setEnabled();
+				mp.setHasBlast();
+			}
+		});
+		radMummer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setEnabled();
+			}
+		});
+		
+	// Cluster
 		chkPseudo = Jcomp.createCheckBox(LABELS[x++], "Number pseudo genes (un-annotated hit)", false);
 		
 		chkAlgo1 = Jcomp.createRadio(LABELS[x++], "Use Algo1");
+		lblTopN = Jcomp.createLabel(LABELS[x++]); 
+		txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
+		
 		chkAlgo2 = Jcomp.createRadio(LABELS[x++], "Use Algo2");
-		ButtonGroup agroup = new ButtonGroup();
-		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
 		chkAlgo2.setSelected(!isSelf);
 		chkAlgo2.setEnabled(!isSelf);
-		
-		lblTopN = Jcomp.createLabel(LABELS[x++]); txtTopN = Jcomp.createTextField("2", "Retain the top N hits of a pile of overlapping hits", numWidth);
-		
-		String lab; 
-		lab = "Scale gene coverage (larger N requires more coverage)";
+		String lab = "Scale gene coverage (larger N requires more coverage)";
 		lblGene = Jcomp.createLabel(LABELS[x++],lab); 
 		txtGene = Jcomp.createTextField("1.0",  lab, decWidth);
 		
@@ -172,8 +193,8 @@ public class PairParams extends JDialog {
 		txtExon = Jcomp.createTextField("1.0",  lab, decWidth);
 		
 		lab = "Scale G2 and G1 length (Nx" + backend.anchor2.Arg.iPpMinGxLen + ")";
-		lblLen = Jcomp.createLabel(LABELS[x++], lab); txtLen = 
-		Jcomp.createTextField("1.0",  lab, decWidth);
+		lblLen = Jcomp.createLabel(LABELS[x++], lab); 
+		txtLen = Jcomp.createTextField("1.0",  lab, decWidth);
 		
 		lab = "Scale G0 length (Nx" + backend.anchor2.Arg.iPpMinG0Len + ")"; 
 		lblNoGene = Jcomp.createLabel(LABELS[x++],lab);     
@@ -184,19 +205,69 @@ public class PairParams extends JDialog {
 		chkEnpile = Jcomp.createCheckBox(LABELS[x++],"Keep En and nE piles", true); 
 		chkIIpile = Jcomp.createCheckBox(LABELS[x++],"Keep II piles", false); 
 		chkInpile = Jcomp.createCheckBox(LABELS[x++],"Keep In and nI piles", false); 
+
+		ButtonGroup agroup = new ButtonGroup();
+		agroup.add(chkAlgo1); agroup.add(chkAlgo2);
 		
-		lblCset = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
+		chkAlgo1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setEnabled();
+			}
+		});
+		chkAlgo2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setEnabled();
+			}
+		});
+		
+	// Collinear set
+		lab = "Collinear set algorithm"; 
+		lblCset = Jcomp.createLabel(LABELS[x++],lab);    
 		cmbCsetNum = Jcomp.createComboBox(coSetNumOpts, "How to number the collinear sets", 0); 
 		cmbCsetAlgo = Jcomp.createComboBox(coSetAlgoOpts, "The advanced algorithm tries to resolve overlapped genes collinearity", 0); 
 				
-		radMummer = Jcomp.createRadio(LABELS[x++], "Run MUMmer or use existing MUMmer files");
-		radBlast  = Jcomp.createRadio(LABELS[x++], "Load Blast Tab file");
+	// synteny
+		lblMinDots = Jcomp.createLabel(LABELS[x++], "Miniumum hits in a block"); 
+		txtMinDots = Jcomp.createTextField("7",     "Miniumum hits in a block", numWidth);
 		
-		ButtonGroup xgroup = new ButtonGroup();
-		xgroup.add(radMummer); xgroup.add(radBlast); radMummer.setSelected(true);
+		chkStrictBlocks = Jcomp.createCheckBox(LABELS[x++], "Smaller gaps allowed and stricter mixed blocks", true); 
+		chkSameOrient  = Jcomp.createCheckBox(LABELS[x++], "Blocks must have hits in same orientation", false); 
+		
+		lblMerge = Jcomp.createLabel(LABELS[x++], "Merge overlapping and close blocks"); 
+		cmbMergeBlocks = Jcomp.createComboBox(mergeOpts, "Each option includes the previous", 0); 
+		
+		// Order
+		String tip1 =  mProj1.strDisplayName + " order against " + mProj2.strDisplayName;
+		String tip2 =  mProj2.strDisplayName + " order against " + mProj1.strDisplayName;
+		radOrdNone  = Jcomp.createRadio(LABELS[x++], "None");
+		radOrdProj1 = Jcomp.createRadio(LABELS[x++], tip1);
+		radOrdProj2 = Jcomp.createRadio(LABELS[x++], tip2);
+		
+		ButtonGroup group = new ButtonGroup();
+		group.add(radOrdNone); group.add(radOrdProj1); group.add(radOrdProj2);
+		radOrdNone.setSelected(true);
 		
 		//////////////////////////////////////////////////////////
 		// bottom row of bottoms
+		if (!isAlignDone || !mp.isPairInDB()) { // same as in setEnabled()
+			actions = new String [1];			
+			if (radBlast.isSelected()) actions[0] = actAlt0[2];  // Load &Synteny
+			else if (mp.hasMUMmer)     actions[0] = actAlt0[1];  // Align&Synteny
+			else                       actions[0] = actAlt0[0];  // Align&Synteny
+		}
+		else {
+			if (radBlast.isSelected()) 	actOptions[0] = actAlt0[2]; 
+			actions = actOptions;
+		}
+		
+		cmbAction = Jcomp.createComboBox(actions, "Action to be performed on 'Selected Pair'", 0); 
+		cmbAction.setPrototypeDisplayValue("Load MUM&Synteny "); // sets width
+		cmbAction.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setAction();
+			}
+		});
+		
 		btnKeep = Jcomp.createButton("Save", "Save parameters and exit"); 
 		btnKeep.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -215,90 +286,82 @@ public class PairParams extends JDialog {
 				setCancel();
 			}
 		});
-		
-		String [] acts;
-		if (!isAlignDone || !mp.isPairInDB()) {
-			acts = new String [1];			// not going to be shown
-			acts[0] = opt0Alt; 
-		}
-		else {
-			acts = actOptions;
-		}
-		cmbAction = Jcomp.createComboBox(acts, "Action to be performed on 'Selected Pair'", 0); 
-		cmbAction.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				setAction();
-			}
-		});
-		
-		/*-------- Create Layout ------------------*/
-		//////////////////////////////////////////////////////////////////////////
+		setEnabled();
+	}
+	/* *********************************************************** */
+	private void createMainPanels() {
+		// Top Label
 		JPanel row = Jcomp.createRowPanel();
 		String plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") x " + 
 					  mProj2.strDisplayName + " (" + mProj2.getdbAbbrev() + ")";
 		if (isSelf) plab = mProj1.strDisplayName + " (" + mProj1.getdbAbbrev() +  ") x Self"; // CAS589 add
 		row.add(Jcomp.createLabel(plab)); 
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5)); 
-	
-		// Alignment
+		
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(3)); 
+		int indent = 25;
+		
+	// Alignment
+		CollapsiblePanel aCollapse = new CollapsiblePanel("Alignment", "MUMmer and Blast", false);
+		
+		// mummer
 		row = Jcomp.createRowPanel();
-		row.add(Jcomp.createHtmlLabel("Alignment"));  row.add(Box.createVerticalStrut(5)); // vert puts icon at end of line
+		row.add(radMummer); 
+		aCollapse.panel.add(row);	
+		row.add(Box.createVerticalStrut(5)); 						// vert puts ? icon at end of line
 		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Align));
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		aCollapse.panel.add(row); aCollapse.panel.add(Box.createVerticalStrut(5));
 		
-		row = Jcomp.createRowPanel();
-		row.add(radBlast); row.add(Box.createHorizontalStrut(5)); // CAS589 add
-		row.add(Jcomp.createLabel("(Skips Cluster Hits)"));
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		CollapsiblePanel aCollapse2 = new CollapsiblePanel("Mask & MUMmer args", "Masking and PROmer vs NUCmer", true);
+			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));	
+			row.add(chkConcat);	row.add(Box.createHorizontalStrut(15));
+			row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	
+			if (!isSelf) row.add(chkMask2);	// CAS589 add					
+			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(5));
 		
-		row = Jcomp.createRowPanel();
-		row.add(radMummer); row.add(Box.createHorizontalStrut(5));
-		row.add(chkConcat);	row.add(Box.createHorizontalStrut(15));
-														
-		row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	
-		if (!isSelf) row.add(chkMask2);	// CAS589 add					
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+			int colWidth = 100;
+			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent+5));
+			row.add(lblProMerArgs);
+			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblProMerArgs)));
+			row.add(txtProMerArgs);
+			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(3));
+			
+			row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(indent+5));
+			row.add(lblNucMerArgs); 
+			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblNucMerArgs)));
+			row.add(txtNucMerArgs);
+			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(3));
 		
-		int colWidth = 100;
-		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(10));
-		row.add(lblProMerArgs);
-		if (lblProMerArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblProMerArgs.getPreferredSize().width));
-		row.add(txtProMerArgs);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
-		
-		row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(10));
-		row.add(lblNucMerArgs); row.add(Box.createHorizontalStrut(10));
-		if (lblNucMerArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblNucMerArgs.getPreferredSize().width));
-		row.add(txtNucMerArgs);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+			row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(indent+5));
+			row.add(lblSelfArgs); 
+			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblSelfArgs)));
+			row.add(txtSelfArgs);
+			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(5));
 	
-		row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(10));
-		row.add(lblSelfArgs); row.add(Box.createHorizontalStrut(10));
-		if (lblSelfArgs.getPreferredSize().width < colWidth) row.add(Box.createHorizontalStrut(colWidth - lblSelfArgs.getPreferredSize().width));
-		row.add(txtSelfArgs);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
-
-		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
-		row.add(chkProOnly); mainPanel.add(row);mainPanel.add(Box.createHorizontalStrut(20));
-		row.add(chkNucOnly); mainPanel.add(row);mainPanel.add(Box.createHorizontalStrut(20));
-		row.add(chkDef);     mainPanel.add(row);mainPanel.add(Box.createVerticalStrut(5));
-		
-		// Clusters
-		int indent=25;
-		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
+			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
+			row.add(chkProOnly); row.add(chkNucOnly); row.add(chkDef);     
+			aCollapse2.panel.add(row);  aCollapse2.panel.add(Box.createVerticalStrut(5));
+		aCollapse.panel.add(aCollapse2);
+		aCollapse.panel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
-		row.add(Jcomp.createHtmlLabel("Cluster Hits"));  
-		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Clust));
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		row.add(radBlast);  	
+		aCollapse.panel.add(row); 
 		
+		aCollapse.finish();
+		aCollapse.panel.add(new JSeparator()); 
+		mainPanel.add(aCollapse);
+		
+	// Clusters
+		CollapsiblePanel cCollapse = new CollapsiblePanel("Cluster MUMmer Hits", "Clustering hits for MUMmer (not Blast hits)", false);
+
 		row = Jcomp.createRowPanel(); 
-		row.add(chkPseudo);
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		row.add(chkPseudo); row.add(Box.createVerticalStrut(5)); // vertical for to put icon at end
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_MUM_URL, Jhtml.mumClust)); // CAS590 changed target
+		cCollapse.panel.add(row); cCollapse.panel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
 		row.add(chkAlgo1);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		cCollapse.panel.add(row);	cCollapse.panel.add(Box.createVerticalStrut(5));
 		chkAlgo1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				boolean b = chkAlgo1.isSelected();
@@ -310,11 +373,11 @@ public class PairParams extends JDialog {
 		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		row.add(lblTopN); row.add(Box.createHorizontalStrut(5));
 		row.add(txtTopN);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		cCollapse.panel.add(row);	cCollapse.panel.add(Box.createVerticalStrut(5));
 		
 		row = Jcomp.createRowPanel();
 		row.add(chkAlgo2);
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		cCollapse.panel.add(row);	cCollapse.panel.add(Box.createVerticalStrut(5));
 		chkAlgo2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				boolean b = chkAlgo2.isSelected();
@@ -330,7 +393,7 @@ public class PairParams extends JDialog {
 		row.add(lblExon);    row.add(txtExon);   row.add(Box.createHorizontalStrut(5)); 
 		row.add(lblLen);     row.add(txtLen);    row.add(Box.createHorizontalStrut(5));
 		row.add(lblNoGene);  row.add(txtNoGene); row.add(Box.createHorizontalStrut(5));
-		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
+		if (!isSelf) {cCollapse.panel.add(row);	cCollapse.panel.add(Box.createVerticalStrut(5));}
 		
 		row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 		row.add(new JLabel("Keep piles:")); 
@@ -339,20 +402,29 @@ public class PairParams extends JDialog {
 		row.add(chkEnpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkIIpile);   row.add(Box.createHorizontalStrut(5));
 		row.add(chkInpile);   row.add(Box.createHorizontalStrut(5));
-		if (!isSelf) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(6));}
+		if (!isSelf) {cCollapse.panel.add(row);}
+		cCollapse.panel.add(new JSeparator()); 
+		cCollapse.finish();
+		mainPanel.add(cCollapse);
 		
+	// Collinear Set
+		CollapsiblePanel csCollapse = new CollapsiblePanel("Collinear Sets", "Collinear Sets parameters", false);
+	
 		row = Jcomp.createRowPanel(); 
-		row.add(lblCset);  row.add(Box.createHorizontalStrut(5));
-		row.add(cmbCsetNum);   row.add(Box.createHorizontalStrut(5));
-		row.add(cmbCsetAlgo);   row.add(Box.createHorizontalStrut(5));
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));
+		row.add(lblCset);   	row.add(Box.createHorizontalStrut(5));
+		row.add(cmbCsetNum);   	row.add(Box.createHorizontalStrut(5));
+		
+		row.add(cmbCsetAlgo);   
+		row.add(Box.createVerticalStrut(5)); 						// vert puts ? icon at end of line
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.paramCoset));
+		
+		csCollapse.panel.add(row); row.add(Box.createVerticalStrut(3)); // Linux needs a little vertical
+		csCollapse.panel.add(new JSeparator()); 
+		csCollapse.finish();
+		mainPanel.add(csCollapse);
 		
 	// Synteny
-		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
-		row = Jcomp.createRowPanel();
-		row.add(Jcomp.createHtmlLabel("Synteny Blocks"));  row.add(Box.createVerticalStrut(5));
-		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Syn));
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(5));
+		CollapsiblePanel synCollapse = new CollapsiblePanel("Synteny", "Synteny and ordering parameters", false);
 		
 		row = Jcomp.createRowPanel();
 		row.add(lblMinDots);      row.add(Box.createHorizontalStrut(3));
@@ -360,32 +432,40 @@ public class PairParams extends JDialog {
 		row.add(chkStrictBlocks); row.add(Box.createHorizontalStrut(5));
 		row.add(chkSameOrient);   row.add(Box.createHorizontalStrut(12));
 		row.add(lblMerge); 		  row.add(Box.createHorizontalStrut(2));
-		row.add(cmbMergeBlocks);
-	
-		mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(3));
+		row.add(cmbMergeBlocks);  row.add(Box.createVerticalStrut(5));
+		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Syn));
+		synCollapse.panel.add(row);	synCollapse.panel.add(Box.createVerticalStrut(6));
 		
 		// order against
-		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(3)); 
 		row = Jcomp.createRowPanel();
 		row.add(Jcomp.createLabel("Order against: ", "Order one project against another; the alignment does not need to be redone."));
 		row.add(radOrdNone);  row.add(Box.createHorizontalStrut(3));
 		row.add(radOrdProj1); row.add(Box.createHorizontalStrut(2));
 		row.add(radOrdProj2);
-		if (mProj1!=mProj2) {mainPanel.add(row);	mainPanel.add(Box.createVerticalStrut(5));}
+		if (mProj1!=mProj2) {synCollapse.panel.add(row);	synCollapse.panel.add(Box.createVerticalStrut(5));}
+		synCollapse.finish();
+		mainPanel.add(synCollapse);
 		
-		// Buttons
-		mainPanel.add(new JSeparator()); mainPanel.add(Box.createVerticalStrut(5)); 
+	// Action & Buttons
+		int sp = (Jhtml.isLinux()) ? 7 : 3;
+		mainPanel.add(new JSeparator()); 
+		JPanel buttonPanel = Jcomp.createPagePanel();
 		
-		int sp = (Jhtml.isLinux()) ? 6 : 3;
 		row = Jcomp.createRowPanel();
-		JPanel buttonPanel = Jcomp.createRowPanel();
-		if (acts.length>1) {buttonPanel.add(cmbAction);	buttonPanel.add(Box.createHorizontalStrut(14));}
-		buttonPanel.add(btnKeep);		buttonPanel.add(Box.createHorizontalStrut(sp));
-		buttonPanel.add(btnLoadDef);	buttonPanel.add(Box.createHorizontalStrut(sp));
-		buttonPanel.add(btnDiscard);		
-		
+		int sp2 = (Jhtml.isLinux()) ? 35 : 45;
+		row.add(Box.createHorizontalStrut(sp2));
+		row.add(cmbAction);
+		buttonPanel.add(row); 
+		buttonPanel.add(Box.createVerticalStrut(5));
+	
+		row = Jcomp.createRowPanel();
+		row.add(btnKeep);		row.add(Box.createHorizontalStrut(sp));
+		row.add(btnLoadDef);	row.add(Box.createHorizontalStrut(sp));
+		row.add(btnDiscard);	
+		buttonPanel.add(row); 
 		buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
+		row = Jcomp.createRowPanel();
 		row.add(Box.createHorizontalGlue());
 		row.add(buttonPanel);
 		row.add(Box.createHorizontalGlue());
@@ -404,15 +484,7 @@ public class PairParams extends JDialog {
 	private String getValue(String symbol) {// ORDER MUST BE SAME AS array
 		int x=0;
 		
-		if (symbol.equals(SYMBOLS[x++])) 		return txtMinDots.getText();
-		else if (symbol.equals(SYMBOLS[x++])) 	return chkStrictBlocks.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++])) 	return chkSameOrient.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return cmbMergeBlocks.getSelectedIndex() + "";
-		
-		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdNone.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj1.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj2.isSelected()?"1":"0";
-		
+		if (symbol.equals(SYMBOLS[x++]))	return radMummer.isSelected()?"1":"0"; 
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkConcat.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkMask1.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkMask2.isSelected()?"1":"0";
@@ -421,12 +493,14 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return txtSelfArgs.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return radBlast.isSelected()?"1":"0"; 
 		
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkPseudo.isSelected()?"1":"0";
+		
 		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo1.isSelected()?"1":"0";
-		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++])) 	return txtTopN.getText();
 		
+		else if (symbol.equals(SYMBOLS[x++]))	return chkAlgo2.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return txtGene.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtExon.getText();
 		else if (symbol.equals(SYMBOLS[x++]))	return txtLen.getText();
@@ -437,26 +511,24 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkEnpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkIIpile.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkInpile.isSelected()?"1":"0";
+		
 		else if (symbol.equals(SYMBOLS[x++]))	return cmbCsetNum.getSelectedIndex() + ":" + cmbCsetAlgo.getSelectedIndex();
-		else if (symbol.equals(SYMBOLS[x++]))	return radMummer.isSelected()?"1":"0"; 
-		else if (symbol.equals(SYMBOLS[x++]))	return radBlast.isSelected()?"1":"0"; 
+		
+		else if (symbol.equals(SYMBOLS[x++])) 	return txtMinDots.getText();
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkStrictBlocks.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return chkSameOrient.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++]))	return cmbMergeBlocks.getSelectedIndex() + "";
+		
+		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdNone.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj1.isSelected()?"1":"0";
+		else if (symbol.equals(SYMBOLS[x++])) 	return radOrdProj2.isSelected()?"1":"0";
+		
 		else return "";
 	}
 	private void setValue(String symbol, String value) {// ORDER MUST BE SAME AS array
 		int x=0;
 		
-		if (symbol.equals(SYMBOLS[x++]))		txtMinDots.setText(value);
-		else if (symbol.equals(SYMBOLS[x++]))	chkStrictBlocks.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkSameOrient.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	{
-			int idx = Utilities.getInt(value);
-			if (idx==-1) idx = 0;
-			cmbMergeBlocks.setSelectedIndex(idx); // number 0,1,2
-		}
-		else if (symbol.equals(SYMBOLS[x++]))	radOrdNone.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj1.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj2.setSelected(value.equals("1"));
-		
+		if (symbol.equals(SYMBOLS[x++])) 	radMummer.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkConcat.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkMask1.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkMask2.setSelected(value.equals("1"));
@@ -465,23 +537,24 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	txtSelfArgs.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	chkNucOnly.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkProOnly.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++])) 	radBlast.setSelected(value.equals("1"));
 		
 		else if (symbol.equals(SYMBOLS[x++]))	chkPseudo.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	txtTopN.setText(value);
 		
+		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo2.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	txtGene.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtExon.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtLen.setText(value);
 		else if (symbol.equals(SYMBOLS[x++]))	txtNoGene.setText(value);
-		
 		else if (symbol.equals(SYMBOLS[x++]))	chkEEpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEIpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkEnpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkIIpile.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkInpile.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++])) {
+		
+		else if (symbol.equals(SYMBOLS[x++])) { // collinear
 			String [] val = value.split(":");
 			if (val.length==2) {
 				int num = Utilities.getInt(val[0]);
@@ -490,10 +563,25 @@ public class PairParams extends JDialog {
 				cmbCsetAlgo.setSelectedIndex(algo);
 			}
 		}
-		else if (symbol.equals(SYMBOLS[x++])) radMummer.setSelected(value.equals("1"));
-		else if (symbol.equals(SYMBOLS[x++])) radBlast.setSelected(value.equals("1"));
+		
+		else if (symbol.equals(SYMBOLS[x++]))	txtMinDots.setText(value);
+		else if (symbol.equals(SYMBOLS[x++]))	chkStrictBlocks.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	chkSameOrient.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	{
+			int idx = Utilities.getInt(value);
+			if (idx==-1) idx = 0;
+			cmbMergeBlocks.setSelectedIndex(idx); // number 0,1,2
+		}
+		
+		else if (symbol.equals(SYMBOLS[x++]))	radOrdNone.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj1.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	radOrdProj2.setSelected(value.equals("1"));
 	}
 	/************************************************************************/
+	private void setParams(HashMap <String, String> valMap) {
+		for(int x=0; x<SYMBOLS.length; x++)
+			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
+	}
 	
 	private void setInit() {
 		setParams(mp.getFileParams());
@@ -503,10 +591,38 @@ public class PairParams extends JDialog {
 		else if (mp.bCoSet) 	cmbAction.setSelectedIndex(actCoSet);
 		else 					cmbAction.setSelectedIndex(actCnS);
 	}
-	private void setParams(HashMap <String, String> valMap) {
-		for(int x=0; x<SYMBOLS.length; x++)
-			setValue(SYMBOLS[x], valMap.get(SYMBOLS[x]));	
+
+	private void setEnabled() {
+		boolean b = radBlast.isSelected();
+		
+		b = !b;
+		chkConcat.setEnabled(b); chkMask1.setEnabled(b); chkMask2.setEnabled(b);
+		lblProMerArgs.setEnabled(b); lblNucMerArgs.setEnabled(b); lblSelfArgs.setEnabled(b);
+		chkNucOnly.setEnabled(b); chkProOnly.setEnabled(b); chkDef.setEnabled(b);
+		
+		b = chkAlgo2.isSelected();
+		lblGene.setEnabled(b); txtGene.setEnabled(b);
+		lblExon.setEnabled(b); txtExon.setEnabled(b);
+		lblLen.setEnabled(b); txtLen.setEnabled(b);
+		lblNoGene.setEnabled(b); txtNoGene.setEnabled(b);
+		
+		chkEEpile.setEnabled(b); chkEIpile.setEnabled(b); chkEnpile.setEnabled(b); 
+		chkIIpile.setEnabled(b); chkInpile.setEnabled(b);
+		
+		if (!isAlignDone || !mp.isPairInDB()) { // same as in CreateMainLabels()
+			actions = new String [1];			
+			if (radBlast.isSelected()) actions[0] = actAlt0[2];  // Load Blast&Synteny; B
+			else if (mp.hasMUMmer)     actions[0] = actAlt0[1];  // Load Mum&Synteny    A
+			else                       actions[0] = actAlt0[0];  // Align&Synteny       x
+		}
+		else {
+			if (radBlast.isSelected()) 	actOptions[0] = actAlt0[2]; // B
+			else 						actOptions[0] = actAlt0[1]; // A
+			actions = actOptions;
+		}
+		cmbAction.setModel(new DefaultComboBoxModel<>(actions));
 	}
+	
 	private void setAction() {
 		int idx = cmbAction.getSelectedIndex();
 		if (idx==actCnS)      {
@@ -534,6 +650,8 @@ public class PairParams extends JDialog {
 		
 		mp.bPseudo = mp.bSynOnly = mp.bCoSet = false;
 		cmbAction.setSelectedIndex(actCnS);
+		
+		setEnabled();
 	}
 	private void setCancel() { 
 		mp.bPseudo  = bSavPseudo;
@@ -671,7 +789,7 @@ public class PairParams extends JDialog {
 		}
 		return true;
 	}
-
+	
 	/************************************************************************/
 	private JPanel mainPanel = null;
 	
@@ -707,4 +825,88 @@ public class PairParams extends JDialog {
 	private JButton btnKeep = null, btnDiscard = null, btnLoadDef = null;
 	
     private boolean bSavPseudo=false, bSavSynOnly=false, bSavCoSet=false;
+    /*******************************************************************
+     * XXX for different sections of Pair Parameters; Copied from frame.CollapsiblePanel CAS580 add 
+     */
+    public class CollapsiblePanel extends JPanel {
+    	private static final long serialVersionUID = 1L;
+    	private JPanel panel; // for user-added components
+    	private boolean collapsed;
+    	private JButton expandButton;
+    	private Dimension collapsedSize;
+    	
+    	private static final ImageIcon expandIcon = createImageIcon("/images/plus.gif");
+    	private static final ImageIcon collapseIcon = createImageIcon("/images/minus.gif");
+    	private static final ImageIcon expandIconSm = createImageIcon("/images/plusSm.gif");
+    	private static final ImageIcon collapseIconSm = createImageIcon("/images/minusSm.gif");
+    	private boolean bSmall;
+    	
+    	protected CollapsiblePanel(String strTitle, String tip, boolean bSmall) {
+    		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+    		setBackground(Jcomp.white);
+    		this.bSmall = bSmall;
+    	
+    		expandButton = new JButton(strTitle);
+    		expandButton.setToolTipText(tip);
+    		expandButton.setBackground(Jcomp.white);
+    		expandButton.setBorderPainted(false);
+    		expandButton.setFocusPainted(false);
+    		expandButton.setContentAreaFilled(false);
+    		expandButton.setMargin(new Insets(0, 0, 0, 0));
+    		expandButton.setFont(new Font(getFont().getName(), Font.PLAIN, 12));
+
+    		expandButton.addActionListener(
+    			new ActionListener( ) {
+    				public void actionPerformed(ActionEvent e) {
+    					if (collapsed) expand();
+    					else           collapse();
+    					
+    					revalidate();
+    		            repaint();
+    		            pack(); 
+    		}});
+    		
+    		panel = Jcomp.createPagePanel();
+    				
+    		collapse();
+    		
+    		super.add(expandButton);
+  
+    		super.add(panel);
+    		
+    		collapsedSize = new Dimension(450, getPreferredSize().height);
+    	}
+    	
+    	private void finish() {
+    		setMinimumSize(getPreferredSize());
+    		setMaximumSize(getPreferredSize());
+    	}
+    	private void collapse() {
+    		collapsed = true;
+    		if (bSmall) expandButton.setIcon(expandIconSm);
+    		else        expandButton.setIcon(expandIcon);
+    		
+    		panel.setVisible(false);
+    		setMaximumSize(collapsedSize); // prevent vertical stretching problem
+    	}
+    	
+    	protected void expand() {
+    		collapsed = false;
+    		if (bSmall) expandButton.setIcon(collapseIconSm);
+    		else        expandButton.setIcon(collapseIcon);
+    		
+    		panel.setVisible(true);
+    		setMaximumSize(collapsedSize);
+    	}
+    	
+    	protected void doClick() {
+    		expandButton.doClick();
+    	}
+    	private static ImageIcon createImageIcon(String path) {
+    	    java.net.URL imgURL = CollapsiblePanel.class.getResource(path);
+    	    if (imgURL == null) {System.err.println("Couldn't find icon: "+path);return null;}
+    	    
+    	    return new ImageIcon(imgURL);
+    	}
+    }
 }

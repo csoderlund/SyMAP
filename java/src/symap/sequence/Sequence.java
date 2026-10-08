@@ -526,23 +526,26 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 			hitsObj1.getHitsInRange(hitList1, start, end, isQuery1);
 			if (hitList1.size()>0) {
 				int rc = drawingPanel.getCloseUp().showCloseUp(hitList1, this, start, end, 
-						isQuery1, hitsObj1.getOtherChrName(this), numShow++);
-				if (rc < 0) Popup.showWarningMessage("Error showing close up view."); 
+												isQuery1, hitsObj1.getOtherChrName(this), numShow++);
+				if (rc < 0) Popup.showWarning("Error showing close up view."); 
 			}
-			// if a track has a track on both sides (e.g. 2 track shown), this is the otherside 
+			else { // CAS590 add 'MUMmer hits only'
+				 Popup.showWarning("No MUMmer hits found in region. \nCannot align without MUMmer hits (Blast hits do not align correctly)."); 
+				 return;
+			}
+			// if a track has a track on both sides (e.g. 2 track shown), this is the other side 
 			if (hitsObj2!=null) { 
 				hitsObj2.getHitsInRange(hitList2, start, end, isQuery2);
 				if (hitList2.size()>0) {
 					int rc = drawingPanel.getCloseUp().showCloseUp(hitList2, this, start, end, 
 						isQuery2, hitsObj2.getOtherChrName(this), numShow);
-					if (rc < 0) Popup.showWarningMessage("Error showing close up view."); 
+					if (rc < 0) Popup.showWarning("Error showing close up view."); 
+				}
+				else { // CAS590 add 'MUMmer hits only'
+					 Popup.showWarning("No MUMmer hits found in region. \nCannot align without MUMmer hits (Blast hits do not align correctly)."); 
+					 return;
 				}
 			}
-			
-			if (hitList1.size()==0 && hitList2.size()==0) {
-				 Popup.showWarningMessage("No hits found in region. Cannot align without hits."); 
-				 return;
-			}	
 		}
 		catch (OutOfMemoryError e) { 
 			Popup.showOutOfMemoryMessage();
@@ -1377,9 +1380,9 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		
 		if (hitsObj1!=null) {
 			if (!annot.hasHitList()) { 
-				boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx);//CAS589 add blast
 				TreeMap <Integer, String> scoreMap = 
-						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType()); // CAS587 add annoType
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, annot.getAnnoType()); // CAS590 remove isAlgo2; exlap!=0 check
+				
 				if (scoreMap.size()>0) {
 					String hits = hitsObj1.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList(hits, scoreMap);
@@ -1388,9 +1391,8 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 		}
 		if (hitsObj2!=null) {// for 3-track
 			if (!annot.hasHitList2()) { 
-				boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx);//CAS589 add blast
 				TreeMap <Integer, String> scoreMap = 
-						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType());
+						seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx,  annot.getAnnoType());
 				if (scoreMap.size()>0) {
 					String hits = hitsObj2.getHitsForGenePopup(this, annot, scoreMap);
 					annot.setHitList2(hits, scoreMap);
@@ -1402,8 +1404,7 @@ public class Sequence implements HelpListener, KeyListener,MouseListener,MouseMo
 	protected boolean hasAnnoHit(int x, Annotation annot) { // Called from Annot to display GeneNum if has hit
 		if (x==2 && hitsObj2==null) return false;
 
-		boolean isAlgo2 = !propDB.isAlgo1(projIdx, otherProjIdx) && !propDB.isBlast(projIdx, otherProjIdx); // CAS589 add blast
-		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx, isAlgo2, annot.getAnnoType());
+		TreeMap <Integer, String> scoreMap = seqPool.getGeneHits(annot.getAnnoIdx(), grpIdx,  annot.getAnnoType());
 		if (scoreMap.size()==0) return false;
 		
 		SeqHits hitObj = (x==1) ? hitsObj1 : hitsObj2;

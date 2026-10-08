@@ -34,8 +34,9 @@ public class HitData {
 	private boolean isPopup=false;		// set when popup; 
 	private boolean isHighG2xN=false, isForceG2xN=false;	// set on seqFilter 3-track ref only; force is filtered but must be shown
 	
-	protected String hitGeneTag;		// g(gene_overlap) or htype (EE) ; gNbN see MapperPool; 
-	private String   hitTag; 
+	protected String hitGeneTag;		
+	private String   hitTag; 		// g(gene_overlap) or htype (EE) ; gNbN see MapperPool; 
+	private String   htype;			// g0,g1,g2,EE,EI,II,En... BH; used for alignments; CAS590
 	
 	// MapperPool.setSeqHitData populates, puts in array for SeqHits, where each HitData is associated with a DrawHit
 	protected HitData(Mapper mapper, int id, int hitnum, 
@@ -81,6 +82,7 @@ public class HitData {
 		this.blocknum = block;
 		this.isBlock = (blocknum>0) ? true : false;
 		this.isBlkInv = (corr<0);
+		this.htype = htype;
 		
 		String gg = (htype.equals("0") || htype.equals("")) ? (" g" + geneOlp) : (" " +htype); 
 		String iv = (corr<0) ? " Inv  " : "  "; // Strand may be == when Inv
@@ -162,6 +164,8 @@ public class HitData {
 	protected int getEnd1(boolean swap)   { return (swap ? end2 : end1); }
 	protected int getStart2(boolean swap) { return (swap ? start1 : start2); }
 	protected int getEnd2(boolean swap)   { return (swap ? end1 : end2); }
+	
+	public String getHtype() {return htype;}
 
 	protected double getPctid() 	{ return (double)pctid; }
 	protected String getTargetSeq() { return target_seq; } 

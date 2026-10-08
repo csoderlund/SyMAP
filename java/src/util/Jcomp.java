@@ -50,6 +50,7 @@ import symap.frame.HelpListener;
  */
 public class Jcomp {
 	public static final String ok = "OK", close = "Close", cancel="Cancel"; // for buttons
+	public static final Color white = Color.WHITE;
 	 
 	// XXX Page and Row
 	static public JPanel createPagePanel() { // Manager and Filters create their own page without color

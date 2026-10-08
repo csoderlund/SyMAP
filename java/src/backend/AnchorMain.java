@@ -139,7 +139,7 @@ public class AnchorMain {
 					hitcnt++;
 				}
 				rs.close();
-				Globals.rprt("Hits for " +  grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt);
+				Globals.rprt("Save hit# for " +  grpMap1.get(g1) + ":" + grpMap2.get(g2) + " " + hitcnt);
 				
 			// save	
 				PreparedStatement ps = dbc2.prepareStatement("update pseudo_hits set hitnum=? where idx=?");

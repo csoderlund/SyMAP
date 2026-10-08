@@ -30,7 +30,7 @@ public class Q {
 	static final String grpCol =   "Group";		// loadRow; show synteny; GrpSize.Grp#.
 	static final String hitPrefix = "Hit";		// Required prefix; Searches MUST BE for equal, or SpAbbr of "Hitx" would mess up
 	static final String hitSt	  = "Hit\nSt";  // Leave \n so can search on full column in TableData
-	
+	static final String hitType	  = "Hit\nType"; // Sets TmpRowData.isLoadBlast=true if Globals.blastHit
 	static final String chrCol =	 "Chr";
 	static final String gStartCol =	 "Gstart";
 	static final String gEndCol =	 "Gend";

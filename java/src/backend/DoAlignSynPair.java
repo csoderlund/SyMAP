@@ -80,8 +80,9 @@ public class DoAlignSynPair extends JFrame {
 			loadBlocks(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (mp.bSynOnly) mp.removeSyntenyFromDB(); 
-		else 			 mp.renewIdx(); 	// Remove existing and restart, sets projIdx; 
+		if (mp.bSynOnly || (mp.isPairInDB() && mp.isBlast(Mpair.FILE)))
+			  mp.removeSyntenyFromDB(); // isBlastAdd uses existing hits; CAS590 
+		else  mp.renewIdx(); 			// Remove existing and restart, sets projIdx; 
 		
 		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  
 		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters (CAS588 getChgClustSyn includes MUMmer)
@@ -177,7 +178,7 @@ public class DoAlignSynPair extends JFrame {
 					/** Finish **/
 					if (!bLoadBlast) { // UseBlast writes from its run
 						String alignParams = aligner.getParams();
-						mp.saveParamsToDB(alignParams);		// deletes all pair_props, then add params (used in summary)
+						mp.saveParamsToDB(alignParams);		// deletes/replace all pair_props; add pairs.params (used in summary)
 					}
 					
 					new SumFrame(dbc2, mp);

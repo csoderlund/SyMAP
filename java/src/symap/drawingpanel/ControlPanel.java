@@ -57,8 +57,7 @@ public class ControlPanel extends JPanel implements HelpListener {
 	private HistoryControl hc;
 	private ColorDialogHandler cdh;
 	
-	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar, 
-			boolean bIsCE, boolean bLoadBlast){ // CAS589 add bLoadBlast
+	public ControlPanel(DrawingPanel dp, HistoryControl hc, ColorDialogHandler cdh, HelpBar bar, boolean bIsCE){ 
 		super();
 		this.dp = dp;
 		this.hc = hc;
@@ -121,14 +120,13 @@ public class ControlPanel extends JPanel implements HelpListener {
 		addToGrid(row, gbl, gbc, shrinkButton, sp2);	
 		addToGrid(row, gbl, gbc, scaleButton, sp2);
 			
-		if (!bLoadBlast) addToGrid(row, gbl, gbc, zoomBox,    sp0);
+		addToGrid(row, gbl, gbc, zoomBox,    sp0);
 		addToGrid(row, gbl, gbc, zoomPopupButton, sp1);
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp1); // End home functions
 		
-		if (!bLoadBlast) {
-			addToGrid(row, gbl, gbc, showBox,    sp0);
-			addToGrid(row, gbl, gbc, showPopupButton, sp1); 
-		}
+		addToGrid(row, gbl, gbc, showBox,    sp0);
+		addToGrid(row, gbl, gbc, showPopupButton, sp1); 
+		
 		addToGrid(row, gbl, gbc, editColorsButton, sp2); 
 		addToGrid(row, gbl, gbc, new JSeparator(JSeparator.VERTICAL), sp2); // End edit display 
 		

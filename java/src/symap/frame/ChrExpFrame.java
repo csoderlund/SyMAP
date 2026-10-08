@@ -339,8 +339,7 @@ public class ChrExpFrame extends JFrame implements HelpListener {
 			}
 			if (!noRedo) {
 				if (symap2D != null) symap2D.clearLast();
-				boolean bLoadBlast = database.Version.isLoadBlast(tdbc2, mapper.getVisibleProjectIDs());
-				symap2D = new SyMAP2d(tdbc2, helpBar, null, bLoadBlast); // start fresh
+				symap2D = new SyMAP2d(tdbc2, helpBar, null); // start fresh
 				dp = symap2D.getDrawingPanel();
 						
 				lastRef=ref;

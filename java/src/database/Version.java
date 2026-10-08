@@ -461,9 +461,9 @@ public class Version {
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
 	}
 	/**********************************************
-	 * There is no where to shared database routines. 
+	 * There is no where to shared database routines. CAS589 add; CAS590 quit using
 	 */
-	public static boolean isLoadBlast(DBconn2 dbc2, int [] projIDs) { // CAS589 add; dotPlot.data, frame.ChrExpFrame, closeup.TextShowInfo
+	public static boolean isLoadBlast(DBconn2 dbc2, int [] projIDs) { 
 		try {
 			for (int i=0; i<projIDs.length-1; i++) {
 				for (int j=1; j<projIDs.length; j++) {

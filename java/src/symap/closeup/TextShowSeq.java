@@ -1,6 +1,5 @@
 package symap.closeup;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -9,8 +8,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Vector;
 
 import javax.swing.JRadioButton;
@@ -24,9 +21,9 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import symap.Globals;
 import symap.drawingpanel.DrawingPanel;
 import symap.mapper.HitData;
-import symap.sequence.Annotation;
 import symap.sequence.Sequence;
 import util.ErrorReport;
 import util.Jcomp;
@@ -34,11 +31,11 @@ import util.Jcomp;
 /*****************************************************
  * 2D Show Seq Options pull-down; called when sequence is selected
  * Uses specialized displayInfoMonoSpace for display
+ * CAS590 removed buttons that were not being used
  */
 public class TextShowSeq extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private final int INC=80;
-	private final boolean bGene=false; // wait until next release - needs some work
 	
 	private AlignPool alignPool;
 	private DrawingPanel drawPanel;
@@ -50,11 +47,10 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	private String type="";
 	
 	private Vector <HitData> hitList;
-	private Vector<Annotation> geneList;
 	
 	private JButton okButton, cancelButton;
-	private JRadioButton exonButton, transExonButton, geneButton;
-	private JRadioButton hitButton, revHitButton, transHitButton, fullHitButton,  regionButton;
+	
+	private JRadioButton hitButton, revHitButton, fullHitButton,  regionButton;
 	
 	public TextShowSeq (DrawingPanel dp, Sequence sequence, String project, 
 			int grpID, int start, int end, boolean isQuery) 
@@ -72,21 +68,13 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		this.grpID = grpID;
 		this.isQuery = isQuery;
 		
-		hitButton = 	Jcomp.createRadio("Subhits", "Show separate subhits"); 		// CAS576 add tip; change label
+		hitButton = 	Jcomp.createRadio("Subhits", "Show separate subhits"); 		
 		revHitButton = 	Jcomp.createRadio("Reverse", "Show reversed subhits"); 		
 		fullHitButton = Jcomp.createRadio("Full Hit", "Show from start to end of the clustered hit"); 			
 		regionButton = 	Jcomp.createRadio("Region", "Show the selected sequence"); 			
-		// these are not working...
-		transHitButton = new JRadioButton("Translated Hit");	transHitButton.setBackground(Color.white);
-		geneButton = 	new JRadioButton("Gene"); 				geneButton.setBackground(Color.white);
-		exonButton = 	new JRadioButton("Exon"); 				exonButton.setBackground(Color.white);
-		transExonButton = new JRadioButton("Translated Exon"); 	transExonButton.setBackground(Color.white);
 		
 		ButtonGroup group = new ButtonGroup();
-		group.add(hitButton); 	 group.add(transHitButton);	
-		group.add(revHitButton); group.add(fullHitButton);
-		group.add(regionButton); group.add(geneButton);		
-		group.add(exonButton);	 group.add(transExonButton);
+		group.add(hitButton); 	group.add(revHitButton); group.add(fullHitButton); group.add(regionButton); 	
 		
 		JPanel buttonPanel = new JPanel();
 		okButton = Jcomp.createButton("Show", "Show Sequence");
@@ -110,12 +98,6 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		addToGrid(cp,gbl,gbc,fullHitButton, 1);
 		addToGrid(cp,gbl,gbc,regionButton, n);
 		
-		if (bGene) {
-			//addToGrid(cp,gbl,gbc,transHitButton, 2);
-			addToGrid(cp,gbl,gbc,exonButton,  1);  
-			addToGrid(cp,gbl,gbc,transExonButton,  n);
-			addToGrid(cp,gbl,gbc,geneButton, n);
-		}
 		addToGrid(cp,gbl,gbc,new JSeparator(),n);
 		addToGrid(cp,gbl,gbc,buttonPanel,n);
 		hitButton.setSelected(true);
@@ -134,15 +116,19 @@ public class TextShowSeq extends JDialog implements ActionListener {
 	// if no genes in region, disable gene/exon. If no hits in region, disable hit/full hit.
 	private void init() {
 		hitList = drawPanel.getHitsInRange(seqObj,rStart,rEnd);
-		geneList = seqObj.getAnnoGene(rStart, rEnd); // EXON_INT if select Exon
-		if (hitList.size()==0) {
-			hitButton.setEnabled(false);      revHitButton.setEnabled(false);
-			transHitButton.setEnabled(false); fullHitButton.setEnabled(false);
-			regionButton.setSelected(true);
+		
+		boolean bLoadBlast=false;	// CAS590
+		for (HitData hd : hitList) {
+			if (hd.getHtype().startsWith(Globals.blastHit)) {
+				bLoadBlast = true;
+				break;
+			}
 		}
-	
-		if (geneList.size()==0) {
-			geneButton.setEnabled(false); exonButton.setEnabled(false); transExonButton.setEnabled(false);
+		if (hitList.size()==0 || bLoadBlast) {
+			hitButton.setEnabled(false);      
+			revHitButton.setEnabled(false);
+			fullHitButton.setEnabled(false);
+			regionButton.setSelected(true);
 		}
 	}
 	private void addToGrid(Container c, GridBagLayout gbl, GridBagConstraints gbc, Component comp, int i) {
@@ -168,11 +154,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 		else if (revHitButton.isSelected()) 	seqs = showHits(true);
 		else if (fullHitButton.isSelected()) 	seqs = showFullHits();
 		else if (regionButton.isSelected())   	seqs = showRegion();
-		
-		else if (transHitButton.isSelected())	seqs = showTransHits();
-		else if (geneButton.isSelected()) 		seqs = showGenes();
-		else if (exonButton.isSelected()) 		seqs = showSepExons();
-		else if (transExonButton.isSelected()) 	seqs = showExons(true);
+	
 		if (seqs==null) return;
 		
 		// Create formated line
@@ -242,126 +224,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 			
 		} catch (Exception e) {ErrorReport.print(e, "show full hit region"); return null;}
 	}
-	//Translated hits (best frame? or all frames?)
-	private Vector <SeqData> showTransHits() {
-		try {
-			type="Translated hits";
-			
-			return alignPool.getHitSequence(hitList, grpID, isQuery, false); // TODO translated
-			
-		} catch (Exception e) {ErrorReport.print(e, "show gene"); return null;}
-	}
-	// Full gene sequence
-	private Vector <SeqData> showGenes() {
-	try {
-		type = "Gene";
-		Vector <SeqData> seqs = new Vector <SeqData>();
-		int s,e; 
-		for (Annotation ad : geneList) {
-			s = ad.getStart();
-			e = ad.getEnd();
-			
-			String seq = alignPool.loadPseudoSeq(s + ":" + e, grpID);
-			
-			String title = ad.getTag() + " " + SeqData.coordsStr(s, e);
-			SeqData sd = new SeqData(seq, ' ', title);
-			seqs.add(sd);
-		}
-		
-		return seqs;
-	} catch (Exception e) {ErrorReport.print(e, "show gene"); return null;}
-	}
 	
-	// concatenated exons
-	private Vector <SeqData> showExons(boolean bTrans) {
-		try {
-			type = "Exons";
-			int geneIdx = seqObj.getAnnoGene(rStart, rEnd).get(0).getAnnoIdx(); 
-			Vector<Annotation> exonList = seqObj.getAnnoExon(geneIdx);
-			Annotation [] annoArr = new Annotation [exonList.size()];
-			for (int i=0; i<exonList.size(); i++) annoArr[i] = exonList.get(i);
-			Comparator <Annotation> comp = Annotation.getExonStartComparator();
-			Arrays.sort(annoArr, comp);
-			
-			Vector <SeqData> seqs = new Vector <SeqData>(exonList.size());
-			int last_gene_idx = -1, s, e, farS=Integer.MAX_VALUE, farE=0;
-			boolean isPos=true;
-			String concatExon="", geneTag="";
-			
-			for (Annotation ad : annoArr) {
-				if (last_gene_idx!=ad.getGeneIdx()) {
-					if (last_gene_idx != -1) {
-						String title = geneTag + " " + SeqData.coordsStr(farS, farE);
-						if (bTrans) concatExon = SeqData.translate(concatExon);
-						SeqData sd = new SeqData(concatExon, ' ', title);
-						seqs.add(sd);
-						
-						farS=Integer.MAX_VALUE; farE=0;
-						concatExon="";
-					}
-					
-					last_gene_idx = ad.getGeneIdx();
-					for (Annotation gd : geneList) {
-						if (last_gene_idx==gd.getAnnoIdx()) {
-							geneTag = gd.getTag();
-							isPos = gd.isStrandPos();
-						}
-					}
-				}
-				s = ad.getStart(); e = ad.getEnd();
-				String exon = alignPool.loadPseudoSeq(s + ":" + e, grpID);
-				if (!isPos) exon = SeqData.revComplement(exon);
-				concatExon +=  exon;
-				
-				farS = Math.min(farS, s); farE = Math.max(farE, e);	
-			}
-			// process last one
-			String title = geneTag + " " + SeqData.coordsStr(farS, farE);
-			if (bTrans) concatExon = SeqData.translate(concatExon);
-			SeqData sd = new SeqData(concatExon, ' ', title);
-			seqs.add(sd);
-			
-			return seqs;
-		} catch (Exception e) {ErrorReport.print(e, "show exon"); return null;}
-	}
-	// separate exons
-	private Vector <SeqData> showSepExons() {
-		try {
-			type = "Exons";
-			int geneIdx = seqObj.getAnnoGene(rStart, rEnd).get(0).getAnnoIdx(); 
-			Vector<Annotation> exonList = seqObj.getAnnoExon(geneIdx);
-			Annotation [] annoArr = new Annotation [exonList.size()];
-			for (int i=0; i<exonList.size(); i++) annoArr[i] = exonList.get(i);
-			Comparator <Annotation> comp = Annotation.getExonStartComparator();
-			Arrays.sort(annoArr, comp);
-			
-			Vector <SeqData> seqs = new Vector <SeqData>(exonList.size());
-			int last_gene_idx = -1, s, e;
-			boolean isPos=true;
-			String geneTag="", exon="";
-			int cnt=1;
-			
-			for (Annotation ad : annoArr) {
-				if (last_gene_idx!=ad.getGeneIdx()) {
-					last_gene_idx = ad.getGeneIdx();
-					for (Annotation gd : geneList) {
-						if (last_gene_idx==gd.getAnnoIdx()) {
-							geneTag = gd.getTag();
-							isPos = gd.isStrandPos();
-						}
-					}
-				}
-				s = ad.getStart(); e = ad.getEnd();
-				exon = alignPool.loadPseudoSeq(s + ":" + e, grpID);
-				if (isPos) exon = SeqData.revComplement(exon);
-				SeqData sd = new SeqData(exon, ' ', geneTag + " " + cnt);
-				seqs.add(sd);
-				cnt++;
-			}
-		
-			return seqs;
-		} catch (Exception e) {ErrorReport.print(e, "show exon"); return null;}
-	}
 	/******************************************************
 	 * Copied from util.Utilities.displayInfoMonoSpace to specialize
 	 * Puts ok button in lower right

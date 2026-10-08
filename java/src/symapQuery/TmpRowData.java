@@ -72,6 +72,11 @@ public class TmpRowData {
 					hitSt = String.valueOf(colVal);
 					continue;
 				}
+				if (colHead.contentEquals(Q.hitType)) {	
+					String type = String.valueOf(colVal);
+					bLoadBlast = type.startsWith(Globals.blastHit);
+					continue;
+				}
 				if (colHead.contentEquals(Q.grpCol)) {	// ends with grpSz-grpN; 
 					String x = (String) colVal;
 					String [] tok = x.split(Q.GROUP);
@@ -249,4 +254,6 @@ public class TmpRowData {
 	protected int [] 	gend = {0,0};
 	
 	protected String [] geneTag = {"",""};
+	
+	protected boolean bLoadBlast=false; // CAS590 add
 }

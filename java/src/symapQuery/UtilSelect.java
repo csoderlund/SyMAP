@@ -39,10 +39,9 @@ import util.Utilities;
  */
 public class UtilSelect {
 	private TableMainPanel tPanel;
-	private boolean bLoadBlast;	// CAS589 add to disable hit sequence optios
-	protected UtilSelect(TableMainPanel tdp, boolean bLoadBlast) {
+	
+	protected UtilSelect(TableMainPanel tdp) {
 		this.tPanel = tdp;
-		this.bLoadBlast = bLoadBlast;
 	}
 	protected void msaAlign() {
 		new MsaAlign();
@@ -140,7 +139,7 @@ public class UtilSelect {
 			int grp2Idx = rd.chrIdx[1];
 			
 			// create new drawing panel; 				
-			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel, tPanel.bLoadBlast); // CAS589 add
+			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel); 
 			symap.getDrawingPanel().setTracks(2); 		
 			symap.getDrawingPanel().setHitFilter(1,hd); 
 			
@@ -239,7 +238,7 @@ public class UtilSelect {
 	 			tPanel.hitNum1 = rd[0].hitnum; tPanel.hitNum2 = rd[1].hitnum;
 				
 	 			// create new drawing panel; 
-	 			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel, bLoadBlast);
+	 			SyMAP2d symap = new SyMAP2d(tPanel.qFrame.getDBC(), tPanel);
 	 			symap.getDrawingPanel().setTracks(3); 
 	 			symap.getDrawingPanel().setHitFilter(1,hd0); // template for Mapper HfilterData, which is already created
 	 			symap.getDrawingPanel().setHitFilter(2,hd1);
@@ -367,13 +366,14 @@ public class UtilSelect {
 		catch(Exception e) {ErrorReport.print(e, "Show alignment");}			
 		}
 		private void popupHelp() {
-			String msg = "Align hit sequences";
-			msg += "\n   This option is not available if the input was Blast hits (see Summary)";
+			String msg = "Align hit sequences:";
+			msg += "\n      If ONLY Blast hits, this is not available.";
+			msg += "\n      If a mix of MUMmer and Blast, only works for MUMmer.";
 			msg += "\n   Merge overlapping seqs: When multiple rows contain the same gene, "
 				 + "\n         or overlapping hits, the hits will be merged.";
 			msg += "\n   Use gapless hits: Remove gaps between subhits. This is good when there are long gaps"
 				 + "\n         between subhits due to long introns (e.g. human genes)";
-			msg += "\nAlign gene sequence: Align the spliced transcripts. "
+			msg += "\n\nAlign gene sequence: Align the spliced transcripts. "
 				 + "\n   The selected rows must contain at least 2 unique genes.";
 			msg += "\n\nSee ? for details.\n";
 			Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
@@ -454,7 +454,7 @@ public class UtilSelect {
 			hg.add(radMerge); hg.add(radGapLess);  hg.add(radNone);
 			radMerge.setSelected(true);
 		
-			JRadioButton radHit = Jcomp.createRadio("Align hit sequences", "Align the selected hits.");
+			JRadioButton radHit = Jcomp.createRadio("Align hit sequences", "Align the selected hits for non-Bp only.");
 			radHit.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					boolean b = true;
@@ -481,25 +481,25 @@ public class UtilSelect {
 					bTrim  = chkTrim.isSelected();
 				}
 			});
-			if (bLoadBlast) {
-				radHit.setEnabled(false);radMerge.setEnabled(false); radGapLess.setEnabled(false); radNone.setEnabled(false);
-			}
+			
 			// Build page
 			page.add(Box.createVerticalStrut(5)); 	
-			page.add(radHit); 		page.add(Box.createVerticalStrut(3));
-			
-			JPanel r1 = Jcomp.createRowPanel();
-			r1.add(Box.createHorizontalStrut(15)); r1.add(radMerge);   
-			page.add(r1); page.add(Box.createVerticalStrut(3));	
-			
-			JPanel r2 = Jcomp.createRowPanel();
-			r2.add(Box.createHorizontalStrut(15)); r2.add(radGapLess);   
-			page.add(r2); page.add(Box.createVerticalStrut(3));	
-			
-			JPanel r3 = Jcomp.createRowPanel();
-			r3.add(Box.createHorizontalStrut(15)); r3.add(radNone);   
-			page.add(r3); page.add(Box.createVerticalStrut(10));	
-			
+			if (!tPanel.qFrame.bOnlyBlast) { // will show if its a mix, but not align if any selected with Bp only; CAS590
+				page.add(radHit); 		page.add(Box.createVerticalStrut(3));
+				
+				JPanel r1 = Jcomp.createRowPanel();
+				r1.add(Box.createHorizontalStrut(15)); r1.add(radMerge);   
+				page.add(r1); page.add(Box.createVerticalStrut(3));	
+				
+				JPanel r2 = Jcomp.createRowPanel();
+				r2.add(Box.createHorizontalStrut(15)); r2.add(radGapLess);   
+				page.add(r2); page.add(Box.createVerticalStrut(3));	
+				
+				JPanel r3 = Jcomp.createRowPanel();
+				r3.add(Box.createHorizontalStrut(15)); r3.add(radNone);   
+				page.add(r3); page.add(Box.createVerticalStrut(10));	
+			}
+			else {radGene.setSelected(true); bGene=true;}
 			page.add(radGene); 		page.add(Box.createVerticalStrut(3));
 			
 			page.add(new JSeparator());
@@ -570,7 +570,13 @@ public class UtilSelect {
 			int [] selRows = tPanel.theTable.getSelectedRows();
 			numRows = selRows.length;
 			TmpRowData rd = new TmpRowData(tPanel);
-		
+			for(int x=0; x<numRows; x++) {
+				if (!rd.loadRow(selRows[x])) {bSuccess=false; return;}
+				if (rd.bLoadBlast) {
+					Popup.showWarning("Selected rows contain at least one Blast hit -- cannot align.");
+					bSuccess=false; return;
+				}
+			}
 			for(int x=0; x<numRows; x++) {
 				if (!rd.loadRow(selRows[x])) {bSuccess=false; return;} // Load row data
 				String [] hitSt = rd.hitSt.split("/");
@@ -597,7 +603,13 @@ public class UtilSelect {
 			numRows = selRows.length;
 			HashMap<String, HitEnd> tagMap = new HashMap<String, HitEnd> (); 
 			TmpRowData rd = new TmpRowData(tPanel);
-			
+			for(int x=0; x<numRows; x++) {
+				if (!rd.loadRow(selRows[x])) {bSuccess=false; return;}
+				if (rd.bLoadBlast) {
+					Popup.showWarning("Selected rows contain at least one row that is a Blast hit -- cannot align.");
+					bSuccess=false; return;
+				}
+			}
 			for(int row=0; row<numRows; row++) {
 				if (!rd.loadRow(selRows[row])) {bSuccess=false; return;} // Load row data
 				String [] hitSt = rd.hitSt.split("/"); // orients of both

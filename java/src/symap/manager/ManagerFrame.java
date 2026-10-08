@@ -756,12 +756,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			boolean allDone =  (val!=null && val.contains(TBL_DONE));
 			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_BDONE) || !val.contains(TBL_QDONE)));
 			
+			// Similar to popup message in 
 			if (Constants.LOAD_BLOCKS) btnSelAlign.setText("Load Blocks"); // Hidden command line option -blk
 			else if (allDone) { 		
 				Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
 				
 				btnSelAlign.setText("Selected Redo"); 			// default
-				if (mp!=null) {									// Similar labels in PairParams
+				if (mp!=null) {									// Similar labels in PairParams and alignSelectedPair()
 					if 		(mp.bSynOnly)                        btnSelAlign.setText("Synteny Redo");
 					else if (mp.bPseudo)                         btnSelAlign.setText("Pseudo Only");
 					else if (mp.bCoSet || Constants.CoSET_ONLY)  btnSelAlign.setText("Collinear");
@@ -792,6 +793,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			btnSelBlockView.setEnabled(false);
 		}
 	}
+
 	/***********************************************************************
 	 * Database
 	**************************************************/
@@ -1156,13 +1158,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		if (!alignCheckOrderAgainst(mp)) return; // For ordering contigs
 		
-		// Compose confirm popup
-		boolean bAlignDone = isSelectedAligned();
+		// Compose confirm popup; // Similar labels in PairParams and updateEnableButtons()
+		boolean bAlignDone = isSelectedAligned(); // check, A, B
 		String msg;
-		
 		if (Constants.LOAD_BLOCKS)						msg = "Load Blocks from file\n"; // either no align or align done
 		else if (bAlignDone) {				 
-			if (mp.bSynOnly) 							msg = "Synteny" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
+			if (mp.bSynOnly) 							msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
 			else if (mp.isBlast(Mpair.FILE))			msg = "Load&Synteny\n" + mp.getChgLoad(Mpair.FILE) + "\n";
 			else if (mp.bPseudo)						msg = "Pseudo Only";
 			else if (Constants.CoSET_ONLY || mp.bCoSet) msg = "Collinear Only\n" + mp.getChgCoSet(Mpair.FILE); // flag -cs; CAS588 set in params	
@@ -1173,6 +1174,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
 			msg += "CPUs " + nCPU + ";  ";	
 		}
+		
 		if (!msg.contains("Only")) {
 			if (Constants.VERBOSE) msg += "Verbose On"; else msg += "Verbose Off";
 		}

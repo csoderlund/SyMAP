@@ -44,14 +44,11 @@ public class UtilExport extends JDialog {
 	private Vector<Mproject> projVec;
 	
 	private JRadioButton btnYes, btnID; // CAS589 add ID for FASTA
-	private boolean bLoadBlast=false;
-	
 	private int nMode = -1;  
 	    
-	protected UtilExport(TableMainPanel tdp, String title, boolean bLoadBlast) {
+	protected UtilExport(TableMainPanel tdp, String title) {
 		this.tPanel = tdp;
 		this.title = title;
-		this.bLoadBlast = bLoadBlast;
 		
 		projVec = tdp.qFrame.getProjects();
 		for (Mproject mp : projVec) projs += mp.getDisplayName() + " (" + mp.getdbAbbrev() + "); ";
@@ -95,14 +92,14 @@ public class UtilExport extends JDialog {
 		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
 		rowPanel.add(btnNo);
 		
-		JRadioButton btnFASTA = Jcomp.createRadio("All pairs hit sequences", 
+		JRadioButton btnHITS = Jcomp.createRadio("All pairs hit sequences", 
 				"Export the sequences from Hstart to Hend for both sequences of the pair");
-		btnFASTA.addActionListener(new ActionListener() {
+		btnHITS.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				nMode = ex_fa_pairs;
 			}
 		});
-		if (tPanel.isSingle || bLoadBlast) btnFASTA.setEnabled(false);
+		// if (tPanel.isSingle) btnFASTA.setEnabled(false);
    	  
 		JRadioButton btnGENES = Jcomp.createRadio("Unique spliced transcripts", 
 				"Export the spliced exons/CDS sequence of unique transcripts");
@@ -111,24 +108,10 @@ public class UtilExport extends JDialog {
 				nMode = ex_fa_genes;
 			}
 		});
-		
-		JPanel row2Panel = Jcomp.createRowPanel();
-        row2Panel.add(Box.createHorizontalStrut(15));
-        row2Panel.add(new JLabel("Header line:")); rowPanel.add(Box.createHorizontalStrut(5));
-        
-		btnID = Jcomp.createRadio("GFF ID", "Use GFF ID for header line (if exists)"); 
-	    JRadioButton btnNSy = Jcomp.createRadio("Gene#", "Use SyMAP gene# for header line"); 
-	    ButtonGroup id = new ButtonGroup();
-		id.add(btnNSy); id.add(btnID);
-		btnNSy.setSelected(true); 
-		row2Panel.add(btnNSy); row2Panel.add(Box.createHorizontalStrut(5));
-		row2Panel.add(btnID);
 			
 		ButtonGroup grp = new ButtonGroup();
-		grp.add(btnCSV);
-		grp.add(btnHTML);
-        grp.add(btnFASTA);  
-        grp.add(btnGENES);
+		grp.add(btnCSV);  grp.add(btnHTML);
+        grp.add(btnHITS); grp.add(btnGENES);
     	btnCSV.setSelected(true);
     	nMode = ex_csv;
 			
@@ -140,8 +123,22 @@ public class UtilExport extends JDialog {
         
         selectPanel.add(new JSeparator());
         selectPanel.add(new JLabel("Table FASTA")); selectPanel.add(Box.createVerticalStrut(5));
-        selectPanel.add(btnFASTA); selectPanel.add(Box.createVerticalStrut(5));
+        if (!tPanel.qFrame.bOnlyBlast) {
+        	selectPanel.add(btnHITS); selectPanel.add(Box.createVerticalStrut(5));
+        }
         selectPanel.add(btnGENES); selectPanel.add(Box.createVerticalStrut(5));
+        
+        JPanel row2Panel = Jcomp.createRowPanel();
+        row2Panel.add(Box.createHorizontalStrut(15));
+        row2Panel.add(new JLabel("Header line:")); rowPanel.add(Box.createHorizontalStrut(5));
+        
+		btnID = Jcomp.createRadio("GFF ID", "Use GFF ID for header line (if exists)"); 
+	    JRadioButton btnNSy = Jcomp.createRadio("Gene#", "Use SyMAP gene# for header line"); 
+	    ButtonGroup id = new ButtonGroup();
+		id.add(btnNSy); id.add(btnID);
+		btnNSy.setSelected(true); 
+		row2Panel.add(btnNSy); row2Panel.add(Box.createHorizontalStrut(5));
+		row2Panel.add(btnID);
         selectPanel.add(row2Panel);
         
     // buttons
@@ -172,8 +169,7 @@ public class UtilExport extends JDialog {
 		mainPanel.add(new JSeparator());
 		mainPanel.add(buttonPanel, BorderLayout.CENTER);
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		add(mainPanel);
-		
+		add(mainPanel);	
 	}
     protected int getSelection() { return nMode; }
     
@@ -304,48 +300,61 @@ public class UtilExport extends JDialog {
     protected void writeSeqPairs() {
     try {
     	int nSelRows = tPanel.theTable.getSelectedRowCount();
-    	if (nSelRows>0) {
+    	boolean reset = false;
+		if (nSelRows == 0) {
+			tPanel.theTable.selectAll();
+			reset = true;
+		}
+		else if (nSelRows>0) {
     		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
     	}
+    	
+		int [] selRows = tPanel.theTable.getSelectedRows();
+		nSelRows = selRows.length;
+		if (nSelRows>500) {
+			if (!Popup.showContinue("Export FASTA",  "Selected " + nSelRows + " row to export hit sequence. This is a slow function. \n" +
+				"It may take over a minute to export 500 rows of sequences.")) {
+				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
+				tPanel.setPanelEnabled(true);
+				return;
+			}
+		}
+		TmpRowData rd = new TmpRowData(tPanel);
+		for(int x=0; x<nSelRows; x++) {
+			if (!rd.loadRow(selRows[x])) {
+				Popup.showWarning("Internal error - cannot continue.");
+				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
+				tPanel.setPanelEnabled(true);
+				return;
+			}
+			if (rd.bLoadBlast) { // CAS590
+				Popup.showWarning("Selected rows contain at least one Blast hit\n  -- cannot export hit sequences.");
+				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
+				tPanel.setPanelEnabled(true);
+				return;
+			}
+		}
+		final boolean isReset = reset; // CAS590 moved checks before file open
     	BufferedWriter outFH = getFileHandle(ex_fa_pairs, filePrefix + "Pairs.fa", true);
 		if (outFH==null) return;
 	
     	Thread inThread = new Thread(new Runnable() {
     	public void run() {
 		try {
-			TmpRowData rd = new TmpRowData(tPanel);
 			tPanel.setPanelEnabled(false);
 			
 			DBconn2 dbc = tPanel.qPanel.getDBC(); 
 			AlignPool aPool = new AlignPool(dbc);
 			
-			boolean reset = false;
-			if(tPanel.theTable.getSelectedRowCount() == 0) {
-				tPanel.theTable.selectAll();
-				reset = true;
-			}
 			long startTime = Utilities.getNanoTime();
 			int [] selRows = tPanel.theTable.getSelectedRows();
 			int selNum = selRows.length;
-			if (selNum>500) {
-				if (!Popup.showContinue("Export FASTA",  "Selected " + selNum + " row to export hit sequence. This is a slow function. \n" +
-					"It may take over a minute to export 500 rows of sequences.")) {
-					if (reset) tPanel.theTable.getSelectionModel().clearSelection();
-					tPanel.setPanelEnabled(true);
-					return;
-				}
-			}
+			
 			int seqNum = 1, pairNum=1;
 			boolean useID = btnID.isSelected();
 				
-			// outFH.write("### " + title + " ### Subhits merged, taking overlap subhits into account; gaps=nnnnn\n");
 			for(int x=0; x<selNum; x++) {
-				if (!rd.loadRow(selRows[x])) {// CAS586 was using x, so not getting selected rows
-					outFH.close();
-					if (reset) tPanel.theTable.getSelectionModel().clearSelection();
-					tPanel.setPanelEnabled(true);
-					return;
-				}	
+				rd.loadRow(selRows[x]); 
 				for (int i=0; i<2; i++) {
 					String seq = aPool.loadSeq(rd.start[i] + ":" + rd.end[i], rd.chrIdx[i]);
 					
@@ -375,7 +384,7 @@ public class UtilExport extends JDialog {
 			Globals.rclear();
 			Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
 			
-			if(reset) tPanel.theTable.getSelectionModel().clearSelection();
+			if (isReset) tPanel.theTable.getSelectionModel().clearSelection();
 			tPanel.setPanelEnabled(true);
 			
 		} catch(Exception e) {ErrorReport.print(e, "Write fasta");}

@@ -31,8 +31,10 @@ import util.FileDir;
 public class Mpair {
 	public  static final int FILE = 0;
 	public  static final int DB = 1;
+	private static final String mummer = "MUMmer";
 	private static final String promer = "PROmer"; // Also hardcoded in PairParams - no where else
 	private static final String nucmer = "NUCmer";
+	private static final String loadPrefix = "Load";    
 	
 	// sections
 	private static final String ALIGN   = "  Align "; // space before PROmer or NUCmer
@@ -57,33 +59,49 @@ public class Mpair {
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
-	private boolean isSelf=false, isAlignNT=false; 				// CAS589 add isAlignNT
+	private boolean isSelf=false, isAlignNT=false, isOnlyBlast=false; 	// CAS589 add isAlignNT; CAS590 add isOnlyBlast
 	
 	// These must be in same order as PairParam.SYMBOLS arrays; the order isn't needed anywhere else in this file
-	private static final String [] paramKey = { // repeated in PairParams and below
-			"mindots", "strict_blocks", "same_orient", "merge_blocks",
-			"order_none", "order_proj1", "order_proj2",			
-			"concat", "mask1", "mask2", 					
+	private static final String [] paramKey = { // repeated exactly in PairParams and defaults below
+			// Alignment
+			"MUMmer", 
+			"concat", "mask1", "mask2",
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-			"number_pseudo","algo1", "algo2",
-			"topn", 
+			"Blast", 
+			// Cluster
+			"number_pseudo",
+			"algo1", "topn", 					// algo1 is default for self, order, no genes, else algo2
+			"algo2", 
 			"gene_scale", "exon_scale","len_scale","g0_scale", 
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile",
-			"CoSet", "MUMmer", "Blast"					// CAS588 add Coset params; CAS589 add blast
+			// Collinear sets	
+			"CoSet", 	// two booleans together, e.g. 1:0 
+			// synteny
+			"mindots", "strict_blocks", "same_orient", "merge_blocks",
+			// Order
+			"order_none", "order_proj1", "order_proj2",			 							
 	};
 	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular
-	private final int defStrict = 1, defAlgo = 16; // if annotated, [16]=0, [17]=1  
-	private String [] paramDef = {  
-			"7", "1", "0",	"0",        // synteny:  hits, strict, orient, merge; strict is default except for when there are many contigs
-			"1", "0", "0", 				// 	 order against: none, proj1->proj2, proj2->proj1
-			"1", "0", "0", 				// align: concat, mask1, mask2
-			"", "", "", "0", "0",		//        nucmer, promer, self, only, only
-			"0", "1", "0",				// cluster: number pseudo,  1st is algo1, 2nd is algo2
-			"2", 					    //       topn
-			"1.0", "1.0", "1.0", "1.0",	//       gene, exon, Len, G0_Len	
-			"1", "1", "1", "0", "0", 	//       EE, EI, En, II, In 
-			"0:0",						// Num (default order):Algo (default new)
-			"1", "0"					// Use MUMmer, Load Blast
+	// CHANGE these if anything is changed
+	
+	private String [] paramDef = {  	
+			"1", 						// 1 Use Mummer
+			"1", "0", "0", 				// 2-4  concat, mask1, mask2
+			"", "", "", "0", "0",		// 5-9  nucmer, promer, self, only, only
+			"0", 						// 0 Load Blast
+			//Cluster
+			"0",						// 10 number pseudo,  
+			"0",						// 11 algo1
+			"2", 					    // 12   topn
+			
+			"1",						// 13 algo2
+			"1.0", "1.0", "1.0", "1.0",	// 14-17  gene, exon, Len, G0_Len	
+			"1", "1", "1", "0", "0", 	// 18-22  EE, EI, En, II, In 
+			
+			"0:0",						// 23 Collinear  Num (default order):Algo (default new)
+			//Synteny
+			"7", "1", "0",	"0",        // 24-27 hits, strict, orient, merge; strict is default except for when there are many contigs
+			"1", "0", "0"				// order against: none, proj1->proj2, proj2->proj1
 	};
 	
 	public Mpair(DBconn2 dbc2, int pairIdx, Mproject p1, Mproject p2, boolean isReadOnly) {
@@ -96,20 +114,25 @@ public class Mpair {
 		proj2Idx = mProj2.getIdx();
 		isSelf = proj1Idx==proj2Idx;
 		
-		if (!isSelf && p1.hasGenes() && p2.hasGenes()) { 		// if annotated, algo2 is default
-			paramDef[defAlgo]="0"; paramDef[defAlgo+1]="1";
+		// Set defaults based on database
+		int defStrict=25, defAlgo1=11, defAlgo2=13; 
+		for (int i=0; i<paramKey.length; i++) {
+			if (paramKey[i].equals("algo1")) defAlgo1=i;
+			else if (paramKey[i].equals("algo2")) defAlgo2=i;
+			else if (paramKey[i].equals("strict_blocks")) defStrict=i;
 		}
-		else {
-			paramDef[defAlgo]="1"; paramDef[defAlgo+1]="0";
-		}
+		if (!isSelf && p1.hasGenes() && p2.hasGenes()) 	{paramDef[defAlgo1]="0"; paramDef[defAlgo2]="1";}
+		else 											{paramDef[defAlgo1]="1"; paramDef[defAlgo2]="0";}
+		
 		if (p1.getNumDraft()>25 || p2.getNumDraft()>25) {		// strict is not good with many small contigs, i.e. ordering
 			paramDef[defStrict] = "0"; 
 		}
-		String x = Constants.orderDelim; 						// ..	also does not work welll with ordered contigs		
-		if ((mProj1.getDBName().contains(x) || mProj2.getDBName().contains(x))) {
+		String o = Constants.orderDelim; 						// ..	also does not work well with ordered contigs		
+		if ((mProj1.getDBName().contains(o) || mProj2.getDBName().contains(o))) {
 			paramDef[defStrict] = "0"; 
 		}
 		
+		// Finish params
 		resultDir = "./" + Constants.getNameResultsDir(p1.strDBName, p2.strDBName);
 		
 		makeParams();
@@ -130,7 +153,49 @@ public class Mpair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "check align/blast directories");  }
 	}
+	protected void setHasBlast() {
+		String name = Utils.getBlastFileList(resultDir);
+	    hasBlast = (name!=null);
+	}
 	/************************************************************************************/
+	// Summary: The folllowing lines can be in dbParam
+	// -MUMmer files 05-Oct-26 08:11   CPUs: 12
+	//    Align PROmer
+	// -Use MUMmer
+	//    Align PROmer
+	// -Load
+	// CHANGE WITH CAUTION: This is checked later for the strings PROmer, MUMmer, NUCmer, Load
+	public String getParamsForSum(String dbParams) {
+		String fullmsg="";
+		if (dbParams!=null && !dbParams.isBlank()) {
+			if (dbParams.contains(mummer)) { // Alignment params are on dbParams
+				String cmsg = getChgCluster(DB);		
+				
+				if (dbParams.contains("\n")) { // take it apart to put cluster under mummer
+					String [] tok = dbParams.split("\n");
+					
+					int load=tok.length+1;
+					for (int i=0; i<tok.length; i++) {
+						if (tok[i].startsWith(loadPrefix)) {load=i; break;}
+						fullmsg += tok[i] + "\n";
+					}
+					fullmsg += cmsg + "\n";
+					for (int i=load; i<tok.length; i++) {
+						fullmsg += tok[i] + "\n";
+					}
+				}
+				else {
+					fullmsg = dbParams + "\n"  + cmsg;
+				}
+			}
+			else fullmsg = dbParams; // Load only
+		}
+		String smsg = getChgSynteny(DB);  
+		
+		if (fullmsg.endsWith("\n")) return fullmsg + smsg;
+		else                        return fullmsg + "\n" + smsg;
+	}
+	
 	// ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgAllParams(int type) {
 		String amsg = getChgAlign(type, false);   
@@ -139,6 +204,7 @@ public class Mpair {
 		
 		return amsg + "\n" + cmsg + "\n" + smsg; // none are empty
 	}
+	
 	// ManagerFrame.alignSelectedPair popup when no align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgClustSyn(int type) { 
 		if (isNotDefault(type, "Blast")) return getChgLoad(type); // Load Blast selected
@@ -161,13 +227,15 @@ public class Mpair {
 		String msg="";
 		if (isNotDefault(type, "Blast")) { // blast selected; CAS589 
 			msg = LOAD;
-			if (!hasBlast) return msg + "\n" + spp + "NO BLAST FILE!!";
 			
-			String name = Utils.getBlastFile(resultDir);
-			if (name==null) return msg + "\n" + spp + "NO BLAST FILE!!";
+			String fname = Utils.getBlastFileList(resultDir);
+			if (fname==null) return msg + "\n" + spp + "NO BLAST FILE!!";
 			
-			if (name.contains("/")) name = name.substring(name.lastIndexOf("/"));
-			return msg + "\n" + spp + name;
+			hasBlast=true;
+			
+			msg = msg + "\n" + spp + fname;
+			if (pairIdx>0) msg += "\n" + spp + "add to existing";
+			return msg;
 		}
 			
 		if (isNotDefault(type,"concat")) 			msg = pjoin(msg, "No concat");	
@@ -318,9 +386,35 @@ public class Mpair {
 	public Mproject getProj1() {return mProj1;}
 	public Mproject getProj2() {return mProj2;}
 	
-	protected boolean isPairInDB() {return pairIdx>0;}
+	public boolean isPairInDB() {return pairIdx>0;}
 	
 	public String getResultDir() {return resultDir;}
+	
+	public boolean isOnlyBlast() { // CAS590 add
+		return isOnlyBlast;
+	}
+	
+	public boolean isBlast(int type) { // CAS589 add
+		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");
+		return x.contentEquals("1");
+	}
+	
+	public boolean isPromer(int type) {
+		String x = (type==FILE) ? fileMap.get( "promer_only") : dbMap.get("promer_only");
+		return x.contentEquals("1");
+	}
+	public String getNucmerArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "nucmer_args") : dbMap.get("nucmer_args");
+		return x;
+	}
+	public String getPromerArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "promer_args") : dbMap.get("promer_args");
+		return x;
+	}
+	public String getSelfArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
+		return x;
+	}
 	
 	public boolean isNumPseudo(int type) {
 		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
@@ -394,26 +488,7 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "nucmer_only") : dbMap.get( "nucmer_only");
 		return x.contentEquals("1");
 	}
-	public boolean isPromer(int type) {
-		String x = (type==FILE) ? fileMap.get( "promer_only") : dbMap.get("promer_only");
-		return x.contentEquals("1");
-	}
-	public String getNucmerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "nucmer_args") : dbMap.get("nucmer_args");
-		return x;
-	}
-	public String getPromerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "promer_args") : dbMap.get("promer_args");
-		return x;
-	}
-	public String getSelfArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
-		return x;
-	}
-	public boolean isBlast(int type) { // CAS589 add
-		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");
-		return x.contentEquals("1");
-	}
+	
 	public int getMinDots(int type) {
 		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
 		return Utilities.getInt(x);
@@ -465,16 +540,14 @@ public class Mpair {
 	}
 	public HashMap <String, String> getDefaults() { return defMap;}
 	
-	// ManagerFrame alignAll and alignSelected; remove existing and restart
+	// ManagerFrame.alignSelected; remove existing and restart
 	public int renewIdx() { 
 		removePairFromDB(false); // False; do not redo numHits,  interrupt does not clear it
 		
 		try { 
-			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " +
-					" VALUES('" + proj1Idx + "','" + proj2Idx + "')");
+			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " + " VALUES('" + proj1Idx + "','" + proj2Idx + "')");
 			
-			pairIdx = dbc2.getIdx("SELECT idx FROM pairs " +
-				"WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
+			pairIdx = dbc2.getIdx("SELECT idx FROM pairs " + "WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
 			
 			return pairIdx;
 		}
@@ -551,18 +624,22 @@ public class Mpair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
 	}
-	/**** called by DoAlignSynPair.run() on A&S ***/
-	public void saveParamsToDB(String params) {// params are ones not in pair_props
+	/**** called by DoAlignSynPair.run() for MUMmer and UseBlast for blast ***/
+	public void saveParamsToDB(String alignParams) {// params are ones not in pair_props
 		try {
-			if (dbc2.tableColumnExists("pairs", "params"))
-				 dbc2.tableCheckModifyColumn("pairs", "params", "text");
-			else dbc2.tableCheckAddColumn("pairs", "params", "text", null); 
-			
 			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj1Idx); 
 			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj2Idx);
 			
+			// Append to current for MUMmer + Multiple Blast load
+			String addParams = alignParams;
+			String curParams = dbc2.executeString("select params from pairs where idx=" + pairIdx);
+			if (curParams!=null && !curParams.isBlank()) {
+				if (curParams.endsWith("\n")) addParams = curParams + alignParams;
+				else                          addParams = curParams + "\n" + alignParams;
+			}
+	
 			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
-					+ "syver='" + Globals.VERSION + "', params='" + params + "'" 
+					+ "syver='" + Globals.VERSION + "', params='" + addParams + "'" 
 					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
 			
@@ -630,6 +707,7 @@ public class Mpair {
 		// set isAlignNT; CAS589 add for query
 		String params = dbc2.executeString("select params from pairs where idx=" + pairIdx);
 		if (params!=null && !params.equals("")) {
+			isOnlyBlast = !params.contains(mummer) && !params.contains(promer) && !params.contains(nucmer) ; // CAS590 for query
 			if (params.contains(promer))      {isAlignNT=false; return;}
 			else if (params.contains(nucmer)) {isAlignNT=true; return;}
 		}
@@ -643,8 +721,8 @@ public class Mpair {
 	private void makeParams() {
 		for (int i=0; i<paramKey.length; i++) {
 			defMap.put(paramKey[i],  paramDef[i]);	// never changes
-			dbMap.put(paramKey[i],   paramDef[i]);	// can changes
-			fileMap.put(paramKey[i], paramDef[i]);
+			dbMap.put(paramKey[i],   paramDef[i]);	// can change in loadFromDB
+			fileMap.put(paramKey[i], paramDef[i]);  // can change in loadFromFIle
 		}
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}

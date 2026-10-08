@@ -49,7 +49,6 @@ public class Data  {
 	private DBload dbLoad;
 	protected boolean isSelf=false; 
 	private boolean bHasLab = false; // has labName
-	private boolean bLoadBlast = false;
 	
 	// Called from DotPlotFrame; for ChrExp, called on first time its used
 	protected Data(DBconn2 dbc2, String type, boolean is2d) {
@@ -94,8 +93,6 @@ public class Data  {
 		projects = newProjects.toArray(new Project[0]);
 		isSelf = projects.length==2 && projects[0].getID()== projects[1].getID();
 	
-		bLoadBlast = database.Version.isLoadBlast(tdbc2, projIDs); // CAS589 add for 2D
-				
 		dbLoad.loadGrpsAndBlocks(projects, xGroupIDs, yGroupIDs, projProps); // needs to redone for ref
 		for (Project p : projects) 
 			maxGrps = Math.max(p.getNumGroups(), maxGrps);
@@ -138,7 +135,7 @@ public class Data  {
 		if (selectedBlock==null) return;
 		
 		// can not do multiple 2d display
-		symap = new SyMAP2d(tdbc2, null, bLoadBlast);
+		symap = new SyMAP2d(tdbc2, null);
 		symap.getDrawingPanel().setTracks(2); 
 		
 		if (selectedBlock instanceof ABlock) {
@@ -184,7 +181,7 @@ public class Data  {
 			return;
 		}
 		try { 
-			symap = new SyMAP2d(tdbc2, null, bLoadBlast);
+			symap = new SyMAP2d(tdbc2, null);
 		} catch (Exception e) {ErrorReport.print(e, "Unable to create SyMAP instance");}
 		
 		symap.getDrawingPanel().setTracks(2);

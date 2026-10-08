@@ -272,7 +272,7 @@ public class TableData implements Serializable {
     	catch (Exception e) {ErrorReport.print(e, "add Rows With Progress");}
     }
     
- // it was using iteration and copyInfo; copyInfo would not work with the self, which I never figured out why; CAS575
+ // it was using iteration and copyInfo; copyInfo would not work with the self, which I never figured out why
     protected void finalizeX() { // X so not deprecated
     	int ncol = vHeaders.size();
     	arrHeaders = new TableDataHeader[ncol];
@@ -452,7 +452,7 @@ public class TableData implements Serializable {
 				int n = Math.min(vals1.length, vals2.length);
 			
 				for (int x=0; x<n && retval == 0; x++) {
-					if (b && x==2) continue; // ignore size; cosets numbered by size CAS577
+					if (b && x==2) continue; // ignore size; cosets numbered by size 
 					
 					boolean valid = true;
 					Integer leftVal = null, rightVal = null;
@@ -558,6 +558,7 @@ public class TableData implements Serializable {
   			
   			// general
   			else if (colName.endsWith(Q.hitSt))		{colNames.add(colName); colVals.add(arrData[row][i]);}
+  			else if (colName.equals(Q.hitType))		{colNames.add(colName); colVals.add(arrData[row][i]);} // CAS590 add
   			else if (colName.equals(Q.blockCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.cosetCol)) 	{colNames.add(colName); colVals.add(arrData[row][i]);}
   			else if (colName.equals(Q.hitCol)) 		{colNames.add(colName); colVals.add(arrData[row][i]);}
@@ -569,7 +570,7 @@ public class TableData implements Serializable {
     protected String getRowData(int row) {
     	String line="";
 		for (int i=0; i<arrHeaders.length; i++) {
-			if (arrData[row][i]==null) continue; // CAS586 Singles
+			if (arrData[row][i]==null) continue; 
 			
 			String colName = arrHeaders[i].getColumnName().replace(Q.delim, Q.dash);
 			if (colName.endsWith("start") || colName.endsWith("end") || colName.endsWith("len") 
