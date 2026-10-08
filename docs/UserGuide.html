@@ -184,23 +184,34 @@ if you use SyMAP results in a paper, poster, or presentation.
 <a id="term2"></a>
 <p><i>More detailed terminology:</i>
 <table class="ty">
-	<tr><td style="white-space: nowrap;">Cluster Hit Algorithm:
+	<tr><td style="white-space: nowrap;"><span class="ttx">Hit Type<br>(htype)</span><td>(1) It can be from MUMmer, resulting
+	in a <span class="ttl">Algo1</span> or <span class="ttl">Algo1</span> <span class="ttx">Hit Type</span>.
+	<br>(2) It can be from Blastp, with a <span class="ttx">Hit Type=Bp</span>.
+
+	<tr><td style="white-space: nowrap;"><span class=ttp>Cluster MUMmer</span><br>Hit Algorithm:
 			<br><span class="ttl">Algo1</span> or <span class="ttl">Algo2</span>
-		<td>During the synteny computation, either the <span class="ttl">Algo1</span> or <span class="ttl">Algo2</span> algorithm could have
-			been selected to cluster hits.
+		<td>MUMmer hits are from genome alignments, so are relative to the genome sequences.
+		<br>During the synteny computation, either the <span class="ttl">Algo1</span> or <span class="ttl">Algo2</span>
+			cluster algorithm could have been selected.
 			<div class="hanging-indent">&bull; The original <span class="ttl">Algo1</span> is gene-aware but does not know exon-intron structure.
 			The new <span class="ttl">Algo2</span> knows exon-intron structure.
 			 See <a href="SystemHelp.html#clust" class="ext" target="_blank">System Parameters</a> for details. </div>
 			<div class="hanging-indent">&bull; The <a href="#report">Summary</a> specifies which was used.
 			There are statistics in SyMAP that have different values based on which algorithm was run.</div>
-	<tr><td><span class="ttl">Algo1</span>:
-		<br><span class="ttx">g2, g1, g0</span>
+	<tr><td>&nbsp;&nbsp;<span class="ttl">Algo1</span>: <span class="ttx">htype=</span>
+		<br>&nbsp;&nbsp;<span class="ttx">g2, g1, g0</span>
 		<td>A hit overlaps a gene on <i>both</i> sides (<span class="ttx">g2</span>), a hit overlaps a gene on <i>one</i> side (<span class="ttx">g1</span>),
 		a hit overlaps <i>no</i> genes (<span class="ttx">g0</span>). These are also written <span class="ttx">G2, G1, G0</span>.
-	<tr><td><span class="ttl">Algo2</span>:
-		<br><span class="ttx">EE, EI, En, In, nn</span>
+	<tr><td>&nbsp;&nbsp;<span class="ttl">Algo2</span>: <span class="ttx">htype=</span>
+		<br>&nbsp;&nbsp;<span class="ttx">EE, EI, En,<br>&nbsp;In, nn</span>
 		<td><span class="ttx">E</span> is exon, <span class="ttx">I</span> is intron, <span class="ttx">n</span> is intergenic. So a <span class="ttx">EI</span> is a hit that at least partially aligns to an exon of one gene and
 		an intron on the other, etc.
+
+	<tr><td>Blastp: <span class="ttx">htype=</span>
+		<br>&nbsp;&nbsp;<span class="ttx">Bp</span>
+		<td>Blast hits are from protein alignments, so are not relative to the genome sequence.
+		<br>The <span class=ttx>start</span> coordinate is relative to the genome sequence, but
+		the <span class=ttx>end</span> coordinate is not (it is  <span class=ttx>start + length</span>).
 	<tr><td><span class="ttx">Gene#</span><td>This is the SyMAP assigned number representing the order of the gene.
 	When genes overlap, they are given the same gene number with different suffixes.
 	For example, see <a href="#view2D">View a region</a>. Gene numbering starts at 1 for each chromosome.
@@ -508,6 +519,7 @@ The project name will be shown in bold italics and the projects colors will be u
 <td>The window on the left will popup when the <span class="ttl">Display</span> button is selected.
 <p>Selecting a checkbox or radio button will instantly change the display, but <span class="ttl">Save</span>
 must be selected to keep the changes when the <span class="ttp">Display</span> window is closed.
+<p>The image on the right shows one inverted block (burgandy) and one non-inverted block (blue).
 <p><td><a href="img/invert.png"><img src="img/invert.png"  alt="inverted block" style="border: 1px solid black;width: 70px"></a>
 </table>
 
@@ -1684,7 +1696,7 @@ which can produce a slightly different alignment.
 <a id="base"></a>
 <h4>Graphical Align (Show pull-down)</h4>
 <i>
-If the hits are from Blast results, alignments are turned off!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
+If the hits are from Blast results (<span class=ttx>htype=BH</span>), the graphical display will not be shown!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
 If more than 2 tracks are shown and one  of the two pairs used blast hits, the alignments are turned off for everything.
 <p>
 Check <span class="ttb">Show</span> on the <a href="#control">2D control bar</a>, then select a region of maximum 50kb,
@@ -1723,7 +1735,7 @@ occurrences have been fixed in v5.4.8, but a few will have slipped through.
 <!-- *********************************************************** -->
 <a id="btext"></a>
 <h4>Text Align (Hit popup)</h4>
-If the hits are from Blast results, alignments are turned off!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
+<i>If a hit is from Blast results (<span class=ttx>htype=BH</span>), the hit alignment is disabled!!</i>  The end of <a href="#sum">Summary</a> will state whether a blast file of hits was used.
 If more than 2 tracks are shown and one  of the two pairs used blast hits, the alignments are turned off for everything.
 <p>Hover over a hit-wire and right click, which will result in the information popup (e.g. <span class="ttt">Hit #100</span> below).
 <br>Click the <span class="ttl">Align...</span> for the <span class="ttl">Align options</span>.

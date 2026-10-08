@@ -44,20 +44,55 @@ For existing databases, there are no database or build changes since <a href="#v
 
 <h3>Summary of recent major releases</h3>
 <table>
-<tr><td><a href="#v589">v5.8.9</a><td>(30-Sept-26)<td>Use <span class="ttx">Blast Tabular file</span> for hits instead of running <span class="ttx">MUMmer</span>.
-<tr><td><a href="#v588">v5.8.8</a><td>(27-Aug-26)<td>Improved <span class="ttx">Collinear set</span> algorithm.
-First update <a href="#v556">v5.5.6</a> (14-July-24)
+<tr><td><a href="#v589">v5.9.0</a><td>(8-Oct-26)
+     <td>Load one or more <span class="ttx">Blast Tabular file</span> of hits.
+     First release <a href="#v589">v5.8.9</a> (30-Sept-26).
+<tr><td><a href="#v588">v5.8.8</a><td>(27-Aug-26)
+    <td>Improved <span class="ttx">Collinear set</span> algorithm.
+    First update <a href="#v556">v5.5.6</a> (14-July-24)
 <tr><td><a href="#v586">v5.8.6</a><td>(15-July-26)
-<td>Update <span class="ttl">xToSymap</span> to include CDSs.
-First release <a href="#v557">v5.5.7</a> (8-Aug-24).
-<tr><td><a href="#v585">v5.8.5</a><td>(1-June-26)<td>Update <span class="ttp">Linear</span> display.
-First release <a href="#v583">v5.8.3</a> (28-Apr-26).
-<tr><td><a href="#v575">v5.7.5</a><td>(15-Oct-25)<td>Self-synteny has almost complete support.
-<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)<td>Improved <span class="ttx">Synteny</span> algorithm using new <span class="ttx">Strict</span> option.
-<tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)<td>New <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo2</span>,
-which is aware of the exon-intron structure.
-<tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)<td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
+     <td>Update <span class="ttl">xToSymap</span> to include CDSs.
+     First release <a href="#v557">v5.5.7</a> (8-Aug-24).
+<tr><td><a href="#v585">v5.8.5</a><td>(1-June-26)
+    <td>Update <span class="ttp">Linear</span> display.
+    First release <a href="#v583">v5.8.3</a> (28-Apr-26).
+<tr><td><a href="#v575">v5.7.5</a><td>(15-Oct-25)
+    <td>Self-synteny has almost complete support.
+<tr><td><a href="#v572">v5.7.2</a><td>(02-Sep-25)
+    <td>Improved <span class="ttx">Synteny</span> algorithm using new <span class="ttx">Strict</span> option.
+<tr><td><a href="#v560">v5.6.0</a><td>(23-Jan-25)
+     <td>New <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo2</span>, which is aware of the exon-intron structure.
+<tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)
+    <td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
 </table>
+
+<a id="v590"></a>
+<h3>Release: v5.9.0 (8-Oct-2026)</h3>
+More support for using <span class="ttl">Blast Tabular file</span>.
+<p>
+<ul>
+<li><span class=ttp>Load Blast</span> changes: All files in
+<span class=ttx>data/seq_results/&lt;proj1&gt;_to_&lt;prot2&gt;/blast</span> will be loaded.
+<ul>
+<li>If a gene pair already has a hit, only the <span class=ttx>Hit Type</span>
+column will be change to indicate that it has a hit from a blast file. In fact, MUMmer hits can first be
+loaded, and then augmented with blast hits.
+
+<li>For multiple blast files with a hit to a given gene pair, the <span class=ttx>Hit Type</span> column
+will be <span class=ttx>Bp</span> followed by the number of times it is found in a
+Blast file, e.g. <span class=ttx>Bp2</span>.
+If there is a MUMmer hit, e.g. <span class=ttx>EE</span>, then <span class=ttx>Hit Type=EE:Bp</span>
+<li>See <a href="./LoadBlast.html" class="ext" target="_blank">Load Blast</a>.
+</ul>
+
+<p><li>The <span class=ttb>Pairs Parameters</span> now have collapsible sections.
+See <a href="./SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameters</a>.
+
+<p><li>The documentation has moved MUMmer alignments and SyMAP clustering instructions to
+<a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> webpage and the trouble-shooting information that was in this file is
+now in <a href="MUMmerHelp.html" class="ext" target="_blank">MUMmerHelp</a> webpage.
+</ul>
+
 
 <a id="v589"></a>
 <h3>Release: v5.8.9 (30-Sept-2026)</h3>
@@ -693,7 +728,7 @@ Improvements to the <span class="ttl">Project parameters</span> and <span class=
 <ul>
 <li><i>Mask genes</i>: The parameter to mask all but the genes in a genome sequence was in the <span class="ttl">Project Parameter</span>; but this feature
 occurs right before the alignment, so has been moved to the <span class="ttl">Pair Parameter</span> so it can be set per pair.
-See <a href="SystemHelp.html#mask" class="ext" target="_blank">Mask</a>.
+
 
 <li><i>Order against</i>: The parameter to order one project against another was in <span class="ttl">Project Parameter</span>; but this feature
 occurs right after the synteny computation, so has been moved to the <span class="ttl">Pair Parameter</span> so it can be set per pair.
@@ -785,7 +820,7 @@ for display of minor genes and a few other little things.
 	<li><span class="ttl">Number Pseudo</span>: A new option to number the non-annotated hit ends.
 	This will created 'pseudo genes' that will be numbered sequentially and end with a "~".
 	This is only useful in <span class="ttl">Queries</span>.
-	See <a href="SystemHelp.html#pseudo" class="ext" target="_blank">System Help</a>
+	See <a href="MUMmer.html#pseudo" class="ext" target="_blank">System Help</a>
 	and <a href="Query.html#pseudo" class="ext" target="_blank">Queries</a>.
 	<li>Small change: If '<span class="ttt">Remove alignments from disk</span>' is to be performed, it prompts the user
 	a second time to be sure.
@@ -1044,7 +1079,6 @@ but the "-wsp" remains to print the wrong strand hits.
 <li>Internal parameters are mostly set by automatic analysis of the gene models.
 The user parameters have been changed from <span class="ttx">Minimal matched bases</span> to <span class="ttx">Scale</span>,
 which is more intuitive to change, i.e. increase filters more, decrease filters less.
-See <a href="SystemHelp.html#hint" class="ext" target="_blank">Algo2 Hints</a> for tested datasets and parameter changes.
 <li>The gene overlap score (shown on the Gene popup) has been changed to be the
 overlap between the hit and the gene without subtracting gaps (same as <span class="ttl">Algo1</span>).
 <li>The changes do not change the synteny blocks very much, however,

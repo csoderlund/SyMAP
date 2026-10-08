@@ -67,7 +67,7 @@
    <tr><td>&nbsp;&nbsp;<td><u>Input files</u>
    <tr><td>&nbsp;&nbsp;<td><a href="#seqprep">Sequence</a>
     <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#seqid">Identifier (seqid)</a>
-    <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#mask">Masking for MUMmer</a>
+    <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<a href="#mask">Masking sequences</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#annot">Annotation</a>
    <tr><td>&nbsp;&nbsp;<td><a href="#dir">Location of files</a> <!-- ref# in code -->
     <tr><td>&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="#load">Load Project</a>
@@ -181,8 +181,7 @@ see <a href="#second">Secondary name</a>.
 </table>
 
 <a id="mask"></a>
-<h4>Masking for MUMmer</h4>
-<i>Masked sequence:</i>
+<h4>Masking sequence</h4>
 <ul>
 <li>SyMAP does not perform the repeat-masking so it must be done with another program.
 However, you may obtain masked sequences from NCBI or Ensembl.
@@ -196,26 +195,12 @@ to change it to hard-masked.
 but also runs a risk of concealing true hits due to inaccurate masking.
 Masking is not really necessary unless the genome is highly repetitive
 <i>and</i> those repeats are shared with other genomes being aligned.
-<p>
-<li>Occasionally, MUMmer fails aligning sequences, which can be resolved by masking the
+Occasionally, MUMmer fails aligning sequences, which can be resolved by masking the
 sequence;  the SyMAP webpage <a href="../MUMmer.html" class="ext" target="_blank">MUMmer</a> explains MUMmer
 failures and how to fix them.
+<p><li>If you will only be loading Blast tabular file(s), then it does not matter.
 </ul>
-<p>
-<i>Mask genes:</i>
-<ul>
-<li>Another masking option, which is available if you have gene
-annotation, is to mask out everything but the annotated genes. You
-can enable the <span class="ttl">Mask non-genes</span> option on the
-<a href="../SystemHelp.html#pairParams"  class="ext" target="_blank">Pair Parameter</a> window;
-turn it on <i>before</i> doing the alignments.
-<p>
-<li>This is useful if you only care about the gene synteny, you are confident in your GFF file,
-and you want very fast MUMmer computations.
-<p>
-<li>This is also useful for really large genomes, e.g. wheat is 14Gb and could only be processed
-on a Mac laptop by masking it.
-</ul>
+
 
 <!-- =================================================== -->
 <a id="annot"></a> <!-- used in SystemHelp -->

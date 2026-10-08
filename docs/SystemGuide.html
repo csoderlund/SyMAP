@@ -107,8 +107,6 @@ Major supporting docs</u>
 6. <u>General</u>
 <ul>
 <li style="margin: 0.4em 0;"><a href="#gen">How to update SyMAP with a new release</a>
-<li style="margin: 0.4em 0;"><a href="#alg">How SyMAP Works</a>
-<li style="margin: 0.4em 0;"><a href="#fpc">FPC project</a>
 <li style="margin: 0.4em 0;"><a href="#refs">References</a>
 <li style="margin: 0.4em 0;"><a href="TroubleShoot.html" class="ext" target="_blank">Trouble-shoot</a>
 </ul>
@@ -308,7 +306,7 @@ see <a href="Results.html"  class="ext" target="_blank">Tested platforms and tim
 <li><a href="LoadBlast.html" class="ext" target="_blank">Load Blast tabular file</a>:
 This is much faster and identifies more genes pairs.
 However, there is no knowledge of exon/intron alignments.
-Also, the user must  download <a href="#refs">Blast</a><sup>10</sup> or <a href="#resf">Diamond</a><sup>11</sup>
+Also, the user must  download <a href="#refs">Blast</a><sup>10</sup> or <a href="#refs">Diamond</a><sup>11</sup>
 and perform the alignments on the protein file created by SyMAP.
 </ul>
 
@@ -371,7 +369,7 @@ Each has subdirectories:
 Note that I do not have an alternative machine to try this on, but it should work. Email me
 at <span class="ttl">cas1@arizona.edu</span> if it does not.
 
-<p>See <a href="MUMmer.html#ext" class="ext" target="_blank">MUMmer Executables</a>.
+<p>See <a href="MUMmerHelp.html#ext" class="ext" target="_blank">MUMmer Executables</a>.
 On MacOS SyMAP may fail running MUMmer,  if it does, see <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 <p>As of v5.8.9, Blast<sup>10</sup> or Diamond<sup>11</sup> may be used to create a blast file for hit input
 in place of running MUMmer; these executables are not supplied.
@@ -459,7 +457,7 @@ Creating database 'symapDemo' (jdbc:mysql://localhost/symapDemo?characterEncodin
 see <a href="TroubleShoot.html#msqslow" class="ext" target="_blank">Trouble Shoot MySQL</a>.
 <p>It will also
 check that the provided external programs (e.g. MUMmer) are executable; if it shows any problems,
-see <a href="MUMmer.html#ext" class="ext" target="_blank">Executables</a>.
+see <a href="MUMmerHelp.html#ext" class="ext" target="_blank">Executables</a>.
 For MacOS, you may also need <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS externals</a>.
 
 <a id="demoseq"></a>
@@ -495,18 +493,20 @@ automatically be selected (green cell).
 <p>The MUMmer alignment takes less than 6 minutes on
 a MacOS x86_64 with 64Gb memory but could take up to 30 minutes on a slow machine.
 
-
-
 <td><a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
 <tr><td colspan="2" style="height: 40px;">&nbsp;
 
 <tr><td style="vertical-align: text-top;">
 When done, the table will have a checkmark (&#10003;), signifying that the synteny is available for viewing.
 
-<p>To speed MUMmer up, mask both sequences in <span class="ttl">Parameters</span>, e.g.
-<br><a href="img/demoMask.png"><img src="img/demoMask.png" alt="demoMask" style="border: 1px solid black; width: 350px"></a>
-<p>To avoid running MUMmer plus speed up comparisons, you can create a <a href="LoadBlast.html" class="ext" target="_blank">Blast tabular file</a> for input.
+<p>For faster alignments:
+<ul>
+<li>To speed MUMmer up, mask both sequences in <span class="ttl">Parameters</span>,
+see <a href="MUMmer.html#mask"  class="ext" target="_blank">Mask</a>.
 
+<li>To avoid running MUMmer plus speed up comparisons, you can create a
+<a href="LoadBlast.html" class="ext" target="_blank">Blast tabular file</a> for input.
+</ul>
 <td><a href="img/demoTable.png"><img src="img/demoTable.png" alt="demoTable" style="border: 1px solid black; width: 400px"></a>
 
 <tr><td colspan="2" style="height: 40px;">&nbsp;
@@ -539,8 +539,8 @@ It also show the results from <span class=ttx> Load Blast File</span>.
 	at the bottom, select <span class="ttx">draft->demBp</span> and uncheck <span class="ttx">Strict</span>.
 	Select <span class="ttx">Cluster Algo1</span>.
 <td>
-	<a href="img/parameters2c.png">
-	<img src="img/parameters2c.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
+	<a href="img/parameters2o.png">
+	<img src="img/parameters2o.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
 </table>
 <p>
 <table>
@@ -664,7 +664,7 @@ However, they will be remove if the project is removed and the user okays removi
 the top directory <span class=ttt>/data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;</span>.
 
 <p>The log files are in the <span class="ttt">/logs</span> directory, see
-<a href="MUMmer.html#log" class="ext" target="_blank">MUMmer log files</a> for more details.
+<a href="MUMmerHelp.html#log" class="ext" target="_blank">MUMmer log files</a> for more details.
 
 <!-- DRAFT ********************************************* -->
 <a id="draft2"></a>
@@ -683,8 +683,8 @@ against a closely related complete sequenced genome using the following approach
 that indicates ordering your draft against a complete sequence (e.g. draft-&gt;demBp).
 <p>Use <span class="ttl">Cluster Algo1</span> and do not use any <span class="ttl">Synteny Blocks</span> options.
 <td><td>
-	<a href="img/parameters2c.png">
-	<img src="img/parameters2c.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
+	<a href="img/parameters2o.png">
+	<img src="img/parameters2o.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
 </table>
 <p>
 <li>Run <span class="ttl">Align&Synteny</span> on the pair.
@@ -788,8 +788,6 @@ Also, see <a href="TroubleShoot.html#hang" class="ext" target="_blank">Trouble S
 <h2>6. General</h2>
 <table class="tz"><tr>
 <td><a href="#update">Update</a>
-<td><a href="#alg">How SyMAP works</a>
-<td><a href="#fpc">FPC</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <td><a href="#refs">References</a>
 <td style="text-align: right"><a href="#top">Go to top</a>
 </table>
@@ -819,85 +817,6 @@ see if there are any <span class="ttt">/scripts</span> or <span class="ttt">/ext
 </ul>
 
 The <span class="ttl">Align&Synteny</span> will use existing MUMmer files if they have not been removed.
-
-<!-- ********************************************* -->
-<a id="alg"></a>
-<h3>How SyMAP Works</h3>
-
-This section provides a brief overview of the SyMAP processing steps; for
-more, see the SyMAP published papers<sup>4,5</sup>. The processing
-has four phases:
-<div style="padding:10px 0px 0px 20px;">
-<i>Alignment:</i> <br>
-The sequences are written to disk<sup>*</sup>, with gene-masking
-if desired. In the alignment, one species is "query" and the other is
-"target".
-The query is the one with alphabetically the lesser name (e.g. A&lt;B). The query sequences
-are written into one large file, while smaller target sequences are grouped
-into larger FASTA files of size up to 60Mb, for more efficient processing
-in MUMmer.
-
-There is an option <span class="ttl">Concat</span> that if unchecked, the query sequences
-are treated the same as the target; i.e. generally there will be more sequence files to
- processed, but they will be smaller.
- See <a href="SystemHelp.html#concat" class="ext" target="_blank">Concat</a> for a description and timing results.
-<p>
-<i>Anchor Clustering and Filtering:</i><br>
-The raw anchor set consists of the hits found by MUMmer, which are filtered and clustered for input to the synteny algorithm.
-<p><u>Algorithm 1 (modified original)</u> is good for medium-to-high divergent genomes, aligning draft sequence, self-synteny,
-and genomes with little or no annotation.
-The MUMmer hits are first clustered into gene, or putative-gene hits. This is
-done by clustering the hit regions on each sequence, and then defining new "gene"
-hits which connect these regions. For example if three separate
-exons hit between two genes, they will be clustered into one "gene"
-hit having a combined score equal to the sum of the raw hit scores.
-Clustering is by gene if the hits overlap annotation, otherwise, it creates
-"candidate genes" from hits that do no overlap annotation.
-<p>The clustered "gene anchors" are then filtered using a version of
-reciprocal-best filtering which is adapted for retaining duplications and
-gene families. For each pair of genes (or putative genes) which is
-connected by a clustered anchor, the retained anchors must be among
- the top two anchors by score on both sides (top-2 allows for one
-ancestral whole-genome duplication). An anchor will also be retained if its
-score is at least 80% of that of the 2nd-best anchor on each side (this
-allows for retention of gene family anchors). These filter parameters
-may be adjusted through the <span class="ttl">Align&amp;Synteny</span>
-<a href="SystemHelp.html#pairParams" class="ext" target="_blank">Parameters</a> panel.
-
-<p><u>Algorithm 2 (exon-intron)</u> is good for low-to-high divergent genomes with good annotation.
-It directly maps hits to the exons and introns. Hits aligning to un-annotated regions are clustered separately.
-There are many more parameters for
-this approach, as the hits are filtered based on the parameter values.
-
-<p>
-<i>Synteny Block Detection:</i><br>
-After the clustered anchors are loaded into the database,  the synteny
-synteny block algorithm runs. This algorithm looks for approximately-collinear
-sequences of anchors, subject to several parameters including (A) Number
-of anchors; (B) Collinearity of the anchors; (C) Amount of "noise" in the
-surrounding region (to help reject false-positive chains). Criterion A can
-be adjusted in the <span class="ttl">Align&amp;Synteny</span> <span class="ttb">Parameters</span> panel.
-<p>
-<sup>*</sup> Note that the sequences are re-written from the database to the
-disk for three reasons: (A) To allow re-grouping for efficiency; (B) To ensure elimination
-of invalid characters; (C) To mask non-gene regions, if desired. This also ensures that
-sequences names will match those in the database, and prevents problems caused by
-moving the source sequences on disk.
-</div>
-
-<!-- ********************************************* -->
-<a id="fpc"></a>
-<h3>FPC project</h3>
-
-For working with FPC<sup>8,9</sup>, it is suggested you use release v5.0.8 from
-<a href="https://github.com/csoderlund/SyMAP/releases">SyMAP releases</a>.
-<ol>
-<li>It has the FPC demo files.
-<li>It has BLAT<sup>10</sup>  in the <span class="ttt">/ext</span> directory.
-<li>It has the tar file <span class="ttt">doc.tar.gz</span> of the documentation.
-<li>The AGCoL documentation applies to this release.
-</ol>
-If you run into any problems, please do not hesitate to contact cas1@arizona.edu.
 
 <!-- ********************************************* -->
 <!-- REFS ********************************************* -->

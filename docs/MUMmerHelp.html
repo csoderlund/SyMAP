@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>SyMAP MUMmer Help</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<!-- left side index - customize -->
+<div class="sidenav">
+<a href="https://csoderlund.github.io">
+		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
+<p class=sidetit>&nbsp;&nbsp;MUMmer Help</p>
+<p>
+<a href="#mfiles">MUMmer files</a>
+<a href="#find">Finding the problem</a>
+<a href="#mem">&nbsp;&nbsp;Out of Memory</a>
+<a href="#suffix">&nbsp;&nbsp;No suffix tree</a>
+<a href="#toobig">&nbsp;&nbsp;Input file too big</a>
+<a href="#fail2">One or more fails</a>
+<a href="#mum4">Using MUMmer4</a>
+<a href="#cmd">MUMmer from the command line</a>
+<a href="#help">Getting Help</a>
+<a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>
+<p>&nbsp;
+<a href="#top">Go to top</a>
+</div>
+
+<!-- right side header and body -->
+<div class="rightSide">
+<a id="top"></a>
+
+<div class="topnav"> <!-- header same in all pages -->
+    <br>
+	<table>
+	<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="http://www.arizona.edu">
+		<img src="./img/UA.gif" alt="UA" title="University of Arizona"  style="width: 40px; border:1px solid black"></a>
+	<td><a href="http://www.bio5.org">
+		<img src="./img/bio5.gif" alt="BIO5" title="BIO5"  style="width: 40px; border:1px solid black"></a>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="https://csoderlund.github.io/SyMAP">SyMAP<br>Home</a>&nbsp;&nbsp;
+	<td><a href="https://github.com/csoderlund/SyMAP/releases">Download</a>&nbsp;&nbsp;
+	<td><a href="./Docs.html">Docs</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./SystemGuide.html">System<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./input/index.html">Input</a>&nbsp;&nbsp;
+	<td><a href="./SystemHelp.html">Parameters</a>&nbsp;&nbsp;
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="./UserGuide.html">User<br>Guide</a>&nbsp;&nbsp;
+	<td><a href="./Query.html">Queries</a>
+	</table>
+ </div>
+
+<!-- =================== bulk of page ===================== -->
+<div class="main">
+<p>This document discusses how to deal with one or more MUMmer alignments failing.
+<br>See <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> for using MUMmer within SyMAP.
+<br>The corresponding MUMmer documentation is
+<a href="http://mummer.sourceforge.net" class="ext" target="_blank">v3</a> and
+<a href="https://mummer4.github.io" class="ext" target="_blank">v4</a>.
+<p>
+<table class="center">
+
+<tr><td style="vertical-align: text-top;" class="tx">
+	<table>
+	<tr><td><a href="#mfiles">MUMmer files</a>
+	<tr><td><a href="#find">Finding the problem</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#ext">Executables</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#log">Log files</a>
+	</table>
+<td>&nbsp;&nbsp;&nbsp;
+<td style="vertical-align: text-top;" class="tx">
+	<table>
+	<tr><td><a href="#mem">Out of Memory</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#cat">Limit CPUs and uncheck Concat</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#mask">Not-masked or Soft-masked</a>
+	<tr><td><a href="#suffix">Could not create suffix tree</a>
+	<tr><td><a href="#toobig">Input file too big</a>
+
+	</table>
+<td>&nbsp;&nbsp;&nbsp;
+<td style="vertical-align: text-top;" class="tx">
+	<table>
+<tr><td><a href="#fail2">One or more MUMmers fail</a>
+	<tr><td><a href="#mum4">Using MUMmer4</a>
+	<tr><td><a href="#cmd">MUMmer from the command line</a>
+	<tr><td>&nbsp;&nbsp;&nbsp;<a href="#example">Example</a>
+	<tr><td><a href="#mum">MUMmer parameters</a>
+	<tr><td><a href="#help">Getting Help</a>
+	</table>
+</table>
+
+<!-- =================================================== -->
+<a id="mfiles"></a>
+<h2>MUMmer files</h2>
+
+SyMAP executes MUMmer on
+<span class="ttt">&lt;species1&gt;</span> and <span class="ttt">&lt;species2&gt;</span>,
+which are the respective directories in  <span class="ttt">/data/seq</span>,
+which contain the genomic sequence files or information as to where they are.
+The resulting alignment files are in:
+<pre>
+   /data/seq_results/&lt;species1&gt;-to-&lt;species2&gt;/align
+</pre>
+For example,
+<pre>
+   data/seq
+   data/seq/demoArab
+   data/seq/demoBrap
+
+   data/seq_results/demoArab_to_demoBrap/align
+   all.done				demoArab_c1.demoBrap_f2.mum
+   demoArab_c1.demoBrap_f1.mum		demoArab_c1.demoBrap_f2.mum.done
+   demoArab_c1.demoBrap_f1.mum.done
+</pre>
+
+<p>All MUMmer files but those with the <span class="ttt">.mum</span> suffix are removed by <span class="ttp">symap</span>. If you prefer them not to be removed,
+use the "-mum" command line parameter, i.e.
+<pre> ./symap -mum</pre>
+
+<p>The log files are in the <span class="ttt">/logs/&lt;species1&gt;-to-&lt;species2&gt;</span> directory.
+
+<!-- ======================================================= -->
+<a id="find"></a>
+<h2>Finding the problem</h2>
+If the MUMmer alignment fails:
+<ul>
+<li>Check that the sequences loaded correctly using the <span class="ttb">View</span> option on the <span class="ttp">Manager</span>.
+<li>If the files loaded correctly, check the <a href="#ext">Executables</a>.
+On Mac, the executables may need to be <a href="#macos">verified</a>.
+<li>If the executables are okay, inspect the <a href="#log">MUMmer log files</a>.
+</ul>
+
+<!-- =====================   -->
+<a id="ext"></a>
+<h4>Executables</h4>
+The alignment programs are provided in the <span class="ttt">symap/ext</span> directory. There are
+64-bit executables for Linux, MacOS x86_64, and MacOS M4. SyMAP will
+select the correct directory for the machine you are running from, i.e. you
+do not need to do anything. See <a href="SystemGuide.html#ext" class="ext" target="_blank">System Guide</a> for details.
+
+<p>When SyMAP creates a database, it (1) checks the MySQL variables, and (2) checks
+that the external programs are executable. If you see a message like:
+<pre>
+  ***Error - file is not executable: ext/mummer/mac/promer
+</pre>
+Execute:
+<pre>
+  > chmod 755 ext/mummer/mac/promer
+</pre>
+You can also try it yourself by typing at the terminal:
+<pre>
+  >./ext/mummer/mac/promer
+
+    USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
+
+    Try './ext/mummer/mac/promer -h' for more information.
+</pre>
+The above shows that the promer code will execute on my MacOS. The 2nd two lines are the promer output.
+<p>
+<a id="macos"></a>
+<u>Verify executable on MacOS</u>:
+Any executable that has not been okayed by Apple results in the error message:
+<p>
+<pre>
+  Apple could not verify "prepro" is free of malware that may harm your mac...
+</pre>
+See <a href="TroubleShoot.html#macos" class="ext" target="_blank">MacOS External</a> for the fix.
+
+<a id="log"></a>
+<h4>Log files</h4>
+<p>Using <span class="ttt">p1</span> = <span class="ttt">species1</span> and <span class="ttt">p2</span> = <span class="ttt">species2</span>
+
+<pre>
+   symap_5/
+     error.log   # a SyMAP error will write its trace data into this file and list failed MUMmer
+
+     logs/
+       &lt;p1&gt;-to-&lt;p2&gt;/         # one directory per project-to-project alignment
+          &lt;p1_c1.p2_f1&gt;.log  # MUMmer terminal output - one file per MUMmer alignment
+          &lt;p1_c1.p2_f2&gt;.log  #   2nd alignment....
+          symap.log          # keeps most of the SyMAP output shown on the terminal for this A&S
+</pre>
+
+e.g. <span class="ttt">p1</span> = <span class="ttt">demoArab</span> and <span class="ttt">p2</span> = <span class="ttt">demoBrap</span>
+<pre>
+       demoArab_to_demoBrap/
+         demoArab_c1.demoBrap_f1.log  # MUMmer output directed to this file for process 1
+         demoArab_c1.demoBrap_f2.log  # MUMmer output directed to this file for process 2
+         symap.log                     # SyMAP terminal output
+</pre>
+<u>Known problems:</u> If an alignment is listed as failed in the <span class="ttt">error.log</span> file,
+the corresponding <span class="ttt">&lt;p1_c1.p2_fn&gt;.log</span> file will contain the MUMmer error
+(e.g. <a href="img/mummerLog.png">mummer log</a>).
+<p>
+<ul>
+<li>There may not be enough memory, see <a href="#mem">Memory</a>.
+<li>A chromosome sequence may be too big, see <a href="#suffix">Could not create suffix tree</a>.
+<li>The input files may be too large, see <a href="#toobig">Too big</a>.
+<li>On my 2018 MacOS x86_64 it sometimes fails, I have to reboot and then it works.
+<li>If you encounter a different problem, I would appreciate if you let me know so I can add it to this webpage.
+</ul>
+<p>
+<u>Run from the terminal:</u> If the error is not found in the log files or the error is not clear, try the following:
+Copy the command from the terminal (or log file), and paste to a terminal to execute.
+The command will look similar to the following, though it will all be on one line:
+<p>
+<pre>
+  > ext/mummer/mac/promer
+    -p data/seq_results/demoArab_to_demoBrap/align/demoArab_c1.demoBrap_f2.promer
+     data/seq_results/demoArab_to_demoBrap/tmp/demoBrap/demoBrap_f2.fa
+     data/seq_results/demoArab_to_demoBrap/tmp/demoArab/demoArab_c1.fa
+</pre>
+This shows <span class="ttt">promer</span> output directly on the terminal and provides a better description of the problem.
+
+<!-- =================================== -->
+<a id="mem"></a>
+<h2>Out of memory</h2>
+
+<table class="tz"><tr>
+<td><a href="#cat">Limit CPUs and uncheck Concat</a>
+<td><a href="#mask">Not-masked or Soft-masked</a>
+
+<td class="colrt"><a href="#top">Go to top</a>
+</table>
+<p>A MUMmer failure is typically from insufficient memory.
+
+<p>If an alignment fails immediately, and if the last line of the first <span class="ttt">&lt;alignment&gt;.log</span> file is:
+<pre>
+  1: PREPARING DATA
+</pre>
+the reason is probably that your machine does not have near enough memory as MUMmer could not even
+prepare the data.
+
+<p>Additionally, the following errors typically indicates a memory problem:
+<pre>
+  Alignment program error code: 141
+  20220512|075853|6007| ERROR: mummer and/or mgaps returned non-zero, please file a bug report
+</pre>
+or
+<pre>
+#..........................ERROR: mummer and/or mgaps returned non-zero, please file a bug report
+Alignment program error code: 1
+</pre>
+The error code will appear on the terminal and the MUMmer log file,
+but not in <span class="ttt">symap/logs/&lt;..&gt;/symap.log</span>.
+<!-- ============================================== -->
+<a id="cat"></a>
+<h4>Limit CPUs and uncheck Concat</h4>
+
+There is no straight-forward way to know if you have enough memory as it depends on the
+size and complexity of the two genomes being compared.
+If you think memory may be tight or MUMmer produced an error as shown in the above section,
+first try running again with reduced <span class="ttl">CPUs</span> and unchecked <span class="ttl">Concat</span>:
+<ol>
+<li>On the <span class="ttb">Project Manager</span> panel, limit the number of CPUs, as each
+CPU uses a considerable amount of memory (e.g. 4 CPUs could collectively use 24G of memory at once).
+See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU</a> for further information.
+<p><li>
+In the <span class="ttb">Project Parameters</span> panel, uncheck <span class="ttl">Concat</span> to reduce the
+size of the input files to MUMmer.
+See <a href="MUMmer.html#concat" class="ext" target="_blank">Concat</a> for a description of
+this option.
+</ol>
+<!-- ================================================== -->
+<a id="mask"></a>
+<h4>Not-masked or Soft-masked</h4>
+A memory problem can occur if the genome sequence is not masked or only soft-masked.
+Try either of the following:
+<ul><li>Change the sequence to hard-masked (see <a href="input/index.html#seqprep" class="ext" target="_blank">Sequence files</a>).
+<li>Set the <a href="SystemHelp.html#align2" class="ext" target="_blank">Pair Parameters</a> parameter to <span class="ttx">Mask</span>
+all sequence but the genes.
+</ul>
+
+<!-- ===================================================== -->
+<a id="suffix"></a>
+<h2>Could not create suffix tree</h2>
+SyMAP will only show that MUMmer failed. The MUMmer log file shows:
+<p><pre>
+# process 5486610 characters per dot
+./ext/mummer/mac/mummer: suffix tree construction failed: textlen=548661066 larger than maximal textlen=536870908
+ERROR: mummer and/or mgaps returned non-zero
+Alignment program error code: 1
+</pre>
+This appeared to happen because of a large chromosomes of 274,330,532 (larger than any human chromosome).
+If <span class="ttl">Concat</span> unchecked, it still happened.
+This even happened when both sequences were masked,
+e.g. the <a href="SystemHelp.html#pairParams" class="ext" target="_blank">Pair Parameter</a> of <span class="ttl">Mask</span>.
+It also happened when I downloaded the Ensembl "Hard Mask" sequence.
+<p>It fixed the problem when I used mummer4, see <a href="#mum4">Using MUMmer4</a>.
+
+<a id="toobig"></a>
+<h2>Input file too big</h2>
+Another error that can occur is the following:
+<p><pre>
+./ext/mummer/macM4/mummer:
+ cannot open file "data/seq_results/Mus_to_Rab/align/Mus_cc.Rab_f1.promer.aaqry"
+ or file "data/seq_results/Mus_to_Rab/align/Mus_cc.Rab_f1.promer.aaqry" is empty
+</pre>
+The MUMmer temporary files will have been created, but the <span class="ttt">.aaqry</span> file is all zeros, hence,
+MUMmer could not produce the final results. This appears to happen when the input it very big.
+If this happens, deselect <span class="ttl">Concat</span>.
+
+<!-- ======================================================= -->
+<a id="fail2"></a>
+<h2>One or more MUMmers fails</h2>
+Sometimes just one or a few of the alignment processes will fail. You will see a line such as:
+
+<pre>
+  Error: Running command: /Users/cari/Workspace/symap_5/ext/mummer/mac/promer
+   -p data/seq_results/ncbi_HS_to_ncbi_XT/align/ncbi_HS_cc.ncbi_XT_f1.promer
+   data/seq_results/ncbi_HS_to_ncbi_XT/tmp/ncbi_HS/ncbi_XT_f1.fa
+   data/seq_results/ncbi_HS_to_ncbi_XT/tmp/ncbi_XT/ncbi_HS_cc.fa
+</pre>
+<p>
+<table>
+<tr>
+<td><a href="img/runDialog.png"><img src="img/runDialog.png" alt="runDialog" style="border: 1px solid black; width: 420px"></a>
+<td>
+You will see the failure on the dialog box as is
+shown on the left. The remaining processes will continue. When all processes are complete,
+you will see a "?" for the pair as shown on the below.
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="img/runResults.png"><img src="img/runResults.png" alt="runResults" style="border: 1px solid black; width: 220px"></a>
+<p>Select the "?" followed by
+<span class="ttb">Selected Pair</span> and it will complete the failed processes.
+</table>
+
+<p><u>Complete alignment</u>:
+If SyMAP completed the alignment, e.g. the <span class="ttt">/align</span> directory
+will have the following files:
+<p><pre>
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 all.done
+-rw-r--r--@ 1 cari  staff   1.2M Apr 10 10:28 ncbi_HS_cc.ncbi_XT_f1.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:28 ncbi_HS_cc.ncbi_XT_f1.mum.done
+-rw-r--r--@ 1 cari  staff   541K Apr 10 10:27 ncbi_HS_cc.ncbi_XT_f2.mum
+-rw-r--r--@ 1 cari  staff     0B Apr 10 10:27 ncbi_HS_cc.ncbi_XT_f2.mum.done
+</pre>
+<ol>
+<li>The <span class="ttt">all.done</span> indicates that all alignments have completed.
+<li>If <span class="ttt">all.done</span> does not exist, SyMAP will perform any alignments that do NOT have a corresponding <span class="ttt">mum.done</span>.
+If the <span class="ttl">Concat</span> setting has been switched between the previous and current run, this will not work correctly.
+<li>If the user supplied the alignments (<a href="MUMmerHelp.html#cmd">Supply MUMmer files</a>),
+there may not be <span class="ttt">mum.done</span> files but there should be an <span class="ttt">all.done</span>, so it is assumed they are all done.
+</ol>
+
+<!-- ====================================================== -->
+<a id="mum4"></a>
+<h2>Using MUMmer4</h2>
+
+Sometimes when MUMmer v3 fails, MUMmer v4 will work, e.g. see <a href="#suffix">Could not create suffix tree</a>.
+<p>MUMmer4 is included in SyMAP package with a fix to <span class="ttt">promer.pl</span> to work with symap.
+<p>
+Enter the <span class="ttt">ext/mummer4</span> directory and follow the instructions in the README. You will
+need <span class="ttt">gcc</span> installed. For more information, see <a href="https://mummer4.github.io/install/install.html" class="ext" target="_blank">mummer4 install</a>.
+<p>The following is an example of the steps:
+<p>1. Compile MUMmer
+<pre>
+  cd symap_5/ext/mummer4
+  pwd                 # my pwd is /Users/cari/Workspace/symap_5/ext/mummer4
+  cd mummer-4.0.0rc1
+  ./configure --prefix=/Users/cari/Workspace/symap_5/ext/mummer4/m4  # your pwd followed by /m4
+  make
+  make install
+</pre>
+<p>
+<p>2. Edit <span class="ttt">symap.config</span> to set the mummer path, e.g.
+<pre>
+  mummer_path = /Users/cari/Workspace/symap/ext/mummer4/m4
+</pre>
+
+<!-- ================================================ -->
+<a id="cmd"></a>
+<h2>Running MUMmer from the command line</h2>
+
+If you need to run MUMmer using the terminal command line from some other machine, do the following:
+<ol>
+<li><u>The naming of your files and their order into MUMmer is VERY important.</u> Everything will mess up
+if this is done wrong!
+<ul>
+<li>It uses the <span class="ttx">Directory</span> name of the two projects in the <span class="ttt">data/seq</span> directory.
+<li>Say the projects are in <span class="ttt">data/seq/arab</span> and <span class="ttt">data/seq/brap</span>.
+<li>The directory name <span class="ttt">arab</span>
+is <i>alphanumerically less</i> than <span class="ttt">brap</span>, so it is <span class="ttt">proj1</span> and <span class="ttt">brap</span> is <span class="ttt">proj2</span>.
+</ul>
+<p>
+<li>Create a directory <span class="ttt">data/seq_results/&lt;proj1-to-proj2&gt;/align</span>.
+<p>
+<li>If your chromosomes are large, split the sequence file into chromosome files using <a href="input/index.html#sp" class="ext" target="_blank">xToSymap</a>.
+<br>Run MUMmer on each chromosome file for <span class="ttt">proj2</span> against each chromosome file of <span class="ttt">proj1</span>.
+
+<p>
+<li>Running MUMmer: The query must be alphanumerically less than reference. For the <span class="ttt">promer</span> command:
+<pre>
+USAGE: promer  [options]  &lt;Reference&gt;  &lt;Query&gt;
+e.g.   promer proj2 proj1
+</pre>
+<p>
+See the commands for the <b>Example</b> below. Replace the demo names with your project/chromosome names.
+If you have many chromosome pairs to process,
+put them in a script, e.g. <a href="input/logs/mummer.html">demo script</a>.
+Then execute the script from the main symap directory.
+
+<p>To view the MUMmer parameters, see <a href="#mum">MUMmer parameters</a>.
+	<ul>
+	<li>Promer: The output of promer is input to "show-coords -dlkT".
+	<li>Nucmer: The output of nucmer is input to "show-coords -dlT".
+	</ul>
+<p>
+<li>Result files:
+<ul>
+<li>The result files must have suffix ".mum"
+<p>
+<li>The ".mum" files must be in the directory <span class="ttt">data/seq_results/&lt;proj1-to-proj2&gt;/align</span>.
+<p>
+<li>In the <span class="ttt">&lt;proj1-to-proj2&gt;/align</span> directory, execute:
+<span class="ttt">touch all.done</span>
+<br>This creates a file, which indicates to SyMAP that the alignments are done and to process
+the files in the directory ending with ".mum".
+</ul>
+<br>
+<li>When you run <span class="ttb">Selected Pair</span>, SyMAP will recognize the files and use them to build the synteny blocks.
+</ol>
+
+<a id="example"></a>
+<h3>Example</h3>
+This example will use MUMmer for the loaded projects <span class="ttt">demoArab</span> and <span class="ttt">demoBrap</span>.
+<br>If you want to try this and you have already run the demo, remove the synteny results
+from the database using the <span class="ttp">symap</span>
+<span class="ttb">Clear Pair</span> along with the directory <span class="ttt">data/seq_results/demoArab_to_demoBrap</span>.
+
+<p>Input:
+<ul>
+<li>Project <span class="ttt">demoArab</span> has file <span class="ttt">genomic.fa</span> (containing 2 chromosomes).
+<li>Project <span class="ttt">demoBrap</span> has files <span class="ttt">chr1.seq.gz</span> and <span class="ttt">chr3.seq</span>.
+<li>Note that <span class="ttt">demoArab</span> is alphanumerically less than <span class="ttt">demoBrap</span>.
+</ul>
+<p>The commands are as follows:
+<p>
+<pre>
+   gunzip data/seq/demoBrap/sequence/chr1.seq.gz  # MUMmer does not process zipped files
+   cd data/seq_results
+   mkdir demoArab_to_demoBrap
+   mkdir demoArab_to_demoBrap/align
+   touch demoArab_to_demoBrap/align/all.done
+
+   # from symap directory, execute the following (the indented line are part of the previous line)
+   ext/mummer/mac/promer  -p data/seq_results/demoArab_to_demoBrap/align/results.promer
+         data/seq/demoBrap/sequence/chr1.seq data/seq/demoArab/sequence/genomic.fa
+   ext/mummer/mac/show-coords
+        -dlkTH data/seq_results/demoArab_to_demoBrap/align/results.promer.delta
+         &gt;data/seq_results/demoArab_to_demoBrap/align/seq1chr1.mum
+</pre>
+See <a href="input/logs/mummer.html">script</a> for the full set of MUMmer commands to process the demo sequence data.
+<br>It is easiest to run the demo by copying the contents of the script
+into a file (e.g. <span class="ttt">./symap/demo.txt</span>),
+<br>then from the <span class="ttt">symap</span> directory, execute it (e.g. <span class="ttt">sh demo.txt</span>).
+
+<p>When <span class="ttt">./symap</span> is started, select <span class="ttt">demoArab</span> and <span class="ttt">demoBrap</span>.
+There will be a "A" in their cell; select it followed by
+<span class="ttb">Selected Pair</span> and it will load the alignments and compute the synteny.
+
+<p>This demo has been fully tested with <span class="ttp">symap</span> v5.7.9.
+
+<!-- ========================================================== -->
+<a id="mum"></a>
+<h2>MUMmer parameters</h2>
+
+When setting parameters for MUMmer in
+<a href="SystemHelp.html#pairParams" target="_blank" class="ext">pairs parameters</a>,
+they are <b>NOT</b> checked for correctness.
+<p>
+To see the parameters for the default MUMmer V3 on MacOS, from the <span class="ttt">symap</span> directory:
+<pre>
+./ext/mummer/mac/mummer -h
+./ext/mummer/mac/promer -h
+./ext/mummer/mac/nucmer -h
+</pre>
+To see the parameters for the default MUMmer V3 on Linux:
+<pre>
+./ext/mummer/linux/mummer -h
+./ext/mummer/linux/promer -h
+./ext/mummer/linux/nucmer -h
+</pre>
+
+If  you compiled V4 in the /ext directory:
+<pre>
+./ext/mummer4/m4/bin/mummer -h
+./ext/mummer4/m4/bin/promer -h
+./ext/mummer4/m4/bin/nucmer -h
+</pre>
+<p>After running MUMmer, all alignment files are removed except the ".mum" file; to prevent removal,
+<br> execute
+<span class="ttt">./symap -mum</span>.
+<!-- ============================================= -->
+<a id="help"></a>
+<h2>Getting Help</h2>
+
+If none of these suggestions fix your problem,
+email <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a>
+with the following files (described in <a href="#mfiles">MUMmer files</a>):
+<ol>
+<li><span class="ttt">error.log</span>
+<li><span class="ttt">logs/&lt;species1&gt;_to_&lt;species2&gt;/symap.log</span>
+<li><span class="ttt">logs/&lt;species1&gt;_to_&lt;species2&gt;/&lt;species1_cn.species2.fm&gt;.log</span> where n and m are the input file number.
+<li>Any output to the terminal (either copy and paste into the email, or send a screen capture)
+</ol>
+For example, email the terminal output and:
+<pre>
+  symap/error.log
+  symap/logs/demoArab_to_demoBrap/symap.log
+  symap/logs/demoArab_to_demoBrap/demoArab_c1.demoBrap_f2.log
+</pre>
+<!-- END BODY -->
+<table style="width: 95%"><tr><td style="text-align: left">
+<td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
+
+<p class="trailer">  Email: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
+</div>
+</div>
+</body>
+</html>

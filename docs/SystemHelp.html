@@ -15,12 +15,16 @@
 <p>
 <a href="#build">Build database</a> <!-- # ref in code -->
 <a href="#projParams">Load Project Parameters</a>
+<a href="#display">&nbsp;&nbsp;Display</a>
+<a href="#project">&nbsp;&nbsp;Load project</a>
+<a href="#anno">&nbsp;&nbsp;Load annotation</a>
+<a href="#annot">&nbsp;&nbsp;GFF Attributes</a>
+<a href="#save1">&nbsp;&nbsp;Save</a>
 <a href="#pairParams">A&amp;S Pair Parameters</a>
 <a href="#align2">&nbsp;&nbsp;Alignment</a>
-<a href="#clust">&nbsp;&nbsp;Cluster Algo</a>
-<a href="#clParam">&nbsp;&nbsp;Cluster Params</a>
 <a href="#cosets">&nbsp;&nbsp;Collinear Sets</a>
 <a href="#syn">&nbsp;&nbsp;Synteny</a>
+<a href="#save2">&nbsp;&nbsp;Drop-down and Save</a>
 <a href="#synResults">Synteny Compare</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
@@ -68,8 +72,12 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <li style="margin: 0.4em 0;"><a href="#avail">Available syntenies</a>
 <li style="margin: 0.4em 0;"><a href="#fun">Align&amp;Synteny (A&amp;S)</a>
 <li style="margin: 0.4em 0;"><a href="#cpu">CPU and Verbose</a>
-<li style="margin: 0.4em 0;"><a href="#addInfo">Additional information</a>
 </ol>
+<u>Additional</u>
+<ul>
+<li><a href="input/index.html" class="ext" target="_blank">Input</a>
+<li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a>
+</ul>
 <td>&nbsp;&nbsp;&nbsp;
 <td style="vertical-align: text-top;">
 2. <a href="#projParams"><u>Load Project Parameters</u></a> 			<!-- in code -->
@@ -87,11 +95,15 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#pairPanel">Parameter panel</a>
 <li style="margin: 0.4em 0;"><a href="#align2">Alignment</a>		<!-- in code v546 -->
-<li style="margin: 0.4em 0;"><a href="#clust">Cluster Hits</a>		<!-- in code v546 -->
+<ul>
+<li style="margin: 0.4em 0;"><a href=MUMmer.html class="ext" target="_blank">MUMmer with SyMAP</a>
+<li style="margin: 0.4em 0;"><a href=LoadBlast.html class="ext" target="_blank">Load Blast tabular file</a>
+</ul>
+<li style="margin: 0.4em 0;"><a href="#cosets">Collinear Sets</a>	<!-- in code v590 -->
 <li style="margin: 0.4em 0;"><a href="#syn">Synteny</a>				<!-- in code v546 -->
-<li style="margin: 0.4em 0;"><a href="#save2">Save pair parameters</a>
+<li style="margin: 0.4em 0;"><a href="#save2">Drop-down and Save</a>
 </ol>
-4. <a href="#synResults"><u>Synteny comparisons</u></a>
+4. <a href="#synResults"><u>Synteny parameter comparison</u></a>
 </table>
 
 <!-- ======================================== -->
@@ -105,12 +117,11 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <td><a href="#avail">Available<br>Synteny</a>
 <td><a href="#fun">Align&amp;<br>Synteny</a>
 <td><a href="#cpu">CPU&amp;<br>Verbose</a>
-<td><a href="#addInfo">Additional<br>information</a>
 </tr>
 </table>
 
 <a id="start"></a>
-<h3>1.a Start SyMAP</h3>
+<h3>Start SyMAP</h3>
 <table class="tx"><tr>
 <td style="vertical-align: text-top;">To start SyMAP, type at the command line: <span class="ttt">./symap</span>
 <br>The <span class="ttp">Project Manager</span> will be displayed.
@@ -120,9 +131,9 @@ for the long introns of mammalian genomes, and less diverse genomes.
 
 <td>&nbsp;For the first time user of SyMAP, see:
 <ul>
+<li><a href="input/index.html" class="ext" target="_blank">Input</a> for file formats.
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
 <li><a href="SystemGuide.html#demo" class="ext" target="_blank">Demo</a> to run the demo (do not skip this step!).
-<li><a href="input/index.html" class="ext" target="_blank">Input</a> for file formats.
 <li><a href="UserGuide.html#term" class="ext" target="_blank">Terminology</a>.
 </ul>
 </table>
@@ -132,7 +143,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 580px"></a>
 
 <a id="selLoad"></a>
-<h3>1.b Load Project</h3>
+<h3>Load Project</h3>
 As shown in the <span class="ttb">Project Manager</span> above, selected projects from the left panel
 will be listed in the <span class="ttb">Selected</span> section on the right.
 The possible functions vary with the state, as listed below:
@@ -206,7 +217,7 @@ to confirm that you want this done! If it will be removing multiple alignment di
 on each one.
 
 <a id="avail"></a>
-<h3>1.c Available Syntenies</h3>
+<h3>Available Syntenies</h3>
 
 Sequence alignments are performed with <a href="./MUMmer.html" class="ext" target="_blank">MUMmer</a>
 or protein alignments with <a href="./LoadBlast.html" class="ext" target="_blank">Blast/Diamond</a>.
@@ -242,18 +253,18 @@ the buttons that can be selected are activated.
 <p>See <a href="#pairPanel">Pair Parameters</a> for additional information on the <span class="ttb">Available Syntenies</span> and codes.
 
 <a id="fun"></a>
-<h3>1.d Align&amp;Synteny</h3>
+<h3>Align&amp;Synteny</h3>
 
 <table class="ty">
-<tr><td colspan=2><i>Align&amp;Synteny (A&amp;S)</i>: Synteny usually implies <i>Cluster&amp;Synteny</i>
-as the process has 2 distinct algorithms.
+<tr><td colspan=2><i>Align&amp;Synteny (A&amp;S)</i>
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Selected Pair</span>
 		<br><span class="ttb">Selected Redo</span>
 	<td>Run (or complete) the <span class="ttl">A&amp;S</span> computation for the selected project pair.
-		<br>If the pair is already complete, the button label changes to <span class="ttb">Redo</span>, and
-		only the <span class="ttx">Cluster&amp;Synteny</span> will be rerun (see <a href="#drop">Pair Parameters</a> for some
-		variations).
+		<br>If the pair is already complete, the button label changes to <span class="ttb">Redo</span>.
+		This will rerun the <span class="ttx">Cluster&amp;Synteny</span> or run <span class="ttx">Load&amp;Synteny</span>,
+		depending on the <a href="#pairParams">Pair Parameters</a> settings.
+		<br>See the parameters's <a href="#drop">drop-down</a> for some variations.
 		<br>If you wish to rerun the MUMmer alignment, first use the <span class="ttb">Clear Pair</span> function.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Clear Pair</span>
@@ -264,38 +275,28 @@ as the process has 2 distinct algorithms.
 	from database.
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Parameters</span>
-	<td>Set the <a href="#pairParams">pair parameters</a> for the selected pair cell .
+	<td>Set the <a href="#pairParams">Pair Parameters</a> for the selected pair cell .
 </table>
 
 <p>For the display buttons, see <a href="UserGuide.html#views" class="ext" target="_blank">User Guide</a>.
 
 <a id="cpu"></a>
-<h3>1.e CPU and Verbose</h3>
+<h3>CPU and Verbose</h3>
 <span class="ttl">CPUs:</span>
-<ul><li>Enter the maximum number of CPUs to use for the alignments.
-<br>For example, if there are 8 alignments to be done,
-it will perform 4 at a time.
-<li>Alternatively, the number of CPUs may be entered in the <span class="ttt">symap.config</span> file or
-<br>using the command line argument <span class="ttt">./symap -p</span>.
-<li>Multiple CPUs are used for (1) <span class=ttp>symap</span> running MUMmer and (2) the <span class=ttp>viewSymap</span> MSA alignment in <span class=ttp>Queries</span>.
+<ul><li>Enter the maximum number of CPUs to use for the multiple CPU computations.
+<li>MUMmer uses multiple CPUs. For example, if there are 8 alignments to be done, it will perform 4 at a time.
+<li>The <span class=ttp>viewSymap</span> MSA alignment in <span class=ttp>Queries</span> uses multiple CPUs.
 </ul>
 	<p><span class="ttl">Verbose</span> checkbox:
 	<ul><li>If checked, detailed summary information is written as
 	it processes the MUMmer files. The information is written both to the terminal and the <span class="ttt">logs/&lt;proj-to-proj&gt;/symap.log</span> file.
 	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
 	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
-	<li>This can also be turned on using a command line argument <span class="ttt">./symap -v</span>.
 	</ul>
-Neither of these are saved with the <span class="ttb">Pair parameters</span> <a href="#save2">Save</a>.
+Neither of these are saved with the <span class="ttb">Pair parameters</span> <a href="#save2">Save</a>. They can be
+set a the command line using <span class=ttt>-p</span> and/or <span class=ttt>-v</span>, respectively.
 
-<a id="addInfo"></a>
-<h3>1.f Additional information</h3>
-<table class="tx">
-<tr><td><a href="MUMmer.html" class="ext" target="_blank">MUMmer</a><td>Resolving problems if MUMmer does not run
-<tr><td><a href="SystemGuide.html#draft2" class="ext" target="_blank">Draft</a><td>Ordering draft sequence
-<tr><td><a href="SystemGuide.html#self" class="ext" target="_blank">Self</a><td>Self-synteny
-<tr><td><a href="SystemGuide.html#cancel" class="ext" target="_blank">Cancel</a><td>Cancelling an A&amp;S
-</table>
+
 <hr>
 <!-- =================================================================-->
 <a id="projParams"></a> <!-- # ref in code -->
@@ -313,7 +314,7 @@ Neither of these are saved with the <span class="ttb">Pair parameters</span> <a 
 </table>
 
 <a id="projPanel"></a>
-<h3>2.a Parameter panel</h3>
+<h3>Project Parameter panel</h3>
 <table>
 <tr><td style="vertical-align: text-top;">
 <table>
@@ -347,7 +348,7 @@ in the converted .gff files.
 
 <!-- ================================================== -->
 <a id="display"></a>
-<h3>2.b Display</h3>
+<h3>Display parameters</h3>
 
 Most of the values in the parameter's <u>Display</u> section are shown in the <span class="ttl">Selected</span> section of the <span class="ttp">Manager</span>.
 New values take immediate effect on <span class="ttb">Save</span> and are saved in the <span class="ttt">symap_5/data/seq/&lt;project-name&gt;/params.txt</span> file.
@@ -404,7 +405,7 @@ New values take immediate effect on <span class="ttb">Save</span> and are saved 
 </table>
 
 <a id="project"></a>
-<h3>2.c Load project</h3>
+<h3>Load project parameters</h3>
 The following parameters are under the <u>Load project</u> section of the <a href="#start">parameters</a> panel.
 
 <p><span class="ttl">Group prefix</span>
@@ -459,7 +460,7 @@ select <span class="ttb">Clear Pair</span> and remove the alignment files, then 
 </ul>
 <!-- ============================================ -->
 <a id="anno"></a>
-<h3>2.d Load annotation</h3>
+<h3>Load annotation parameters</h3>
 The following parameters are under the <u>Load annotation</u> section of the <a href="#projParams">parameters</a> panel.
 
 <p><span class="ttl">Exon/CDS</span> toggle (v5.8.7 or later)
@@ -502,7 +503,7 @@ Annotation is optional but highly recommended. Default location: <span class="tt
 </ul>
 <!-- ================================================= -->
 <a id="annot"></a>
-<h3>2.e GFF Attributes</h3>
+<h4>GFF Attributes</h4>
 If <span class="ttp">xToSymap</span> was used to create the GFF file, then the attributes have already been filtered,
 and this section can probably be ignored.
 <p>
@@ -537,7 +538,7 @@ the <span class="ttt">Name=value</span> would not be part of any gene annotation
 is executed.
 <!-- ============================================================= -->
 <a id="save1"></a>
-<h3>2.f Saving project parameters</h3>
+<h3>Saving project parameters</h3>
 
 On <span class="ttb">Save</span> and before loading the project, the parameters are saved to:
 <pre>  data/seq/&lt;project-name&gt;/params.txt</pre>
@@ -557,44 +558,36 @@ Do not edit <span class="ttt">params.txt</span> with a standard editor.
 <tr>
 <td><a href="#pairPanel">Parameter<br>panel</a>&nbsp;&nbsp;&nbsp;
 <td><a href="#align2"><i>Alignment</i></a>
-<td><a href="#clust"><i>Cluster<br>Hits</i></a>
+<td><a href="#cosets"><i>Collinear<br>Sets</i></a>&nbsp;&nbsp;&nbsp;
 <td><a href="#syn"><i>Synteny</i></a>&nbsp;&nbsp;&nbsp;
-<td><a href="#save2">Save</a>
-<td><a href="#synResults">Synteny<br>results</a>
+
+<td><a href="#save2">Save</a>&nbsp;&nbsp;&nbsp;
+<td><a href="#synResults">Synteny<br>Compare</a>
 <td class="colrt"><a href="#top">Go to top</a>
 </table>
 
 <a id="pairPanel"></a>
-<h3>3.a Parameter panel</h3>
-The <a href="#avail">Available Syntenies</a> section explains the table in the lower right. The following provides
-more information in the context of the pair parameters.
-<p>
-<table>
-<tr>
-	<td>
-	The table on the right has cells that have the following completed:
-	<p><table class="ty">
-	<tr><td><i>Value</i><td><i>Alignment</i><td><i>Synteny</i>
-	<tr><td>blank<td>No<td>No
-	<tr><td><b>A</b>, <b>B</b> or<br><b>A/B</b><td>Yes<td>No
-	<tr><td>&#10004;<td>Yes<td>Yes
-	</table>
-	<td><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 500px"></a>
-</table>
+<h3>Pair Parameter panel</h3>
+The <a href="#avail">Available Syntenies</a> section explains the table in the lower right.
+<p><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 500px"></a>
 
-<table>
-<tr>
-	<td style="vertical-align: text-top;">
-	<p>&nbsp;<p>If <span class=ttl>Use MUMmer</span> is selected (see panel on right) and the cell contains an <b>A</b>,
-	alignment will not be redone. This is important because MUMmer
+<p>If a cell contains an <b>A</b>, the MUMmer alignments are complete and will
+	not be redone. This is important because MUMmer
 is very time-consuming, but the synteny computation is not
 (see <a href="Results.html#time" class="ext" target="_blank">timing results</a>); hence,
 one can make changes to the cluster or synteny parameters and re-run without redoing the alignments.
 <p>
+
 Select a pair cell in the <span class="ttb">Available Syntenies</span> table followed by the <span class="ttl">Parameters</span>
-button, which will popup the panel shown on the right.
-	<p>If a value in the pair cell exists and the parameters for a section
-	are changed, do the following:
+button, which will popup the panel shown on the lower left; click <span style="font-size: 20px">+</span> to open a section and show
+its associated parameters.
+<p><table>
+<tr>
+    <td style="vertical-align: text-top;">
+	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 300px"></a>
+	<td>&nbsp;
+	<td>
+     If a value in the pair cell exists and the parameters for a section are changed, do the following:
 
 	<table class="ty">
 		<tr><td style="white-space: nowrap;"><i>Changed Section</i><td><i>Action</i>
@@ -602,329 +595,56 @@ button, which will popup the panel shown on the right.
 		then <span class="ttb">Selected Pair</span>.
 		<tr><td><b><i>Cluster Hits</i></b> <td>Use <span class="ttb">Selected Redo</span>
 		directly; the existing alignments for the pair will be used.
+		<tr><td><b><i>Collinear Sets</i></b><td>If only collinear sets parameters are changed,
+		click the lower drop-down and select <span class="ttx">Collinear Only</span>
+		(see <a href="#drop">drop-down</a>).
 		<tr><td><b><i>Synteny</i></b> <td>If only synteny parameters are changed,
-		click the lower-left drop-down and select <span class="ttx">Synteny Only</span>
+		click the lower drop-down and select <span class="ttx">Synteny Only</span>
 		(see <a href="#drop">drop-down</a>).
 	</table>
-	<p>If the <span class="ttl">Align&amp;Synteny</span> has already been run, the last row will have an extra
-	drop-down, as shown below (see <a href="#drop">drop-down</a>):
-	<br><a href="img/parameters2last.png">
-	<img src="img/parameters2last.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
-
-	<td>&nbsp;&nbsp;&nbsp;
-	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
+	&nbsp;
 </table>
-<p>The parameters are described in the following 3 sections: <a href="#align2">Alignment</a>,
-	<a href="#clust">Cluster hits</a> and <a href="#syn">Synteny</a>.
+<p>The <span class="ttl">Align&amp;Synteny</span> drop-down shows what will be run.
+	If the alignment and synteny have been run, parameters can be changed and then
+	different actions can be selected to re-run (see <a href="#drop">drop-down</a>):
+
+<p>The parameters for each section are described below:
+<table class="tz">
+<tr>
+<td><a href="#align2"><i>Alignment</i></a>
+<td><a href="#cosets"><i>Collinear Sets</i></a>
+<td><a href="#syn"><i>Synteny</i></a>&nbsp;&nbsp;&nbsp;
+</table>
 
 <a id="align"></a>
 <a id="align2"></a> <!-- ref in code -->
-<h3>3.b Alignment</h3>
-<a id="blast"></a>
-<h4>Load Blast Hits</h4>
-If blast hits are loaded instead of running MUMmer,
+<a id="clust"></a> <!-- ref in pre-v590 code -->
+<h3><span style="font-size: 20px">+</span> Alignment</h3>
+<table style="width:90%"><tr><td>
+&bull; <span class=ttl>Use MUMmer</span>:
+MUMmer provides genome alignment, as described in <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
+<p>&bull; <span class=ttl>Load Blast files</span>: Blastp hits from a b6 tabular file can be loaded instead of running MUMmer, or to augment MUMmer results;
 see <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details.
-<br>There is no clustering step, so ignore the <i><b>Cluster Hits</b></i> section.
-
-<a id="mask"></a>
-<a id="concat"></a> <!-- this is referenced elsewhere -->
-<h4>Use MUMmer - Preparing the sequences </h4>
-<table class="ty">
-<tr><td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
-<tr><td><span class="ttl">Concat</span>
-<td>
-<span class="ttl">Concat</span> checked:
-<div class="hanging-indent">&bull;For the 1st genome, sequences are concatenated into a file as long as the file length is &lt;1G. Multiple
-files of maximum file length 1G may be created.</div>
-<div class="hanging-indent">&bull;For the 2nd genome, the same as above except the maximum file length is 60M.</div>
-<div class="hanging-indent">&bull;All files from the 1st genome are searched against all files from the 2nd genome.
-This results in fewer MUMmer alignments, which can be faster.</div>
-
-<p><span class="ttl">Concat</span> unchecked: To reduce memory usage, you can uncheck <span class="ttl">Concat</span> so that
-multiple files &lt;60M  are created for each genomes. This results in more MUMmer alignments, which can be slower.
-
-
-<p>The exception is self-synteny, where all chromosomes are written to their own file, so <span class="ttl">Concat</span> is
-not relevant.
-
-<p>See below for timing differences.
-<td>On
-
-<tr><td style="white-space: nowrap;"><span class="ttl">Mask</span> &lt;abbrev&gt;<td>Mask out all non-genic parts of the sequences before running MUMmer (gene annotation must
-be provided).
-<p>The &lt;abbrev&gt;, which is set in the <a href="#projParams">Project parameters</a> popup <span class="ttl">Abbreviation</span> parameter,
-is used to determine which sequence will be masked.
-
-<p>Both sequences may be masked, which results in <i>very fast execution</i>
-and gene-based synteny.
-
-<p>If <span class="ttl">Mask</span> is changed after <span class="ttl">A&amp;S</span>, the alignment files need to be
-removed with <span class="ttb">Clear Pair</span> and <span class="ttl">A&amp;S</span> run again.
-<td>Off
+<p><b><span style="font-size: 12px">+</span> Cluster MUMmer hits</b>
+See <a href="MUMmer.html#clust" class="ext" target="_blank">MUMmer</a> for clustering MUMmer hits.
+<td><a href="img/parameters2ab.png">
+    <img src="img/parameters2ab.png" alt="align params" style="border: 1px solid black; width: 200px"></a>
 </table>
 
-<p><span class="ttl">Concat</span>: The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
-on a MacOS using 1 CPU.
-<table>
-<tr><td><u>Concatenated</u>
-<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<td><u>Not concatenated</u>
-<tr><td>
-<pre>
-48819 hits
-  334 synteny blocks
-46319 gene hits
-38334 synteny hits
-
-Finished in 1 hour 8 minutes
-</pre>
-<td>
-<td>
-<pre>
-48846 hits
-  334 synteny blocks
-46348 gene hits
-38345 synteny hits
-
-Finished in 1 hour 35 minutes
-</pre>
-</table>
-
-<h4>MUMmer parameters</h4>
-The default MUMmer parameter seems to work fine with SyMAP, so probably do not need changing.
-<table class="ty">
-<tr>
-<td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">PROmer Args</span><sup>1</sup>
-	<td>Arguments for PROmer
-	<td>&nbsp;-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">NUCmer Args</span><sup>1</sup>
-	<td>Arguments for NUCmer
-	<td>&nbsp;-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Self Args</span><sup>2</sup>
-	<td>Arguments to use when aligning a chromosome to itself
-	<td>&nbsp;-
-<tr><td>&nbsp;&nbsp;<span class="ttl">PROmer Only</span><sup>3</sup>
-	<td>Use PROmer for all alignments
-	<td>Off
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">NUCmer Only</span><sup>3</sup>
-	<td>Use NUCmer for all alignments
-	<td>Off
-</table>
-<br><sup>1</sup>
-<small>
-<span class="green">BEWARE</span>: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
-See <a href="MUMmer.html#mum" target="_blank" class="ext">MUMmer parameters</a>.</small>
-
-<br><sup>2</sup><small>When self-alignment is performed, standard arguments are used
-when comparing different chromosomes. However, additional arguments may be desired
-when a chromosome sequence is run against itself, e.g. <span class="ttt">--nosimplify</span>.
-</small>
-<br><sup>3</sup><small> By default, PROmer is used for alignments between different
-projects, while NUCmer is used for self alignments.
-</small>
-<p>All MUMmer files but the those with the <span class="ttt">.mum</span> suffix are removed by <span class="ttp">symap</span>. If you prefer them not to be removed,
-use the "-mum" command line parameter, i.e.
-<pre> ./symap -mum</pre>
-<!-- ============================================================= -->
-<!-- ============================================================= -->
-<a id="clust"></a> <!-- ref in code -->
-<h3>3.c Cluster Hits</h3>
-	<table class="tz">
-	<tr>
-	<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
-	<td><a href="#clParam">Parameter description</a>
-	<td><a href="#pseudo">Pseudo and Piles</a>
-	<td><a href="#cosets">Collinear Sets</a>
-	<td class="colrt"><a href="#top">Go to top</a>
-	</table>
-
-<a id="a1a2"></a>
-<h4>3.c.I  Algo1 vs Algo2</h4>
-
-<table class="ty">
-<tr><td colspan="2"><span class="ttl">Algorithm 1 (modified original, abbreviated Algo1)</span>:
-<tr><td>Pros<td>This is an generic algorithm that has knowledge of genes versus intergenic hits.
-<br>It is recommended for ordering sequence contigs and when there are little or no gene annotation.
-<br>It <u>must</u> be used for self-synteny.
-<br>It has been used on 100's of genome comparisons.
-<tr><td>Cons<td>It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
-<tr><td>Parameters<td>It only has one parameter, which is easier to run but there is no control over what hits are filtered.
-
-<tr><td colspan="2"><span class="ttl">Algorithm 2 (exon-intron, abbreviated Algo2)</span>:
-<tr><td>Pros<td>This is a new algorithm with explicit knowledge of gene pairs and their exon-intron structure.
-<br>When there is good gene annotations for both genomes, this is definitely the superior algorithm.
-<br>It takes less memory.
-<tr><td>Cons<td>It does not perform self-synteny.
-<br>It does not work when a given chromosome is split over multiple MUMmer files; this will NOT happen
-when SyMAP generates the MUMmer files.
-
-<tr><td>Parameters<td>It has two set of parameters, hence, more control over results than <span class="ttl">Algo1</span>. See <a href="#hint">Hints</a>
-below the parameter explanation; the parameters generally do not need adjusting.
-</table>
-<p><span class="ttl">Algo1</span> is the default for self-synteny and if there is no annotation; else <span class="ttl">Algo2</span> is the default.
-
-<p><b>Wrong strand</b>
-The wrong strand is when all hits in a cluster are to the same strand (++/--)
-yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
-
-<p><span class="ttt">Algo1</span> includes these hits. You can view them in the <span class="ttp">Queries</span>
-where the <span class="ttx">Hit St</span> column will be different than the two gene <span class="ttx">Gst</span> columns.
-
-<p><span class="ttt">Algo2</span> does NOT include these hits. You can request to view the potential hits
-during the <span class="ttl">A&amp;S</span> by running it with the "-wsp" flag, i.e.
-<span class="ttt">   ./symap -wsp </span>.
-This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
-an overlapping gene. It is up to the user to determine what is real.
-
-<a id="hint"></a>
-<p><b>Hints about parameter settings</b>
-
-<p><u>Hint for <span class="ttx">Algo1</span></u>: Increasing the <span class="ttl">Top N</span> parameter can cause too many hits and reduce synteny.
-Decreasing it can remove more gene-pair hits.
-Hence, try <span class="ttl">Algo2</span> if you want more gene pairs.
-
-<p><u>Hint for <span class="ttx">Algo2</span></u>: On the output to the terminal (in <span class="ttl">Verbose</span> mode), if any chromosome pair shows over 10,000 hits, the
-parameters probably need to be made more stringent. Too many hits confuses the synteny algorithm, which results
-in synteny blocks not being found; it also results in very long execution time.
-<p><i>Suggestion</i>: For large genomes, experiment with the parameters on just one pair of the chromosomes.
-(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
-<p><i>I have experimented with the datasets</i>: (1) human, chimpanzee, mouse (2)
-Arabidopsis, Brassica rapa, Brassica oleracea.
-Only B. rapa to B. oleracea needed parameter adjustment: the number of G1 hits was over 200k,
-which is way more than typical;
-by increasing all parameters a small amount, this reduced to just over 100k.
-
-<!-- ==================================================== -->
-<a id="clParam"></a>
-<h4>3.c.II  Parameter description</h4>
-<table class="tx">
-<tr><td>
-<a href="img/parameters2b.png">
-<img src="img/parameters2b.png" alt="Cluster parameters" style="border: 1px solid black; width: 300px"></a>
-<td>Defaults:
-<p>
-<ul>
-<li><span class="ttl">Algorithm 1 (Algo1)</span>: If at least one project does not have annotation or it is self-synteny.
-<p>
-<li><span class="ttl">Algorithm 2 (Algo2)</span>: If both projects have annotation and it is not self-synteny.
-</ul>
-The image on the left shows the defaults for <span class="ttl">Algorithm 2</span>.
-</table>
-
-<table class="ty">
-<tr><td><i>Parameter</i><td><i>Description</i>
-<tr><td style="white-space: nowrap;"><span class="ttl">Number Pseudo</span><td>If selected, the un-annotated ends of hits will be assigned a
-pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
-
-<tr><td colspan=2><span class="ttl">Algo1 (original)</span>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Top N piles</span>
-	<td>It will retain the top N hits of a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>), as
-		well as all hits with score at least 80% of the Nth hit.
-<tr><td colspan=2><span class="ttl">Algo2 (gene-centric)</span>
-
-<tr><td>&nbsp;&nbsp;<span class="ttl">Scale</span>
-	<td>
-	<table class="ty">
-		<tr><td><i>Scale</i><td><i>Description</i>
-		<tr><td><span class="ttx">Gene</span>
-			<td>Determines the percentage of required <span class="ttx">gene</span> coverage.
-			<br>The percentage is based on N*internal-parameters.
-		<tr><td><span class="ttx">Exon</span>
-			<td>Same as above except for <span class="ttx">exon</span>.
-		<tr><td><span class="ttx">Len</span>
-			<td>For G2 and G1<sup>*</sup>, minimum size hit unless it <i>almost completely</i> covers a gene.
-			<br>The minimum is N*300bp. With default N=1.0, the minimum is 300bp.
-		<tr><td><span class="ttx">G0_Len</span>
-			<td>For G0<sup>*</sup>, minimum size hit.
-			<br>The minimum is N*1000bp. With default N=1.0, the minimum is 1000bp.
-			<br>Suggestion: increase for closely related species.
-		<tr><td colspan="2"><sup>*</sup><small>G2=gene to gene, G1=gene to non-gene, G0=non-gene to non-gene</small>
-		</table>
-	<ol>
-	<li>Increase a scale to filter out more clustered hits, decrease to filter out less.
-	<p>
-	<li>Only one end of the hit may pass the rules.
-	<p>
-	<li>The internal rules balance coverage and length for the two ends.
-	</ol>
-<tr><td>&nbsp;&nbsp;<span class="ttl">Keep piles</span>
-	<td><span class="ttl">EE</span>, <span class="ttl">EI</span>, <span class="ttl">En</span>, <span class="ttl">II</span>, <span class="ttl">In</span> (E=exon, I=intron, n=non-gene)
-		<ol>
-		<li>This ONLY applies when there is a pile of overlapping hits (<a href="#pileOfHits">Pile of Hits</a>);
-		<br>it tells the algorithm what type of cluster hits to retain if they are in a pile.
-		<p><li>Hits are filtered before pile analysis.
-		<p><li>Intergenic-intergenic pile hits, and any unchecked categories, are filtered
-		as described for <span class="ttl">Top N piles</span>.
-		</ol>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Top N piles</span>
-	<td><span class="ttl">Algo2</span> uses <span class="ttl">Algo1</span> <span class="ttl">Top N</span> parameter
-for any uncheck categories, but in a more conservative way.
-It will retain the <span class="ttl">Top N</span> hits of a piled region that have lengths within
-80% of the longest hit.
-<tr><td>Collinear Sets</td><td>See <a href="#cosets">Collinear sets</a>
-</table>
-
-<a id="pseudo"></a>
-<h4>3.c.III Pseudos and Piles</h4>
-
-<b>Pseudo genes</b>
+<a id="cosets"></a> <!-- ref in code -->
+<h3><span style="font-size: 20px">+</span> Collinear Sets</h3>
 <table><tr><td>
-The end of a hit may not overlap an annotated gene; by default, this
-will just show a <span class="ttx">Gene#</span> of 'N.~' where N is the chromosome number.
-<p>If <span class="ttl">Number Pseudo</span> is selected,
-a <i>pseudo</i> <span class="ttx">Gene#</span> will be assigned. The counts start after the annotated
-gene numbers and are suffixed by "~". For example, if the last <span class="ttx">Gene#</span> for
-Chr03 is 5550 (e.g. 3.5550.), the first pseudo gene number will be 6000 (e.g. 3.6000.~).
-
-<td><a href="img/query_pseudo.png"><img src="img/query_pseudo.png" alt="Pseudo genes" style="border: 1px solid black; width:  370px"></a>
-</table>
-<p>If <span class="ttl">A&amp;S</span> was run without numbered pseudos, go to the <span class="ttb">Pair Parameter</span> panel,
-and select <span class="ttx">Number Pseudo</span> in the lower-left <a href="#drop">drop-down</a>; only this algorithm
-will be run. <i>This cannot be undone</i>;
-you would need to re-run <span class="ttl">A&amp;S</span> with the <span class="ttb">Number Pseudo</span> unchecked to remove them.
-<p>
-<table class="ty">
-<tr><td>Pros
-<td>
-If you would like the <span class="ttl">Queries</span>
-<a href="Query.html#clhit" class="ext" target="_blank">Cluster</a>  and
-<a href="Query.html#report" class="ext" target="_blank">Report</a>
-to include un-annotated hits.
-<br>If you are exploring new candidate genes, numbered pseudos are easier to track.
-<br>If your genome is not annotated, numbered pseudos are easier to track.
-<tr><td>Cons
-<td>The <span class="ttl">Queries</span> results can be easier to view with the
-'N.~' as it is more distinct from a real <span class="ttx">Gene#</span>.
-</table>
-<br>If comparing more than 2 species, it makes the most sense to have them all numbered or not numbered (though a mix
-will work).
-
-<a id="pileOfHits"></a>
-<p><b>Piles of Hits</b>
-
-<table>
-<tr><td>The below image shows a pile of hits on the left (Cabb C5)
-that link to repetitive genes on the right (Arab Chr02). These are important to keep.
-<p>The right image shows a pile of hits in an intergenic region (Cabbage Chr03) to multiple other regions (B.rapa Chr01).
-There are MANY occurrence of repeats like this in the MUMmer file, which is why these piles
-must be filtered; if they are not, the synteny algorithm does not perform well.
-<br><a href="img/demoPileG2.png"><img src="img/demoPileG2.png" alt="Pile to repetitive gene" style="border: 1px solid black; width:  400px"></a>
-<td><a href="img/demoPileG0.png"><img src="img/demoPileG0.png" alt="Pile to intergenic" style="border: 1px solid black; width:  400px"></a>
-</table>
-
-<a id="cosets"></a>
-<h4>3.c.III Collinear Sets</h4>
 Collinear Sets is abbreviated as "CoSet" below. A description of <span class="ttx">Collinear Sets</span>
 is given in <a href="Details.html" class="ext" target="_blank">Details</a>.
+<td><a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="Collinear" style="border: 1px solid black; width:  380px"></a>
+</table>
 <p><b>Parameters</b>
 <table class="tx">
-<tr><td style="vertical-align: text-top;"><span class="ttl">By Order</span> or <br><span class="ttl">By Size</span>
+<tr><td style="vertical-align: text-top;"><span class="ttl">By Order</span> <br><span class="ttl">By Size</span>
 <td>The 1st option numbers the CoSets in descending order by the start coordinates.
-<br>&nbsp;
 <br>The 2nd option sorts CoSets by size and then numbers then in ascending order by size.
 
-<tr><td style="vertical-align: text-top;"><span class="ttl">Advanced</span> or <br><span class="ttl">Simple</span>
+<tr><td style="vertical-align: text-top;"><span class="ttl">Advanced</span> <br>&nbsp;<br><span class="ttl">Simple</span>
 <td>The 1st option uses the advanced algorithm (released v5.8.8), which tries to find collinearity
 in complex overlapped genes areas.
 <br>The 2nd option uses the original algorithm, which does not try to resolve overlapping genes.
@@ -945,12 +665,12 @@ the collinear sets (see <span class="ttl">Strict</span> below).
 </ul>
 <!-- =============================================================== -->
 <a id="syn"></a> <!-- ref in code -->
-<h3>3.d Synteny</h3>
+<h3><span style="font-size: 20px">+</span> Synteny</h3>
 
 <table class="tx">
 <tr><td>
 <a href="img/parameters2s.png">
-<img src="img/parameters2s.png" alt="Cluster parameters" style="border: 1px solid black; width: 300px"></a>
+<img src="img/parameters2s.png" alt="Cluster parameters" style="border: 1px solid black; width: 380px"></a>
 <td>The image on the left shows the defaults. The one exception is that <span class="ttl">Strict</span> is turned off
 for draft sequence.
 </table>
@@ -978,7 +698,7 @@ for draft sequence.
 <p>If the <span class="ttl">Align&amp;Synteny</span> has already been executed, and you want to try different synteny parameter,
 you may just run the synteny algorithm as described in <a href="#save2">Save</a>.
 
-<p>See <a href="#synResults">Synteny results</a> for comparison of using the different
+<p>See <a href="#synResults">Synteny parameter comparison</a> for comparison of using the different
 synteny parameters. The following is a brief comparison of three images of the same regions
 when evaluated with the following 3 parameter sets:
 
@@ -987,22 +707,6 @@ when evaluated with the following 3 parameter sets:
 <span class="ttl">Same orient</span> with <span class="ttl">Merge</span> (two blocks).
 <a href="img/pairOrient.png"><img src="img/pairOrient.png" alt="Pair Orient" style="border: 1px solid black; width:  700px"></a>
 <br>In the last image, the reverse orientation block is embedded in another block
-
-<a id="order"></a>
-<h4>Order against</h4>
-
-For draft sequences, they may be ordered against another project.
-See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
-<table>
-<tr><td>The <span class="ttx">Draf-&gt;Seq2</span> and <span class="ttx">Seq2-&gt;Draf</span> use the
-<span class="ttl">Abbreviation</span> set in the <span class="ttb">Project parameters</span> panel.
-The "-&gt;" indicates that the first sequence will be ordered against the second.
-
-<p>If the draft has been aligned to the <span class="ttl">Order against</span> sequence, but this option
-was not set, it can be set and the <span class="ttx">Synteny Only</span> setting used (described below in <b>3.e Save</b>).
-
-<td><a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="pair parameters synteny" style="border: 1px solid black; width: 280px"></a>
-</table>
 
 <a id="hint2"></a>
 <p><b>Hints about synteny parameter settings</b>
@@ -1014,41 +718,58 @@ For two genome complete sequence synteny, it is strongly suggested you start wit
 you can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split. Note: the synteny results of
 one or two chromosomes will be slightly different compared to whole genome synteny.
 
+<a id="order"></a>
+<h4>Order against</h4>
+
+For draft sequences, they may be ordered against another project.
+See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering details</a>.
+<p>In the synteny parameters above, the <span class="ttx">Draf-&gt;Seq2</span> and <span class="ttx">Seq2-&gt;Draf</span> use the
+<span class="ttl">Abbreviation</span> set in the <span class="ttb">Project parameters</span> panel.
+The "-&gt;" indicates that the first sequence will be ordered against the second.
+
+<p>If the draft has been aligned to the <span class="ttl">Order against</span> sequence, but this option
+was not set, it can be set and the <span class="ttx">Synteny Only</span> setting used (described below in <b>3.e Save</b>).
+
 <a id="save2"></a>
-<h3>3.e Save</h3>
+<h3>Drop-down and Save</h3>
 
 <a id="drop"></a>
-<h4>Lower-left drop-down</h4>
+<h4>Drop-down</h4>
 <table class="tx"><tr>
 <td>If the <span class="ttl">Align&amp;Synteny</span> has already been run,
-the lower left side of the parameters window will have a drop-down with the following options:
+the top item of the drop-down will describe what will be run by default.
+There are additional options you may select, as follows:
 <td><a href="img/parameters2last.png">
-	<img src="img/parameters2last.png" alt="pair parameters" style="border: 1px solid black; width: 340px"></a>
+	<img src="img/parameters2last.png" alt="pair parameters" style="border: 1px solid black; width: 240px"></a>
 </table>
 
 <table class="tx">
 <tr><td><span class="ttx">Clust&Synteny</span>
 	<td>If you have changed the
-	<a href="#clParam">clustering</a> parameters, select this option.
+	<a href="MUMmer.html#clParam">clustering</a> parameters, select this option. It will be the default.
+<tr><td><span class="ttx">Load&Synteny</span>
+	<td>If you have <span class=ttl>Load Blast File</span> selected, this option will show as the default.
+
 <tr><td><span class="ttx">Synteny Only</span>
 	<td>If you have only changed
 	<a href="#syn">synteny</a> parameters, select this option.
 <tr><td><span class="ttx">Number Pseudo</span>
-	<td>If you want to add <a href="#pseudo">pseudo numbers</a>, select this option.
+	<td>If you want to add <a href="MUMmer.html#pseudo">pseudo numbers</a>, select this option.
 <tr><td><span class="ttx">Collinear Sets</span>
 	<td>If you only want to redo the <a href="#cosets">Collinear Sets</a> computation, select this option.
 </table>
 
-<p><span class="ttp">Manager</span>: The <span class="ttb">Selected Pair</span> button
-will have its label replace to reflect the drop-down setting, as follows:
-<br>
-
-<br>&nbsp;&nbsp;<span class="ttx">Clust&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
+<p>The <span class="ttp">Manager</span> window button right after <span class=ttl>Align &amp; Synteny</span> will be labeled:
+<p>&nbsp;&nbsp;<span class="ttx">Clust&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
+<br>&nbsp;&nbsp;<span class="ttx">Load&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
 <br>&nbsp;&nbsp;<span class="ttx">Synteny Only</span> &nbsp;&rarr; <span class="ttb">Synteny Only</span>
 <br>&nbsp;&nbsp;<span class="ttx">Number Pseudo</span> &rarr; <span class="ttb">Pseudo Only</span>
 <br>&nbsp;&nbsp;<span class="ttx">Collinear Sets</span> &rarr; <span class="ttb">Collinear</span>
-<p>If you have changed the <a href="#align2">alignment</a> parameters, you must remove them using the <span class="ttb">Clear Pair</span>
-option on the <span class="ttp">Manager</span> panel.
+<table style="width:80%"><tr><td>
+<p>Once the button is clicked, a popup will give detailed information on the actions and parameters,
+select <span class=ttl>Confirm</span>.
+<td><a href="img/demoRedo.png"><img src="img/demoRedo.png" alt="Drop redo" style="border: 1px solid black; width: 250px"></a>
+</table>
 <!-- =================================================== -->
 <h4>Saving pairs parameters</h4>
 
