@@ -13,9 +13,10 @@
 		<img src="./img/agcol_logo.gif" alt="AGCoL" style="width: 160px; border:1px solid black; background: white;"></a>
 <p class=sidetit>&nbsp;&nbsp;Load Blast Hits</p>
 <p>
-<a href="#pfile">Create file of proteins</a>
-<a href="#blast">Create Blast tab file</a>
+<a href="#pfile">Create FASTA files</a>
+<a href="#blast">Run Blast or Diamond</a>
 <a href="#pload">Load Blast file</a>
+<a href="#existh">Add to existing hits</a>
 <a href="#pex">Example and details</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
@@ -53,20 +54,17 @@
 <h2>Load Blast</h2>
 <table class="tz"><tr>
 <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<td><a href="#pfile">Create file<br>of proteins</a>
-<td><a href="#blast">Create<br>Blastp file</a>
-<td><a href="#pload">Load<br>Blast file</a>
+<td><a href="#pfile">Create the<br>FASTA files</a>
+<td><a href="#blast">Run Blast<br>or Diamond</a>
+<td><a href="#pload">Load<br>Blast files</a>
 <td><a href="#existh">Add to<br>existing hits</a>
 <td><a href="#pex">Example<br>and details</a>
 </table>
-<p>This page describes creating project protein files, running blast, and loading a file of blast results.
-<br>&rarr; It is necessary to have loaded the GFF file with the CDS option (v5.8.7 or later); see
-<a href="SystemHelp.html#anno" class="ext" target="_blank">Exon/CDS</a> for details.
-<br>&rarr; The <span class="ttp">xToSymap</span> program started including CDSs in the GFF file in release v5.8.6.
+<p>This page describes using Blast or Diamond for computing the hits for SyMAP.
 
 <div class="hanging-indent">
 <p>Pros: (1) Loading a blast file is much faster than SyMAP running MUMmer.
-(2) Any numbers of blast file hits can be 'added' to the existing hits, including to MUMmer hits.
+(2) Any numbers of blast file hits can be 'added' to the existing hits.
 
 <p>Cons: (1) It does not work if one of the genomic sequence is not annotated and it
 does not perform gene discovery.
@@ -74,131 +72,231 @@ does not perform gene discovery.
 structure is incorrect.
 (3) The user must obtain and manually run <a href="https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html" class="ext" target="_blank">Blast</a>
 or <a href="https://github.com/bbuchfink/diamond/releases"  class="ext" target="_blank">Diamond</a>.
-
-<p>Pro/Con: SyMAP filters MUMmer hits whereas Blast hits are not filtered.
-However, the user can pre-filter the Blast file as they desire.
 </div>
 <p><u>The steps are very easy</u>:
 <ul>
-<li>Export the protein sequences from SyMAP (you must use the SyMAP exported proteins).
+<li>Use the SyMAP <span class=ttl>Export</span> to create a FASTA file of the protein, CDS or Exons.
 <li>Run Blast or Diamond on
-them and put the results in <span class=ttt>data/seq_results/&lt;proj1&gt;_to_&lt;prot2&gt;/blast</span>.
-<li>Set the <span class=ttl>Load Blast files</span> from
-<a href="SystemHelp.html#align2" class="ext" target="_blank">Parameters</a>, then run <span class=ttp>Selected Pairs</span>.
+them and put the results in <span class=ttt>data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;/blast</span>.
+<li>Set <span class=ttl>Load Blast files</span> from
+<a href="SystemHelp.html#align2" class="ext" target="_blank">Parameters</a>,
+then run <span class=ttp>Selected Pairs</span> or <span class=ttp>Selected Redo</span> (add to existing hits).
 </ul>
 Please read the following for the details.
-
+<!-- =========================================== -->
 <!-- -->
 <a id="pfile"></a>
-<h3>Create protein files</h3>
+<h3>Create the FASTA files</h3>
+When you load the project, you may request that either the <span class=ttx>Exons</span>
+or <span class=ttx>CDSs</span> be loaded; see
+<a href="SystemHelp.html#anno" class="ext" target="_blank">Parameters</a>.
+
 <table><tr><td style="vertical-align: text-top;">
 <ol>
-<li>On the <span class=ttp>Manager</span> project's last line, it should say <span class=ttx>CDSs:</span> (as shown on the right).
-If it says <span class=ttx>Exons:</span>,  see <a href="SystemHelp.html#anno" class="ext" target="_blank">Parameters</a>
-and reload the annotations with <span class=ttx>CDS</span>.
-
-<p><li>Select <span class="ttl">View</span> for the project, then <span class="ttl">Export</span>.
-<br>Select the <span class="ttx">Export proteins</span> option, then <span class="ttl">Export</span>.
-
-<p>This can take awhile, e.g. for the demoArab 13,476 genes,
-it took 15m:36s on my old MacOS x86_64 and 4m:28s on my newer MacOS M4.
-It uses a single CPU and does not use much memory.
-
-<p><li>Likewise, export the proteins from the second project.
+<li>Select <span class="ttl">View</span> for the project, then <span class="ttl">Export</span>.
+<p>&rarr;If you have loaded the <span class=ttx>CDSs</span>, then you can create a file of <span class=ttx>Proteins</span> and/or <span class=ttx>Spliced CDSs</span>.
+<p><table><tr><td>
+<br>&rarr;If you have loaded the <span class=ttx>Exons</span> , you can create a file of <span class=ttx>Spliced Exons</span>.
+<td><a href="img/viewExportExon.png"><img src="img/viewExportExon.png"
+alt="view export exon" style="border: 1px solid black; width: 150px"></a>
+</table>
+<p><li>Likewise, export the proteins or spliced transcripts from the second project.
 </ol>
 <td><a href="img/viewExport.png"><img src="img/viewExport.png"
 alt="view export" style="border: 1px solid black; width: 400px"></a>
 </table>
 
-By default, the protein files will be in the SyMAP <span class=ttt>/export</span> directory.
-The FASTA header line uses the value of GFF file attribute <span class=ttx>ID=</span>; see
+<p>The export can take awhile, e.g. for the demoArab 13,476 genes:
+<ul><li>It took 13 minutes on my old MacOS x86_64
+<li>It took 3 minutes on my newer MacOS M4
+<li>It uses a single CPU and does not use much memory.
+</ul>
+
+<p>
+By default, the exported files will be in the SyMAP <span class=ttt>/export</span> directory.
+<br>The FASTA header line uses the <span class=ttx>ID=</span> value from the GFF file attribute; see
 <a href="./input/index.html#annot"  class="ext" target="_blank">Annotation file</a>.
 
 <!-- ================================== -->
 <a id="blast"></a>
-<h3>Create Blastp file</h3>
+<h3>Run Blast or Diamond</h3>
 SyMAP does not run Blast or Diamond for you. You must download
 <a href="https://blast.ncbi.nlm.nih.gov/doc/blast-help/downloadblastdata.html" class="ext" target="_blank">Blast</a>
 or <a href="https://github.com/bbuchfink/diamond/releases"  class="ext" target="_blank">Diamond</a>.
 
+<br>For protein sequences, use Blastp or Diamond.
+<br>For nucleotide sequences, use Blastn.
+
 <p>The output file must be the tabular format (<span class=ttt>-outfmt 6</span>).
-<p>When SyMAP loads the hits, <i>it does not filter them</i>. Hence, you should have Blast or Diamond only produce the
+<p>It is recommended that the results only show the
 top 5 hits per gene (<span class=ttt>-max_target_seqs 5</span>).
 
-<p>For the Demo, you can copy and paste the commands <a href=#pex>Example</a> below;
+<p>For the Demo, you can copy and paste the commands from <a href=#pex>Example</a> below.
 <!-- ====================================== -->
 <a id="pload"></a>
 <h3>Load Blast files</h3>
-<table class="tx"><tr><td>
-Start SyMAP and select
-<a href="SystemHelp.html#projParams" class="ext" target="_blank">Pair Parameters</a>.
-Select the <span class="ttx">Load Blast files</span> option.
-<br>When you select <span class="ttl">Save</span>, the directory
-<span class="ttt">data/&lt;proj1&gt;_to_&lt;proj2&gt;/blast</span> will be created.
+<table class="tx">
+<tr>
+	<td>Start SyMAP and select
+	<a href="SystemHelp.html#projParams" class="ext" target="_blank">Pair Parameters</a>.
+	<br>Select the <span class="ttl">Load Blast files</span> option.
+	<p>If protein files are being compared, select <span class="ttx">Proteins</span>,
+	else select <span class="ttx">Nucleotides</span>. For protein files, the length of the hits
+	is multiplied by 3 to better approximate its alignment.
 
-<td><a href="img/parameters2ab.png"><img src="img/parameters2ab.png"
-alt="view export" style="border: 1px solid black; width: 150px"></a>
-<tr><td style="vertical-align: text-top;">
-Exit SyMAP, move the blast tab file(s) to <span class="ttt">data/&lt;proj1&gt;_to_&lt;proj2&gt;/blast</span>,
-restart SyMAP and select <span class=ttl>Selected Pair</span> (see popup on the right).
-<p>SyMAP will load the blast hits, then execute the <span class=ttx>Collinear</span> algorithm and the <span class=ttx>Synteny</span> algorithm.
-<td><a href="img/loadBlast.png"><img src="img/loadBlast.png" alt="load blast" style="border: 1px solid black; width: 180px"></a>
+	<p>When you select <span class="ttl">Save</span>, the directory
+	<span class="ttt">data/&lt;project1&gt;_to_&lt;project2&gt;/blast</span> will be created.
+
+	<td><a href="img/parameters2ab.png"><img src="img/parameters2ab.png"
+	alt="view export" style="border: 1px solid black; width: 240px"></a>
+<tr><td colspan="2">Exit SyMAP and move the blast tab file(s) to <span class="ttt">data/&lt;project1&gt;_to_&lt;project2&gt;/blast</span>.
+<tr>
+	<td style="vertical-align: text-top;">
+	Restart SyMAP and select <span class=ttl>Selected Pair</span>; a popup (as shown on right) will confirm your
+	parameters; select <span class="ttb">Confirm</span>.
+	<p>SyMAP will load the blast hits, then execute the <span class=ttx>Collinear</span> algorithm and
+	<span class=ttx>Synteny</span> algorithm.
+
+	<td><a href="img/loadBlast.png"><img src="img/loadBlast.png" alt="load blast" style="border: 1px solid black; width: 200px"></a>
 </table>
 
 SyMAP will load ALL files in the <span class=ttt>/blast</span> directory.
 <ul>
-<li>The hits coordinates are <span class=ttx>start</span>=(1st CDS_start + blast_hit_start), <span class=ttx>end</span>=(1st CDS_start + blast_hit_len).
-That is, it does not align correctly with the exons.
-<li>If a hit between a gene pair already exists in the database, only the
-<span class=ttx>Hit Type</span> column will  be updated to indicate that the hit was found in multiple files.
-<li>Only one hit per gene pair from a file will be loaded unless there are hits that do not overlap.
-<li>The blast hits are not clustered like the MUMmer hits are.
+<li>The hits coordinates are set to start at the beginning of the first CDS or exon.
+That is, the hit does not align correctly with the gene (MUMmer hits do align correctly).
+<p><li>Only one hit per gene pair from a file will be loaded unless there are hits that do not overlap.
+<br>The blast hits are not clustered like the MUMmer hits are.
+<p><li>If a hit between a gene pair already exists in the database, only the
+<span class=ttx>Hit Type</span> column will  be updated to indicate that the hit was found in multiple files
+(see <a href="#qtable">Query table</a>).
 </ul>
-
+<!-- =========================================== -->
 <a id="existh"></a>
 <h4>Add to existing hits</h4>
 
 <ul>
 <li>In order to load both MUMmer and Blast hits, first run SyMAP with MUMmer. Then add the Blast hits.
-<br>The collinear and synteny algorithms run each time; the additional hits slow these down.
-But as <a href="Results.html#time" class="ext" target="_blank">Timings</a> shows, these do not take a long time.
-<p><li>The <span class=ttl>Load&Synteny</span> can be executed with any number of blast files. However, it does NOT check
-if a file is already loaded.
+<p><li>The <span class=ttl>Load&Synteny</span> can be executed with any number of blast files.
+<br>If multiple files are being loaded, make sure they are all from protein sequences
+or all from nucleotide sequences, and have the parameter correctly set to <span class=ttx>Protein</span>
+or <span class=ttx>Nucleotide</span>, respectively.
+<br>SyMAP does NOT check if a file is already loaded.
 <p><li>MUMmer, Blast and Diamond produce different subsets of gene pair hits. Moreover, Blast and Diamond produce different
-subsets depending one whether <i>species1</i> is the database or <i>species2</i>. By loading all variations, the maximum
-number of gene pair hits will be in the SyMAP database. However, Blast and Diamond can produce some low quality hits.
+subsets depending one whether <i>project1</i> is the blast database or <i>project2</i>. By loading all variations, the maximum
+number of gene pair hits will be in the SyMAP database.
 </ul>
-<p><u>Remove hits from a given file</u>: There is no way to do this. <span class=ttb>Clear Pair</span> then reload the desired files.
-<!-- -->
+<p><u>Remove hits added by a given file</u>: There is no way to do this. <span class=ttb>Clear Pair</span> then reload the desired files.
+
+<!-- =========================================== -->
 <a id="pex"></a>
 <h3>Example and Details</h3>
-By default, the protein files were written to <span class="ttt">/export</span>.
+<table class="tz"><tr>
+<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<td><a href="#bhits">Load MUMmer + Blast Hits</a>
+<td><a href="#qtable">Query Table</a>
+<td><a href="#top">Go to top</a>
+</table>
+<p>By default, the exported files are written to <span class="ttt">/export</span>.
+I generally create a directory
+<br>&nbsp;&nbsp;&nbsp;<span class=ttt>data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;/export</span>
+<br>and move the FASTA files here, and run Blast/Diamond from this directory.
 
-<p><span class="ttp">Diamond</span>: To run diamond on the demo files:
-<pre>
-   cd export
-   diamond makedb --in demoBrapPr.faa -d brapdb
-   diamond blastp -q demoArabPr.faa -d brapdb  -o diam.b6 -f 6 -k 5 -p 4
-   mv diam.b6 ../data/seq_results/demoArab_to_demoBrap/blast
+<br>Then I copy the desired *.tsv files to <span class=ttt>../blast</span>.
+<br>Note: <span class=ttb>Clear Pair</span> only removes the <span class=ttt>/align</span> and <span class=ttt>/blast</span> directories.
+<p>The following filenames are suggested naming; SyMAP does not care as long as they are <span class=ttx>outfmt 6</span>.
+
+<p><span class="ttp">Diamond</span>:
+<pre style="font-size:9pt">
+diamond makedb --in demoBrapProt.faa -d brapdb
+diamond blastp -q demoArabProt.faa -d brapdb  -o diamBrapProt.tsv -f 6 -k 5 -p 4
 </pre>
 
-<p><span class="ttp">Blast</span>:
-The downloaded executables worked find. To run blast on the demo files:
-<pre>
-   cd export
-   makeblastdb -in demoBrapPr.faa -dbtype prot -out brapdb
-   blastp -query demoArabPr.faa -db brapdb -out blast.b6 -outfmt 6 -max_target_seqs 5 -num_threads 4
-   mv blast.b6 ../data/seq_results/demoArab_to_demoBrap/blast
+<p><span class="ttp">Blastp</span>:
+<pre style="font-size:9pt">
+makeblastdb -in demoBrapProt.faa -dbtype prot -out brapAAdb
+blastp -query demoArabProt.faa -db brapAAdb -out bltBrapProt.tsv -outfmt 6 -max_target_seqs 5 -num_threads 4
 </pre>
-<a href="Results.html#mask" class="ext" target="_blank">Mask vs Blast</a> shows comparison results
+
+<p><span class="ttp">Blastn</span>
+<pre style="font-size:9pt">
+makeblastdb -in demoBrapExon.fna -dbtype nucl -out brapNTdb
+blastn -query demoArabExon.fna -db brapNTdb -out bltBrapExon.tsv -outfmt 6 -max_target_seqs 5 -num_threads 4
+</pre>
+or
+<pre style="font-size:9pt">
+makeblastdb -in demoBrapCDS.fna -dbtype nucl -out brapNTdb
+blastn -query demoArabCDS.fna -db brapNTdb -out bltBrapCDS.tsv -outfmt 6 -max_target_seqs 5 -num_threads 4
+</pre>
+
+<a id="bhits"></a>
+<h4>MUMmer + Blast hits</h4>
+<a href="Results.html#mask" class="ext" target="_blank">Mask vs Blast</a> shows timing comparison results
 between using mask MUMmer and Blast.
+<br>The following shows adding multiple files of blast hits.
+<ol>
+<li>MUMmer hits were loaded and clustered.
+<pre>
+>> Summary for demoArab to demoBrap
+     8,507 hits
+        44 synteny blocks
+     8,143 gene hits
+     5,789 synteny hits
+</pre>
+<p><li>Two files of diamond protein results were added, one with demoArab as the blast database, the other with
+demoBrap as the blast database.
+<pre>
+Load Blast for demoArab and demoBrap
+     7,701 gene pair hits in database
+   --- Read File /diamBrapProt.tsv ---
+       Projects Gene IDs in correct order
+    29,448 Hits from Blast file
+     8,202 Failed %identity cutoff of 40
+       626 Failed E-value cutoff of 1.0E-10
+     7,481 Update existing hits - file #1
+    13,139 Saved new hits
+   --- Read File /diamArabProt.tsv ---
+       Projects Gene IDs in reverse order - swapping
+    22,864 Hits from Blast file
+     4,725 Failed %identity cutoff of 40
+       390 Failed E-value cutoff of 1.0E-10
+    15,687 Update existing hits - file #2
+     2,062 Saved new hits
+    22,902 Total hits in database
+Finish Load Blast                    12s
 
+>> Summary for demoArab to demoBrap
+    23,708 hits
+        76 synteny blocks
+    23,344 gene hits
+     8,023 synteny hits
+Complete processing                  51s
+</pre>
+</ol>
+<p>The bottom of the <span class=ttp>Summary</span> shows:
+<br><a href="img/sum-EEBp.png">
+<img src="img/sum-EEBp.png" alt="query table" style="border: 1px solid black; width: 350px"></a>
+
+<a id="qtable"></a>
+<h3>Query table</h3>
+<table class=tx>
+<tr>
+<td><a href="img/queryTableEEBp.png">
+<img src="img/queryTableEEBp.png" alt="query table" style="border: 1px solid black; width: 350px"></a>
+<td>
+<ul><li>EE indicates a MUMmer hit. The Bp12 means it was also found in both blast files.
+<li>A Bp1 indicates it was only found in the 1st blast file,
+<br>A Bp2 indicates it was only found in the 2nd blast file.
+<li><span class="ttl">Load Blast</span> will add numbers for up to 9 blast files.
+</ul>
+
+</table>
+All hit values are from the FIRST hit entered into the database, e.g.
+the <span class=ttx>%Olap</span> and <span class=ttx>%Id</span> from the first row are from the EE hit.
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>
 <!-- END BODY -->
 <p class="trailer">  Email Comments To: <a href="mailto:cas1@arizona.edu">cas1@arizona.edu</a></p>
 </div>
-
 </div>
 </body>
 </html>

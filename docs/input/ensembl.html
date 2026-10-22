@@ -51,11 +51,13 @@
 <p><span class="ttp">xToSymap</span> and <span class="ttp">ConvertEnsembl</span> were updated in v5.8.6.
 <p>Ensembl supplies FASTA formatted files for genome sequence and GFF formatted files for the annotation
 The following provides a simple scheme to produce the correctly formatted files for SyMAP.
-<p><i>Ensembl has recently changed and the below discussion for obtaining genomic and GFF files does not work.</i>
-<br>The following links are to the old site, and still works as discussed below:
-
+<p><span style="color:green"><i>Ensembl has recently changed and does not work for obtaining genomic and
+GFF files as discussed below.</i></span>
+<br>However, the links
 <a href="https://www.ensembl.org/help/articles/archives">Archives</a> and
 <a href="https://jun2026-plants.ensembl.org/index.html">Plants</a>
+are to the old site and still works as discussed below.
+
 <p>
 <table class="center">
 	<tr>
@@ -255,14 +257,17 @@ to enter the appropriate values.
 <!-- ============================ -->
 <a id="edit"></a>
 <h2>Editing the ConvertEnsembl script</h2>
-
-<p>The script <span class="ttt">scripts/ConvertEnsembl.java</span> executes the same code as the <span class="ttp">xToSymap</span>
+The script <span class="ttt">scripts/ConvertEnsembl.java</span> executes the same code as the <span class="ttp">xToSymap</span>
 <span class="ttl">Ensembl</span> <span class="ttb">Convert</span>.
 
-The Ensembl files are not consistent in their header lines. Hence, the parsing could
-be incorrect.  If it is not parsing correctly (the summary output should indicate
-if it is correct or not), edit the program
+The Ensemble FASTA files are not consistent in their header lines, hence, the parsing could
+be incorrect.
+If it is not parsing the FASTA file correctly, edit the program
 <a href="./index.html#edit" class="ext" target="_blank">as described  here.</a>
+<p>
+The GFF files may also not be consistent, but all of the
+<a href="index.html#tg" class="ext" target="_blank">Tested genomes</a> were consistent, along with others I have tried.
+Nevertheless, if you want to change the attributes, you may do so in the script.
 
 <a id="what"></a>
 <table style="width: 95%"><tr><td style="text-align: left">
@@ -277,20 +282,31 @@ if it is correct or not), edit the program
 in the <span class="ttp">xToSymap</span> interface).
 	</ol>
 
-<u>GFF</u>: Reads the file ending in 'gff3.gz' and writes the file <span class="ttt">annotation/anno.gff</span>. The
+<u>GFF</u>: Reads the file ending in '.gff3' or '.gff3.gz' and writes the file <span class="ttt">annotation/anno.gff</span>. The
 <a href="http://www.sequenceontology.org/gff3.shtml" class="ext" target="_blank">gff3 format</a>
 has 9 columns, where the first is the 'seqid', the third is the 'type' (e.g. feature 'gene'), the
-last column is a semicolon-delimited keyword=value 'attribute' list. The file is processed as follows:
+last column is a semicolon-delimited <span class=ttt>keyword=value</span> 'attribute' list. The file is processed as follows:
 	<ol  type="a">
 	<li>Only lines with the 'type' (3rd column) equal <span class="ttx">gene</span>, <span class="ttx">mRNA</span>,
 	<span class="ttx">exon</span> and <span class="ttx">CDS</span> are read.
 	<li>Genes with <span class="ttx">biotype=protein_coding</span> are written to file, followed by the canonical mRNA and
 	its exons and CDSs.
 	<li>All lines have their <span class="ttx">seqid</span> replaced with the assigned <span class="ttx">seqid</span> used in the FASTA file.
-	<li>The only gene attributes retained are <span class="ttx">ID</span>, <span class="ttx">description</span> and <span class="ttx">Name</span>
+	<li>The only gene attributes retained are <span class="ttx">ID</span>,
+	<span class="ttx">description</span> and <span class="ttx">Name</span>
 	(if it is not the same as <span class="ttx">ID</span>).
-	It removes the ending "[Source:..." from the input <span class="ttx">description</span>.
-	If there is no description, it will be assigned "uncharacterized protein".
+	<br>It removes the ending "[Source:..." from the input <span class="ttx">description</span>.
+	<br>If there is no description, it will be assigned "uncharacterized protein".
+	<li>Two gene attributes are added:
+	<ul>
+	<li><span class="ttx">rnaID</span> is equal to the canonical mRNA ID.
+    <li><span class="ttx">proteinID</span> is equal to the CDS <span class=ttx>protein-id</span> attribute value.
+    However, if the <span class=ttx>protein-id</span> is the same as the
+    <span class="ttx">rnaID</span>, it is not included.
+    </ul>
+    Note: you can have any attributes ignored by listing them under <span class=ttx>Anno keywords</span>
+    on
+    <a href="../SystemHelp.html#projParams" class="ext" target = "_blank">Project Parameters</a>.
 	</ol>
 <!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">

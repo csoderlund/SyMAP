@@ -230,37 +230,38 @@ without the alignment. Also, two tiny input files were used to test MUMmer.
 <a id="mask"></a>
 <h3>MUMmer MASK or Blast/Diamond</h3>
 The following compares the datasets with (1) MUMmer non-masked, (2) MUMmer masked, (3) MUMmer masked with --maxmatch, (4) Blast, (5) Diamond.
-Diamond and Blast were run with <span class=ttt>-max_target_seqs 5</span>, which produces
-the top 5 hits for each sequence. The following were run on a MacOS M4.
+Diamond and Blast were run with <span class=ttx>blastp</span> and
+<span class=ttt>-max_target_seqs 5</span>, which produces
+the top 5 hits for each protein. The following were run on a MacOS M4.
 <!-- demo -->
-<p>&rarr;&rarr;
-Demo: <i>Arabidopsis thaliana</i> Chr1&amp;5 x <i>Brassica rapa</i> Chr2&amp;6
+<p><u>Demo: <i>Arabidopsis thaliana</i> Chr1&amp;5 x <i>Brassica rapa</i> Chr2&amp;6</u>
 <p>Size: 57Mb x 60Mb&nbsp;&nbsp;Genes: 13,476 x 8,138&nbsp;&nbsp;CDSs: 70,655 &amp; 41,428
-<table class="ty">
-<tr><td><span class=ttp>MUMmer</span><br><span class=ttp>Params</span>
+<table class="ty" style="font-size:12px">
+<tr><td><i>MUMmer<br>Params</i>
 	<td><i>Align<br>(CPU 2)</i>
 	<td><i>Has Hits<br>g2+g1+g0</i>
 	<td><i>Gene Pairs<br>Hits</i><td><i>Gene Pairs<br>Collinear</i><td><i>Gene Pairs<br>Block</i>
     <td><i>Avg %Id</i>
-<tr><td>Non-masked<td style="text-align: right">5m
+<tr><td>Non-masked<td style="text-align: right">5m:02s
 	<td style="text-align: right">8,506
 	<td style="text-align: right">7,701
 	<td style="text-align: right">3,396
 	<td style="text-align: right">5,787
 	<td style="text-align: right">67.0
-<tr><td>Masked<td style="text-align: right">3m
+<tr><td>Masked<td style="text-align: right">3m:11s
 	<td style="text-align: right">
 	<td style="text-align: right">7,549
 	<td style="text-align: right">3,274
 	<td style="text-align: right">5,518
 	<td style="text-align: right">68.1
-<tr><td>--maxmatch<td style="text-align: right">5m
+<tr><td>--maxmatch<td style="text-align: right">5m:15s
 	<td style="text-align: right">
 	<td style="text-align: right">10,249
 	<td style="text-align: right">3,491
 	<td style="text-align: right">6,104
 	<td style="text-align: right">65.3
-<tr><td colspan="7"><span class=ttl>Export</span>: ~6min<sup>1</sup><br><span class=ttp>Blast Program</span>
+
+<tr><td colspan="7"><i>Blast Program -- Export</i>: ~4min<sup>1</sup>
 <tr><td>Diamond
 	<td style="text-align: right">1s
 	<td style="text-align: right">
@@ -269,46 +270,47 @@ Demo: <i>Arabidopsis thaliana</i> Chr1&amp;5 x <i>Brassica rapa</i> Chr2&amp;6
 	<td style="text-align: right">7,906
 	<td style="text-align: right">53.7
 <tr><td>Blast
-	<td style="text-align: right">4m:14
-	<td style="text-align: right">64,744
+	<td style="text-align: right">4m:14s
+	<td style="text-align: right">
 	<td style="text-align: right">64,744
 	<td style="text-align: right">4,960
 	<td style="text-align: right">8,108
 	<td style="text-align: right">42.2
 </table>
-<sup>1</sup> SyMAP <span class=ttl>Export</span>: demoArab took 4m:28s and demoBrap took 1m:43s.
+<sup>1</sup><span class=ttl>Export Proteins</span>: demoArab took 2m:53s and demoBrap took 1m:08s.
 
 <!-- cabb -->
-<p>&rarr;&rarr; <i>Brassica rapa</i> (field mustard) x <i>Brassica oleracea</i> (wild cabbage)
+<p><u><i>Brassica rapa</i> (field mustard) x <i>Brassica oleracea</i> (wild cabbage)</u>
 <p>Size: 297Mb x 447Mb&nbsp;&nbsp;  Gene: 40,793 x 54,761 &nbsp;&nbsp; CDSs: 206,730 &amp; 256,428
-<table class="ty">
-<tr><td><span class=ttp>MUMmer</span><br><span class=ttp>Params</span>
+<table class="ty" style="font-size:12px">
+<tr><td><i>MUMmer<br>Params</i>
 	<td><i>Align</i><br>(CPU 4)
 	<td><i>Has Hits<br>g2+g1+g0</i>
 	<td><i>Gene Pairs<br>Hits</i><td><i>Gene Pairs<br>Collinear</i><td><i>Gene Pairs<br>Block</i>
     <td><i>Avg %Id</i>
 <tr><td>Non-Masked
-    <td style="text-align: right">1h:25m
+    <td style="text-align: right">1h:25m:10s
 	<td style="text-align: right">323,351
 	<td style="text-align: right">147,145
 	<td style="text-align: right">41,284
 	<td style="text-align: right">70,487
 	<td style="text-align: right">73.8
 <tr><td>Masked
-	<td style="text-align: right">29m
+	<td style="text-align: right">29m:05s
 	<td style="text-align: right">
 	<td style="text-align: right">150,460
 	<td style="text-align: right">42,231
 	<td style="text-align: right">71,663
 	<td style="text-align: right">75.4
 <tr><td>--maxmatch
-	<td style="text-align: right">52m
+	<td style="text-align: right">52m:14s
 	<td style="text-align: right">
 	<td style="text-align: right">420,995
 	<td style="text-align: right">51,637
 	<td style="text-align: right">82,441
 	<td style="text-align: right">68.3
-<tr><td colspan="7"><span class=ttl>Export</span>: ~42m<sup>1</sup><br><span class=ttp>Blast Program</span>
+
+<tr><td colspan="7"><i>Blast Program -- Export</i>: ~24m<sup>1</sup>
 <tr><td>Diamond
 	<td style="text-align: right">15s
 	<td style="text-align: right">
@@ -317,39 +319,39 @@ Demo: <i>Arabidopsis thaliana</i> Chr1&amp;5 x <i>Brassica rapa</i> Chr2&amp;6
 	<td style="text-align: right">87,441
 	<td style="text-align: right">68.4
 <tr><td>Blast
-	<td style="text-align: right">31m27s
+	<td style="text-align: right">31m:27s
 	<td style="text-align: right">
 	<td style="text-align: right">270,629
 	<td style="text-align: right">46,569
 	<td style="text-align: right">87,977
 	<td style="text-align: right">61.7
 </table>
-<sup>1</sup> SyMAP <span class=ttl>Export</span>: B.rapa took 10m:16s and B.oleracea took 31m:38s.
+<sup>1</sup><span class=ttl>Export Proteins</span>: B.rapa took 6m:50s and B.oleracea took 17m:14s.
 
 <!-- human -->
-<p>&rarr;&rarr; <i>Homo sapiens x Mus musculus</i>
+<p><u><i>Homo sapiens x Mus musculus</i></u>
 <p>Size: 3.1Gb x 2.7Gb&nbsp;&nbsp;  Gene: 19,888 x 22,133&nbsp;&nbsp; CDSs: 189,229 &amp; 207,696
-<table class="ty">
-<tr><td><span class=ttp>MUMmer</span><br><span class=ttp>Params</span>
+<table class="ty" style="font-size:12px">
+<tr><td><i>MUMmer<br>Params</i>
 	<td><i>Align</i><br>(4 CPU)
 	<td><i>Has Hits<br>g2+g2+g0</i>
 	<td><i>Gene Pairs<br>Hits</i><td><i>Gene Pairs<br>Collinear</i><td><i>Gene Pairs<br>Block</i>
     <td><i>Avg %Id</i>
 <tr><td>Non-Masked
-    <td style="text-align: right">30h:45m
+    <td style="text-align: right">30h:45m:27s
 	<td style="text-align: right">41,058
 	<td style="text-align: right">21,304
 	<td style="text-align: right">14,611
 	<td style="text-align: right">15,302
 	<td style="text-align: right">63.3
 <tr><td>Masked
-	<td style="text-align: right">8h:03m
+	<td style="text-align: right">8h:03m:16s
 	<td style="text-align: right">
 	<td style="text-align: right">22,368
 	<td style="text-align: right">14,768
 	<td style="text-align: right">15,467
 	<td style="text-align: right">68.9
-<tr><td colspan="7"><span class=ttl>Export</span>: ~2hr<sup>1</sup><br><span class=ttp>Blast Program</span>
+<tr><td colspan="7"><i>Blast Program -- Export</i>: ~17min<sup>1</sup>
 <tr><td>Diamond
 	<td style="text-align: right">1s
 	<td style="text-align: right">
@@ -358,16 +360,16 @@ Demo: <i>Arabidopsis thaliana</i> Chr1&amp;5 x <i>Brassica rapa</i> Chr2&amp;6
 	<td style="text-align: right">24,660
 	<td style="text-align: right">58.2
 <tr><td>Blast
-	<td style="text-align: right">19m
+	<td style="text-align: right">19m:0s
 	<td style="text-align: right">
 	<td style="text-align: right">109,291
 	<td style="text-align: right">22,036
 	<td style="text-align: right">26,308
 	<td style="text-align: right">48.0
 </table>
-<sup>1</sup> SyMAP <span class=ttl>Export</span>: Humans took 1h:8m:15s and Mouse took 1h:4m:21s.
-<p>The increase time for Humans and Mouse <span class=ttl>Export</span> is probably due to the larger genomes, plus
-a larger average number of CDSs per gene.
+<sup>1</sup><span class=ttl>Export Proteins</span>: Humans took 8m:10s and Mouse took 9m:9s.
+<p>Note: Release v5.9.1 has a speedup for exporting proteins, which decreased the time for
+humans+mouse from ~2hr down to ~17min.
 <!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>

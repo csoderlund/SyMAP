@@ -123,7 +123,7 @@
 	&bull; <a href="#gen">General</a>
 	<ul>
 	<li><a href="#self">Self-synteny</a>
-	<li><a href="#data_export">Export</a>
+	<li><a href="#data_export">Export - multiple ways</a>
 	<li><a href="#image">Color Wheel, Print and Help (?) Icons</a> <!-- # ref 'wheel' in code -->
 	<li><a href="Details.html" target="_blank" class="ext">Details</a> <small>Collinear Sets, Hit popup, 3-chr conserved</small>
 	</ul>
@@ -184,9 +184,6 @@ if you use SyMAP results in a paper, poster, or presentation.
 <a id="term2"></a>
 <p><i>More detailed terminology:</i>
 <table class="ty">
-	<tr><td style="white-space: nowrap;"><span class="ttx">Hit Type<br>(htype)</span><td>(1) It can be from MUMmer, resulting
-	in a <span class="ttl">Algo1</span> or <span class="ttl">Algo1</span> <span class="ttx">Hit Type</span>.
-	<br>(2) It can be from Blastp, with a <span class="ttx">Hit Type=Bp</span>.
 
 	<tr><td style="white-space: nowrap;"><span class=ttp>Cluster MUMmer</span><br>Hit Algorithm:
 			<br><span class="ttl">Algo1</span> or <span class="ttl">Algo2</span>
@@ -198,20 +195,31 @@ if you use SyMAP results in a paper, poster, or presentation.
 			 See <a href="SystemHelp.html#clust" class="ext" target="_blank">System Parameters</a> for details. </div>
 			<div class="hanging-indent">&bull; The <a href="#report">Summary</a> specifies which was used.
 			There are statistics in SyMAP that have different values based on which algorithm was run.</div>
-	<tr><td>&nbsp;&nbsp;<span class="ttl">Algo1</span>: <span class="ttx">htype=</span>
-		<br>&nbsp;&nbsp;<span class="ttx">g2, g1, g0</span>
-		<td>A hit overlaps a gene on <i>both</i> sides (<span class="ttx">g2</span>), a hit overlaps a gene on <i>one</i> side (<span class="ttx">g1</span>),
-		a hit overlaps <i>no</i> genes (<span class="ttx">g0</span>). These are also written <span class="ttx">G2, G1, G0</span>.
-	<tr><td>&nbsp;&nbsp;<span class="ttl">Algo2</span>: <span class="ttx">htype=</span>
-		<br>&nbsp;&nbsp;<span class="ttx">EE, EI, En,<br>&nbsp;In, nn</span>
-		<td><span class="ttx">E</span> is exon, <span class="ttx">I</span> is intron, <span class="ttx">n</span> is intergenic. So a <span class="ttx">EI</span> is a hit that at least partially aligns to an exon of one gene and
-		an intron on the other, etc.
+		<tr><td style="white-space: nowrap;"><span class="ttx">Hit Type</span><td>(1) It can be from MUMmer, resulting
+	in a <span class="ttl">Algo1</span> or <span class="ttl">Algo1</span> <span class="ttx">Hit Type</span>.
+	<br>(2) It can be from Blastp, with a <span class="ttx">Hit Type=Bp</span>.
 
-	<tr><td>Blastp: <span class="ttx">htype=</span>
-		<br>&nbsp;&nbsp;<span class="ttx">Bp</span>
-		<td>Blast hits are from protein alignments, so are not relative to the genome sequence.
-		<br>The <span class=ttx>start</span> coordinate is relative to the genome sequence, but
-		the <span class=ttx>end</span> coordinate is not (it is  <span class=ttx>start + length</span>).
+		<tr><td colspan="2">
+		<table><tr><td>Algorithm<td>Hit Type<td>Descriptions
+			<tr><td><span class="ttl">Algo1</span>
+		    <td><span class="ttx">g2, g1, g0</span>
+			<td>A hit overlaps a gene on <i>both</i> sides (<span class="ttx">g2</span>),
+			a hit overlaps a gene on <i>one</i> side (<span class="ttx">g1</span>),
+			a hit overlaps <i>no</i> genes (<span class="ttx">g0</span>).
+			These are also written <span class="ttx">G2, G1, G0</span>.
+
+			<tr><td><span class="ttl">Algo2</span>
+			<td style="white-space: nowrap;"><span class="ttx">EE, EI, En,<br>In, nn</span>
+			<td><span class="ttx">E</span> is exon, <span class="ttx">I</span> is intron,
+			<span class="ttx">n</span> is intergenic. So a <span class="ttx">EI</span> is a hit that at least
+			partially aligns to an exon of one gene and an intron on the other, etc.
+
+			<tr><td><span class="ttl">Blastp</span>
+			<td><span class="ttx">Bp</span>
+			<td>Blast hits are from protein alignments, <i>so are not relative to the genome sequence</i>.
+			<br>The <span class=ttx>start</span> coordinate is relative to the genome sequence, but
+			the <span class=ttx>end</span> coordinate is not (=<span class=ttx>start + length</span>).
+	</table>
 	<tr><td><span class="ttx">Gene#</span><td>This is the SyMAP assigned number representing the order of the gene.
 	When genes overlap, they are given the same gene number with different suffixes.
 	For example, see <a href="#view2D">View a region</a>. Gene numbering starts at 1 for each chromosome.
@@ -250,7 +258,8 @@ Is it also available from <span class="ttt">./symap</span>, which will include t
 
 	<p>Selecting projects on the left panel shows them on the right panel. Clicking the
 	<span class="ttb">View</span> popups
-	a window with the information about the project, e.g. <a href="./img/viewArab.png">View panel</a>.
+	a window with the information about the project, e.g. <a href="./img/viewArab.png">View</a>,
+	which has a <a href="#data_export">Export</a> menu.
 
 	<p>A check mark (&#10003;) in the <span class="ttb">Available Syntenies</span> table indicates the pair has computed synteny that can be viewed.
 
@@ -771,8 +780,7 @@ selecting <u>Reverse</u>.
 <table>
 <tr><td>Select <span class="ttb">Reports...</span> which
 popups a menu as shown on the right.
-<p>The options are <a href="#sum">Summary</a>, <a href="#breport">Block Report...</a> and
-<a href="#bexport">Export...</a>.
+<p>The options are <a href="#sum">Summary</a> and <a href="#breport">Block Report...</a>.
 <td><a href="img/reportMenu.png">
 	<img src="img/reportMenu.png" alt="report menu" style="border: 1px solid black; width: 100px"></a>
 </table>
@@ -785,20 +793,21 @@ The <span class="ttb">Explain</span> button on this view explains the different 
 <p><a href="img/sum-2g.png">
 	<img src="img/sum-2g.png" alt="sum-two-genome" style="border: 1px solid black; width: 550px"></a>
 
+<!-- *********************************************************** -->
 <a id="breport"></a>
 <h3>Block Report</h3>
-
-<table style="width:90%">
-<tr><td style="vertical-align: text-top;">
 The panel on the right will be shown when <span class="ttl">Block Report</span> is selected from the
 <span class="ttl">Report...</span> drop-down.
 
+
+<p>
+<table style="width:90%">
+<tr><td style="vertical-align: text-top;">
+The following options are for the first three report types:
+
 <p><span class="ttl">Reference</span>: The <span class="ttl">Reference</span> determines what species chromosomes and
 start coordinates will be sorted for display.
-
-<p><span class="ttl">Blocks plus</span>, <span class="ttl">Blocks with gene info</span> and <span class="ttl">Blocks summary</span> are described below
-with examples.
-
+<p>&nbsp;
 <p><span class="ttl">Output</span>: The <span class="ttx">Popup</span> popups a window with an HTML formatted report.
 The <span class="ttx">HTML File</span> is written in a way that the file is easily edited. The <span class="ttx">TSV File</span> can be loaded into Excel.
 <p><span class="ttl">Combine C1.C2.B</span> If checked, the values for <span class="ttx">Chr1</span>, <span class="ttx">Chr2</span> and <span class="ttx">Block</span>
@@ -807,9 +816,9 @@ their own column.
 <td><a href="img/report.png">
 	<img src="img/report.png" alt="sum-two-genome" style="border: 1px solid black; width: 250px"></a>
 </table>
-<p>The following 3 options are available, where the top of an HTML table is shown for each:
+<p>The following shows the top three report types, where the top of an HTML table is shown for each:
 
-<p>&#8858; <span class="ttl">Blocks plus</span>:
+<p>&#8858; <span class="ttl">Blocks with block info</span>:
 <small>(<span class="ttl">Reference</span> is A.thal, <span class="ttl">Combined</span> unchecked); first two lines of report</small>
 <table class='ty' style="font-size: 10px; text-align: right;">
 <tr style="background-color: lightgrey;"><td style="text-align: center"><b>Chr01</b><td style="text-align: center">ChrX
@@ -850,7 +859,7 @@ is the percentage of genes that have a hit.
 </ul>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
-<p>&#8858; <span class="ttl">Blocks summary</span>:
+<p>&#8858; <span class="ttl">Blocks with chr-pair summary</span>:
 (<span class="ttl">Reference</span> is A.thal, <span class="ttl">Combined</span> unchecked).
 <br>This includes the title and first two lines of report.
 <p>The <span class="ttx">#Blocks</span> and <span class="ttx">#Hits</span> are the sum of blocks and hits
@@ -866,15 +875,11 @@ is the percentage of genes that have a hit.
 </table>
 </table>
 
-<a id="bexport"></a>
-<h3>Export...</h3>
-<table>
-<tr><td>A file of blocks and their gene pairs will be written. If there are hits in a block that do not
+<p>The last report type is export only in text format with no reference:
+<p>&#8858; <span class="ttl">Blocks with gene pairs</span>:
+A file of blocks and their gene pairs will be written. If there are hits in a block that do not
 align to two genes, they are not written.
-The file format is described in <a href="./LoadBlast.html#pfile" class="ext" target="_blank">Load Blocks</a>.
-<td><a href="img/reportExport.png">
-	<img src="img/reportExport.png" alt="Export blocks" style="border: 1px solid black; width: 150px"></a>
-</table>
+
 <!-- *********************************************************** -->
 <!-- *********************************************************** -->
 <!-- *********************************************************** -->
@@ -1055,8 +1060,10 @@ colored dark blue (positive strand) or purple (negative strand).
 further out then the other, indicate overlapping genes; they have the same <span class="ttx">Gene#</span> with a different suffix.
 <p>Hits: The <i>hit-wires</i> connects the aligned regions on the two sequences.
 The aligned region graphics, located on the track at the end of the hit-wire, extends the length of the hit.
+
 <p><i>Clustered hits</i> are multiple <i>subhits</i> clustered together with gaps in between,
-where the gaps are represented by a grey area.
+where the gaps are represented by a grey area. <i>If this is a Blast hit, it is not correctly aligned to
+the exons/introns</i>.
 
 <td><a href="img/2d-closeup2.png">
 	<img src="img/2d-closeup2.png" alt="2d-closeup" style="border: 1px solid black; width: 550px"></a>
@@ -1853,23 +1860,34 @@ displayed;
 <a id="exncl"></a>
 <a id="data_export"></a>
 <h3>Export (download data)</h3>
-
-There are three ways to download data for SyMAP synteny blocks, individual hits, and annotations:
 <p><span class="ttp">Manager</span>:
-<ul>
-<li><a href="#breport">Block Report</a>: Select the species of interest,
-select <span class="ttb">Report...</span> on the <span class="ttp">Manager</span>, then select <span class="ttl">Block Report</span>
-</ul>
+<table class=tx style="margin-left:20px">
+	<tr>
+	<td style="vertical-align: text-top;">
+	&bull; <span class=ttb>View</span>: Select the <span class="ttb">View</span> link by a project.
+	<p>If <span class=ttx>CDSs</span> were loaded, the export menu will look like the image on the right.
+
+	<p>If <span class=ttx>Exons</span> were loaded, the export menu will look the <br>image below.
+	<br><a href="./img/viewExportExon.png">
+			  <img src="img/viewExportExon.png" alt="Exons" style="border: 1px solid black; width: 160px"></a>.
+	<p>The sequences will be exported in FASTA format.
+
+	<td><a href="img/viewArab.png">
+			  <img src="img/viewArab.png" alt="Hit Colors" style="border: 1px solid black; width: 340px"></a>
+</table>
+
+<p style="margin-left:20px">&bull; <span class=ttb>Block Report</span>: Select <span class="ttb">Report...</span> on the <span class="ttp">Manager</span>,
+then select <a href="#breport">Block Report</a>.
+<br>&nbsp;&nbsp;&nbsp;Blocks can be exported with a choice of different information.
+
 
 <p><span class="ttp">Queries</span>:
 <ul>
 <li><a href="Query.html#export" class="ext" target="_blank">Query Export</a>:
-The results of a query are shown in a table,
-which can be exported as a CSV or HTML file.  Additionally,
-the hit sequences or unique spliced genes from the genes i can be exported in FASTA format.
+The results of a query are shown in a table, which can be exported as a HTML or CSV file.
 <p>
-<li><a href="Query.html#export" class="ext" target="_blank">Gene Report</a>:
-A report that combines rows of a query can be created and exported in HTML or TSV format.
+<li><a href="Query.html#report" class="ext" target="_blank">Gene Report</a>:
+A report that combines rows of a query can be created and exported in HTML or TSV file.
 </ul>
 
 <a id="image"></a>

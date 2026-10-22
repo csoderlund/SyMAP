@@ -48,7 +48,8 @@
 
 <!-- ==================== bulk of page ========================= -->
 <div class="main">
-<p><span class="ttp">xToSymap</span> and <span class="ttp">ConvertNCBI</span> were updated in v5.8.6.
+<p><span class="ttp">xToSymap</span> was updated in v5.8.6
+and <span class="ttp">ConvertNCBI</span> was updated in v5.9.1.
 
 <p>NCBI supplies FASTA formatted files for genome sequence and GFF3 formatted files for the annotation,
 where FASTA and GFF3 files are the input to SyMAP. Though they can be loaded directly into SyMAP,
@@ -71,6 +72,7 @@ it is better to convert them.
 	<tr><td><a href="#load">&nbsp;&nbsp;&nbsp;Load files into SyMAP</a></td></tr>
 	<tr><td><a href="#edit">&nbsp;&nbsp;&nbsp;Editing the script</a></td></tr>
 	<tr><td><a href="#what">&nbsp;&nbsp;&nbsp;What the ConvertNCBI script does</a></td></tr>
+	<tr><td><a href="#zip">&nbsp;&nbsp;&nbsp;The files can be gzip</a></td></tr>
 	</table>
 </td>
 </table>
@@ -123,6 +125,9 @@ the <span style="color:darkblue">Genome</span> link under <span class="ttl">Popu
 <br>Note: <span class="ttp">xToSymap</span> does NOT work with Genbank files, only RefSeq.
 <li>Select <span class="ttb">Download</span>. By default, a file called <span class="ttt">ncbi_dataset.zip</span> will be downloaded.
 </ol>
+<p>
+<li>If the genome sequence file is greater than 250Mb, it may hang on download.
+See <a href="#man">Manual download</a>
 </ol>
 
 <table><tr><td>
@@ -135,6 +140,17 @@ the <span style="color:darkblue">Genome</span> link under <span class="ttl">Popu
 <p><a href="img/NCBI-download.png"><img src="img/NCBI-download.png" alt="" style="border: 1px solid black; width: 500px"></a>
 <br><b>Fig 3. </b> Select the <span class="ttl">RefSeq only</span> with the <span class="ttl">FASTA</span> and <span class="ttl">GFF</span> files.
 
+<a id="man"></a>
+<h3>Manual download</h3>
+See NCBI's <a href="https://www.ncbi.nlm.nih.gov/datasets/docs/v2/download-and-install" class="ext" target="_blank">datasets</a>
+to download the NCBI <span class=ttp>datasets</span> executable.
+<p>Determine the RefSeq accession, e.g.
+<br><a href="img/NCBI-accession.png"><img src="img/NCBI-accession.png" alt="" style="border: 1px solid black; width: 400px"></a>
+<p>Then execute the following command:<p>
+<pre>
+   ./datasets download genome accession GCF_000001405.40
+</pre>
+This only gets the sequence file; download the GFF file as described above.
 <!-- ================================================== -->
 <a id="cv"></a>
 <h2>Convert files</h2>
@@ -256,9 +272,10 @@ the <span class="ttp">xToSymap</span> <a href="./index.html#ol" class="ext" targ
 <a id="gen"></a>
 <h2>General</h2>
 <table class="tz">
-<tr><td><a href="#load">Load files into SyMAP</a>
-	<td><a href="#edit">Editing the script</a>
-	<td><a href="#what">What the ConvertNCBI script does</a>
+<tr><td><a href="#load">Load files<br>into SyMAP</a>
+	<td><a href="#edit">Edit<br>script</a>&nbsp;&nbsp;&nbsp;&nbsp;
+	<td><a href="#what">ConvertNCBI<br> script</a>
+	<td><a href="#zip">Gzip</a>&nbsp;&nbsp;&nbsp;&nbsp;
 	<td class="colrt"><a href="#top">Go to top</a>
 </table>
 <!-- ============================================= -->
@@ -281,11 +298,18 @@ to enter the appropriate values.
 <!-- ================================================== -->
 <a id="edit"></a>
 <h3>Editing the script</h3>
+The script <span class="ttt">scripts/ConvertNCBI.java</span> executes the same code as the
+<span class="ttp">xToSymap</span>
+<span class="ttl">NCBI</span> <span class="ttb">Convert</span>.
 
-The NCBI FASTA files are not consistent in their header lines. Hence, the parsing could
-be incorrect. They may also not be consistent in the GFF files, but I have not found one.
-Anyway, if it is not parsing the FASTA file correctly, edit the program
+<p>The NCBI FASTA files are not consistent in their header lines, hence, the parsing could
+be incorrect.
+If it is not parsing the FASTA file correctly, edit the program
 <a href="./index.html#edit" class="ext" target="_blank">as described  here.</a>
+<p>
+The GFF files may also not be consistent, but all of the
+<a href="index.html#tg" class="ext" target="_blank">Tested genomes</a> were consistent, along with others I have tried.
+Nevertheless, if you want to change the attributes, you may do so in the script.
 
 <a id="what"></a>
 <h3>What the ConvertNCBI script does</h3>
@@ -319,15 +343,36 @@ The gene line is written to the <span class="ttt">anno.gff</span> file with the 
 <li><span class="ttx">ID</span> and <span class="ttx">Name</span> from the input gene attributes.
 <li><span class="ttx">desc</span> is the gene <span class="ttx">description</span>; if this does not exist, then it is
 the longest mRNA <span class="ttx">product</span>.
-<li><span class="ttx">rnaID</span> is equal to the first mRNA ID.
+<li><span class="ttx">rnaID</span> is equal to the longest mRNA ID.
+<li><span class="ttx">proteinID</span> is equal to the CDS <span class=ttx>protein-id</span> attribute value.
+ However, if the <span class=ttx>protein-id</span> is the same as the
+    <span class="ttx">rnaID</span>, it is not included.
 </ul>
+You can have any attributes ignored by listing them for <span class=ttx>Anno keywords</span> on
+    <a href="../SystemHelp.html#projParams" class="ext" target = "_blank">Project Parameters</a>.
 </ol>
 
-<li>The longest <span class="ttx">type=mRNA</span> line for a gene is written to the <span class="ttt">anno.gff</span> file followed
+<p><li>The longest <span class="ttx">type=mRNA</span> line for a gene is written to the <span class="ttt">anno.gff</span> file followed
 by its <span class="ttx">type=exon</span> and <span class="ttx">type=CDS</span>, where they each are written with the new seqid and a subset of the
 attributes. The mRNA ID is saved as an gene attribute (<span class="ttx">rnaID=</span>) to indicate which exons were saved.
 </ol>
 
+<a id="zip"></a>
+<h3>The files can be gzip</h3>
+<span class=ttp>xToSymap</span> can take as input gzipped files.
+<p>
+<pre>
+&gt;ls
+-rw-------@ 1 cari  staff   3.1G Oct 14  2026 GCF_000001405.40_GRCh38.p14_genomic.fna
+-rw-------@ 1 cari  staff   1.5G Oct 14  2026 genomic.gff
+
+&gt;gzip GCF_000001405.40_GRCh38.p14_genomic.fna
+&gt;gzip genomic.gff
+
+&gt;ls
+-rw-------@ 1 cari  staff   957M Oct 14  2026 GCF_000001405.40_GRCh38.p14_genomic.fna.gz
+-rw-------@ 1 cari  staff    77M Oct 14  2026 genomic.gff.gz
+ </pre>
 <!-- END BODY -->
 <table style="width: 95%"><tr><td style="text-align: left">
 <td style="text-align: right"><a href="#top">Go to top</a></td></tr></table>

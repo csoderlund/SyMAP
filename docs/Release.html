@@ -44,7 +44,7 @@ For existing databases, there are no database or build changes since <a href="#v
 
 <h3>Summary of recent major releases</h3>
 <table>
-<tr><td><a href="#v589">v5.9.0</a><td>(8-Oct-26)
+<tr><td><a href="#v589">v5.9.1</a><td>(22-Oct-26)
      <td>Load one or more <span class="ttx">Blast Tabular file</span> of hits.
      First release <a href="#v589">v5.8.9</a> (30-Sept-26).
 <tr><td><a href="#v588">v5.8.8</a><td>(27-Aug-26)
@@ -65,6 +65,51 @@ For existing databases, there are no database or build changes since <a href="#v
 <tr><td><a href="#v540">v5.4.0</a><td>(06-Apr-23)
     <td>Improved <span class="ttx">Cluster Hit</span> algorithm <span class="ttx">Algo1</span> for the detection of gene homology.
 </table>
+
+<a id="v591"></a>
+<h3>Release: v5.9.1 (22-Oct-2026)</h3>
+More support for using <span class="ttl">Blast Tabular file</span> and some interface improvements.
+<p>
+<ul>
+<li><span class=ttp>View</span>:
+<ul><li><span class=ttl>Export</span> is faster for
+large genomes with many exons, e.g. humans (reduced from 1hr to 8min).
+<li>The <span class=ttx>Export RNAs</span> has been changed to <span class=ttx>Spliced CDSs</span>
+or <span class=ttx>Spliced Exons</span>, depending on which was loaded with <span class=ttl>Load Annotations</span>.
+</ul>
+<p><li><span class=ttp>LoadBlast</span>:
+<ul>
+<li>Either the protein blastp or exon/cds nucleotide blastn can be used.
+<br>There is a new parameter on <a href="./LoadBlast.html" class="ext" target="_blank">Load Blast</a>
+to state whether the input is from blastp or blastn.
+<li>Each subsequent blast file that gets loaded is provided a new number in the <span class=ttx>Hit Type</span>
+columns, e.g. Bp123 indicates that a hit was found in the 1st 3 blast input files.
+
+</ul>
+<p><li><span class=ttp>Pair Parameters</span>: There are new parameters for the <span class=ttx>%Identity</span>
+and <span class=ttx>E-value</span> cutoffs.
+
+<p><li><span class=ttp>ConvertNCBI</span> and <span class=ttp>ConvertEnsembl</span>:
+Added the attribute <span class=ttx>proteinID</span> for the gene.
+<br>It is included on the FASTA header line for <span class=ttp>View</span> exported files.
+<br>The demo has been updated with <span class=ttx>proteinID</span>.
+
+<p><li><span class=ttp>Report...</span>: The <span class=ttl>Export...</span> item has been merged
+with the <span class=ttl>Block Report...</span>
+
+<p><li><span class=ttp>Queries</span>:
+<li>The query table will now show exon overlap for blast hits (though there still is not a correct alignment).
+<ul><li>Export
+<span class=ttl>Unique spliced transcripts</span> was removed since it is on <span class=ttp>View</span>.
+<br>Export <span class=ttl>All pair hit sequences</span> has also been removed.
+<li>The <span class=ttps>Queries</span> <span class=ttbs>Search</span> includes the <span class=ttxs>Hit Type</span> column.
+</ul>
+<p><li><span class=ttp>Summary</span> and <span class=ttp>Selected Pairs</span>:
+<ul>
+<li>Improved both of these to fully show changed parameters.
+<li><span class=ttp>Summary</span> keeps track of MUMmer and blast additions.
+</ul>
+</ul>
 
 <a id="v590"></a>
 <h3>Release: v5.9.0 (8-Oct-2026)</h3>
@@ -107,8 +152,8 @@ See <a href="./LoadBlast.html" class="ext" target="_blank">Load Blast</a>.
 (see <a href="./img/viewExport.png">View</a>) to export the translated sequences.
 
 <p><li><span class="ttp">Reports...</span> has a new option
-<a href="./UserGuide.html#bexport" class="ext" target="_blank">Export...</a>,
-which exports the blocks with gene pairs.
+<span class=ttb>Export...</span>,
+which exports the blocks with gene pairs. (v5.9.1 moved it to <span class=ttb>Block Report</span>).
 
 <p><li><span class="ttp">2D</span> has a new <span class="ttp">Track Filter</span> option to show the
 <span class=ttx>GFF ID</span> instead of the <span class=ttx>Gene#</span>.
@@ -239,7 +284,7 @@ option for the species project; everywhere else will still say 'Exon'.
 <li><span class="ttl">Export</span>: new option <span class="ttx">Unique splice genes</span>
 to export FASTA spliced genes, which also works for singles. If the annotation was loaded with
 <span class="ttp">symap</span> using the -cds flag,
-the output will be the spliced CDSs, else it will be the spliced exons.
+the output will be the spliced CDSs, else it will be the spliced exons. (This export option is now removed).
 <li>Bug fix: (1) The <span class="ttl">Export</span> did not work for selected rows.
 (2) <span class="ttl">Show</span>
 crashed if using the <span class="ttl">Single</span> option.
