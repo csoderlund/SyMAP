@@ -1,10 +1,7 @@
 package backend;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
 import java.util.Vector;
 
 import java.util.TreeMap;
@@ -28,14 +25,15 @@ import util.FileDir;
 
 /*******************************************************
  * Set up to run MUMmer for alignments for one pair of genomes
+ * CAS591 all saving of parameters is moved to Mpair; existing calls mp.usedParamsRead; align calls mp.usedParamsWrite
  */
 public class AlignMain {
-	public static boolean bNoCAT = false;		// CAS581 testing multiple threads, do not concatenate any
+	public static boolean bNoCAT = false;		// testing multiple threads, do not concatenate any
 	protected boolean mCancelled = false;
 	
 	private static final int CHUNK_SIZE = Constants.CHUNK_SIZE; // 1000000
-	private static final int maxFileSize = 60000000; // 'Concat' parameter works for demo using this size
-	private static final int maxConcatSize = 1000000000; // MUMmer seems not to work with 3Gb files; CAS581
+	private static final int maxFileSize = 60000000;     // 'Concat' parameter works for demo using this size
+	private static final int maxConcatSize = 1000000000; // MUMmer seems not to work with 3Gb files
 	
 	private ProgressDialog plog;
 	private String proj1Dir, proj2Dir; // also dbName, directory name
@@ -56,7 +54,6 @@ public class AlignMain {
 	private boolean error = false;
 	
 	private String resultDir;
-	private String alignParams=""; // assign value here; passed from DoAlignSynPair to Mpair for saving in db
 	private int nAlignDone=0;
 	
 	protected AlignMain(DBconn2 dbc2, ProgressDialog log, Mpair mp, int nMaxThreads, String alignLogDirName){
@@ -76,25 +73,19 @@ public class AlignMain {
 		alignList = new Vector<AlignRun>();
 		toDoQueue = new LinkedList<AlignRun>();
 	}
-	// passed to DoAlignSynPair onto Mpair for saving in db for summary 
-	protected String getParams() {
-		 return alignParams;
-	}
-	
+
 	/*******************************************************
 	 * Run all alignments for p1-p2 
 	 */
 	protected boolean run() {
 		try {
-			long startTime = Utils.getTime();
-	
-			System.gc(); // free unused heap for mummer to use (Java treats this as a suggestion)
-			
 			resultDir = Constants.getNameResultsDir(proj1Dir, proj2Dir);
-			
 			if (alignExists()) {
 				return true; // must have all.done and at least one .mum file; r/w params_used
 			}
+			
+			long startTime = Utils.getTime();
+			System.gc(); // free unused heap for mummer to use (Java treats this as a suggestion)
 			
 			buildAlignments(); // build toDoQueue
 			
@@ -159,6 +150,7 @@ public class AlignMain {
 			else { 
 				plog.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
 			}
+			
 			Utils.prtMsgTimeDone(plog, "Alignments", startTime); // Align done: time
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
@@ -178,15 +170,14 @@ public class AlignMain {
 			
 			boolean bdone = Utils.checkDoneMUMmer(alignDir); // all.done
 			nAlignDone    = Utils.checkDoneMaybe(alignDir);   // # existing .mum files
-			usedParamsRead(Utils.getDateStr(f.lastModified()));// sets alignParams for saving to db
 			
 			if (bdone && nAlignDone>0) {// could by SyMAP or user complete
+				mp.saveParamsForAlignExist(nAlignDone, Utils.getDateStr(f.lastModified()));
 				plog.msg("Use existing " + nAlignDone + " MUMmer files ");
 				plog.msg("--If not correct, remove " + resultDir + " and re-align");
 				return true;
 			}
 			/*-------- Alignments to be done ------*/
-			
 			if (nAlignDone==0) return false; // do all
 			
 			/* If !bDone && nAlign>0, probably did not finish; 
@@ -212,45 +203,7 @@ public class AlignMain {
 		catch (Exception e) {ErrorReport.print(e, "Trying to see if alignment exists");}
 		return false;
 	}
-	/*********************************************************
-	 * Create alignParams for save to pairs.param for summary
-	 * If align, write to params_used, else read it. This is not in the /align directory, but its main directory
-	 * Also read in Mpair
-	 */
-	private void usedParamsWrite() {
-		try {
-			alignParams = "MUMmer files " + Utilities.getDateTime() + "   CPUs: " + nMaxCPUs + "\n";
-			alignParams += mp.getChgAlign(Mpair.FILE, true); // true, do not add command line
-			if (Ext.isMummer4Path()) alignParams += "\n" + Ext.getMummerPath() + " "; // CAS588 add \n
-			
-			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
-			if (pfile==null) pfile = new File(resultDir,Constants.usedFile); // create 
-			
-			PrintWriter out = new PrintWriter(pfile);
-			out.println("# Parameters used for MUMmer alignments in /align.");
-			out.println(alignParams);
-			out.close();
-		}
-		catch (Exception e) {ErrorReport.print(e, "Save " + Constants.usedFile); }
-	}
-	// for saving in db to go on summary; Mpair also reads this file for writing previous params on Manager popup
-	private void usedParamsRead(String dateTime) {
-		try {
-			alignParams = "Use previous " + nAlignDone + " MUMmer files " + dateTime; 
-			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
-			if (pfile==null) return;  // okay, not written yet
-			
-			alignParams = "Use previous " + nAlignDone + " "; // completed with what is in file
-			String line;
-			BufferedReader reader = new BufferedReader(new FileReader(pfile));
-			while ((line = reader.readLine()) != null) {
-				if (!line.startsWith("#"))
-					alignParams += line + "\n";
-			}
-			reader.close();
-		}
-		catch (Exception e) {ErrorReport.print(e, "Save params_used"); }
-	}
+	
 	/****************************************************
 	 * Create preprocessed files and run alignment
 	 */
@@ -261,7 +214,7 @@ public class AlignMain {
 		/* create directories */
 			// result directory (e.g. data/seq_results/demo1_to_demo2)
 			FileDir.checkCreateDir(resultDir, true /* bPrt */);
-			usedParamsWrite(); // write here after creating the directory
+			mp.saveParamsForAlignRun(nMaxCPUs);
 			
 			// temporary directories to put data for alignment
 			String tmpDir =  Constants.getNameTmpDir(proj1Dir, proj2Dir);
@@ -352,7 +305,7 @@ public class AlignMain {
 	
 	/**************************************
 	 *  Write sequences to file; first is concatenated (if Concat), second is not. Apply gene masking if requested.
-	 *  CAS581 MUMmer seems to fail when the input is very large, e.g. 3G. Hence, it is now restricted to 1G max.
+	 *  MUMmer seems to fail when the input is very large, e.g. 3G. Hence, it is now restricted to 1G max.
 	 */
 	private boolean writePreprocSeq(File dir, Mproject mProj,  boolean concat, boolean isSelf, String who) {
 		try {
@@ -408,7 +361,7 @@ public class AlignMain {
 				
 				if (!isSelf && !bNoCAT) {  // Unless concat=true, group up to total seq length maxFileSize.
 					boolean noCat = !concat && nOrigGrp > 1 && curSize+chrLen > maxFileSize;  // 60,000,000
-					boolean yesCat = concat && nOrigGrp > 1 && curSize+chrLen > maxConcatSize;// 1,000,000,000; CAS581 new restriction
+					boolean yesCat = concat && nOrigGrp > 1 && curSize+chrLen > maxConcatSize;// 1,000,000,000
 					
 					if (noCat || yesCat) { 
 						nGrp++;
@@ -471,7 +424,7 @@ public class AlignMain {
 			for (int i = 0; i < groups.size(); i++) {
 				if (groups.get(i).size() == 0) break; // last one can come up empty
 				
-				String fileName = (concat) ? ("_c" + (i+1)) : ("_f" + (i+1)); // CAS581 concat now need suffix#
+				String fileName = (concat) ? ("_c" + (i+1)) : ("_f" + (i+1)); 
 				
 				fileName = projName + fileName + Constants.faFile;
 				msg = "   " + fileName + ": ";

@@ -162,7 +162,7 @@ public class TableColumns {
 		
 		if (isAlgo2 && Globals.bQueryOlap==false) {
 			fd.addField(Integer.class,Q.PHA, "exlap", Q.AOLAP, "Exon overlap"); 
-			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent exon overlap";				
+			SPECIES_COLUMN_DESC[OLAP_COL] = "Percent exon or CDS overlap";				
 		}
 		else { 
 			fd.addField(Integer.class,Q.PHA, "olap", Q.AOLAP, "Gene overlap");

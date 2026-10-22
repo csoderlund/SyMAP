@@ -1042,8 +1042,6 @@ public class TableMainPanel extends JPanel {
 		if (mode != ex.ex_cancel) {
 			if (mode==ex.ex_csv)        ex.writeColsCSV();
 			else if (mode==ex.ex_html)  ex.writeColsHTML();
-			else if (mode==ex.ex_fa_pairs) ex.writeSeqPairs();  
-			else if (mode==ex.ex_fa_genes) ex.writeSeqGenes(); // CAS586 unique genes
 		}	
  	}
    
@@ -1306,18 +1304,15 @@ public class TableMainPanel extends JPanel {
     	}
     }
     private void popupHelp() {
-		String msg = "Suffix * is minor gene. \n"
-				   + "  i.e. a hit overlaps it, but the hit is assigned to another gene.\n\n"; 
-				
-		msg +=  	 "Suffix ~ is un-annotated pseudo gene.\n"
-				   + "  Numbered Pseudo: Is preceeded by a number.\n" 
-				   + "    It can be searched for in Search..., and used in Report...\n"
-				   + "  Columns:\n"
-				   + "    Not numbered: %Olap, Gstart, Gend, Glen and Gst are blank.\n"
-				   + "    Numbered:     Gstart=Hstart, Gend=Hend, Glen=Hlen.\n\n";
+		String msg = "";
+		msg += "Hit Type: Bp is blast hit. It is not aligned to the genome,\n"
+			+  "  though its start coordinate is correct.\n";
+		msg += "Suffix * is minor gene. \n"
+			 + "  i.e. a hit overlaps it, but the hit is assigned to another gene.\n"; 
+		msg += "Suffix ~ is un-annotated pseudo gene.\n\n";
 		
-		msg +=       "In the Select Columns panel, hover the mouse over a column name for a description.\n"
-				   + "  Columns can be moved be dragging the header, and sorted by clicking the header.\n\n";			  
+		msg += "In the Select Columns panel, hover the mouse over a column name for a description.\n"
+		     + "  Columns can be moved be dragging the header, and sorted by clicking the header.\n\n";			  
 				   
 		Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
 	}

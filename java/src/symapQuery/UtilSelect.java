@@ -484,7 +484,7 @@ public class UtilSelect {
 			
 			// Build page
 			page.add(Box.createVerticalStrut(5)); 	
-			if (!tPanel.qFrame.bOnlyBlast) { // will show if its a mix, but not align if any selected with Bp only; CAS590
+			if (!tPanel.qFrame.isOnlyBlast()) { // will show if its a mix, but not align if any selected with Bp only; CAS590
 				page.add(radHit); 		page.add(Box.createVerticalStrut(3));
 				
 				JPanel r1 = Jcomp.createRowPanel();
@@ -708,12 +708,12 @@ public class UtilSelect {
 				if (bGene) {
 					String tag = ht.geneTag.substring(ht.geneTag.indexOf(Globals.DOT)+1, ht.geneTag.length()); // remove chr
 					
-					ht.theSeq = aPool.loadGeneSeq(tag, ht.chrIdx, null); 	 // revComp in loadGeneSeq
+					ht.theSeq = aPool.loadSplicedTrans(tag, ht.chrIdx, null); 	 // revComp in loadGeneSeq
 					
 					if (ht.theSeq==null) {bSuccess=false; return;}
 				}
 				else {
-					ht.theSeq = aPool.loadSeq(ht.pos, ht.start + ":" + ht.end, ht.chrIdx, ht.gapLess); 	
+					ht.theSeq = aPool.loadHitsForMSA(ht.pos, ht.start + ":" + ht.end, ht.chrIdx, ht.gapLess); 	
 					
 					if (ht.theSeq==null) {bSuccess=false; return;}
 					

@@ -44,8 +44,8 @@ public class SyMAPmanager extends ManagerFrame {
 
 	/** Args **/
 	private static String [] rArgVec = {"-r", "-c", "-sql",  "-p", "-a", "-go", "-pg", "-ac"};	// symap or viewSymap
-	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  				// symap
-	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-cs", "-ncat", "-blk"}; 	    // hidden
+	private static String [] wArgVec = {"-mum", "-wsp","-v", "-nh"};					  			// symap
+	private static String [] hArgVec = { "-ii","-tt", "-dd", "-dbd", "-bt", "-s", "-ncat", "-blk"}; // hidden
 	
 	private static void argPrint(String args[]) {
 		if (isReadOnly) System.out.println("Usage:  ./viewSymap [options]");
@@ -76,7 +76,7 @@ public class SyMAPmanager extends ManagerFrame {
 		System.out.println("  -dbd Database - saves special tables to db");
 		System.out.println("  -bt  Synteny trace");
 		System.out.println("  -s   Regenerate summary");
-		System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
+		// System.out.println("  -cs  Collinear sets: recompute for v5.7.7");
 		System.out.println("  -ncat Do not concat any sequence files for v5.8.1");
 		System.out.println("  -blk  Load Blocks from file (the interface will prompt for the filename)"); // CAS589 
 	}
@@ -165,10 +165,6 @@ public class SyMAPmanager extends ManagerFrame {
 		if (equalOption(args, "-ncat")) {  // CAS581
 			System.out.println("-ncat No concatenation");
 			backend.AlignMain.bNoCAT = true;
-		}
-		if (equalOption(args, "-cs")) { // shown on -h for v5.7.7
-			System.out.println("-cs  On A&S, ONLY execute the collinear sets computation");
-			Constants.CoSET_ONLY = true;
 		}
 		if (equalOption(args, "-s")) { 
 			System.out.println("-s  Regenerate summary");

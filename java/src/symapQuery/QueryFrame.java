@@ -46,7 +46,8 @@ public class QueryFrame extends JFrame {
 	protected String title="";// for Export
 	
 	private Vector<Mproject> mProjs = null;
-	protected boolean bUseAlgo2=false, isSelf=false, isAlignNT=false, bUseBlast=false, bOnlyBlast=false;			
+	private boolean isSelf=false, isAlignNT=false;
+	private boolean bUseAlgo2=false, bUseAlgo1=false, bUseBlast=false;	
 	protected int cntUsePseudo=0, cntSynteny=0; // for Overview
 	
 	/******************************************************
@@ -63,22 +64,26 @@ public class QueryFrame extends JFrame {
 		mProjs = new Vector<Mproject> ();			
 		for (Mproject p: mProjVec) mProjs.add(p);
 		
-		bUseBlast = bUseAlgo2 = bOnlyBlast = false;
-		int cntBlast=0;
-		for (int i=0; i<mProjs.size()-1; i++) { // CAS589 moved from ManagerFrame
+		bUseAlgo1 = bUseAlgo2 = bUseBlast = false;
+		int cntBlast=0, cntAlgo1=0, cntAlgo2=0;
+		for (int i=0; i<mProjs.size()-1; i++) { 
 			for (int j=i+1; j<mProjs.size(); j++) {
 				Mpair mp = getMpair(mProjs.get(i).getIdx(), mProjs.get(j).getIdx());
 				if (mp.getPairIdx()<0) continue; 
 				
 				if (mp.isNumPseudo(Mpair.DB)) cntUsePseudo++;
-				if (mp.isBlast(Mpair.DB)) bUseBlast = true; // if one is true
-				if (mp.isAlgo2(Mpair.DB)) bUseAlgo2 = true;
-				if (mp.isOnlyBlast()) cntBlast++;
+				
+				if (mp.hasBlastHits())   cntBlast++; 
+				if (mp.usedAlgo2()) cntAlgo2++; // will only be true if MUMmer hits and Algo2 in pairs.params
+				else if (mp.usedAlgo1()) cntAlgo1++; // ditto
+				
 				isAlignNT = mp.isAlignNT();
 				cntSynteny++;				  // if more than 2 projects, some pairs may not have synteny
 			}	
 		}
-		bOnlyBlast = (cntSynteny==cntBlast); // CAS590 add
+		bUseAlgo1 = (cntAlgo1>0);
+		bUseAlgo2 = (cntAlgo2>0);
+		bUseBlast = (cntBlast>0);
 
 		String [] ab = getAbbrevNames();
 		for (int i=0; i<ab.length-1; i++) {// This is now checked in ProjParams, but to be sure...
@@ -371,9 +376,24 @@ public class QueryFrame extends JFrame {
 	protected DBconn2 getDBC() {return tdbc2;}
 	protected QueryPanel getQueryPanel() {return qPanel;}
 	protected Vector<Mproject> getProjects() {return mProjs;}
-	protected boolean isAlgo2() {return bUseAlgo2 && !bUseBlast;}
-	protected boolean isSelf() {return isSelf;}
-	protected boolean isAlignNT() {return isAlignNT;}
+
+	protected String sumLabel() {
+		String use="";
+		if (bUseBlast) use = "Blast: ";
+		if (bUseAlgo1) {
+			if (use.isBlank()) use = "Algo1: ";
+			else use = "Blast, Algo1: ";
+		}
+		else if (bUseAlgo2) {
+			if (use.isBlank()) use = "Algo2: ";
+			else use = "Blast, Algo2: ";
+		}
+		return use;
+	}
+	protected boolean isUseExon()  {return !bUseAlgo1;}
+	protected boolean isOnlyBlast() {return bUseBlast && !bUseAlgo1 && !bUseAlgo2;}
+	protected boolean isSelf()      {return isSelf;}
+	protected boolean isAlignNT()  {return isAlignNT;}
 	
 	protected Mpair getMpair(int idx1, int idx2) { 
 		return mFrame.getMpair(idx1, idx2);
@@ -396,7 +416,6 @@ public class QueryFrame extends JFrame {
 	private DBconn2 tdbc2 = null;
 	private ManagerFrame mFrame;
 	private QueryPanel qPanel = null;
-	
 	
 	private int screenWidth, screenHeight;
 	private JSplitPane splitPane = null;

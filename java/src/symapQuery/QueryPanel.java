@@ -67,7 +67,7 @@ public class QueryPanel extends JPanel {
 		if (Jhtml.isLinux()) {wFil1 = 160; wFil2 = 70;}
 		
 		qFrame = parentFrame;
-		olapDesc = (qFrame.isAlgo2() && Globals.bQueryOlap==false) ? "Exon" : "Gene";
+		olapDesc = (qFrame.isUseExon() && Globals.bQueryOlap==false) ? "Exon" : "Gene";
 		
 		// what queries to display
 		isSelf   =  qFrame.isSelf();
@@ -86,7 +86,7 @@ public class QueryPanel extends JPanel {
 		setClearDefaults(); // No matter on they get set on create, they all start out cleared
 	}
 	protected DBconn2 getDBC()  {return qFrame.getDBC();} // DBdata needs this for Gene#
-	protected boolean isOlap()  {return !qFrame.bUseAlgo2 || qFrame.bUseBlast;}
+	protected boolean isOlap()  {return qFrame.isUseExon();}
 	    
 	/*************************************************************
 	 * XXX State and get
@@ -509,7 +509,7 @@ public class QueryPanel extends JPanel {
 		lblHitGE = Jcomp.createLabel("Hit >=  ", "Value >= input number");
 		row.add(lblHitGE);		row.add(Box.createHorizontalStrut(Jcomp.getWidth(wFil2, lblHitGE)));
 		row.add(lblHitId); 		row.add(txtHitId); 		row.add(Box.createHorizontalStrut(w));
-		if (!qFrame.isAlignNT) {row.add(lblHitSim); row.add(txtHitSim); row.add(Box.createHorizontalStrut(w));}//CAS588 add,CAS589 was isSelf
+		if (!qFrame.isAlignNT()) {row.add(lblHitSim); row.add(txtHitSim); row.add(Box.createHorizontalStrut(w));}//CAS588 add,CAS589 was isSelf
 		row.add(lblHitCov); 	row.add(txtHitCov); 	
 		if (!bNoAnno) {
 			row.add(Box.createHorizontalStrut(w*3));
@@ -929,7 +929,7 @@ public class QueryPanel extends JPanel {
 			grpCoords.clear(); // in case makeSpChrWhere is not called
 
 			bValidQuery=true;
-			TableColumns theFields = TableColumns.getFields(isIncludeMinor(), qFrame.isAlgo2()); 
+			TableColumns theFields = TableColumns.getFields(isIncludeMinor(), qFrame.isUseExon()); 
 			boolean bSingle = isSingle();
 			
 			String sql = "SELECT " + theFields.getDBFieldList(bSingle);

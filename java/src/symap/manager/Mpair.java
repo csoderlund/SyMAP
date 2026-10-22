@@ -13,6 +13,7 @@ import backend.Utils;
 import backend.anchor1.Group;
 import database.DBconn2;
 import props.PropertiesReader;
+import symap.Ext;
 import symap.Globals;
 import util.ErrorReport;
 import util.Utilities;
@@ -34,23 +35,34 @@ public class Mpair {
 	private static final String mummer = "MUMmer";
 	private static final String promer = "PROmer"; // Also hardcoded in PairParams - no where else
 	private static final String nucmer = "NUCmer";
-	private static final String loadPrefix = "Load";    
+	private static final String loadblast = "Load Blast";   
+	private static final String hasAlgo2 = "Cluster Algo2";
 	
-	// sections
+	private static final String spp     = "       ";	// space to go before parameters;
+	private static final String sp2     = "          ";	// space to go before parameters;
+	
+	// sections -- spacing is used in getParamsForSum
 	private static final String ALIGN   = "  Align "; // space before PROmer or NUCmer
+	private static final String USE		= "  Use ";   // space before filename or existing
 	private static final String LOAD	= "  Load Blast File";
+	private static final String COSET   = "  Collinear Sets";
+	private static final String SYNORIG = "  Synteny Original";
+	private static final String SYNSTRI = "  Synteny Strict";	
+	// subsection for MUMmer
 	private static final String ALGO1   = "  Cluster Algo1 (modified original)";
 	private static final String ALGO2   = "  Cluster Algo2 (exon-intron)";
-	private static final String SYNORIG = "  Synteny Original";
-	private static final String SYNSTRI = "  Synteny Strict";		
-	private static final String spp     = "       ";	// space to go before parameters;
 	
 	public Mproject mProj1, mProj2;
 	protected int pairIdx=-1; 		// accessed in ManagerFrame; 
 	private int proj1Idx=-1, proj2Idx=-1;
 	private DBconn2 dbc2;
 	
-	protected boolean hasMUMmer=false, hasBlast=false;
+	private boolean isSelf=false; 
+	private boolean bHasMUMmerFiles=false,  //align/all.done	
+					  bHasBlastFiles=false, //blast/files
+					  bHasMUMmerHits=false,	// pair.params string contains MUMmer - see loadParamsDB
+					  bHasBlastHits=false;  // pair.params string contains Load
+	private boolean isAlignNT, bUsedAlgo1=false, bUsedAlgo2=false; // pair.params contains ALGO1, ALGO2, nucmer
 	protected String alignStr="";
 	
 	public boolean bPseudo=false, bSynOnly=false, bCoSet=false; // set in PairParams and read in ManagerFrame
@@ -59,7 +71,6 @@ public class Mpair {
 	private HashMap <String, String> fileMap = new HashMap <String, String> ();
 	private HashMap <String, String> dbMap = new HashMap <String, String> ();
 	private HashMap <String, String> defMap = new HashMap <String, String> ();
-	private boolean isSelf=false, isAlignNT=false, isOnlyBlast=false; 	// CAS589 add isAlignNT; CAS590 add isOnlyBlast
 	
 	// These must be in same order as PairParam.SYMBOLS arrays; the order isn't needed anywhere else in this file
 	private static final String [] paramKey = { // repeated exactly in PairParams and defaults below
@@ -67,7 +78,7 @@ public class Mpair {
 			"MUMmer", 
 			"concat", "mask1", "mask2",
 			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-			"Blast", 
+			"Blast", "isAA", "pIdentity", "evalue",
 			// Cluster
 			"number_pseudo",
 			"algo1", "topn", 					// algo1 is default for self, order, no genes, else algo2
@@ -85,10 +96,11 @@ public class Mpair {
 	// CHANGE these if anything is changed
 	
 	private String [] paramDef = {  	
-			"1", 						// 1 Use Mummer
+			"1", 						// 1 Use Mummer; 0 BlastHits
 			"1", "0", "0", 				// 2-4  concat, mask1, mask2
 			"", "", "", "0", "0",		// 5-9  nucmer, promer, self, only, only
 			"0", 						// 0 Load Blast
+			"1", "40", "1E-10",			// 1 Input Proteins, >%Sim, <evalue
 			//Cluster
 			"0",						// 10 number pseudo,  
 			"0",						// 11 algo1
@@ -141,115 +153,133 @@ public class Mpair {
 		
 		setAligns();
 	}
-	protected void setAligns() {// check here so can reuse values; called from ManagerFrame for updates; CAS589 add; 
+	/** ManagerFrame: */ 
+	protected void setAligns() {
 	try {
-		hasMUMmer 		 = Utils.checkDoneMUMmer(resultDir + Constants.alignDir);
-		hasBlast 		 = Utils.checkDoneBlast(resultDir + Constants.blastDir);
+		bHasMUMmerFiles = Utils.checkDoneMUMmer(resultDir + Constants.alignDir);
+		bHasBlastFiles  = Utils.checkDoneBlast(resultDir + Constants.blastDir);
 		
-		if (hasBlast && hasMUMmer) alignStr = "MUMmer/Blast files";
-		else if (hasBlast)         alignStr = "Blast files";
-		else if (hasMUMmer)        alignStr = "MUMmer files";
+		if (bHasBlastFiles && bHasMUMmerFiles) alignStr = "MUMmer/Blast files";
+		else if (bHasBlastFiles)         alignStr = "Blast files";
+		else if (bHasMUMmerFiles)        alignStr = "MUMmer files";
 		else alignStr="";
 	}
 	catch (Exception e) {ErrorReport.print(e, "check align/blast directories");  }
 	}
-	protected void setHasBlast() {
+	// PairParams.createMainLabels()
+	protected void setHasBlast() { 
 		String name = Utils.getBlastFileList(resultDir);
-	    hasBlast = (name!=null);
+	    bHasBlastFiles = (name!=null);
 	}
-	/************************************************************************************/
-	// Summary: The folllowing lines can be in dbParam
-	// -MUMmer files 05-Oct-26 08:11   CPUs: 12
+	/************************************************************************************
+	// Summary: The following lines can be in the database pair.dbParam 
+	// MUMmer files 05-Oct-26 08:11   CPUs: 12
 	//    Align PROmer
-	// -Use MUMmer
+	// Use MUMmer
 	//    Align PROmer
-	// -Load
-	// CHANGE WITH CAUTION: This is checked later for the strings PROmer, MUMmer, NUCmer, Load
-	public String getParamsForSum(String dbParams) {
-		String fullmsg="";
-		if (dbParams!=null && !dbParams.isBlank()) {
-			if (dbParams.contains(mummer)) { // Alignment params are on dbParams
-				String cmsg = getChgCluster(DB);		
+	// Load Blast
+	// CHANGE WITH CAUTION: 
+	 *   loadFromDB: pair.params is checked for strings PROmer, MUMmer, NUCmer, Load Blast
+	 *   saveParamsForAlignRun, saveParamsForAlignExist, saveParamsForBlast: these are written
+	 *     before summary is created
+	 *********************************************************************/
+	public String getChgForSummary(String dbParams) {
+		String amsg="";
+	
+		if (dbParams==null || dbParams.isBlank()) {
+			amsg = "No information on alignment";
+		}
+		else if (!dbParams.contains(mummer)){
+			amsg = dbParams; 
+		}
+		else { // take it apart to put cluster under mummer
+			if (dbParams.contains("\n")) { 
+				String [] tok = dbParams.split("\n");
 				
-				if (dbParams.contains("\n")) { // take it apart to put cluster under mummer
-					String [] tok = dbParams.split("\n");
+				// add lines until break on Load 
+				int load=tok.length+1;
+				for (int i=0; i<tok.length; i++) {  
+					if (tok[i].startsWith(loadblast)) {load=i; break;}
 					
-					int load=tok.length+1;
-					for (int i=0; i<tok.length; i++) {
-						if (tok[i].startsWith(loadPrefix)) {load=i; break;}
-						fullmsg += tok[i] + "\n";
-					}
-					fullmsg += cmsg + "\n";
-					for (int i=load; i<tok.length; i++) {
-						fullmsg += tok[i] + "\n";
-					}
+					amsg += tok[i] + "\n";
 				}
-				else {
-					fullmsg = dbParams + "\n"  + cmsg;
+				amsg += getChgCluster(DB) + "\n"; // add cluster
+				
+				// finish Load section
+				for (int i=load; i<tok.length; i++) {
+					amsg += tok[i] + "\n";
 				}
 			}
-			else fullmsg = dbParams; // Load only
+			else {
+				amsg = dbParams + "\n"  + getChgCluster(DB);
+			}
 		}
-		String smsg = getChgSynteny(DB);  
+		if (amsg.startsWith("  ")) amsg = amsg.substring(2); 
 		
-		if (fullmsg.endsWith("\n")) return fullmsg + smsg;
-		else                        return fullmsg + "\n" + smsg;
+		// both get collinear and synteny
+		String smsg = getChgSynteny(DB); 
+		if (smsg.startsWith("  ")) smsg = smsg.substring(2); 
+		
+		String cmsg = getChgCoSet(DB);
+		if (!cmsg.isBlank()) {
+			if (cmsg.startsWith("  ")) cmsg = cmsg.substring(2); 
+			smsg = cmsg + "\n" + smsg;
+		}
+		
+		if (amsg.endsWith("\n")) return amsg + smsg;
+		else                     return amsg + "\n" + smsg;
 	}
-	
-	// ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log
+	/*************************************************************************
+	 * Get changed params
+	 */
+	// Align MUMmer
+	//   ManagerFrame.alignSelectPair popop when need align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgAllParams(int type) {
 		String amsg = getChgAlign(type, false);   
-		String cmsg = getChgCluster(type); 
-		String smsg = getChgSynteny(type); 
+		String cmsg = "\n" + getChgCluster(type); 
+		String smsg = "\n" + getChgSynteny(type);
 		
-		return amsg + "\n" + cmsg + "\n" + smsg; // none are empty
+		String csmsg = getChgCoSet(type);  // CAS591 was missing coset
+		if (!csmsg.isBlank()) smsg = "\n" + csmsg  + smsg;
+		
+		return amsg + cmsg + smsg; // none are empty
 	}
-	
-	// ManagerFrame.alignSelectedPair popup when no align; DoAlignSynPair terminal, dialog, symap.log
+	// No align - load MUMmer or Blast
+	//   ManagerFrame.alignSelectedPair popup when no align; DoAlignSynPair terminal, dialog, symap.log
 	public String getChgClustSyn(int type) { 
-		if (isNotDefault(type, "Blast")) return getChgLoad(type); // Load Blast selected
+		// Load Blast
+		if (isNotDefault(type, "Blast")) 
+			return getChgLoad(type); 
 		
+		// Load Mummer
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
+		String csmsg = getChgCoSet(type);  // CAS591 was missing coset
+		if (!csmsg.isBlank()) smsg = csmsg + "\n" + smsg;
 		
 		if (type==FILE) {
-			String amsg = getUseExistAlign(); // CAS588 include on initial popup
+			String amsg = getUseAlignExists(); 
 			return amsg + "\n" + cmsg + "\n" + smsg;
 		}
 		else return cmsg + "\n" + smsg; // Summary has type=DB, so gets existing from pairs.params
 	}
-	public String getChgLoad(int type) {
-		String cmsg = getChgAlign(type, false);
-		String smsg = getChgSynteny(type); 
-		return cmsg + "\n" + smsg;
-	}
+	// Run MUMmer
 	public String getChgAlign(int type, boolean forSum) {
 		String msg="";
-		if (isNotDefault(type, "Blast")) { // blast selected; CAS589 
-			msg = LOAD;
-			
-			String fname = Utils.getBlastFileList(resultDir);
-			if (fname==null) return msg + "\n" + spp + "NO BLAST FILE!!";
-			
-			hasBlast=true;
-			
-			msg = msg + "\n" + spp + fname;
-			if (pairIdx>0) msg += "\n" + spp + "add to existing";
-			return msg;
-		}
-			
-		if (isNotDefault(type,"concat")) 			msg = pjoin(msg, "No concat");	
-		if (isNotDefault(type,"mask1")) 			msg = pjoin(msg, "Mask " + mProj1.getDisplayName());	
-		if (isNotDefault(type,"mask2")) 			msg = pjoin(msg, "Mask " + mProj2.getDisplayName());	
 		
-		if (isNotDefault(type,"promer_only")) 		msg = pjoin(msg, "Use PROmer ");// CAS589 was 'PROmer only'
-		else if (isNotDefault(type,"nucmer_only"))  msg = pjoin(msg, "Use NUCmer ");
+		if (isNotDefault(type,"concat")) 			msg = joinSp(msg, "No concat", sp2);	
+		if (isNotDefault(type,"mask1")) 			msg = joinSp(msg, "Mask " + mProj1.getDisplayName(), sp2);	
+		if (isNotDefault(type,"mask2")) 			msg = joinSp(msg, "Mask " + mProj2.getDisplayName(), sp2);	
 		
-		if (isNotDefault(type,"self_args")) 		msg = pjoin(msg, "Self args: "   + getSelfArgs(type)); 
-		else if (isNotDefault(type,"promer_args"))  msg = pjoin(msg, "PROmer args: " + getPromerArgs(type));
-		else if (isNotDefault(type,"nucmer_args"))  msg = pjoin(msg, "NUCmer args: " + getNucmerArgs(type));
+		if (isNotDefault(type,"promer_only")) 		msg = joinSp(msg, "Use PROmer ", sp2);
+		else if (isNotDefault(type,"nucmer_only"))  msg = joinSp(msg, "Use NUCmer ", sp2);
 		
-		if (!forSum && Constants.MUM_NO_RM)     msg = pjoin(msg, "Keep MUMmer .delta file"); 
+		if (isNotDefault(type,"self_args")) 		msg = joinSp(msg, "Self args: "   + getSelfArgs(type), sp2); 
+		else if (isNotDefault(type,"promer_args"))  msg = joinSp(msg, "PROmer args: " + getPromerArgs(type), sp2);
+		else if (isNotDefault(type,"nucmer_args"))  msg = joinSp(msg, "NUCmer args: " + getNucmerArgs(type), sp2);
+		
+		if (Ext.isMummer4Path()) 					msg = joinSp(msg, Ext.getMummerPath(), sp2); 
+		if (!forSum && Constants.MUM_NO_RM)     	msg = joinSp(msg, "Keep MUMmer .delta file", sp2); 
 		
 		if (!msg.equals("")) {
 			if (msg.contains(promer) || msg.contains(nucmer)) return ALIGN + "\n" + msg;
@@ -259,113 +289,38 @@ public class Mpair {
 		if (isSelf) return ALIGN + nucmer ; // always remind what is being used
 		return ALIGN + promer;
 	}
-	
-	private String getChgCluster(int type) {
-		String msg="";
-		if (isAlgo2(type)) {
-			if (isNotDefault(type,"exon_scale")) 	msg = pjoin(msg, "Exon scale = " + getExonScale(type)); 
-			if (isNotDefault(type,"gene_scale")) 	msg = pjoin(msg, "Gene scale = " + getGeneScale(type));
-			if (isNotDefault(type,"len_scale")) 	msg = pjoin(msg, "Length scale = " + getLenScale(type));
-			if (isNotDefault(type,"g0_scale")) 	msg = pjoin(msg, "G0 length scale = " + getG0Scale(type));
-			
-			if (isNotDefault(type,"EE_pile"))		msg = pjoin(msg, "Limit Exon-Exon piles");
-			if (isNotDefault(type,"EI_pile"))		msg = pjoin(msg, "Limit Exon-Intron piles"); 
-			if (isNotDefault(type,"En_pile"))		msg = pjoin(msg, "Limit Exon-intergenic piles");
-			if (isNotDefault(type,"II_pile"))		msg = pjoin(msg, "Allow Intron-Intron piles");
-			if (isNotDefault(type,"In_pile"))		msg = pjoin(msg, "Allow Intron-intergenic piles");
-			if (isNotDefault(type,"topn")) 		msg = pjoin(msg, "Top N piles = " + getTopN(type));
-			if (isNotDefault(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); 
-			
-			if (isNotDefault(type,"CoSet")) {
-				if (!isCoSetNum(type)) msg = pjoin(msg,  "Order Collinear by size");
-				if (!isCoSetAlgo(type)) msg = pjoin(msg, "Simple Collinear Algo");
-			}
-			if (msg.equals("")) msg = ALGO2;
-			else                msg = ALGO2 + "\n" + msg;
-		}
-		else if (isAlgo1(type)) {
-			if (isNotDefault(type,"topn")) msg = pjoin(msg,"Top N piles =" + getTopN(type));
-			if (Group.bSplitGene)   msg = pjoin(msg,"Split gene");
-			if (isNotDefault(type,"number_pseudo")) msg = pjoin(msg, "Number pseudo"); // algo will come after
-			
-			if (msg.equals("")) msg = ALGO1;
-			else                msg = ALGO1 +  "\n" + msg; 				
-		}
-		return msg;
-	}
-	// Called for A&S, C&S, and SynOnly (directly)
-	protected String getChgSynteny(int type) {   
-		String msg="", smsg="";
-		
-		if (isStrict(type))  smsg = SYNSTRI;
-		else                 smsg = SYNORIG;
-		
-		if (isNotDefault(type,"mindots")) 		msg = pjoin(msg, "Min hits=" + getMinDots(type));
-		if (isNotDefault(type,"same_orient"))  msg = pjoin(msg, "Same orient");
-		if (isNotDefault(type,"merge_blocks")) {// has a choice of 3 where 0 is default
-			String idx  = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
-			int ix = Utilities.getInt(idx);
-			msg = pjoin(msg, "Merge blocks: " + PairParams.mergeOpts[ix]);
-		}
-		
-		if (isNotDefault(type, "order_proj1"))	msg = pjoin(msg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName()); 
-		if (isNotDefault(type, "order_proj2"))	msg = pjoin(msg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName());
-		
-		if (msg.equals("")) return smsg;
-		return smsg + "\n" + msg; 	
-	}
-	protected String getChgCoSet(int type) {
-		String msg="";
-		if (!isCoSetNum(type)) msg = pjoin(msg,  "Collinear order by size");
-		if (!isCoSetAlgo(type)) msg = pjoin(msg, "Collinear Simple");
-		return msg;
-	}
-	private boolean isNotDefault(int type, String field) {
-		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
-		if (db==null) {
-			Globals.prt("No parameter in database: " + field);
-			return false;				
-		}
-		String def = defMap.get(field);
-		if (def==null) return false;
-		return !db.contentEquals(def);
-	}
-	private String pjoin(String m1, String m2) {
-		if (!m1.equals("") && !m1.startsWith(spp)) m1 = spp + m1;
-		if (!m2.equals("") && !m2.startsWith(spp)) m2 = spp + m2;
-		if (m1.equals("")) return m2;
-		if (m2.equals("")) return m1;
-		return m1 + "\n" + m2; 
-	}
-	/* read align_params_used.txt file for A&S popup; 
-	 * only PROMER/NUCMER, MASK and any MUMmer args (skip No concat and M4 directory) 
-	 * Read and written in AlignMain */
-	private String getUseExistAlign() { // this is also read in AlignMain, but contains a little more info
-		String align="  Use existing MUMmer files"; 
+	/* Use existing MUMmer
+	 * Read align_params_used.txt, e.g.
+	 *    MUMmer files 16-Jul-26 08:18   CPUs: 2
+  	 *   	Align PROmer 
+	 *  Only PROMER/NUCMER, MASK and any MUMmer args (skip No concat and M4 directory) 
+	 */
+	private String getUseAlignExists() { // this is also read in AlignMain, but contains a little more info
+		String align= USE + "existing MUMmer files"; 
 		try {		
 			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
-			if (pfile==null) return align; // okay, not written yet
+			if (pfile==null) return align; // okay, not params_used file not there
 			
-			String sp="     ";
-			String line, params="", mask=sp, msg = ""; 
+			String line, params="", mask=spp, msg = ""; 
+			
 			BufferedReader reader = new BufferedReader(new FileReader(pfile));
 			while ((line = reader.readLine()) != null) {
 				line = line.trim();
-				if (!line.startsWith("#")) {
-					if (msg.isBlank()) {
-						msg = "  Use " + line;
-						msg = msg.substring(0, msg.indexOf("CPU")); // remove CPU
-					}
-					else if (line.startsWith("Align")) msg += line.replace("Align ", ""); // remove Align
-					else if (line.contains("Mask")) {
-						if (line.contains("/")) line = line.substring(0, line.indexOf("/")); // was writing M4 path on same line
-						mask += line + " ";		
-					}
-					else if (!line.contains("No concat") && !line.startsWith("/")){// only mummer args here
-						if (line.length()>40) line = line.substring(0, params.length()) + "...";
-						if (params.isBlank()) params = sp + line;
-						else                  params += "\n" + sp + line; // nl for each new param line
-					}
+				if (line.startsWith("#")) continue;
+				
+				if (msg.isBlank()) { // 1st line
+					msg = USE + line;
+					msg = msg.substring(0, msg.indexOf("CPU")); // remove CPU
+				}
+				else if (line.startsWith("Align")) msg += line.replace("Align ", ""); // remove Align
+				else if (line.contains("Mask")) {
+					if (line.contains("/")) line = line.substring(0, line.indexOf("/")); // was writing M4 path on same line
+					mask += line + " ";		
+				}
+				else if (!line.contains("No concat") && !line.startsWith("/")){// only mummer args here
+					if (line.length()>40) line = line.substring(0, params.length()) + "...";
+					if (params.isBlank()) params = spp + line;
+					else                  params += "\n" + spp + line; // nl for each new param line
 				}
 			}
 			reader.close();
@@ -378,167 +333,108 @@ public class Mpair {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Read " + Constants.usedFile); return align;}
 	}
-	/************************************************************************************/
-	public int getPairIdx()   {return pairIdx;}
-	public int getProj1Idx()  { return mProj1.getIdx();}
-	public int getProj2Idx()  { return mProj2.getIdx();}
 	
-	public Mproject getProj1() {return mProj1;}
-	public Mproject getProj2() {return mProj2;}
-	
-	public boolean isPairInDB() {return pairIdx>0;}
-	
-	public String getResultDir() {return resultDir;}
-	
-	public boolean isOnlyBlast() { // CAS590 add
-		return isOnlyBlast;
+	// Load Blast: Called above and in ManagerFrame.alignSelectedPair
+	public String getChgLoad(int type) {
+		String cmsg = "";
+		String fname = Utils.getBlastFileList(resultDir);
+		if (fname==null) return LOAD + "\n" + spp + "NO BLAST FILE!!";
+		
+		bHasBlastFiles=true;
+		
+		// repeated in saveOaransToDBforBlast; Utils.getBlastFileList reads from disk and 'could' have changed
+		cmsg = spp + fname;
+		if (isNotDefault(type,"isAA")) 	cmsg += " NT"; else cmsg += " AA";	
+		if (pairIdx>0) cmsg = joinSp(cmsg, "Add to existing", spp);
+
+		if (isNotDefault(type,"pIdentity")) 	cmsg = joinSp(cmsg, "%Identity " + getpIdentity(type), spp);	
+		if (isNotDefault(type,"evalue")) 		cmsg = joinSp(cmsg, "E-value "   + getEval(type), spp);
+		cmsg = LOAD + "\n" + cmsg;
+		
+		String csmsg = getChgCoSet(type);
+		String smsg = "\n" + getChgSynteny(type); 
+		if (!csmsg.isBlank()) smsg = "\n" + csmsg + smsg;
+		return cmsg + smsg;
 	}
-	
-	public boolean isBlast(int type) { // CAS589 add
-		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");
-		return x.contentEquals("1");
-	}
-	
-	public boolean isPromer(int type) {
-		String x = (type==FILE) ? fileMap.get( "promer_only") : dbMap.get("promer_only");
-		return x.contentEquals("1");
-	}
-	public String getNucmerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "nucmer_args") : dbMap.get("nucmer_args");
-		return x;
-	}
-	public String getPromerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "promer_args") : dbMap.get("promer_args");
-		return x;
-	}
-	public String getSelfArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
-		return x;
-	}
-	
-	public boolean isNumPseudo(int type) {
-		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
-		return x.contentEquals("1");
-	}
-	public boolean isAlgoX(int type) { // neither have exLap
-		if (isBlast(type)) return true;
-		return isAlgo1(type);
-	}
-	public boolean isAlgo1(int type) {
-		String x = (type==FILE) ? fileMap.get("algo1") : dbMap.get("algo1");
-		return x.contentEquals("1");
-	}
-	public int getTopN(int type) {
-		String x = (type==FILE) ? fileMap.get("topn") : dbMap.get("topn");
-		return Utilities.getInt(x);
-	}
-	public boolean isAlgo2(int type) {
-		String x = (type==FILE) ? fileMap.get("algo2") : dbMap.get("algo2");
-		return x.contentEquals("1");
-	}
-	public double getG0Scale(int type) {
-		String x = (type==FILE) ? fileMap.get("g0_scale") : dbMap.get("g0_scale");
-		return Utilities.getDouble(x);
-	}
-	public double getExonScale(int type) {
-		String x = (type==FILE) ? fileMap.get("exon_scale") : dbMap.get("exon_scale");
-		return Utilities.getDouble(x);
-	}
-	public double getGeneScale(int type) {
-		String x = (type==FILE) ? fileMap.get("gene_scale") : dbMap.get("gene_scale");
-		return Utilities.getDouble(x);
-	}
-	public double getLenScale(int type) {
-		String x = (type==FILE) ? fileMap.get("len_scale") : dbMap.get("len_scale");
-		return Utilities.getDouble(x);
-	}
-	public boolean isEEpile(int type) {
-		String x = (type==FILE) ? fileMap.get("EE_pile") : dbMap.get("EE_pile");
-		return x.contentEquals("1");
-	}
-	public boolean isEIpile(int type) {
-		String x = (type==FILE) ? fileMap.get("EI_pile") : dbMap.get("EI_pile");
-		return x.contentEquals("1");
-	}
-	public boolean isEnpile(int type) {
-		String x = (type==FILE) ? fileMap.get("En_pile") : dbMap.get("En_pile");
-		return x.contentEquals("1");
-	}
-	public boolean isIIpile(int type) {
-		String x = (type==FILE) ? fileMap.get("II_pile") : dbMap.get("II_pile");
-		return x.contentEquals("1");
-	}
-	public boolean isInpile(int type) {
-		String x = (type==FILE) ? fileMap.get("In_pile") : dbMap.get("In_pile");
-		return x.contentEquals("1");
-	}
-	public boolean isConcat(int type) {
-		String x = (type==FILE) ? fileMap.get( "concat") : dbMap.get( "concat");
-		return x.contentEquals("1");
-	}
-	public boolean isMask1(int type) {
-		String x = (type==FILE) ? fileMap.get( "mask1") : dbMap.get( "mask1");
-		return x.contentEquals("1");
-	}
-	public boolean isMask2(int type) {
-		String x = (type==FILE) ? fileMap.get( "mask2") : dbMap.get( "mask2");
-		return x.contentEquals("1");
-	}
-	public boolean isNucmer(int type) {
-		String x = (type==FILE) ? fileMap.get( "nucmer_only") : dbMap.get( "nucmer_only");
-		return x.contentEquals("1");
-	}
-	
-	public int getMinDots(int type) {
-		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
-		return Utilities.getInt(x);
-	}
-	public String getMergeIndex(int type) {// 3 options
-		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
-		return x;
-	}
-	public boolean isOrient(int type) {
-		String x = (type==FILE) ? fileMap.get("same_orient") : dbMap.get("same_orient");
-		return x.contentEquals("1");
-	}
-	public boolean isStrict(int type) {
-		String x = (type==FILE) ? fileMap.get("strict_blocks") : dbMap.get("strict_blocks");
-		return x!=null && x.contentEquals("1");
-	}
-	public boolean isOrder1(int type) {
-		String x = (type==FILE) ? fileMap.get("order_proj1") : dbMap.get("order_proj1");
-		return x.contentEquals("1");
-	}
-	public boolean isOrder2(int type) {
-		String x = (type==FILE) ? fileMap.get("order_proj2") : dbMap.get("order_proj2");
-		return x.contentEquals("1");
-	}
-	public boolean isCoSetNum(int type) {
-		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
-		String [] y = x.split(":");
-		if (y.length!=2) return true;
-		return y[0].contentEquals("0");
-	}
-	public boolean isCoSetAlgo(int type) {
-		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
-		String [] y = x.split(":");
-		if (y.length!=2) return true;
-		return y[1].contentEquals("0");
-	}
-	public boolean isAlignNT() {return isAlignNT;}
-	
-	/************************************************************************************/
-	public HashMap <String, String> getFileParams() { return fileMap;}
-	public HashMap <String, String> getDbParams() { return dbMap;} // for PairParams Pseudo
-	
-	public String getFileParamsStr() {
+
+	// Cluster
+	private String getChgCluster(int type) {
 		String msg="";
-		for (String x : fileMap.keySet()) {
-			msg += String.format("%15s %s\n", x, fileMap.get(x));
+		if (isAlgo2(type)) {
+			if (isNotDefault(type,"exon_scale")) 	msg = joinSp(msg, "Exon scale = " + getExonScale(type), sp2); 
+			if (isNotDefault(type,"gene_scale")) 	msg = joinSp(msg, "Gene scale = " + getGeneScale(type), sp2);
+			if (isNotDefault(type,"len_scale")) 	msg = joinSp(msg, "Length scale = " + getLenScale(type), sp2);
+			if (isNotDefault(type,"g0_scale")) 	msg = joinSp(msg, "G0 length scale = " + getG0Scale(type), sp2);
+			
+			if (isNotDefault(type,"EE_pile"))		msg = joinSp(msg, "Limit Exon-Exon piles", sp2);
+			if (isNotDefault(type,"EI_pile"))		msg = joinSp(msg, "Limit Exon-Intron piles", sp2); 
+			if (isNotDefault(type,"En_pile"))		msg = joinSp(msg, "Limit Exon-intergenic piles", sp2);
+			if (isNotDefault(type,"II_pile"))		msg = joinSp(msg, "Allow Intron-Intron piles", sp2);
+			if (isNotDefault(type,"In_pile"))		msg = joinSp(msg, "Allow Intron-intergenic piles", sp2);
+			if (isNotDefault(type,"topn")) 		msg = joinSp(msg, "Top N piles = " + getTopN(type), sp2);
+			if (isNotDefault(type,"number_pseudo")) msg = joinSp(msg, "Number pseudo", sp2); 
+			
+			if (msg.equals("")) return ALGO2;
+			else                return ALGO2 + "\n" + msg;
+		}
+		else if (isAlgo1(type)) {
+			if (isNotDefault(type,"topn")) msg = joinSp(msg,"Top N piles =" + getTopN(type), sp2);
+			if (Group.bSplitGene)          msg = joinSp(msg,"Split gene", sp2);
+			if (isNotDefault(type,"number_pseudo")) msg = joinSp(msg, "Number pseudo", sp2); // algo will come after
+			
+			if (msg.equals("")) return ALGO1;
+			else                return ALGO1 +  "\n" + msg; 				
 		}
 		return msg;
 	}
-	public HashMap <String, String> getDefaults() { return defMap;}
+	// Synteny: Called for A&S, C&S, and SynOnly (directly)
+	protected String getChgSynteny(int type) {   
+		String msg="";
+		
+		if (isNotDefault(type,"mindots")) 	   msg = joinSp(msg, "Min hits=" + getMinDots(type), spp);
+		if (isNotDefault(type,"same_orient"))  msg = joinSp(msg, "Same orient", spp);
+		if (isNotDefault(type,"merge_blocks")) {// has a choice of 3 where 0 is default
+			String idx  = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
+			int ix = Utilities.getInt(idx);
+			msg = joinSp(msg, "Merge blocks: " + PairParams.mergeOpts[ix], spp);
+		}
+		if (isNotDefault(type, "order_proj1"))	msg = joinSp(msg, "Order " + mProj1.getDisplayName() + "->" + mProj2.getDisplayName(), spp); 
+		if (isNotDefault(type, "order_proj2"))	msg = joinSp(msg, "Order " + mProj2.getDisplayName() + "->" + mProj1.getDisplayName(), spp);
+		
+		String smsg = (isStrict(type)) ? SYNSTRI : SYNORIG;
+		if (msg.equals("")) return smsg;
+		return smsg + "\n" + msg; 	
+	}
+	// Collinear sets
+	protected String getChgCoSet(int type) {
+		String msg="";
+		if (!isCoSetNum(type))  msg = joinSp(msg, "Order by size", spp);
+		if (!isCoSetAlgo(type)) msg = joinSp(msg, "Simple", spp);
+		if (msg.isEmpty()) return msg;
+		return COSET + "\n" + msg;
+	}
+	// utility
+	private boolean isNotDefault(int type, String field) {
+		String db = (type==FILE) ? fileMap.get(field) : dbMap.get(field);
+		if (db==null) {
+			Globals.prt("No parameter in database: " + field);
+			return false;				
+		}
+		String def = defMap.get(field);
+		if (def==null) return false;
+		return !db.contentEquals(def);
+	}
+	private String joinSp(String m1, String m2, String sp) {
+		if (!m1.equals("") && !m1.startsWith(sp)) m1 = sp + m1;
+		if (!m2.equals("") && !m2.startsWith(sp)) m2 = sp + m2;
+		if (m1.equals("")) return m2;
+		if (m2.equals("")) return m1;
+		return m1 + "\n" + m2; 
+	}
+	
+	/************************************************************************************
+	 * XXX File/DB params and actions
+	 **************************************************************************************/
 	
 	// ManagerFrame.alignSelected; remove existing and restart
 	public int renewIdx() { 
@@ -606,7 +502,7 @@ public class Mpair {
 		} catch(Exception e) {ErrorReport.print(e, "Creating params file");}
 	}
 	/*********************************************************************/
-	public void saveLoad(String params) {
+	public void saveLoad(String params) { // hidden
 		try { 
 			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
 					+ "syver='" + Globals.VERSION + "', params='" + params + "'" 
@@ -615,40 +511,104 @@ public class Mpair {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
 	}
-	
-	public void saveUpdate() {
+	/*** Only - otherwise, one of the aligns will do this **************/
+	public void saveParamsForOnly() {
 	try { 
 		dbc2.executeUpdate("update pairs set aligndate=NOW(), syver='" + Globals.VERSION + "'"
 				+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 				+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
+		savePairPropsDB();
 	}
 	catch (Exception e) {ErrorReport.print(e, "Update version"); return;}
 	}
-	/**** called by DoAlignSynPair.run() for MUMmer and UseBlast for blast ***/
-	public void saveParamsToDB(String alignParams) {// params are ones not in pair_props
-		try {
-			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj1Idx); 
-			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj2Idx);
-			
-			// Append to current for MUMmer + Multiple Blast load
-			String addParams = alignParams;
-			String curParams = dbc2.executeString("select params from pairs where idx=" + pairIdx);
-			if (curParams!=null && !curParams.isBlank()) {
-				if (curParams.endsWith("\n")) addParams = curParams + alignParams;
-				else                          addParams = curParams + "\n" + alignParams;
-			}
 	
+	/*********************************************************
+	 * MUMmer run
+	 */
+	public void saveParamsForAlignRun(int nMaxCPUs) {
+		try {
+			String alignParams = "MUMmer files " + Utilities.getDateTime() + "   CPUs: " + nMaxCPUs + "\n";
+			alignParams += getChgAlign(Mpair.FILE, true); 	// true, do not add command line -mum
+			
+			FileDir.checkCreateDir(resultDir, true /* bPrt */); // only created on firs time
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
+			if (pfile==null) pfile = new File(resultDir,Constants.usedFile); // create 
+			
+			PrintWriter out = new PrintWriter(pfile);
+			out.println("# Parameters used for MUMmer alignments in /align.");
+			out.println(alignParams);
+			out.close();
+			
+			savePairParamsDB(alignParams, false);
+			savePairPropsDB();
+		}
+		catch (Exception e) {ErrorReport.print(e, "Save " + Constants.usedFile); }
+	}
+	/** MUMmer exist: use previous **/
+	public void saveParamsForAlignExist(int nAlignDone, String dateTime) {
+		try {
+			String alignParams = USE + "previous " + nAlignDone + " MUMmer files " + dateTime; 
+			File pfile = Utils.getParamsFile(resultDir,Constants.usedFile); 
+			if (pfile!=null) { // okay, just is missing 
+				alignParams = USE + "previous " + nAlignDone + " "; // completed with what is in file
+				String line;
+				BufferedReader reader = new BufferedReader(new FileReader(pfile));
+				while ((line = reader.readLine()) != null) {
+					if (!line.startsWith("#"))
+						alignParams += line + "\n";
+				}
+				reader.close();
+			}
+			savePairParamsDB(alignParams, false);
+			savePairPropsDB();
+			return;  
+		}
+		catch (Exception e) {ErrorReport.print(e, "Save params_used"); return; }
+	}
+	/**** UseBlast; append blast params ***/
+	public void saveParamsToDBforBlast(String filename) {
+		String msg = loadblast + " " + filename;
+		if (isNotDefault(FILE,"isAA")) 	msg += " NT"; else msg += " AA";	
+
+		boolean bi = isNotDefault(FILE,"pIdentity"), be = isNotDefault(FILE,"evalue");
+		if (bi || be) {
+			String pmsg="";
+			if (bi) pmsg = " %Identity " + getpIdentity(FILE);	
+			if (be) pmsg += " E-value "   + getEval(FILE);
+			msg += "\n" + pmsg;
+		}
+		savePairParamsDB(msg, true);
+		savePairPropsDB();
+	}
+	/******************************************************************/
+	private void savePairParamsDB(String alignParams, boolean bAppend) {
+		try {
+			String addParams = alignParams;
+			
+			if (bAppend) {
+				String curParams = dbc2.executeString("select params from pairs where idx=" + pairIdx);
+				if (curParams!=null && !curParams.isBlank()) {
+					if (curParams.endsWith("\n")) addParams = curParams + alignParams;
+					else                          addParams = curParams + "\n" + alignParams;
+				}
+			}
 			dbc2.executeUpdate("update pairs set aligned=1, aligndate=NOW(), "
 					+ "syver='" + Globals.VERSION + "', params='" + addParams + "'" 
 					+ " where (proj1_idx=" + proj1Idx + " and proj2_idx=" + proj2Idx 
 					+ ") or   (proj1_idx=" + proj2Idx + " and proj2_idx=" + proj1Idx + ")"); 
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot save pair parameters");}
+	}
+	private void savePairPropsDB() {
+		try {
+			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj1Idx); 
+			dbc2.executeUpdate("update projects set hasannot=1,loaddate=NOW() where idx=" + proj2Idx);
 			
-			String st = "DELETE FROM pair_props WHERE pair_idx=" + pairIdx;
-			dbc2.executeUpdate(st);
+			dbc2.executeUpdate("DELETE FROM pair_props WHERE pair_idx=" + pairIdx);
 			
 			for (String key : fileMap.keySet()) {
 				String val = fileMap.get(key);
-				st = "INSERT INTO pair_props VALUES ('" + 
+				String st = "INSERT INTO pair_props VALUES ('" + 
 						pairIdx + "','" + proj1Idx + "','" + proj2Idx + "','" + key + "','" + val + "')";
 				dbc2.executeUpdate(st);
 				dbMap.put(key, val);
@@ -656,7 +616,6 @@ public class Mpair {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot save pair parameters");}
 	}
-
 	/******** AnchorMain.run; update one value ************************/
 	public void setPairProp(String name, String val) throws Exception {
 		dbc2.executeUpdate("delete from pair_props where name='" + name + "' and pair_idx=" + pairIdx);
@@ -690,7 +649,11 @@ public class Mpair {
 	}
 	catch (Exception e) {ErrorReport.print(e, "load from file"); return false; }
 	}
-	/***** From last A&S *************************************************/
+	/***** From last A&S *************************************************
+	 * There is a pair_prop called 'MUMmer' which is 1/0 depending on whether it was selected
+	 * but it turns to 0 when blast files are loaded. Hence, need to use the pair.params string
+	 * to set isAlignNT, hasMUMmerHits, hasBlastHits
+	 *******************************************************************/
 	private void loadFromDB() {
 	try {
 		ResultSet rs = dbc2.executeQuery("select name,value from pair_props where pair_idx=" + pairIdx);
@@ -704,16 +667,26 @@ public class Mpair {
 			if (!dbMap.containsKey(paramKey[i]))
 				dbMap.put(paramKey[i], paramDef[i]);
 		
-		// set isAlignNT; CAS589 add for query
+		// see comment above
 		String params = dbc2.executeString("select params from pairs where idx=" + pairIdx);
 		if (params!=null && !params.equals("")) {
-			isOnlyBlast = !params.contains(mummer) && !params.contains(promer) && !params.contains(nucmer) ; // CAS590 for query
-			if (params.contains(promer))      {isAlignNT=false; return;}
-			else if (params.contains(nucmer)) {isAlignNT=true; return;}
+			bHasMUMmerHits = params.contains(mummer) || params.contains(promer) || params.contains(nucmer); // CAS590 for query
+			bHasBlastHits  = params.contains(loadblast);
+			
+			if (bHasMUMmerHits) {
+				if (params.contains(promer))      isAlignNT=false; 
+				else if (params.contains(nucmer)) isAlignNT=true; 
+			}
 		}
-		// will only search all on self
-		int cnt = dbc2.executeCount("select idx from pseudo_hits where cvgpct>0 and pair_idx=" + pairIdx + " limit 1");
-		isAlignNT = (cnt<=0);
+		// pair_props may be changed, even if not used -- so use summary
+		if (bHasMUMmerHits) {
+			String summary = dbc2.executeString("select summary from pairs where idx=" + pairIdx);
+			if (summary!=null && !summary.equals("")) {
+				bUsedAlgo1=bUsedAlgo2=false;
+				if (summary.contains(hasAlgo2)) bUsedAlgo2 = true;
+				else 						    bUsedAlgo1 = true;
+			}
+		}
 	}
 	catch (Exception e) {ErrorReport.print(e, "load from db"); }
 	}
@@ -724,6 +697,182 @@ public class Mpair {
 			dbMap.put(paramKey[i],   paramDef[i]);	// can change in loadFromDB
 			fileMap.put(paramKey[i], paramDef[i]);  // can change in loadFromFIle
 		}
+	}
+	/************************************************************************************
+	 * XXX Simple gets
+	 ********************************************************************************/
+	public HashMap <String, String> getFileParams() { return fileMap;}
+	public HashMap <String, String> getDbParams() { return dbMap;} // for PairParams Pseudo
+	
+	public String getFileParamsStr() {
+		String msg="";
+		for (String x : fileMap.keySet()) {
+			msg += String.format("%15s %s\n", x, fileMap.get(x));
+		}
+		return msg;
+	}
+	public HashMap <String, String> getDefaults() { return defMap;}
+	
+	public int getPairIdx()   {return pairIdx;}
+	public int getProj1Idx()  { return mProj1.getIdx();}
+	public int getProj2Idx()  { return mProj2.getIdx();}
+	
+	public Mproject getProj1() {return mProj1;}
+	public Mproject getProj2() {return mProj2;}
+	
+	public boolean isPairInDB() {return pairIdx>0;}
+	
+	public String getResultDir() {return resultDir;}
+	
+	// MUMmer
+	public boolean isConcat(int type) {
+		String x = (type==FILE) ? fileMap.get( "concat") : dbMap.get( "concat");
+		return x.contentEquals("1");
+	}
+	public boolean isMask1(int type) {
+		String x = (type==FILE) ? fileMap.get( "mask1") : dbMap.get( "mask1");
+		return x.contentEquals("1");
+	}
+	public boolean isMask2(int type) {
+		String x = (type==FILE) ? fileMap.get( "mask2") : dbMap.get( "mask2");
+		return x.contentEquals("1");
+	}
+	public boolean isPromer(int type) {
+		String x = (type==FILE) ? fileMap.get( "promer_only") : dbMap.get("promer_only");
+		return x.contentEquals("1");
+	}
+	public String getNucmerArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "nucmer_args") : dbMap.get("nucmer_args");
+		return x;
+	}
+	public String getPromerArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "promer_args") : dbMap.get("promer_args");
+		return x;
+	}
+	public String getSelfArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
+		return x;
+	}
+	public boolean isNucmer(int type) {
+		String x = (type==FILE) ? fileMap.get( "nucmer_only") : dbMap.get( "nucmer_only");
+		return x.contentEquals("1");
+	}
+	public boolean isAlignNT() {return isAlignNT;}
+	// Blast
+	public boolean hasMUMerHits() { return bHasMUMmerHits;}
+	public boolean hasBlastHits() { return bHasBlastHits;}
+	public boolean hasMUMerFiles() { return bHasMUMmerFiles;}
+	public boolean hasBlastFiles() { return bHasBlastFiles;}
+	
+	public boolean isBlast(int type) { 
+		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");
+		return x.contentEquals("1");
+	}
+	public boolean isBlastAA(int type) {
+		String x = (type==FILE) ? fileMap.get("isAA") : dbMap.get("isAA");
+		return x.contentEquals("1");
+	}
+	public int getpIdentity(int type) {
+		String x = (type==FILE) ? fileMap.get("pIdentity") : dbMap.get("pIdentity");
+		return Utilities.getInt(x);
+	}
+	public double getEval(int type) {
+		String x = (type==FILE) ? fileMap.get("evalue") : dbMap.get("evalue");
+		return Utilities.getDouble(x);
+	}
+	// Cluster
+	public boolean isNumPseudo(int type) {
+		String x = (type==FILE) ? fileMap.get("number_pseudo") : dbMap.get("number_pseudo");
+		return x.contentEquals("1");
+	}
+	public int getMinDots(int type) {
+		String x = (type==FILE) ? fileMap.get("mindots") : dbMap.get("mindots");
+		return Utilities.getInt(x);
+	}
+	public boolean usedAlgo1() {return bUsedAlgo1;} // uses pair.params string
+	public boolean usedAlgo2() {return bUsedAlgo2;}
+	
+	public boolean isAlgo1(int type) {
+		String x = (type==FILE) ? fileMap.get("algo1") : dbMap.get("algo1");
+		return x.contentEquals("1");
+	}
+	public int getTopN(int type) {
+		String x = (type==FILE) ? fileMap.get("topn") : dbMap.get("topn");
+		return Utilities.getInt(x);
+	}
+	public boolean isAlgo2(int type) {
+		String x = (type==FILE) ? fileMap.get("algo2") : dbMap.get("algo2");
+		return x.contentEquals("1");
+	}
+	public double getG0Scale(int type) {
+		String x = (type==FILE) ? fileMap.get("g0_scale") : dbMap.get("g0_scale");
+		return Utilities.getDouble(x);
+	}
+	public double getExonScale(int type) {
+		String x = (type==FILE) ? fileMap.get("exon_scale") : dbMap.get("exon_scale");
+		return Utilities.getDouble(x);
+	}
+	public double getGeneScale(int type) {
+		String x = (type==FILE) ? fileMap.get("gene_scale") : dbMap.get("gene_scale");
+		return Utilities.getDouble(x);
+	}
+	public double getLenScale(int type) {
+		String x = (type==FILE) ? fileMap.get("len_scale") : dbMap.get("len_scale");
+		return Utilities.getDouble(x);
+	}
+	public boolean isEEpile(int type) {
+		String x = (type==FILE) ? fileMap.get("EE_pile") : dbMap.get("EE_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isEIpile(int type) {
+		String x = (type==FILE) ? fileMap.get("EI_pile") : dbMap.get("EI_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isEnpile(int type) {
+		String x = (type==FILE) ? fileMap.get("En_pile") : dbMap.get("En_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isIIpile(int type) {
+		String x = (type==FILE) ? fileMap.get("II_pile") : dbMap.get("II_pile");
+		return x.contentEquals("1");
+	}
+	public boolean isInpile(int type) {
+		String x = (type==FILE) ? fileMap.get("In_pile") : dbMap.get("In_pile");
+		return x.contentEquals("1");
+	}
+	// Collinear
+	public boolean isCoSetNum(int type) {
+		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
+		String [] y = x.split(":");
+		if (y.length!=2) return true;
+		return y[0].contentEquals("0");
+	}
+	public boolean isCoSetAlgo(int type) {
+		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
+		String [] y = x.split(":");
+		if (y.length!=2) return true;
+		return y[1].contentEquals("0");
+	}
+	// Synteny
+	public boolean isStrict(int type) {
+		String x = (type==FILE) ? fileMap.get("strict_blocks") : dbMap.get("strict_blocks");
+		return x!=null && x.contentEquals("1");
+	}
+	public String getMergeIndex(int type) {// 3 options
+		String x = (type==FILE) ? fileMap.get("merge_blocks") : dbMap.get("merge_blocks");
+		return x;
+	}
+	public boolean isOrient(int type) {
+		String x = (type==FILE) ? fileMap.get("same_orient") : dbMap.get("same_orient");
+		return x.contentEquals("1");
+	}
+	public boolean isOrder1(int type) {
+		String x = (type==FILE) ? fileMap.get("order_proj1") : dbMap.get("order_proj1");
+		return x.contentEquals("1");
+	}
+	public boolean isOrder2(int type) {
+		String x = (type==FILE) ? fileMap.get("order_proj2") : dbMap.get("order_proj2");
+		return x.contentEquals("1");
 	}
 	public String toString() {return mProj1.strDisplayName + "-" + mProj2.strDisplayName + " pair";}
 }

@@ -669,9 +669,9 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 						mp = pairObjMap.get(key);
 						mp.setAligns(); // in case contents changed
 					}
-					if (mp.hasMUMmer && mp.hasBlast) row.add(TBL_ADONE + "/" + TBL_BDONE);
-					else if (mp.hasMUMmer) 		     row.add(TBL_ADONE); 
-					else if (mp.hasBlast) 		     row.add(TBL_BDONE); 
+					if (mp.hasMUMerFiles() && mp.hasBlastFiles()) row.add(TBL_ADONE + "/" + TBL_BDONE);
+					else if (mp.hasMUMerFiles()) 		     row.add(TBL_ADONE); 
+					else if (mp.hasBlastFiles()) 		     row.add(TBL_BDONE); 
 					else {
 						String alignDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
 						if (Utils.checkDoneMaybe(alignDir)>0) row.add( TBL_QDONE);
@@ -761,12 +761,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			else if (allDone) { 		
 				Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
 				
-				btnSelAlign.setText("Selected Redo"); 			// default
-				if (mp!=null) {									// Similar labels in PairParams and alignSelectedPair()
-					if 		(mp.bSynOnly)                        btnSelAlign.setText("Synteny Redo");
-					else if (mp.bPseudo)                         btnSelAlign.setText("Pseudo Only");
-					else if (mp.bCoSet || Constants.CoSET_ONLY)  btnSelAlign.setText("Collinear");
-					else if (Constants.NUMHITS_ONLY)             btnSelAlign.setText("NumHits");
+				btnSelAlign.setText("Selected Redo"); // default
+				if (mp!=null) {						    // Similar labels in PairParams and alignSelectedPair()
+					if 		(mp.bSynOnly)               btnSelAlign.setText("Synteny Redo");
+					else if (mp.bPseudo)                btnSelAlign.setText("Pseudo Only");
+					else if (mp.bCoSet)  				btnSelAlign.setText("Collinear");
+					else if (Constants.NUMHITS_ONLY)    btnSelAlign.setText("NumHits");
 				}
 			}	
 			else {
@@ -1158,23 +1158,25 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		if (!alignCheckOrderAgainst(mp)) return; // For ordering contigs
 		
-		// Compose confirm popup; // Similar labels in PairParams and updateEnableButtons()
+		// Popup to confirm actions and params; Similar labels in PairParams and updateEnableButtons()
 		boolean bAlignDone = isSelectedAligned(); // check, A, B
 		String msg;
-		if (Constants.LOAD_BLOCKS)						msg = "Load Blocks from file\n"; // either no align or align done
+		int loc = Mpair.FILE;
+		
+		if (Constants.LOAD_BLOCKS)				msg = "Load Blocks from file\n"; // hidden command line
 		else if (bAlignDone) {				 
-			if (mp.bSynOnly) 							msg = "Synteny Only" + "\n" + mp.getChgSynteny(Mpair.FILE) + "\n";
-			else if (mp.isBlast(Mpair.FILE))			msg = "Load&Synteny\n" + mp.getChgLoad(Mpair.FILE) + "\n";
-			else if (mp.bPseudo)						msg = "Pseudo Only";
-			else if (Constants.CoSET_ONLY || mp.bCoSet) msg = "Collinear Only\n" + mp.getChgCoSet(Mpair.FILE); // flag -cs; CAS588 set in params	
-			else if (Constants.NUMHITS_ONLY) 			msg = "NumHits Only\n";   					    	   // For v5.7.9c,flag -nh
-			else										msg = "Clust&Synteny\n" + mp.getChgClustSyn(Mpair.FILE) + "\n";
+			if (mp.bSynOnly) 					msg = "Synteny Only\n"   + mp.getChgSynteny(loc) + "\n";	
+			else if (mp.bPseudo)				msg = "Pseudo Only";
+			else if (mp.bCoSet) 				msg = "Collinear Only\n" + mp.getChgCoSet(loc); 
+			else if (Constants.NUMHITS_ONLY) 	msg = "NumHits Only\n";   					 // For v5.7.9c,flag -nh
+			// if none of the above selected
+			else if (mp.isBlast(Mpair.FILE))	msg = "Load&Synteny\n"   + mp.getChgLoad(loc) + "\n";
+			else								msg = "Clust&Synteny\n"  + mp.getChgClustSyn(loc) + "\n";
 		}
 		else {
-			msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(Mpair.FILE) + "\n";
+			msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(loc) + "\n";
 			msg += "CPUs " + nCPU + ";  ";	
 		}
-		
 		if (!msg.contains("Only")) {
 			if (Constants.VERBOSE) msg += "Verbose On"; else msg += "Verbose Off";
 		}
@@ -1296,13 +1298,11 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		JMenuItem menuItem1 = new JMenuItem("Summary");
 	    JMenuItem menuItem2 = new JMenuItem("Block Report...");
-	    JMenuItem menuItem3 = new JMenuItem("Export...");
-	    JMenuItem menuItem4 = new JMenuItem("Cancel");
+	    JMenuItem menuItem3 = new JMenuItem("Cancel");
 	    
 	    popup.add(menuItem1); popup.addSeparator();
 	    popup.add(menuItem2); popup.addSeparator();
-	    popup.add(menuItem3); popup.addSeparator();
-	    popup.add(menuItem4);
+	    popup.add(menuItem3);
 	    
 	    menuItem1.addActionListener(e -> {
 	        showSummary();
@@ -1311,9 +1311,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	        showReport();
 	    });
 	    menuItem3.addActionListener(e -> {
-	    	showExportBlocks();
-	    });
-	    menuItem4.addActionListener(e -> {
 		      
 	    });
 	    btnSelReports.setComponentPopupMenu(popup); 
@@ -1354,23 +1351,6 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		if (mp==null) return;
 				
 		new Report(dbc2, p, mp); // dialog made visible in Report; 
-		
-		Jcomp.setCursorBusy(this, false);		
-	}
-	// Export blocks with hit genes
-	private void showExportBlocks(){ 
-		Jcomp.setCursorBusy(this, true);
-		
-		Mproject[] p = getSelectedPair();
-		if (p==null) return;
-		
-		int projXIdx = p[0].getIdx();
-		int projYIdx = (p.length>1) ? p[1].getIdx() : projXIdx; 
-		
-		Mpair mp = getMpair(projXIdx, projYIdx);
-		if (mp==null) return;
-				
-		new ReportExport(dbc2, mp); 
 		
 		Jcomp.setCursorBusy(this, false);		
 	}

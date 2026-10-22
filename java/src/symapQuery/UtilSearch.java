@@ -66,10 +66,10 @@ public class UtilSearch  extends JDialog{
 		ArrayList <String> searchCols = new ArrayList <String> ();
 		for (String col : displayedCols) {
 			
-			if (col.equals(Q.cosetCol) || col.equals(Q.hitCol) || col.equals(Q.blockCol) || col.equals(Q.grpCol)) {
+			if (col.equals(Q.cosetCol) || col.equals(Q.hitCol) || col.equals(Q.blockCol) || col.equals(Q.grpCol)) { 
 				searchCols.add(col);
 			}
-			else if (col.endsWith(Q.gNCol)) { // gene
+			else if (col.endsWith(Q.gNCol) || col.equals(Q.hitType)) { // gene; CAS591 add hittype
 				searchCols.add(col.replace("\n"," "));
 			}
 			else if (col.contains("\n")) { // annotation only
@@ -295,7 +295,7 @@ public class UtilSearch  extends JDialog{
 	private int getRowIndex(int nrows,  String findStr) {
 		int index= -1;
 	
-		for (int x=rowIndex+1; x<nrows; x++) {// start with last row index; CAS579
+		for (int x=rowIndex+1; x<nrows; x++) {// start with last row index
 			// get column value
 			Object colValObj = tPanel.theTable.getValueAt(x, colIndex);
 			String colVal;
@@ -325,7 +325,7 @@ public class UtilSearch  extends JDialog{
 					break;
 				}
 			}
-			else { // CAS579c make case-insensitive
+			else { 
 				colVal  = colVal.toLowerCase();
 				findStr = findStr.toLowerCase();
 				if (isExact) {

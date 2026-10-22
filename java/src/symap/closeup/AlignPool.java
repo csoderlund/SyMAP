@@ -32,69 +32,15 @@ public class AlignPool  {
 	private static final boolean TRACE = false; 
 	private static final boolean toUpper = false;
 	private static final boolean bTrim=Globals.bTrim; // only used for Closeup; Text align has it passed in
-	private static final int lineLen = 70;
+	private static final int lineLen = 80;				// NCBI uses 80 CAS591
 	
 	private final int CHUNK_SZ = backend.Constants.CHUNK_SIZE; // 1000000;
 	private HitAlignResults curHit; // hqr for the whole current hit
 	
 	private DBconn2 dbc2;
 	
-	/**************************************************************
-	 * Symap query MSA 
-	 */
-	public AlignPool(DBconn2 dbc2){ // For SyMAPQueryFrame to use loadPseudoSeq
+	public AlignPool(DBconn2 dbc2){ 
 		this.dbc2 = dbc2;
-	}
-	/********************************************************
-	 * Return concatenated hits, with nnnnn between each hit
-	 * Overlapping hits are merged.
-	 * If not gapless, load from start to end of hit.
-	 * Otherwise, get the queryStr or targetStr from database, and just pull out their sequence
-	 */
-	public String loadSeq(int pos, String indices, int grpIdx, String gapLess) {
-	try {
-		if (gapLess.equals("")) return loadPseudoSeq(indices, grpIdx); // pseudo_seq2 is index by grpIdx only
-		
-		// process subhits
-		String subhitstr = loadSubHitStr(pos, gapLess);				// reads pseudo_hits - 
-		if (subhitstr==null) return loadPseudoSeq(indices, grpIdx); // shouldn't happen
-		
-		// Merge overlapping subhits
-		String [] subhits = subhitstr.split(",");
-		int [] start = new int [subhits.length];
-		int [] end = new int [subhits.length];
-		for (int i=0; i<subhits.length; i++) start[i]=end[i]=-1;
-		
-		int s2=0, e2=0;
-		for (int i=0; i<subhits.length; i++) {
-			int [] coords = extractInt(subhits[i]);
-			
-			int olap= (e2==0) ? 0 : Math.min(coords[1],e2) - Math.max(coords[0],s2) + 1;
-				
-			if (olap>0) end[i-1] = coords[1]; // merge; start[i] remains -1
-			else {
-				start[i] = coords[0]; 
-				end[i] = coords[1];
-			}
-			s2 = coords[0]; e2 = coords[1];
-		}
-		
-		// load sequence
-		String mgSeq="";
-		for (int i=0; i<subhits.length; i++) {
-			if (start[i]!=-1) {
-				if (!mgSeq.equals("")) mgSeq += "nnnnn"; // too many throws off alignment
-				mgSeq += loadPseudoSeq(start[i]+":"+end[i], grpIdx);
-			}
-		}
-			
-		return mgSeq;
-	}
-	catch (Exception e) {ErrorReport.print(e, "Getting sequence"); return null;}
-	}
-
-	public String loadSeq(String indices, int grpIdx) { // For query export
-		 return mkLines(loadPseudoSeq(indices, grpIdx), lineLen);
 	}
 	
 	/*****************************************************************
@@ -120,9 +66,9 @@ public class AlignPool  {
 		char s1 = (anno1.isStrandPos()) ? '+' : '-';
 		char s2 = (anno2.isStrandPos()) ? '+' : '-';
 		int [] num1 = new int [4];
-		String seq1 = loadGeneSplice(anno1.getAnnoIdx(), s1+"", anno1.getGrpIdx(), num1);
+		String seq1 = loadTransAndSplice(anno1.getAnnoIdx(), s1+"", anno1.getGrpIdx(), num1);
 		int [] num2 = new int [4];
-		String seq2 = loadGeneSplice(anno2.getAnnoIdx(), s2+"", anno2.getGrpIdx(), num2);
+		String seq2 = loadTransAndSplice(anno2.getAnnoIdx(), s2+"", anno2.getGrpIdx(), num2);
 		
 		 /** Align **/
 		AlignData ad = new AlignData();
@@ -202,300 +148,6 @@ public class AlignPool  {
 		return (HitAlignment[]) hitAlign.toArray(new HitAlignment[0]);
 	} catch (Exception e) {ErrorReport.print(e, "getHitAlignments"); return null; }
 	}
-	
-	/******************************************************************************/
-	private synchronized HitAlignment[] computeHitReverse(HitAlignment [] halign) {
-		Vector <HitAlignment> alignments = new Vector <HitAlignment>();
-		
-		for (int i=0; i<halign.length; i++) {
-			HitAlignResults subHit = alignSubHitRev(halign[i]);
-			
-			HitAlignment ha = new HitAlignment(halign[i], 
-					new SeqData(subHit.selectAlign, subHit.strand.charAt(0)), 
-					new SeqData(subHit.otherAlign,  subHit.strand.charAt(2)),
-					new SeqData(subHit.matchAlign, ' '),
-					subHit.selectStart, subHit.selectEnd,
-					subHit.otherStart,  subHit.otherEnd,
-					subHit.alignLength, subHit.offset,
-					subHit.scoreStr);
-			 
-			alignments.add(ha);
-		}
-		return (HitAlignment[]) alignments.toArray(new HitAlignment[0]);
-	}
-	/*********************************************************************
-	 * ComputeHitAlign
-	 */
-	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd, boolean isTrim) {
-	try {
-		HitAlignResults subHit = new HitAlignResults();
-		
-		// make select sub-sequence
-		subHit.selectStart = subStart; // [0] s1:e1 [1] s2:e2, etc; get i[0]
-		subHit.selectEnd   = subEnd;
-		
-		int startOfs = subHit.selectStart - curHit.selectStart; // relative to beginning
-		int endOfs   = subHit.selectEnd   - curHit.selectStart;
-		subHit.selectSeq =   curHit.selectSeq.substring(startOfs, endOfs+1); 
-		if (toUpper)         subHit.selectSeq = subHit.selectSeq.toUpperCase();
-		if (curHit.isSelNeg) subHit.selectSeq = SeqData.revComplement(subHit.selectSeq);
-		
-		// make other sub-sequence
-		subHit.otherStart = extractStart(curHit.otherIndices[i]);
-		subHit.otherEnd =   extractEnd(curHit.otherIndices[i]);
-		
-		startOfs = subHit.otherStart - curHit.otherStart;
-		endOfs =   subHit.otherEnd   - curHit.otherStart;
-		subHit.otherSeq =    curHit.otherSeq.substring(startOfs, endOfs+1);
-		if (toUpper)         subHit.otherSeq = subHit.otherSeq.toUpperCase();
-		if (curHit.isOthNeg) subHit.otherSeq = SeqData.revComplement(subHit.otherSeq);
-		
-	    /** Align **/
-		int type = (isNT) ? AlignData.NT : AlignData.AA;
-		AlignData ad = new AlignData();
-		String tmsg = (TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
-					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
-					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
-		
-		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, isTrim, tmsg)) return null; 
-		
-		// Get results
-		subHit.selectAlign = ad.getAlignSeq1();
-		subHit.otherAlign =  ad.getAlignSeq2();
-		subHit.matchAlign =	 ad.getAlignMatch();
-		
-		subHit.scoreStr =	 ad.getScore();
-		subHit.offset  = 	 ad.getStartOffset();
-		subHit.alignLength = subHit.selectAlign.length();
-		
-		return subHit;
-	}
-	catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
-	}
-	/****************************************************************/
-	private HitAlignResults alignSubHitRev(HitAlignment ha) {
-		try {
-			HitAlignResults subHit = new HitAlignResults();
-			
-			String subSelect =   ha.getSelectSeq(); 
-			if (subSelect==null || subSelect.length()==0) ErrorReport.die("no select seq");
-			subSelect = SeqData.revComplement(subSelect);
-			
-			String subOther =    ha.getOtherSeq();
-			subOther = SeqData.revComplement(subOther);
-			
-		    /** Align **/
-			int type = AlignData.NT;
-			AlignData ad = new AlignData();
-			String tmsg = (TRACE) ? ha.getSubHitName() + "  Reverse" : "";
-			if (!ad.align(type, subSelect, subOther, bTrim, tmsg)) return null;
-			
-			// Get results
-			subHit.selectAlign = ad.getAlignSeq1();
-			subHit.otherAlign =  ad.getAlignSeq2();
-			subHit.matchAlign =	 ad.getAlignMatch();
-			
-			subHit.scoreStr =	 ad.getScore();
-			subHit.offset  = 	 ad.getStartOffset();
-			subHit.alignLength = subHit.selectAlign.length();
-			
-			subHit.selectStart = ha.getSstart();
-			subHit.selectEnd = 	 ha.getSend();
-			
-			subHit.otherStart =  ha.getOstart();
-			subHit.otherEnd = 	 ha.getOend();
-			char ss =     (ha.getSelectStrand()=='+') ? '-' : '+'; // reverse
-			char so =     (ha.getOtherStrand()=='+') ? '-' : '+';
-			subHit.strand = ss + "/" + so;
-			
-			return subHit;
-		}
-		catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
-	}
-	
-	/***************************************************************
-	 * Get subhits for TextShowSeq (Show Sequence) - set query only and get isSwap from grpID
-	 */
-	private Vector <SeqData> createHitSequence (Vector <HitData> hitList, 
-			int grpID, boolean isQuery, boolean bRev) {
-	try {
-		Vector <SeqData> hitVec = new Vector <SeqData> ();
-		
-		// make sorted hitArr from hitList
-		HitData[] hitArr = new HitData [hitList.size()];
-		for (int i=0; i<hitList.size(); i++) hitArr[i] = hitList.get(i);
-		Comparator<HitData> comp = HitData.sortByStart2();
-		Arrays.sort(hitArr, comp);
-			
-		// for each hit from selected region
-		for (HitData hitObj : hitArr) { 
-			curHit = loadHitForSeq(hitObj, grpID, isQuery);
-			
-			// for each subhit, extract subsequence
-			int num=curHit.selectIndices.length;
-			for (int i = 0;  i < num;  i++) {
-				// make query sub-sequence
-				int qStart = extractStart(curHit.selectIndices[i]); // [0] s1:e1 [1] s2:e2, etc; get i[0]
-				int qEnd   = extractEnd(curHit.selectIndices[i]);
-				
-				int startOfs 	= qStart - curHit.selectStart; // relative to beginning
-				int endOfs   	= qEnd   - curHit.selectStart;
-				String strQuery = curHit.selectSeq.substring(startOfs, endOfs+1);
-				if (toUpper)    strQuery = strQuery.toUpperCase();
-				char strand 	= curHit.strand.charAt(0);
-				String rc="";
-				if (strand == '-') {
-					if (!bRev) {
-						strQuery = SeqData.revComplement(strQuery); 
-						rc=" RC";
-					}
-				}
-				else if (bRev) {
-					strQuery = SeqData.revComplement(strQuery);
-					rc=" RC";
-				}
-				
-				String coords = SeqData.coordsStr(strand, qStart, qEnd);
-				String header = hitObj.getName() + "." + (i+1)+"/"+num + "   " + coords + rc;
-				SeqData sd = new SeqData(strQuery, qStart, strand, header);
-				hitVec.add(sd);
-			}
-		}
-		Collections.sort(hitVec);
-		return hitVec;
-	} catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
-	}
-	/************************************************************************
-	 * Database calls
-	 */
-	// For ViewProj -- it adds >ID 
-	public String loadProtein(int annotIdx, int grpIdx, String strand) {
-		try {
-			int [] num = new int [4]; 
-			String seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
-			String aa = SeqData.translate(seq);
-			return mkLines(aa, lineLen);
-		}
-		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
-		return null;
-	}
-	public String loadSpliced(int annotIdx, int grpIdx, String strand) {
-		try {
-			int [] num = new int [4];
-			String seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
-			return mkLines(seq, lineLen);
-		}
-		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
-		return null;
-	}
-	
-	/**************************************************************
-	 * Exon spliced sequence; CAS586 add
-	 * Read DB for idx and strand; read DB for exons/CDS; read DB for each splice CDS
-	 * Very slow
-	 */
-	public String loadGeneSeq(String genetag, int grpIdx, String annoType) { // For view export, query export, MSA
-		String seq="", query="";
-		if (genetag.isEmpty()) {Globals.prt("No genetag"); return null;}
-		
-		String genenum = genetag.substring(0, genetag.indexOf(Globals.DOT)); // 123. or 123.b; int is genenum
-		if (genenum.isEmpty()) {Globals.prt("Could not parse: " + genetag); return null;}
-		
-		try {
-			int annotIdx=0;
-			String strand="+", id="", rna="", tag="";
-			
-			query = "select idx, tag, name, strand from pseudo_annot "
-					+ " where genenum=" + genenum + " and grp_idx=" + grpIdx;
-			
-			// Go through records getting the genenum and tag, and use that one where pseudo_tag.startsWith(genetag)
-			ResultSet rs = dbc2.executeQuery(query);
-			while (rs.next()) {
-				tag = rs.getString(2);		// 123. (exon stuff) or 123.b (exon stuff)
-				tag = tag.substring(0, tag.indexOf("(")).trim();
-	
-				if (tag.equals(genetag)) {
-					annotIdx 		= rs.getInt(1);
-					strand   		= rs.getString(4);
-					
-					// ID=AT1G01010;Name=NAC001;rnaID=NM_099983.2 (1);desc=NAC domain containing protein 1
-					String name     = rs.getString(3);
-					String [] tok = name.split(";");
-					for (String val : tok) {
-						if (val.startsWith("ID="))    id=val.replace("ID=","");
-						else if (val.startsWith("rnaID")) rna=val;
-					}
-					if (id.isEmpty()) id = name;
-					break;
-				}
-			}
-			rs.close();
-			if (annotIdx==0) {Globals.prt("Fail: " + genetag + " (" + tag + ") " + query);return null;}
-			
-			int [] num = new int [4]; 
-			seq = loadGeneSplice(annotIdx, strand, grpIdx, num);
-			
-			seq = mkLines(seq, lineLen);
-			
-			// header is first line, where > geneTag will be put in front from calling routine
-			// queries MSA annoType=null;  queries Export annoType is CDS or Exon  
-			String header=""; 
-			if (annoType!=null) { // MSA is null
-				header = String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
-			}
-			return header + seq; 
-		} 
-		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + genetag); Globals.prt(query);} 	
-		return seq;
-	}
-	// returns Spliced gene sequence; get coordinates of exons/CDS, then call LoadGeneSeq for each
-	// the output was compared with gffRead on CDSs
-	// num[0]=#exons, num[1]=length, num[2]=start, num[3]=end (if CDS, not the same as gene start/end)
-	public String loadGeneSplice(int annotIdx, String strand, int grpIdx, int [] num) { // For query export and MSA
-		String seq="", query="";
-		ResultSet rs=null;
-		try {
-			num[2]=Integer.MAX_VALUE; num[3]=0;
-			
-			Vector <String> coords = new Vector <String> (20);
-	
-			query = "SELECT start, end FROM pseudo_annot WHERE gene_idx=" + annotIdx 
-					+ " and grp_idx= " + grpIdx + " order by start";
-		
-			// GFF coordinates are 1-based and fully closed (the start position is the exact position of the first base, and the end position is the exact position of the last base).
-			rs = dbc2.executeQuery(query); // loadPseudoSeq does db calls, so cannot be in the loop
-			while (rs.next()) {
-				int start = rs.getInt(1); // loadPseudoSeq adds one assuming zero-based coords
-				int end   = rs.getInt(2);
-				
-				coords.add(start + ":" + end);
-				
-				num[0]++;
-				num[1] += (end-start)+1;
-				num[2] = Math.min(num[2], start);
-				num[3] = Math.max(num[3], end);
-			}
-			rs.close();
-			
-			// get splice strings and concatenate 
-			StringBuffer seqbuf = new StringBuffer();
-			for (String c : coords) {
-				String exon = loadPseudoSeq(c, grpIdx);
-				seqbuf.append(exon);
-			}
-			seq = seqbuf.toString();
-			if (strand.equals("-")) seq = reverseComplement(seq);
-			
-			return seq;
-		}
-		catch (Exception e) {
-			ErrorReport.print(e, "Getting gene seq for: " + annotIdx); 
-			try {if (rs!=null) rs.close();} catch (Exception ee) {};
-		} 
-		
-		return "#error\n" + seq;
-	}
-	
 	/***************************************************************************
 	 * Load the hit info and subhit target/query sequence
 	 * Coords for subhits are relative to forward strand
@@ -552,22 +204,448 @@ public class AlignPool  {
 			curHit.isSelNeg = (curHit.strand.charAt(0) == '-'); // -/?
 			curHit.selectIndices = query_seq.split(",");
 			curHit.selectStart =   start1;
-			curHit.selectSeq =     loadPseudoSeq(start1 + ":" + end1, grp1_idx);
+			curHit.selectSeq =     loadSeqFromDB(start1 + ":" + end1, grp1_idx);
 		
 			curHit.isOthNeg = (curHit.strand.charAt(2) == '-'); // ?/-
 			curHit.otherIndices = target_seq.split(",");
 			curHit.otherStart =   start2;
-			curHit.otherSeq =     loadPseudoSeq(start2 + ":" + end2, grp2_idx);
+			curHit.otherSeq =     loadSeqFromDB(start2 + ":" + end2, grp2_idx);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Acquiring alignment"); } 
 		return curHit;
 	}
+	/******************************************************************************/
+	private synchronized HitAlignment[] computeHitReverse(HitAlignment [] halign) {
+		Vector <HitAlignment> alignments = new Vector <HitAlignment>();
+		
+		for (int i=0; i<halign.length; i++) {
+			HitAlignResults subHit = alignSubHitRev(halign[i]);
+			
+			HitAlignment ha = new HitAlignment(halign[i], 
+					new SeqData(subHit.selectAlign, subHit.strand.charAt(0)), 
+					new SeqData(subHit.otherAlign,  subHit.strand.charAt(2)),
+					new SeqData(subHit.matchAlign, ' '),
+					subHit.selectStart, subHit.selectEnd,
+					subHit.otherStart,  subHit.otherEnd,
+					subHit.alignLength, subHit.offset,
+					subHit.scoreStr);
+			 
+			alignments.add(ha);
+		}
+		return (HitAlignment[]) alignments.toArray(new HitAlignment[0]);
+	}
+	private HitAlignResults alignSubHitRev(HitAlignment ha) {
+		try {
+			HitAlignResults subHit = new HitAlignResults();
+			
+			String subSelect =   ha.getSelectSeq(); 
+			if (subSelect==null || subSelect.length()==0) ErrorReport.die("no select seq");
+			subSelect = SeqData.revComplement(subSelect);
+			
+			String subOther =    ha.getOtherSeq();
+			subOther = SeqData.revComplement(subOther);
+			
+		    /** Align **/
+			int type = AlignData.NT;
+			AlignData ad = new AlignData();
+			String tmsg = (TRACE) ? ha.getSubHitName() + "  Reverse" : "";
+			if (!ad.align(type, subSelect, subOther, bTrim, tmsg)) return null;
+			
+			// Get results
+			subHit.selectAlign = ad.getAlignSeq1();
+			subHit.otherAlign =  ad.getAlignSeq2();
+			subHit.matchAlign =	 ad.getAlignMatch();
+			
+			subHit.scoreStr =	 ad.getScore();
+			subHit.offset  = 	 ad.getStartOffset();
+			subHit.alignLength = subHit.selectAlign.length();
+			
+			subHit.selectStart = ha.getSstart();
+			subHit.selectEnd = 	 ha.getSend();
+			
+			subHit.otherStart =  ha.getOstart();
+			subHit.otherEnd = 	 ha.getOend();
+			char ss =     (ha.getSelectStrand()=='+') ? '-' : '+'; // reverse
+			char so =     (ha.getOtherStrand()=='+') ? '-' : '+';
+			subHit.strand = ss + "/" + so;
+			
+			return subHit;
+		}
+		catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
+	}
+	/*********************************************************************
+	 * ComputeHitAlign
+	 */
+	private HitAlignResults alignSubHit(int i, boolean isNT, int subStart, int subEnd, boolean isTrim) {
+	try {
+		HitAlignResults subHit = new HitAlignResults();
+		
+		// make select sub-sequence
+		subHit.selectStart = subStart; // [0] s1:e1 [1] s2:e2, etc; get i[0]
+		subHit.selectEnd   = subEnd;
+		
+		int startOfs = subHit.selectStart - curHit.selectStart; // relative to beginning
+		int endOfs   = subHit.selectEnd   - curHit.selectStart;
+		subHit.selectSeq =   curHit.selectSeq.substring(startOfs, endOfs+1); 
+		if (toUpper)         subHit.selectSeq = subHit.selectSeq.toUpperCase();
+		if (curHit.isSelNeg) subHit.selectSeq = SeqData.revComplement(subHit.selectSeq);
+		
+		// make other sub-sequence
+		subHit.otherStart = extractStart(curHit.otherIndices[i]);
+		subHit.otherEnd =   extractEnd(curHit.otherIndices[i]);
+		
+		startOfs = subHit.otherStart - curHit.otherStart;
+		endOfs =   subHit.otherEnd   - curHit.otherStart;
+		subHit.otherSeq =    curHit.otherSeq.substring(startOfs, endOfs+1);
+		if (toUpper)         subHit.otherSeq = subHit.otherSeq.toUpperCase();
+		if (curHit.isOthNeg) subHit.otherSeq = SeqData.revComplement(subHit.otherSeq);
+		
+	    /** Align **/
+		int type = (isNT) ? AlignData.NT : AlignData.AA;
+		AlignData ad = new AlignData();
+		String tmsg = (TRACE) ? "Hit #" + curHit.hitnum + "." + (i+1) + "  " 
+					+ SeqData.coordsStr(!curHit.isSelNeg, subHit.selectStart, subHit.selectEnd) + "  "
+					+ SeqData.coordsStr(!curHit.isOthNeg, subHit.otherStart, subHit.otherEnd) : "";
+		
+		if (!ad.align(type, subHit.selectSeq, subHit.otherSeq, isTrim, tmsg)) return null; 
+		
+		// Get results
+		subHit.selectAlign = ad.getAlignSeq1();
+		subHit.otherAlign =  ad.getAlignSeq2();
+		subHit.matchAlign =	 ad.getAlignMatch();
+		
+		subHit.scoreStr =	 ad.getScore();
+		subHit.offset  = 	 ad.getStartOffset();
+		subHit.alignLength = subHit.selectAlign.length();
+		
+		return subHit;
+	}
+	catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
+	}
+	
+	/***************************************************************
+	 * Get subhits for TextShowSeq (Show Sequence) - set query only and get isSwap from grpID
+	 */
+	private Vector <SeqData> createHitSequence (Vector <HitData> hitList, 
+			int grpID, boolean isQuery, boolean bRev) {
+	try {
+		Vector <SeqData> hitVec = new Vector <SeqData> ();
+		
+		// make sorted hitArr from hitList
+		HitData[] hitArr = new HitData [hitList.size()];
+		for (int i=0; i<hitList.size(); i++) hitArr[i] = hitList.get(i);
+		Comparator<HitData> comp = HitData.sortByStart2();
+		Arrays.sort(hitArr, comp);
+			
+		// for each hit from selected region
+		for (HitData hitObj : hitArr) { 
+			curHit = loadHitForSeq(hitObj, grpID, isQuery);
+			
+			// for each subhit, extract subsequence
+			int num=curHit.selectIndices.length;
+			for (int i = 0;  i < num;  i++) {
+				// make query sub-sequence
+				int qStart = extractStart(curHit.selectIndices[i]); // [0] s1:e1 [1] s2:e2, etc; get i[0]
+				int qEnd   = extractEnd(curHit.selectIndices[i]);
+				
+				int startOfs 	= qStart - curHit.selectStart; // relative to beginning
+				int endOfs   	= qEnd   - curHit.selectStart;
+				String strQuery = curHit.selectSeq.substring(startOfs, endOfs+1);
+				if (toUpper)    strQuery = strQuery.toUpperCase();
+				char strand 	= curHit.strand.charAt(0);
+				String rc="";
+				if (strand == '-') {
+					if (!bRev) {
+						strQuery = SeqData.revComplement(strQuery); 
+						rc=" RC";
+					}
+				}
+				else if (bRev) {
+					strQuery = SeqData.revComplement(strQuery);
+					rc=" RC";
+				}
+				
+				String coords = SeqData.coordsStr(strand, qStart, qEnd);
+				String header = hitObj.getName() + "." + (i+1)+"/"+num + "   " + coords + rc;
+				SeqData sd = new SeqData(strQuery, qStart, strand, header);
+				hitVec.add(sd);
+			}
+		}
+		Collections.sort(hitVec);
+		return hitVec;
+	} catch (Exception e) {ErrorReport.print(e, "align hit"); return null;}
+	}
+	 //For getSeq Get subhit query only and get isSwap from grpID
+	 // HitData is from Mapper 
+	private HitAlignResults loadHitForSeq(HitData hitData, int grpID, boolean isQuery) {
+		ResultSet rs = null;
+		curHit = new HitAlignResults();
+		
+		// Note that target_seq and query_seq refer to indices of sequence segments not the sequences themselves.
+		String query = "SELECT h.strand, h.query_seq, h.target_seq,  h.grp1_idx, h.grp2_idx "
+				     + "FROM pseudo_hits AS h WHERE h.idx=" +  hitData.getID();
+		
+		try {
+			rs = dbc2.executeQuery(query);
+			if (!rs.next()) {
+				System.err.println("Major SyMAP error reading database");
+				return null;
+			}
+			curHit.strand = rs.getString(1);
+			if (curHit.strand == null || curHit.strand.length() < 3) {
+				System.err.println("Invalid strand value '" + curHit.strand + "' for hit idx=" + hitData.getID());
+				curHit.strand = "+/+";
+			}
+			
+			String query_seq  = rs.getString(2);  // string list of sub-block start/end values
+			String target_seq = rs.getString(3);  // string list of sub-block start/end values
+			
+			int start1 = (isQuery) ? hitData.getStart1() : hitData.getStart2();
+			int end1   = (isQuery) ? hitData.getEnd1()   : hitData.getEnd2();
+		
+			if (!isQuery) {
+				query_seq = target_seq;
+				curHit.strand = reverseStrand(curHit.strand);
+			}
+			// No indices if one hit, so create indices for whole hit
+			if (query_seq  == null || query_seq.length()  == 0 || target_seq == null || target_seq.length() == 0){   
+				query_seq  = start1 + ":" + end1;
+			}
+			
+			// Get sequence covering to merged hits
+			curHit.selectIndices  = query_seq.split(",");
+			curHit.selectStart =    start1;
+			curHit.selectSeq =      loadSeqFromDB(start1 + ":" + end1, grpID);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Acquiring alignment"); } 
+		
+		return curHit;
+	}
+	/**************************************/
+	/*** For ViewProj **/
+	public String loadProtein(int annotIdx, int grpIdx, String strand) {
+		try {
+			int [] num = new int [4]; 
+			String seq = loadTransAndSplice(annotIdx, strand, grpIdx, num);
+			
+			String aa = SeqData.translate(seq);
+			
+			return mkLines(aa, lineLen);
+		}
+		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
+		return null;
+	}
+	public String loadSpliced(int annotIdx, int grpIdx, String strand) {
+		try {
+			int [] num = new int [4];
+			String seq = loadTransAndSplice(annotIdx, strand, grpIdx, num);
+			return mkLines(seq, lineLen);
+		}
+		catch (Exception e) {ErrorReport.print("load protein " + annotIdx);}
+		return null;
+	}
+	public String loadUnsplicedTrans(int annotIdx, int grpIdx) {
+		try {
+			String query = "SELECT start, end FROM pseudo_annot WHERE idx=" + annotIdx; 
+			ResultSet rs = dbc2.executeQuery(query);
+			if (rs.next()) {
+				int start = rs.getInt(1);
+				int end = rs.getInt(2);
+				String seq = loadSeqFromDB(start + ":" + end, grpIdx);
+				return mkLines(seq, lineLen);
+			}
+		}
+		catch (Exception e) {ErrorReport.print("load primary transcript " + annotIdx);}
+		return null;
+	}
+	/********************************************************
+	 * Return concatenated hits, with nnnnn between each hit
+	 * Overlapping hits are merged.
+	 * If not gapless, load from start to end of hit.
+	 * Otherwise, get the queryStr or targetStr from database, and just pull out their sequence
+	 */
+	public String loadHitsForMSA(int pos, String indices, int grpIdx, String gapLess) {
+	try {
+		if (gapLess.equals("")) return loadSeqFromDB(indices, grpIdx); // pseudo_seq2 is index by grpIdx only
+		
+		// process subhits
+		String subhitstr = loadSubHitStr(pos, gapLess);				// reads pseudo_hits - 
+		if (subhitstr==null) return loadSeqFromDB(indices, grpIdx); // shouldn't happen
+		
+		// Merge overlapping subhits
+		String [] subhits = subhitstr.split(",");
+		int [] start = new int [subhits.length];
+		int [] end = new int [subhits.length];
+		for (int i=0; i<subhits.length; i++) start[i]=end[i]=-1;
+		
+		int s2=0, e2=0;
+		for (int i=0; i<subhits.length; i++) {
+			int [] coords = extractInt(subhits[i]);
+			
+			int olap= (e2==0) ? 0 : Math.min(coords[1],e2) - Math.max(coords[0],s2) + 1;
+				
+			if (olap>0) end[i-1] = coords[1]; // merge; start[i] remains -1
+			else {
+				start[i] = coords[0]; 
+				end[i] = coords[1];
+			}
+			s2 = coords[0]; e2 = coords[1];
+		}
+		
+		// load sequence
+		String mgSeq="";
+		for (int i=0; i<subhits.length; i++) {
+			if (start[i]!=-1) {
+				if (!mgSeq.equals("")) mgSeq += "nnnnn"; // too many throws off alignment
+				mgSeq += loadSeqFromDB(start[i]+":"+end[i], grpIdx);
+			}
+		}
+			
+		return mgSeq;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Getting sequence"); return null;}
+	}
+	private String loadSubHitStr(int pos, String gapLess) {
+	try {
+		String [] tok = gapLess.split(";");		// pseudo_hits needs all of these to be unique since no hitIdx
+		String where = " FROM pseudo_hits where hitNum=" + tok[0] 
+				+ " and grp1_idx=" + tok[1] + " and proj1_idx=" + tok[2] 
+				+ " and grp2_idx=" + tok[3] + " and proj2_idx=" + tok[4];
+		if (pos==0) {
+			ResultSet rs = dbc2.executeQuery("SELECT query_seq " + where);
+			if (rs.next()) return rs.getString(1);
+		}
+		else {
+			ResultSet rs = dbc2.executeQuery( "SELECT target_seq " +  where);
+			if (rs.next()) return rs.getString(1);
+		}
+		Globals.eprt("Load indices: " + where);
+		return null;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Subhit string"); return "";} 	
+	}
+	
+	
+	/**************************************************************
+	 * Exon or CDS spliced sequence. Does not have annot_idx so must read find it from genetag
+	 * Return header followed by sequence
+	 */
+	public String loadSplicedTrans(String genetag, int grpIdx, String annoType) { // For MSA
+		String seq="", query="";
+		if (genetag.isEmpty()) {Globals.prt("No genetag"); return null;}
+		
+		String genenum = genetag.substring(0, genetag.indexOf(Globals.DOT)); // 123. or 123.b; int is genenum
+		if (genenum.isEmpty()) {Globals.prt("Could not parse: " + genetag); return null;}
+		
+		try {
+			int annotIdx=0;
+			String strand="+", id="", rna="", tag="";
+			
+			query = "select idx, tag, name, strand from pseudo_annot where genenum=" + genenum + " and grp_idx=" + grpIdx;
+			
+			// Go through records getting the genenum and tag, and use that one where pseudo_tag.startsWith(genetag)
+			ResultSet rs = dbc2.executeQuery(query);
+			while (rs.next()) {
+				tag = rs.getString(2);		// 123. (exon stuff) or 123.b (exon stuff)
+				tag = tag.substring(0, tag.indexOf("(")).trim();
+	
+				if (tag.equals(genetag)) {
+					annotIdx 		= rs.getInt(1);
+					strand   		= rs.getString(4);
+					
+					// ID=AT1G01010;Name=NAC001;rnaID=NM_099983.2 (1);desc=NAC domain containing protein 1
+					String name     = rs.getString(3);
+					String [] tok = name.split(";");
+					for (String val : tok) {
+						if (val.startsWith(Globals.idKey))    id=val.replace(Globals.idKey,"");
+						else if (val.startsWith(Globals.rnaID)) rna=val;
+					}
+					if (id.isEmpty()) id = name;
+					break;
+				}
+			}
+			rs.close();
+			if (annotIdx==0) {Globals.prt("Fail: " + genetag + " (" + tag + ") " + query);return null;}
+			
+			int [] num = new int [4]; 
+			seq = loadTransAndSplice(annotIdx, strand, grpIdx, num);
+			
+			seq = mkLines(seq, lineLen);
+			
+			// header is first line, where > geneTag will be put in front from calling routine
+			// queries MSA annoType=null;  queries Export annoType is CDS or Exon  
+			String header=""; 
+			if (annoType!=null) { // MSA is null
+				header = String.format("%s  %s  %s  #%s=%d %,dbp\n", id, strand, rna, annoType, num[0], num[1]);
+			}
+			return header + seq; 
+		} 
+		catch (Exception e) {ErrorReport.print(e, "Getting gene seq for: " + genetag); Globals.prt(query);} 	
+		return seq;
+	}
+	/** Main routines **/
+	/****************************************************************
+	* returns Spliced transcripts
+	* num[0]=#exons, num[1]=length, num[2]=start, num[3]=end (if CDS, not the same as gene start/end
+	*/
+	private String loadTransAndSplice(int annotIdx, String strand, int grpIdx, int [] num) { // For query export and MSA
+		ResultSet rs=null;
+		try {
+			boolean isRev = strand.equals("-");
+			
+			num[2]=Integer.MAX_VALUE; num[3]=0;
+			
+			Vector <String> coords = new Vector <String> (20);
+	
+			String query = "SELECT start, end FROM pseudo_annot WHERE gene_idx=" + annotIdx 
+					+ " and grp_idx= " + grpIdx + " order by start"; // gene_idx>0 is either CDS or Exon
+		
+			// GFF coordinates are 1-based and fully closed (the start position is the exact position of the first base, 
+			// and the end position is the exact position of the last base).
+			// loadPseudoSeq adds one assuming zero-based coords
+			rs = dbc2.executeQuery(query); 			 // loadPseudoSeq does db calls, so cannot be in the loop
+			while (rs.next()) {
+				int start = rs.getInt(1); 			 
+				int end   = rs.getInt(2);
+				coords.add(start + ":" + end);
+				
+				num[0]++;
+				num[1] += (end-start)+1;
+				num[2] = Math.min(num[2], start);
+				num[3] = Math.max(num[3], end);
+			}
+			rs.close();
+			
+			// get sequence once, then splice; CAS591 was getting each exon from database
+			int gstart = num[2], gend=num[3];
+			String geneSeq = loadSeqFromDB(gstart+":"+gend, grpIdx);
+			
+			// get splice strings and concatenate 
+			StringBuffer seqbuf = new StringBuffer();
+			for (String c : coords) {
+				int start = extractStart(c) - gstart;
+				int end   = extractEnd(c)   - gstart;
+				
+				String exon = geneSeq.substring(start, end+1); 
+				seqbuf.append(exon);
+			}
+			String seq = seqbuf.toString();
+			if (isRev) seq = reverseComplement(seq);
+		
+			return seq;
+		}
+		catch (Exception e) {
+			ErrorReport.print(e, "Getting gene seq for: " + annotIdx); 
+			try {if (rs!=null) rs.close();} catch (Exception ee) {};
+		} 
+		return "#error\n";
+	}
+	
 	/*********************************
 	 * indices is start:end; called from anywhere that needs chucks of sequence;
 	 * called directly from TextShowSeq and from this file
-	 * Original routine written by Will
 	 */
-	protected String loadPseudoSeq(String indices, int grpIdx) {
+	protected String loadSeqFromDB(String indices, int grpIdx) {
 		ResultSet rs = null;
 		String pseudoSeq = ""; // add to in 1M chucks
 		
@@ -614,75 +692,7 @@ public class AlignPool  {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Getting sequence data"); return "";}
 	}
-	/*******************************************************
-	 *  For getSeq Get subhit query only and get isSwap from grpID
-	 *  HitData is from Mapper 
-	 */
-	private HitAlignResults loadHitForSeq(HitData hitData, int grpID, boolean isQuery) {
-		ResultSet rs = null;
-		curHit = new HitAlignResults();
-		
-		// Note that target_seq and query_seq refer to indices of sequence segments not the sequences themselves.
-		String query = "SELECT h.strand, h.query_seq, h.target_seq,  h.grp1_idx, h.grp2_idx "
-				     + "FROM pseudo_hits AS h WHERE h.idx=" +  hitData.getID();
-		
-		try {
-			rs = dbc2.executeQuery(query);
-			if (!rs.next()) {
-				System.err.println("Major SyMAP error reading database");
-				return null;
-			}
-			curHit.strand = rs.getString(1);
-			if (curHit.strand == null || curHit.strand.length() < 3) {
-				System.err.println("Invalid strand value '" + curHit.strand + "' for hit idx=" + hitData.getID());
-				curHit.strand = "+/+";
-			}
-			
-			String query_seq  = rs.getString(2);  // string list of sub-block start/end values
-			String target_seq = rs.getString(3);  // string list of sub-block start/end values
-			
-			int start1 = (isQuery) ? hitData.getStart1() : hitData.getStart2();
-			int end1   = (isQuery) ? hitData.getEnd1()   : hitData.getEnd2();
-		
-			if (!isQuery) {
-				query_seq = target_seq;
-				curHit.strand = reverseStrand(curHit.strand);
-			}
-			// No indices if one hit, so create indices for whole hit
-			if (query_seq  == null || query_seq.length()  == 0 || target_seq == null || target_seq.length() == 0){   
-				query_seq  = start1 + ":" + end1;
-			}
-			
-			// Get sequence covering to merged hits
-			curHit.selectIndices  = query_seq.split(",");
-			curHit.selectStart =    start1;
-			curHit.selectSeq =      loadPseudoSeq(start1 + ":" + end1, grpID);
-		}
-		catch (Exception e) {ErrorReport.print(e, "Acquiring alignment"); } 
-		
-		return curHit;
-	}
 	
-	// Query MSA 
-	private String loadSubHitStr(int pos, String gapLess) {
-	try {
-		String [] tok = gapLess.split(";");		// pseudo_hits needs all of these to be unique since no hitIdx
-		String where = " FROM pseudo_hits where hitNum=" + tok[0] 
-				+ " and grp1_idx=" + tok[1] + " and proj1_idx=" + tok[2] 
-				+ " and grp2_idx=" + tok[3] + " and proj2_idx=" + tok[4];
-		if (pos==0) {
-			ResultSet rs = dbc2.executeQuery("SELECT query_seq " + where);
-			if (rs.next()) return rs.getString(1);
-		}
-		else {
-			ResultSet rs = dbc2.executeQuery( "SELECT target_seq " +  where);
-			if (rs.next()) return rs.getString(1);
-		}
-		Globals.eprt("Load indices: " + where);
-		return null;
-	}
-	catch (Exception e) {ErrorReport.print(e, "Subhit string"); return "";} 	
-	}
 	/******************************************************************/
 	private String reverseStrand(String s) { // used to reverse +/- or -/+
 		return new StringBuffer(s).reverse().toString();

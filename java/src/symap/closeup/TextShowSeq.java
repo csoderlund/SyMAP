@@ -183,7 +183,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 			String coords = rStart + ":" + rEnd;
 			String title = "Region " + SeqData.coordsStr(rStart, rEnd);
 			 
-			String seq = alignPool.loadPseudoSeq(coords, grpID);
+			String seq = alignPool.loadSeqFromDB(coords, grpID);
 			
 			SeqData sd = new SeqData(seq, ' ', title);
 			Vector <SeqData> seqs = new Vector <SeqData>(1);
@@ -214,7 +214,7 @@ public class TextShowSeq extends JDialog implements ActionListener {
 				s = (isQuery) ? hd.getStart1() : hd.getStart2();
 				e  =  (isQuery) ? hd.getEnd1() : hd.getEnd2();
 				
-				String seq = alignPool.loadPseudoSeq(s + ":" + e, grpID);
+				String seq = alignPool.loadSeqFromDB(s + ":" + e, grpID);
 				
 				String title = hd.getName() + " " + SeqData.coordsStr(s, e);
 				SeqData sd = new SeqData(seq, ' ', title);

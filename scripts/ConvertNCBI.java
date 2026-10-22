@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * ConvertNCBI: NCBI genome files formatted for SyMAP
  * See https://csoderlund.github.io/SyMAP/input/ncbi.html
  * 
- * NCBI script - same as used by xToSymap Convert NCBI
+ * Called from xToSymap, but can be used stand-alone (see /scripts directory).
  * 
  * This assumes input of the project directory, which has either
  * 1. The ncbi_dataset.zip unzipped, .e.g 
@@ -43,13 +43,14 @@ import java.util.regex.Pattern;
    			rnaID= longest mRNA ID (cnt of number of mRNAs)
    			desc=gene description or longest mRNA product
    			
-   CAS586: add Version on header; create classes; output longest mRNA; include All seqs; remove Protein-id
+   CAS586: add Version on header; create classes; output longest mRNA; include All seqs; 
+   remove Protein-id (add it back on CAS591)
  */
 
 public class ConvertNCBI {
-	static private boolean isToSymap=true;
-	static private int defGapLen=30000;
+	static private boolean isToSymap=false; // false if standalone
 	static private boolean bTrace=false;
+	static private int defGapLen=30000;
 	
 	private final String header = "### Written by SyMAP ConvertNCBI"; 
 	
@@ -85,7 +86,7 @@ public class ConvertNCBI {
 	// Changed for specific input; if unknown and prefixOnly, no suffix
 	private String chrPrefix="Chr", chrPrefix2="C", chrType="chromosome";	// These are checked in Split
 	private String scafPrefix="s",  scafType="scaffold";  	// single letter is used because the "Chr" is usually removed to save space
-	private String unkPrefix="Seq", unkType="unknown";		// CAS586 changed Unk to Seq
+	private String unkPrefix="Seq", unkType="unknown";		
 	
 	// input 
 	private String projDir = null;
@@ -101,13 +102,10 @@ public class ConvertNCBI {
 	private TreeMap <String, String> id2scaf = new TreeMap <String, String> ();
 	private TreeMap <String, Integer> cntChrGene = 	new TreeMap <String, Integer> ();
 	private TreeMap <String, Integer> cntScafGene = new TreeMap <String, Integer> ();
-	
-	private FASTA faObj;
-	private GFF gffObj;
-	private Init initObj;
-				  	
+					  	
 	private boolean bSuccess=true;
 	private final int PRT = 10000;
+	private String suggestMsg="";
 	
 	/********************************************************************/
 	// main: stand-alone; gaplen needs to be changed below; args are -s (scaffold) -t (MT) -v (verbose) -m (hard mask)
@@ -116,25 +114,26 @@ public class ConvertNCBI {
 		new ConvertNCBI(args, defGapLen, null);
 	}
 	protected ConvertNCBI(String [] args, int gapLen, String prefix) {
-		initObj = new Init();
+		Init initObj = new Init();
 		initObj.printArgs(args); // standalone only; exits if none or -h
 		
 		projDir = args[0];
 		gapMinLen = gapLen;
 		prefixOnly = prefix;
 		
-		prt("\n------ ConvertNCBI " + projDir +  " ------");
+		prt("\n------ ConvertNCBI " + projDir  + " ------");
 		
 		if (!initObj.checkInitFiles() || !bSuccess) return;
 		initObj.createLog(args); if (!bSuccess) return;
 		initObj.checkArgs(args); if (!bSuccess) return; // writes args to log
 		
-		faObj = new FASTA();	if (!bSuccess) return;
+		// Create files
+		new FASTA();	if (!bSuccess) return;
 		
-		gffObj = new GFF();		if (!bSuccess) return;
+		new GFF();		if (!bSuccess) return;
 		
+		// Wrapup
 		printSuggestions();
-		
 		prt("------ Finish ConvertNCBI " + projDir + " ------");
 		if (logFile!=null) logFile.close();
 	}
@@ -151,11 +150,7 @@ public class ConvertNCBI {
 			}
 			if (isChr && !INCLUDESCAF) prt("Suggestion: Set SyMAP project parameter 'Group prefix' to 'Chr'.");
 		}
-		
-		if (faObj.cntOutSeq==0) prt("Are these NCBI files? Should scaffolds be included? Should 'Prefix only' be set?");
-		else 
-			if (faObj.cntOutSeq>30)  prt( "Suggestion: There are " + String.format("%,d",faObj.cntOutSeq) + " sequences. "
-				+ "Set SyMAP project parameter 'Minimum length' to reduce number loaded.");
+		prt(suggestMsg);
 	}
 	
 	/*******************************************************/
@@ -413,7 +408,7 @@ public class ConvertNCBI {
 		private int cntScafSmall=0;
 		char [] base = {'A', 'C', 'G', 'T', 'N', 'a', 'c', 'g', 't', 'n'};
 		
-		// Hard-coded values in rwFasta
+		// There are hard-coded values in rwFasta
 		
 		private FASTA () {
 		try {
@@ -430,6 +425,10 @@ public class ConvertNCBI {
 			fhOut.close(); ghOut.close();
 			
 			printSummary();
+			
+			if (cntOutSeq==0) suggestMsg = "Are these NCBI files? Should scaffolds be included? Should 'Prefix only' be set?";
+			else if (cntOutSeq>30) suggestMsg = "Suggestion: There are " + String.format("%,d", cntOutSeq) + " sequences. "
+					+ "Set SyMAP project parameter 'Minimum length' to reduce number loaded.";
 		}
 		catch (Exception e) {e.printStackTrace(); fail("rwFasta");}
 		}
@@ -473,7 +472,7 @@ public class ConvertNCBI {
     				isChr=isScaf=isMT=false; 
     				if (idcol1.startsWith("NC_") || line.contains(chrType))    isChr=true; 
     				if (idcol1.startsWith("NW_") || idcol1.startsWith("NT_") ) isScaf=true;
-    				if (isChr && isScaf) isChr=false; //CAS586 >NW_018394658.1 Danio rerio strain Tuebingen chromosome 6 genomic scaffold,
+    				if (isChr && isScaf) isChr=false; // >NW_018394658.1 Danio rerio strain Tuebingen chromosome 6 genomic scaffold,
     				
     				if (isChr) {
 	    				if  (line.contains("mitochondrion") || line.contains("mitochondrial")
@@ -498,7 +497,7 @@ public class ConvertNCBI {
     					seqType=chrType;
     					prtName = createChrPrtName(line);
     					
-    					if (chr2id.containsKey(prtName)) { // CAS586 happens with zebrafish
+    					if (chr2id.containsKey(prtName)) { // happens with zebrafish
     						if (cntDup<=traceNum) prt("Duplicate " + prtName + ":" + line);
     						else if (cntDup==traceNum+1) prt("Suppressing further chromosome logs");
     						cntDup++;
@@ -546,7 +545,7 @@ public class ConvertNCBI {
 	    				seqType=scafType;
     					bPrtSeq=true;
     				}
-    				else if (prefixOnly!=null || INCLUDEAll) {// CAS586 add INCLUDEAll
+    				else if (prefixOnly!=null || INCLUDEAll) {
 						nUnk++;
 						prtName = unkPrefix + padNum(nUnk+"");
 						id2chr.put(idcol1, prtName); 
@@ -772,10 +771,11 @@ public class ConvertNCBI {
 	} // End FASTA class
 	/***************************************************************************
 	 * XXX GFF file example:
-	 * NC_016131.2     Gnomon  gene    18481   21742   .       +       .       ID=gene3;Dbxref=GeneID:100827252;Name=LOC100827252;gbkey=Gene;gene=LOC100827252;gene_biotype=protein_coding
-	   NC_016131.2     Gnomon  mRNA    18481   21742   .       +       .       ID=rna2;Parent=gene3;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;Name=XM_003563157.3;gbkey=mRNA;gene=LOC100827252;model_evidence=Supporting evidence includes similarity to: 3 Proteins%2C and 78%25 coverage of the annotated genomic feature by RNAseq alignments;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
-	   NC_016131.2     Gnomon  exon    18481   18628   .       +       .       ID=id15;Parent=rna2;Dbxref=GeneID:100827252,Genbank:XM_003563157.3;gbkey=mRNA;gene=LOC100827252;product=angio-associated migratory cell protein-like;transcript_id=XM_003563157.3
-	 	Gene gets new attribute of product=mRNA product and rnaID=mrnaID
+	 NC_003070.9     RefSeq  gene    3631    5899  .  +   .   ID=gene-AT1G01010;Dbxref=Araport:AT1G01010,TAIR:AT1G01010,GeneID:839580;Name=NAC001;gbkey=Gene;gene=NAC001;gene_biotype=protein_coding;gene_synonym=ANAC001,NAC domain containing protein 1,T25K16.1,T25K16_1;locus_tag=AT1G01010
+	 NC_003070.9     RefSeq  mRNA    3631    5899  .  +   .   ID=rna-NM_099983.2;Parent=gene-AT1G01010;Dbxref=Araport:AT1G01010,TAIR:AT1G01010,GeneID:839580,GenBank:NM_099983.2;Name=NM_099983.2;gbkey=mRNA;gene=NAC001;inference=similar to RNA sequence%2C mRNA:INSD:BT001115.1%2CINSD:AF439834.1%2CINSD:AK226863.1;locus_tag=AT1G01010;orig_protein_id=gnl|JCVI|AT1G01010.1;orig_transcript_id=gnl|JCVI|mRNA.AT1G01010.1;product=NAC domain containing protein 1;transcript_id=NM_099983.2
+	 NC_003070.9     RefSeq  exon    3631    3913  .  +   .   ID=exon-NM_099983.2-1;Parent=rna-NM_099983.2;Dbxref=Araport:AT1G01010,TAIR:AT1G01010,GeneID:839580,GenBank:NM_099983.2;gbkey=mRNA;gene=NAC001;inference=similar to RNA sequence%2C mRNA:INSD:BT001115.1%2CINSD:AF439834.1%2CINSD:AK226863.1;locus_tag=AT1G01010;orig_protein_id=gnl|JCVI|AT1G01010.1;orig_transcript_id=gnl|JCVI|mRNA.AT1G01010.1;product=NAC domain containing protein 1;transcript_id=NM_099983.2
+	 NC_003070.9     RefSeq  CDS     3760    3913  .  +   0   ID=cds-NP_171609.1;Parent=rna-NM_099983.2;Dbxref=Araport:AT1G01010,TAIR:AT1G01010,GeneID:839580,GenBank:NP_171609.1;Name=NP_171609.1;Note=NAC domain containing protein 1 (NAC001)%3B FUNCTIONS IN: sequence-specific DNA binding transcription factor activity%3B INVOLVED IN: multicellular organismal development%2C regulation of transcription%3B LOCATED IN: cellular_component unknown%3B EXPRESSED IN: 7 plant structures%3B EXPRESSED DURING: 4 anthesis%2C C globular stage%2C petal differentiation and expansion stage%3B CONTAINS InterPro DOMAIN/s: No apical meristem (NAM) protein (InterPro:IPR003441)%3B BEST Arabidopsis thaliana protein match is: NAC domain containing protein 69 (TAIR:AT4G01550.1)%3B Has 2503 Blast hits to 2496 proteins in 69 species: Archae - 0%3B Bacteria - 0%3B Metazoa - 0%3B Fungi - 0%3B Plants - 2502%3B Viruses - 0%3B Other Eukaryotes - 1 (source: NCBI BLink).;gbkey=CDS;gene=NAC001;inference=similar to RNA sequence%2C mRNA:INSD:BT001115.1%2CINSD:AF439834.1%2CINSD:AK226863.1;locus_tag=AT1G01010;orig_transcript_id=gnl|JCVI|mRNA.AT1G01010.1;product=NAC domain containing protein 1;protein_id=NP_171609.1
+	 	Gene gets new attribute of desc=mRNA product, rnaID=longest mrnaID, proteinID=CDS protein_id for longest mrnaID
 	 */
 	private class GFF {
 		// types
@@ -790,10 +790,12 @@ public class ConvertNCBI {
 		private final String parentAttrKey 	= "Parent";			// mRNA, CDS, Exon
 		private final String productAttrKey = "product"; 		// mRNA 
 		private final String descAttrKey 	= "description"; 	// gene - usually does not exist, use longest mRNA product
-
+		private final String proteinAttrKey = "protein_id";		// CDS attribute; else use nameAttrKey; else use ID
+		
 		// new gene attribute
-		private final String MRNAID    = "rnaID="; 	   // longest mRNA 
-		private final String DESC	   = "desc=";	   // either gene description or mRNA product
+		private final String MRNAID_KEY    = "rnaID="; 	    // longest mRNA 
+		private final String DESC_KEY	   = "desc=";	    // either gene description or mRNA product
+		private final String PROTID_KEY    = "proteinID="; 
 		
 		private final String RMGENE	   = "gene-";
 		private final String RMRNA	   = "rna-";
@@ -805,19 +807,20 @@ public class ConvertNCBI {
 		private int cntReadGene=0, cntReadMRNA=0, cntReadExon=0, cntReadCDS=0;
 		private int cntChrGeneAll=0, cntScafGeneAll=0, cntGeneNotOnSeq=0;
 		private int cntUseGene=0, cntUseExon=0, cntUseCDS=0, cntReplace=0, cntNoDesc=0, cntNoMrna=0;
-	
+		private int cntNoProtID=0;
+		
 		// anno per gene
 		private String geneLine="";						
 		private String geneID="", gChr="";
 		private int cntGeneMRNA=0;	// number of mRNAs for gene
 		
 		private int mrnaLen=0;
-		private String mrnaLine="", mrnaID="", mrnaProduct="";
+		private String mrnaLine="", mrnaID="", mrnaProduct="", protID="";
 		private Vector <String> exonVec = new Vector <String> ();
 		private Vector <String> cdsVec = new Vector <String> ();	
 		
 		private int nextLen=0;		// find longest mRNA
-		private String nextLine="", nextID="", nextProduct="";
+		private String nextLine="", nextID="", nextProduct="", nextProtID="";
 		private Vector <String> nextExonVec = new Vector <String> ();	
 		private Vector <String> nextCdsVec = new Vector <String> ();
 		
@@ -884,7 +887,6 @@ public class ConvertNCBI {
 			 }
 			 fhIn.close(); fhOutGff.close();
 			
-			 
 			 printSummary();
 		 }
 		 catch (Exception e) {fail(e, "rwAnnoGene");}
@@ -960,19 +962,21 @@ public class ConvertNCBI {
 		 private void replaceMRNA() {
 			 if (nextLine.equals("")) return;
 			 
+			 if (mrnaLen!=0 &&  mrnaLen<nextLen) cntReplace++;
+			 
 			 if (mrnaLen==0 || mrnaLen<nextLen) {
 				 mrnaLen  = nextLen;
 				 mrnaLine = nextLine;
 				 mrnaID   = nextID;
 				 mrnaProduct = nextProduct;
 				 
+				 protID = nextProtID;
 				 exonVec.clear(); cdsVec.clear();
 				 for (String e : nextExonVec) exonVec.add(e);
 				 for (String c : nextCdsVec)  cdsVec.add(c); 
-				 cntReplace++;
 			 }
 			 nextLen=0;
-			 nextLine = nextID = nextProduct = "";
+			 nextLine = nextID = nextProduct = nextProtID = "";
 			 nextExonVec.clear(); nextCdsVec.clear();
 		 }
 		 // CDS
@@ -984,6 +988,10 @@ public class ConvertNCBI {
 			String pid = getVal(parentAttrKey, attrs);
 			if (!nextID.equals(pid)) return;
 			
+			if (nextProtID.isBlank()) {
+				nextProtID = getVal(proteinAttrKey, attrs);
+				if (nextProtID.isBlank()) nextProtID = getVal(nameAttrKey, attrs);
+			}
 			// save CDS
 			String idStr =   idAttrKey       + "=" + getVal(idAttrKey, attrs);	// create shortened attribute list
 			String parStr =  parentAttrKey   + "=" + nextID.replace(RMRNA,"");	
@@ -1019,26 +1027,30 @@ public class ConvertNCBI {
 			if (geneID.trim().equals("")) {cntNoMrna++; return;} 
 			if (mrnaID.trim().equals("")) return; 
 		
+			// Get ID, Name, desc from geneLine
 			String [] tok = geneLine.split("\\t"); // original geneLine
 			if (tok.length!=9) fail("Gene: " + tok.length + " " + geneLine);
 			
-			if (geneID.startsWith(RMGENE)) geneID = geneID.replace(RMGENE,""); 
+			if (geneID.startsWith(RMGENE)) geneID = geneID.replace(RMGENE,""); 					// ID
 			String idAt = idAttrKey + "=" + geneID + ";";
 			
 			String [] attrs = tok[8].split(";");
 			String val = getVal(nameAttrKey, attrs);
-			String nameAt = (!geneID.contains(val)) ? (nameAttrKey + "=" + val + ";") : ""; // CHANGE here to alter what attributes are saved
+			String nameAt = (!geneID.contains(val)) ? (nameAttrKey + "=" + val + ";") : "";  	// name
 			
-			String desc = getVal(descAttrKey, attrs).trim();
-			if (!desc.equals("")) desc = DESC + desc;
+			String desc = getVal(descAttrKey, attrs).trim();									// desc
+			if (!desc.equals("")) desc = DESC_KEY + desc  + ";";
 			else {
 				if (mrnaProduct.equals("")) {desc=""; cntNoDesc++;}
-				else desc = DESC + mrnaProduct;
+				else desc = DESC_KEY + mrnaProduct + ";";
 			}
+			String mid = mrnaID.replace(RMRNA,"");
+			String mrnaAt = MRNAID_KEY + mid + " (" + cntGeneMRNA + ")"; 	// mrnaID
 			
-			String mrnaAt 	= MRNAID + mrnaID.replace(RMRNA,"") + " (" + cntGeneMRNA + ");";
+			String proteinAt = (protID.isBlank() || protID.equals(mid)) ? "" : ";" + PROTID_KEY + protID; 			// proteinID
+			if (proteinAt.isBlank()) cntNoProtID++;
 			
-			String allAttrs = idAt + nameAt + mrnaAt + desc;
+			String allAttrs = idAt + nameAt + desc + mrnaAt +  proteinAt;
 			
 			String line = gChr + "\t" + tok[1] + "\t" + tok[2] + "\t" + tok[3] + "\t" + tok[4]
 			+ "\t" + tok[5] + "\t" + tok[6] + "\t" + tok[7] + "\t" + allAttrs;
@@ -1061,7 +1073,7 @@ public class ConvertNCBI {
 			
 			cntGeneMRNA=0; mrnaLen=0;
 			geneID=geneLine=gChr="";
-			mrnaLine= mrnaID = mrnaProduct="";
+			mrnaLine= mrnaID = mrnaProduct=protID = "";
 			exonVec.clear(); cdsVec.clear();
 			
 			nextLen=0;
@@ -1098,12 +1110,7 @@ public class ConvertNCBI {
 			prt(String.format(" %,8d mRNA from %,d (longest mRNA)  ", cntUseGene, cntReadMRNA));
 			prt(String.format(" %,8d Exon from %,d                 ", cntUseExon, cntReadExon));
 			prt(String.format(" %,8d CDS  from %,d                 ", cntUseCDS,  cntReadCDS));
-			
-			if (bTrace) {
-				prt(String.format(" %,8d Genes with no mRNAs", cntNoMrna));
-				prt(String.format(" Replace 1st mRNA with longest %,d", cntReplace));
-			}
-			
+			if (cntNoProtID>0) prt(String.format(" %,8d No unique proteinID ", cntNoProtID));
 			prt("Finish writing " + annoDir + outGffFile + "                     ");
 			
 			if (!VERBOSE) return;
@@ -1128,9 +1135,14 @@ public class ConvertNCBI {
 				}
 			}
 			if (!oline.isEmpty()) prt(oline);
-			if (cntNoDesc>0) prt(String.format(" No description %,d", cntNoDesc));
+			if (bTrace) { // -d
+				prt("");
+				if (cntNoDesc>0)  prt(String.format("No description %,d", cntNoDesc));
+				if (cntNoMrna>0)  prt(String.format("Genes with no mRNAs %,d", cntNoMrna));
+				if (cntReplace>0) prt(String.format("1st mRNA is not longest %,d", cntReplace));	
+			}
 		} 
-		catch (Exception e) {fail(e, "GFF summary");}
+		catch (Exception e) {e.printStackTrace();}
 		}
 		
 		private void printDiff() {

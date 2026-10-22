@@ -7,8 +7,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.Vector;
-import java.util.HashSet;
-import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -21,18 +19,16 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 
-import database.DBconn2;
 import symap.Globals;
-import symap.closeup.AlignPool;
 import symap.manager.Mproject;
 import util.ErrorReport;
 import util.Jcomp;
 import util.Jhtml;
 import util.Popup;
-import util.Utilities;
 
 /***************************************************
  * Export file methods for Table, called by TableDataPanel.exportPopup
+ * Recently put export FASTA of pairs and unique spliced transcripts; the 2nd is now in View, and the 1st seems useless; CAS591
  */
 public class UtilExport extends JDialog {
 	private static final long serialVersionUID = 1L;
@@ -43,7 +39,7 @@ public class UtilExport extends JDialog {
 	private String title, projs=""; 
 	private Vector<Mproject> projVec;
 	
-	private JRadioButton btnYes, btnID; // CAS589 add ID for FASTA
+	private JRadioButton btnYes; 
 	private int nMode = -1;  
 	    
 	protected UtilExport(TableMainPanel tdp, String title) {
@@ -92,26 +88,8 @@ public class UtilExport extends JDialog {
 		rowPanel.add(btnYes); rowPanel.add(Box.createHorizontalStrut(5));
 		rowPanel.add(btnNo);
 		
-		JRadioButton btnHITS = Jcomp.createRadio("All pairs hit sequences", 
-				"Export the sequences from Hstart to Hend for both sequences of the pair");
-		btnHITS.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				nMode = ex_fa_pairs;
-			}
-		});
-		// if (tPanel.isSingle) btnFASTA.setEnabled(false);
-   	  
-		JRadioButton btnGENES = Jcomp.createRadio("Unique spliced transcripts", 
-				"Export the spliced exons/CDS sequence of unique transcripts");
-		btnGENES.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				nMode = ex_fa_genes;
-			}
-		});
-			
 		ButtonGroup grp = new ButtonGroup();
 		grp.add(btnCSV);  grp.add(btnHTML);
-        grp.add(btnHITS); grp.add(btnGENES);
     	btnCSV.setSelected(true);
     	nMode = ex_csv;
 			
@@ -120,26 +98,6 @@ public class UtilExport extends JDialog {
 		selectPanel.add(btnCSV); 			selectPanel.add(Box.createVerticalStrut(5));
 		selectPanel.add(btnHTML);			selectPanel.add(Box.createVerticalStrut(5));
         selectPanel.add(rowPanel);
-        
-        selectPanel.add(new JSeparator());
-        selectPanel.add(new JLabel("Table FASTA")); selectPanel.add(Box.createVerticalStrut(5));
-        if (!tPanel.qFrame.bOnlyBlast) {
-        	selectPanel.add(btnHITS); selectPanel.add(Box.createVerticalStrut(5));
-        }
-        selectPanel.add(btnGENES); selectPanel.add(Box.createVerticalStrut(5));
-        
-        JPanel row2Panel = Jcomp.createRowPanel();
-        row2Panel.add(Box.createHorizontalStrut(15));
-        row2Panel.add(new JLabel("Header line:")); rowPanel.add(Box.createHorizontalStrut(5));
-        
-		btnID = Jcomp.createRadio("GFF ID", "Use GFF ID for header line (if exists)"); 
-	    JRadioButton btnNSy = Jcomp.createRadio("Gene#", "Use SyMAP gene# for header line"); 
-	    ButtonGroup id = new ButtonGroup();
-		id.add(btnNSy); id.add(btnID);
-		btnNSy.setSelected(true); 
-		row2Panel.add(btnNSy); row2Panel.add(Box.createHorizontalStrut(5));
-		row2Panel.add(btnID);
-        selectPanel.add(row2Panel);
         
     // buttons
     	JButton btnOK = Jcomp.createButton("Export", "Perform export");
@@ -293,241 +251,7 @@ public class UtilExport extends JDialog {
 		tPanel.setPanelEnabled(true);
 	} catch(Exception e) {ErrorReport.print(e, "Write delim file");}
     }
-    
-    /******************************************************************
-     * Write fasta pairs
-     */
-    protected void writeSeqPairs() {
-    try {
-    	int nSelRows = tPanel.theTable.getSelectedRowCount();
-    	boolean reset = false;
-		if (nSelRows == 0) {
-			tPanel.theTable.selectAll();
-			reset = true;
-		}
-		else if (nSelRows>0) {
-    		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
-    	}
-    	
-		int [] selRows = tPanel.theTable.getSelectedRows();
-		nSelRows = selRows.length;
-		if (nSelRows>500) {
-			if (!Popup.showContinue("Export FASTA",  "Selected " + nSelRows + " row to export hit sequence. This is a slow function. \n" +
-				"It may take over a minute to export 500 rows of sequences.")) {
-				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
-				tPanel.setPanelEnabled(true);
-				return;
-			}
-		}
-		TmpRowData rd = new TmpRowData(tPanel);
-		for(int x=0; x<nSelRows; x++) {
-			if (!rd.loadRow(selRows[x])) {
-				Popup.showWarning("Internal error - cannot continue.");
-				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
-				tPanel.setPanelEnabled(true);
-				return;
-			}
-			if (rd.bLoadBlast) { // CAS590
-				Popup.showWarning("Selected rows contain at least one Blast hit\n  -- cannot export hit sequences.");
-				if (reset) tPanel.theTable.getSelectionModel().clearSelection();
-				tPanel.setPanelEnabled(true);
-				return;
-			}
-		}
-		final boolean isReset = reset; // CAS590 moved checks before file open
-    	BufferedWriter outFH = getFileHandle(ex_fa_pairs, filePrefix + "Pairs.fa", true);
-		if (outFH==null) return;
-	
-    	Thread inThread = new Thread(new Runnable() {
-    	public void run() {
-		try {
-			tPanel.setPanelEnabled(false);
-			
-			DBconn2 dbc = tPanel.qPanel.getDBC(); 
-			AlignPool aPool = new AlignPool(dbc);
-			
-			long startTime = Utilities.getNanoTime();
-			int [] selRows = tPanel.theTable.getSelectedRows();
-			int selNum = selRows.length;
-			
-			int seqNum = 1, pairNum=1;
-			boolean useID = btnID.isSelected();
-				
-			for(int x=0; x<selNum; x++) {
-				rd.loadRow(selRows[x]); 
-				for (int i=0; i<2; i++) {
-					String seq = aPool.loadSeq(rd.start[i] + ":" + rd.end[i], rd.chrIdx[i]);
-					
-					String idStr;
-					if (!useID) {
-						idStr = getId(rd.geneTag[i], rd.chrNum[i], rd.spAbbr[i], seqNum);
-					}
-					else {
-						String idkey = rd.getAnnoFromKey(rd.spAbbr[i], selRows[x]);
-						idStr = getAnnoID(idkey);
-					}
-					String coords = String.format("  Start %,d  End %,d  Len %,d", 
-							rd.start[i], rd.end[i], (rd.end[i]-rd.start[i])+1); // CAS576 add commas and Len
-					
-					String outStr = idStr + "  " + rd.spName[i] + coords + " Pair#" + pairNum;		
-					outFH.write(outStr+"\n");
-					outFH.write(seq+"\n");
-					outFH.flush();
-					seqNum++;
-				}
-				pairNum++;
-				if (x>0 && x % 10 == 0) Globals.rprt("Wrote: " + x + " of " + selNum + " pairs");
-			}
-			outFH.close(); 
-			dbc.close();
-			
-			Globals.rclear();
-			Utilities.printElapsedNanoTime("Wrote " + (seqNum-1) + " sequences", startTime);
-			
-			if (isReset) tPanel.theTable.getSelectionModel().clearSelection();
-			tPanel.setPanelEnabled(true);
-			
-		} catch(Exception e) {ErrorReport.print(e, "Write fasta");}
-		}});
-		inThread.start();
-	}
-	catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
-    }
-    // Return one of the following: e.g. ~, 2.200.~, 2.200.b~, 2.200., 2.200.b
-    private String getId (String tag, String chr, String abbr, int seqNum) {
-    	String id;
-    	if (tag.equals(Globals.pseudoChar)) id = String.format(">%-20s", chr +"_" + seqNum);
-		else { 
-			String delim="_";
-			if (tag.endsWith(".")) tag = tag.substring(0, tag.length()-1);
-			else if (tag.endsWith(".~")) {
-				tag = tag.substring(0, tag.length()-2);
-				delim = Globals.pseudoChar;
-			}
-			else if (tag.endsWith("~")) delim = Globals.pseudoChar;
-			
-			id = String.format(">%-20s", abbr+"_"+tag+ delim +seqNum); // CAS576 change from">SEQ" + String.format("%06d  ", seqNum)  
-		}
-    	return id;
-    }
-    // e.g. ID=AT1G09580;rnaID=NM_100830.5 (1);desc=emp24/gp25L/p24 family/GOLD family protein
-    // return AT1G09580; CAS589 add
-    private String getAnnoID(String idkey) {
-		String [] tok = idkey.split(";");
-		if (tok.length==0) return "No ID";
-		String id=null;
-		for (String tuple : tok) {
-			if (tuple.startsWith("ID=")) {
-				id = tuple.split("=")[1];
-				break;
-			}
-		}
-		if (id==null) id=idkey;
-		return String.format("> %-15s", id);
-    }
-    /******************************************************************
-     * Write fasta pairs
-     */
-    protected void writeSeqGenes() {
-    try {
-    	
-    	int nSelRows = tPanel.theTable.getSelectedRowCount();
-    	if (nSelRows>0) {
-    		if (!Popup.showConfirm2("Selected rows","Export " + nSelRows + " selected rows?" )) return ;
-    	}
-    	BufferedWriter outFH = getFileHandle(ex_fa_genes, filePrefix + "Genes.fa", true);
-		if (outFH==null) return;
-	
-    	Thread inThread = new Thread(new Runnable() {
-    	public void run() {
-		try {
-			TmpRowData rd = new TmpRowData(tPanel);
-			tPanel.setPanelEnabled(false);
-				
-			DBconn2 dbc = tPanel.qPanel.getDBC(); 
-			AlignPool aPool = new AlignPool(dbc);
-				
-			boolean reset = false;
-			if(tPanel.theTable.getSelectedRowCount() == 0) {
-				tPanel.theTable.selectAll();
-				reset = true;
-			}
-			long startTime = Utilities.getNanoTime();
-			int [] selRows = tPanel.theTable.getSelectedRows();
-			int selNum = selRows.length;
-			if (selNum>500) {
-				if (!Popup.showContinue("Export FASTA", "Selected " + selNum + " row to export spliced transcripts. This is a very slow function. \n" +
-					"It may take over a minute if there are >500 unique genes.")) {
-					if (reset)tPanel.theTable.getSelectionModel().clearSelection();
-					tPanel.setPanelEnabled(true);
-					return;
-				}
-			}
-			boolean useID = btnID.isSelected();
-
-			HashMap <Integer, String> spAnnoType = new HashMap <Integer, String> ();
-			for (Mproject mp : projVec) spAnnoType.put(mp.getID(), mp.getdbAnnoType()); // getID is projIdx
-			
-			HashSet <String> geneSet = new HashSet <String> ();
-			int cntDup=0, cntIgn=0;
-			
-			// CAS589 outFH.write("### " + title + "   ### Gene sequences\n");
-		
-			// Loop through rows
-			for(int x=0; x<selNum; x++) {
-				if (!rd.loadRow(selRows[x])) {
-					outFH.close();
-					if(reset) tPanel.theTable.getSelectionModel().clearSelection();
-					tPanel.setPanelEnabled(true);
-					return;
-				}
-				int loop = (rd.geneTag[1].isEmpty()) ? 1 : 2; // Is from Single query; write one; else write pair
-				
-				for (int i=0; i<loop; i++) {
-					String tag = rd.geneTag[i]; // Chr.tag
-					
-					if (tag.contains(Globals.pseudoChar)) {cntIgn++; continue;}
-					if (geneSet.contains(tag)) 	{cntDup++; continue;}
-					geneSet.add(tag);
-					
-					String geneNum = tag.substring(tag.indexOf(Globals.DOT)+1, tag.length()); // remove chr from beginning
-					
-					String annotype = (useID) ? "ID" : spAnnoType.get(rd.spIdx[i]);
-					String seq = aPool.loadGeneSeq(geneNum, rd.chrIdx[i], annotype); // spIdx is projIdx
-					if (seq==null) {
-						Globals.prt("Failed obtaining sequence");
-						return;
-					}
-					if (tag.endsWith(".")) tag = tag.substring(0, tag.length()-1);
-					
-					if (!useID) {// 1st line of seq is ' # strand ID\n'; so header is >id   origID (strand coords)
-						String idStr = String.format(">%-15s", rd.spAbbr[i] + "_" + tag);
-						outFH.write(idStr + "  " + seq +"\n");
-					}
-					else {
-						outFH.write(seq+"\n");
-					}
-					outFH.flush();	// this does not slow it down much, and if user cancelled, will at least get part of file	
-				}		
-				if (x>0 && x % 10 == 0) Globals.rprt("Wrote: " + x + " of " + selNum + " rows");
-			}
-			outFH.close();
-			Globals.rclear();
-			String msg = String.format("Wrote %,d genes", geneSet.size());
-			if (cntDup>0) msg += String.format("; duplicates %,d", cntDup);
-			if (cntIgn>0) msg += String.format("; not a gene %,d", cntIgn);
-			Utilities.printElapsedNanoTime(msg, startTime);
-			
-			if(reset)
-				tPanel.theTable.getSelectionModel().clearSelection();
-			tPanel.setPanelEnabled(true);
-		} catch(Exception e) {ErrorReport.print(e, "Write fasta");}
-		}});
-		inThread.start();
-	}
-	catch(Exception e) {ErrorReport.print(e, "Save as fasta");}
-    }
-    
+     
     ////////////////////////////////////////////////////////////////////////
     // All Exports use this
     // CAS589 change from PrintWriter for speed, which made no difference 

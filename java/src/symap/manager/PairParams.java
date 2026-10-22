@@ -65,6 +65,7 @@ public class PairParams extends JDialog {
 		"Concat",  "Mask1", "Mask2", 
 		"NUCmer args", "PROmer args", "Self args", "Use NUCmer","Use PROmer", 
 		"Load Blast files",  // must start with the word 'Load';  CAS589 new
+		"Proteins", "%Identity", "E-value", // CAS591 new; if !protein, then nucleotide
 		
 		"Number pseudo", 											
 		"Algorithm 1 (modified original)", 
@@ -72,7 +73,7 @@ public class PairParams extends JDialog {
 		"Algorithm 2 (exon-intron)",  
 		"Gene", "Exon", "Len","G0_Len", 
 		"EE", "EI", "En", "II", "In", 
-		"Algorithm",				// Order/Size CoSet1/CoSet2 pulldown CAS588 new
+		"Algorithm",				// Order/Size CoSet1/CoSet2 pulldown 
 		
 		"Min hits", "Strict", "Orient", "Merge:", 
 		"None", "Order1", "Order2", 			 
@@ -83,8 +84,9 @@ public class PairParams extends JDialog {
 	private static final String [] SYMBOLS = { // Mpairs.paramKey
 		// Alignment
 		"MUMmer", "concat", "mask1", "mask2",
-		"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
-		"Blast",
+			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+		"Blast", 
+			"isAA", "pIdentity", "evalue",
 		// Cluster
 		"number_pseudo",
 		"algo1", "topn", 
@@ -96,7 +98,7 @@ public class PairParams extends JDialog {
 		// synteny
 		"mindots", "strict_blocks", "same_orient", "merge_blocks",
 		// Order
-		"order_none", "order_proj1", "order_proj2",		
+		"order_none", "order_proj1", "order_proj2"	
 	};
 
 	private Mpair mp = null;
@@ -154,6 +156,12 @@ public class PairParams extends JDialog {
 		chkDef        = Jcomp.createRadio("Defaults", "Use NUCmer for self-synteny, otherwise use PROmer");		// not saved
 		
 		radBlast  = Jcomp.createRadio(LABELS[x++], "Load one or more Blastp b6 files");
+		radAA    = Jcomp.createRadio(LABELS[x++], "The blast file is protein results");
+		radNT    = Jcomp.createRadio("Nucleotide", "The blast file is nucleotide results");
+		lblpID = Jcomp.createLabel(LABELS[x++],"Percent identity must be >= than this value"); 
+		txtpID = Jcomp.createTextField("40",    "Percent identity must be >= than this value", decWidth);
+		lblEval = Jcomp.createLabel(LABELS[x++], "E-value must be <= than this value"); 
+		txtEval = Jcomp.createTextField("1E-10", "E-value must be <= than this value", decWidth*2);
 		
 		ButtonGroup xgroup = new ButtonGroup();
 		xgroup.add(radMummer); xgroup.add(radBlast); // set selected below
@@ -161,6 +169,10 @@ public class PairParams extends JDialog {
 		ButtonGroup sgroup = new ButtonGroup();
 		sgroup.add(chkNucOnly); sgroup.add(chkProOnly); sgroup.add(chkDef);
 		chkDef.setSelected(true);
+		
+		ButtonGroup bgroup = new ButtonGroup();
+		bgroup.add(radAA); bgroup.add(radNT); 
+		radAA.setSelected(true);
 		
 		radBlast.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -249,17 +261,8 @@ public class PairParams extends JDialog {
 		
 		//////////////////////////////////////////////////////////
 		// bottom row of bottoms
-		if (!isAlignDone || !mp.isPairInDB()) { // same as in setEnabled()
-			actions = new String [1];			
-			if (radBlast.isSelected()) actions[0] = actAlt0[2];  // Load &Synteny
-			else if (mp.hasMUMmer)     actions[0] = actAlt0[1];  // Align&Synteny
-			else                       actions[0] = actAlt0[0];  // Align&Synteny
-		}
-		else {
-			if (radBlast.isSelected()) 	actOptions[0] = actAlt0[2]; 
-			actions = actOptions;
-		}
 		
+		setActionItems();
 		cmbAction = Jcomp.createComboBox(actions, "Action to be performed on 'Selected Pair'", 0); 
 		cmbAction.setPrototypeDisplayValue("Load MUM&Synteny "); // sets width
 		cmbAction.addActionListener(new ActionListener() {
@@ -311,44 +314,61 @@ public class PairParams extends JDialog {
 		row.add(Jhtml.createHelpIconSysSm(Jhtml.SYS_HELP_URL, Jhtml.param2Align));
 		aCollapse.panel.add(row); aCollapse.panel.add(Box.createVerticalStrut(5));
 		
-		CollapsiblePanel aCollapse2 = new CollapsiblePanel("Mask & MUMmer args", "Masking and PROmer vs NUCmer", true);
+		CollapsiblePanel mumCollapse = new CollapsiblePanel("Mask & MUMmer args", "Masking and PROmer vs NUCmer", true);
 			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));	
 			row.add(chkConcat);	row.add(Box.createHorizontalStrut(15));
 			row.add(chkMask1);	row.add(Box.createHorizontalStrut(5));	
 			if (!isSelf) row.add(chkMask2);	// CAS589 add					
-			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(5));
+			mumCollapse.panel.add(row);	mumCollapse.panel.add(Box.createVerticalStrut(5));
 		
 			int colWidth = 100;
 			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent+5));
 			row.add(lblProMerArgs);
 			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblProMerArgs)));
 			row.add(txtProMerArgs);
-			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(3));
+			mumCollapse.panel.add(row);	mumCollapse.panel.add(Box.createVerticalStrut(3));
 			
 			row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(indent+5));
 			row.add(lblNucMerArgs); 
 			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblNucMerArgs)));
 			row.add(txtNucMerArgs);
-			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(3));
+			mumCollapse.panel.add(row);	mumCollapse.panel.add(Box.createVerticalStrut(3));
 		
 			row = Jcomp.createRowPanel();  row.add(Box.createHorizontalStrut(indent+5));
 			row.add(lblSelfArgs); 
 			row.add(Box.createHorizontalStrut(Jcomp.getWidth(colWidth, lblSelfArgs)));
 			row.add(txtSelfArgs);
-			aCollapse2.panel.add(row);	aCollapse2.panel.add(Box.createVerticalStrut(5));
+			mumCollapse.panel.add(row);	mumCollapse.panel.add(Box.createVerticalStrut(5));
 	
 			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));
 			row.add(chkProOnly); row.add(chkNucOnly); row.add(chkDef);     
-			aCollapse2.panel.add(row);  aCollapse2.panel.add(Box.createVerticalStrut(5));
-		aCollapse.panel.add(aCollapse2);
+			mumCollapse.panel.add(row);  mumCollapse.panel.add(Box.createVerticalStrut(5));
+		aCollapse.panel.add(mumCollapse);
 		aCollapse.panel.add(Box.createVerticalStrut(5));
 		
+		// blast
 		row = Jcomp.createRowPanel();
 		row.add(radBlast);  	
-		aCollapse.panel.add(row); 
+		aCollapse.panel.add(row);  
+	
+		CollapsiblePanel bltCollapse = new CollapsiblePanel("Blast input and filter", "AA or NT, >%Identity, <E-value", true);
+			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent));	
+			row.add(Jcomp.createLabel("Input file: ", "Was the input to blast protein or nucleotide files?"));
+			row.add(radAA);	row.add(Box.createHorizontalStrut(5));
+			row.add(radNT);	row.add(Box.createHorizontalStrut(5));			
+			bltCollapse.panel.add(row);	bltCollapse.panel.add(Box.createVerticalStrut(5));
+	
+			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(indent+5));
+			row.add(lblpID); row.add(Box.createHorizontalStrut(3));
+			row.add(txtpID); row.add(Box.createHorizontalStrut(15));
+			row.add(lblEval); row.add(Box.createHorizontalStrut(3));
+			row.add(txtEval); 
+			bltCollapse.panel.add(row);	bltCollapse.panel.add(Box.createVerticalStrut(3));
+		aCollapse.panel.add(bltCollapse);
+		aCollapse.panel.add(Box.createVerticalStrut(5));
 		
 		aCollapse.finish();
-		aCollapse.panel.add(new JSeparator()); 
+		aCollapse.panel.add(new JSeparator()); 	
 		mainPanel.add(aCollapse);
 		
 	// Clusters
@@ -494,6 +514,9 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	return chkNucOnly.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return chkProOnly.isSelected()?"1":"0";
 		else if (symbol.equals(SYMBOLS[x++]))	return radBlast.isSelected()?"1":"0"; 
+		else if (symbol.equals(SYMBOLS[x++]))	return radAA.isSelected()?"1":"0"; 
+		else if (symbol.equals(SYMBOLS[x++]))	return txtpID.getText(); 
+		else if (symbol.equals(SYMBOLS[x++]))	return txtEval.getText(); 
 		
 		else if (symbol.equals(SYMBOLS[x++])) 	return chkPseudo.isSelected()?"1":"0";
 		
@@ -538,6 +561,12 @@ public class PairParams extends JDialog {
 		else if (symbol.equals(SYMBOLS[x++]))	chkNucOnly.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkProOnly.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++])) 	radBlast.setSelected(value.equals("1"));
+		else if (symbol.equals(SYMBOLS[x++]))	{
+			boolean a = value.equals("1");
+			radAA.setSelected(a);  radNT.setSelected(!a);  
+		}
+		else if (symbol.equals(SYMBOLS[x++]))	txtpID.setText(value); 
+		else if (symbol.equals(SYMBOLS[x++]))	txtEval.setText(value); 
 		
 		else if (symbol.equals(SYMBOLS[x++]))	chkPseudo.setSelected(value.equals("1"));
 		else if (symbol.equals(SYMBOLS[x++]))	chkAlgo1.setSelected(value.equals("1"));
@@ -594,6 +623,8 @@ public class PairParams extends JDialog {
 
 	private void setEnabled() {
 		boolean b = radBlast.isSelected();
+		radAA.setEnabled(b); radNT.setEnabled(b);
+		txtpID.setEnabled(b); txtEval.setEnabled(b);
 		
 		b = !b;
 		chkConcat.setEnabled(b); chkMask1.setEnabled(b); chkMask2.setEnabled(b);
@@ -609,20 +640,24 @@ public class PairParams extends JDialog {
 		chkEEpile.setEnabled(b); chkEIpile.setEnabled(b); chkEnpile.setEnabled(b); 
 		chkIIpile.setEnabled(b); chkInpile.setEnabled(b);
 		
-		if (!isAlignDone || !mp.isPairInDB()) { // same as in CreateMainLabels()
-			actions = new String [1];			
-			if (radBlast.isSelected()) actions[0] = actAlt0[2];  // Load Blast&Synteny; B
-			else if (mp.hasMUMmer)     actions[0] = actAlt0[1];  // Load Mum&Synteny    A
-			else                       actions[0] = actAlt0[0];  // Align&Synteny       x
-		}
-		else {
-			if (radBlast.isSelected()) 	actOptions[0] = actAlt0[2]; // B
-			else 						actOptions[0] = actAlt0[1]; // A
-			actions = actOptions;
-		}
+		setActionItems();
 		cmbAction.setModel(new DefaultComboBoxModel<>(actions));
 	}
-	
+	private void setActionItems() { // Set the Action text; CAS591
+		String align;
+		if (radBlast.isSelected()) align = actAlt0[2];  // Load &Synteny
+		else if (mp.hasMUMerHits())align = actAlt0[1];  // Clust&Synteny
+		else                       align = actAlt0[0];  // Align&Synteny
+		
+		if (!isAlignDone || !mp.isPairInDB()) { 
+			actions = new String [1];	
+			actions[0] = align;
+		}
+		else {
+			actOptions[0] = align; 
+			actions = actOptions;
+		}
+	}
 	private void setAction() {
 		int idx = cmbAction.getSelectedIndex();
 		if (idx==actCnS)      {
@@ -792,13 +827,17 @@ public class PairParams extends JDialog {
 	
 	/************************************************************************/
 	private JPanel mainPanel = null;
-	
-	private JRadioButton radMummer = null, radBlast = null;
-	
+
+	private JRadioButton radMummer = null;
 	private JCheckBox chkConcat = null, chkMask1 = null, chkMask2 = null;
 	private JLabel lblNucMerArgs = null, lblProMerArgs = null, lblSelfArgs = null;
 	private JTextField txtNucMerArgs = null, txtSelfArgs = null, txtProMerArgs = null;
 	private JRadioButton chkNucOnly = null, chkProOnly = null, chkDef = null;
+	
+	private JRadioButton radBlast = null;
+	private JRadioButton radAA=null, radNT=null;
+	private JLabel lblpID=null, lblEval=null;
+	private JTextField txtpID=null, txtEval=null;
 	
 	private JRadioButton chkAlgo1,  chkAlgo2;
 	

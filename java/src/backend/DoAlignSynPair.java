@@ -44,7 +44,7 @@ public class DoAlignSynPair extends JFrame {
 	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  boolean closeWhenDone,  int maxCPUs, boolean bAlignDone) {
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp, boolean bclose,  int maxCPUs, boolean bAlignDone) {
 		this.dbc2 = dbc2;
 		this.mp = mp;
 		
@@ -64,28 +64,33 @@ public class DoAlignSynPair extends JFrame {
 		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
 		diaLog.msgToFileOnly(">>> " + toName + v);
 		
+		if (mp.bSynOnly) { // CAS591 make separate method
+			mp.removeSyntenyFromDB(); 
+			syntenyOnly(diaLog, mProj1, mProj2);
+			return;
+		}
 		if (mp.bPseudo) {
 			pseudoOnly(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (Constants.CoSET_ONLY || mp.bCoSet) { // Popup is in ManagerFrame.alignSelectedPair( ) -- already been okay
+		if (mp.bCoSet) { // Popup is in ManagerFrame.alignSelectedPair( ) -- already been okay
 			collinearOnly(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (Constants.NUMHITS_ONLY) {
+		if (Constants.NUMHITS_ONLY) {// hidden
 			numHitsOnly(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (Constants.LOAD_BLOCKS) {
+		if (Constants.LOAD_BLOCKS) { // hidden 
 			loadBlocks(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (mp.bSynOnly || (mp.isPairInDB() && mp.isBlast(Mpair.FILE)))
+		if (mp.isPairInDB() && mp.isBlast(Mpair.FILE))
 			  mp.removeSyntenyFromDB(); // isBlastAdd uses existing hits; CAS590 
 		else  mp.renewIdx(); 			// Remove existing and restart, sets projIdx; 
 		
 		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  
-		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // CAS578 add parameters (CAS588 getChgClustSyn includes MUMmer)
+		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // getChgClustSyn includes MUMmer
 		diaLog.closeWhenDone();					
 		
 		final boolean bLoadBlast = mp.isBlast(Mpair.FILE);
@@ -139,7 +144,7 @@ public class DoAlignSynPair extends JFrame {
 					
 					/** Align **/
 					if (bLoadBlast) success = loadBlast.run(); 
-					else         success = aligner.run(); 
+					else            success = aligner.run(); 
 					
 					if (Cancelled.isCancelled()) {
 						diaLog.setVisible(false);
@@ -150,12 +155,11 @@ public class DoAlignSynPair extends JFrame {
 						diaLog.finish(false);
 						return;
 					}	
-					
 					if (Cancelled.isCancelled()) return;
 					
 					/** Anchors **/
 					long synStart = Utils.getTime(); // need time for symap part only
-					success = (mp.bSynOnly || bLoadBlast) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
+					success = (bLoadBlast) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
 					
 					if (Cancelled.isCancelled()) return;
 					if (!success) {
@@ -171,16 +175,11 @@ public class DoAlignSynPair extends JFrame {
 						diaLog.finish(false);
 						return;
 					}
-					if (mp.bSynOnly)  Utils.prtMsgTimeDone(diaLog, "Complete SyMAP", synStart);
+					if (mp.bSynOnly)     Utils.prtMsgTimeDone(diaLog, "Complete SyMAP", synStart);
 					else if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, "Complete Load & SyMAP", synStart);
-					else              Utils.prtMsgTimeDone(diaLog, "Complete Align & SyMAP", synStart);
+					else                 Utils.prtMsgTimeDone(diaLog, "Complete Align & SyMAP", synStart);
 
 					/** Finish **/
-					if (!bLoadBlast) { // UseBlast writes from its run
-						String alignParams = aligner.getParams();
-						mp.saveParamsToDB(alignParams);		// deletes/replace all pair_props; add pairs.params (used in summary)
-					}
-					
 					new SumFrame(dbc2, mp);
 					
 					diaLog.appendText(">> Summary for " + toName + "\n");
@@ -252,7 +251,7 @@ public class DoAlignSynPair extends JFrame {
 			}
 			catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
 		}
-		else if (closeWhenDone) {
+		else if (bclose) {
 			diaLog.dispose();	
 		}
 		
@@ -326,6 +325,21 @@ public class DoAlignSynPair extends JFrame {
 		return null;
 	}
 	/**************************************************************/
+	/*** Synteny - pair parameter pull-down  ***/ 
+	private void syntenyOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
+	try {
+		mLog.msg("Only synteny");
+		
+		SyntenyMain synteny = new SyntenyMain(dbc2, mLog, mp);
+		synteny.run( mProj1, mProj2);
+		
+		mp.saveParamsForOnly();		
+		new SumFrame(dbc2, mp); 
+		System.out.println("--------------------------------------------------");
+	}
+	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
+	}
+	
 	/*** Add Pseudo - pair parameters pull-down  ***/ 
 	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
@@ -334,15 +348,13 @@ public class DoAlignSynPair extends JFrame {
 		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
 		anchors.addPseudoFromFlag();
 			
-		String params = dbc2.executeString("select params from pairs where idx=" + mp.getPairIdx());
-		mp.saveParamsToDB(params);		// re-enter params and update NOW(), then update pair_props
-		
+		mp.saveParamsForOnly();		
 		new SumFrame(dbc2, mp, "Number pseudo"); // only so it will show the updated version
 		System.out.println("--------------------------------------------------");
 	}
 	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
 	}
-	/** Collinear only: -cs command line or pair parameter pull-down  **********************/
+	/** Collinear only: pair parameter pull-down  **********************/
 	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Only run collinear set algorithm");
@@ -354,7 +366,7 @@ public class DoAlignSynPair extends JFrame {
 		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
 		else 							new AnchorCset1(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
 			
-		mp.saveUpdate();
+		mp.saveParamsForOnly();
 		new SumFrame(dbc2, mp);
 		System.out.println("--------------------------------------------------");
 	}

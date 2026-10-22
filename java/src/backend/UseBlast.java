@@ -29,16 +29,19 @@ import util.ProgressDialog;
  */
 public class UseBlast {
 	private boolean bVerbose = Constants.VERBOSE;
-	private final String HTYPE = Globals.blastHit; // instead of EE..., or g2
+	private final String BpTYPE = Globals.blastHit; // instead of EE..., or g2
 	private final String SEP = ":";    // key for hitMap (geneIdxs) and blockMap (chrNames)
 	
 	private Mpair mp;
 	private ProgressDialog mLog;
-	private DBconn2 dbc;
-	private boolean isID=true, isPR=true;		// right now, these are always true
+	private DBconn2 dbc;	
 	
 	private int pairIdx, projIdx1, projIdx2;
 	private Mproject mProj1, mProj2;
+	
+	private boolean isAA=true;
+	private int idCutoff=0;
+	private double evalCutoff= Double.MAX_VALUE;
 
 	private boolean bSuccess=true;
 	private AccessDB aDB;
@@ -49,7 +52,7 @@ public class UseBlast {
 	private HashMap <Integer, Gene>   geneIdxMap2 = new HashMap <Integer, Gene> ();  //           ditto
 	
 	private HashMap <String, Hit>     hitPairMap  = new HashMap <String, Hit> ();    // Created in Blast; key geneIdx1:geneIdx2
-
+	private int numExistHits=0;
 	/********************************************************************/
 	public UseBlast(DBconn2 dbc, ProgressDialog mLog,  Mpair mp) {
 		this.mLog = mLog;
@@ -62,6 +65,10 @@ public class UseBlast {
 		mProj2  = mp.mProj2;
 		projIdx1 = mProj1.getIdx();	
 		projIdx2 = mProj2.getIdx();
+		
+		isAA = mp.isBlastAA(Mpair.FILE);
+		idCutoff = mp.getpIdentity(Mpair.FILE);
+		evalCutoff = mp.getEval(Mpair.FILE);
 	}
 	protected boolean run() {
 		long time = Utils.getTime();
@@ -71,6 +78,7 @@ public class UseBlast {
 		mLog.msg("");
 		mLog.msg("Load Blast for " + mProj1.getDBName() + " and " + mProj2.getDBName());
 		
+		String blastFileList = Utils.getBlastFileList(mp.getResultDir()); // use for summary at end
 		ArrayList <String> fileList = Utils.getBlastFiles(mp.getResultDir());
 		if (fileList==null || fileList.isEmpty()) {
 			prtErr("No files in " + mp.getResultDir() + Constants.blastDir);
@@ -80,8 +88,8 @@ public class UseBlast {
 	// Process
 		aDB.loadGenes(mProj1.strDisplayName, grpMap1, idIdxMap1, geneIdxMap1); if (!bSuccess) return false;
 		aDB.loadGenes(mProj2.strDisplayName, grpMap2, idIdxMap2, geneIdxMap2); if (!bSuccess) return false;
-		int num = aDB.getNumHits();
-		if (num>0) Utils.prtNumMsgFile(mLog, aDB.getNumHits(), "gene pair hits in database");
+		numExistHits = aDB.getNumHits();
+		if (numExistHits>0) Utils.prtNumMsgFile(mLog, numExistHits, "gene pair hits in database");
 		boolean rc;
 		
 		for (String fileName : fileList) {
@@ -103,7 +111,7 @@ public class UseBlast {
 	// Finish -- These all must be done!
 		time = Utils.getTime();
 		Utils.prtIndentMsg(mLog, 0, "Process hits"); 
-		mp.saveParamsToDB("Load " + Utils.getBlastFileList(mp.getResultDir())); // goes in Summary, which is done in DoAlignSynPair
+		mp.saveParamsToDBforBlast(blastFileList); // goes in Summary, which is done in DoAlignSynPair
 		
 		AnchorMain anchors = new AnchorMain(dbc, mLog, mp);
 		anchors.saveHitNum();
@@ -125,9 +133,9 @@ public class UseBlast {
 	try {
 		BufferedReader fhIn = new BufferedReader (new FileReader (fileName));
 		String line;
-		int cntPair=0, cntSkip=0, cnt=0;
+		int cntRead=0, cntGood=0, cntSkip=0, cnt=0, idFail=0, evalFail=0;
 		boolean bSwap = false, bSetSwap=false;
-		int t = (isPR) ? 3 : 1;
+		int tm = (isAA) ? 3 : 1;
 		
 		while ((line = fhIn.readLine()) != null) {
 			if (line.isBlank() || line.startsWith("//") || line.startsWith("#")) continue;
@@ -138,6 +146,7 @@ public class UseBlast {
 				fhIn.close();
 				return false;
 			}
+			cntRead++;
 			String qid = tok[0];
 			String sid = tok[1];
 			if (!bSetSwap) { // read until the first found qseqid or sseqid, set swap if necessary
@@ -173,8 +182,17 @@ public class UseBlast {
 				continue; 
 			}
 			if (idx1==idx2) continue; // for self 
-			
-			cntPair++;	
+			int pid = toInt(tok[2]); 
+			if (pid<idCutoff) {
+				idFail++;
+				continue;
+			}
+			double eval = toDouble(tok[10]);
+			if (eval>evalCutoff) {
+				evalFail++;
+				continue;
+			}
+			cntGood++;
 			Hit ht;
 			String key = gn1.idx + SEP + gn2.idx;
 			if (hitPairMap.containsKey(key)) ht = hitPairMap.get(key);
@@ -182,33 +200,39 @@ public class UseBlast {
 				ht = new Hit(gn1, gn2);
 				hitPairMap.put(key, ht);
 			}
-			int s1, e1, s2, e2, len, pid;
+			int s1, e1, s2, e2, len;
 			
-			pid = toInt(tok[2]); 
-			len = toInt(tok[3])*t; // skip mm and gapopen
+			len = toInt(tok[3])*tm; // skip mm and gapopen
 			if (bSwap) {
-				s2  = toInt(tok[6])   + gn2.cdsStart;
-				e2  = toInt(tok[7])*t + gn2.cdsStart;
-				s1  = toInt(tok[8])   + gn1.cdsStart;
-				e1  = toInt(tok[9])*t + gn1.cdsStart; 
+				s2  = toInt(tok[6])    + gn2.cdsStart;
+				e2  = toInt(tok[7])*tm + gn2.cdsStart;
+				s1  = toInt(tok[8])    + gn1.cdsStart;
+				e1  = toInt(tok[9])*tm + gn1.cdsStart; 
 			}
 			else {
-				s1  = toInt(tok[6])   + gn1.cdsStart;
-				e1  = toInt(tok[7])*t + gn1.cdsStart;
-				s2  = toInt(tok[8])   + gn2.cdsStart;
-				e2  = toInt(tok[9])*t + gn2.cdsStart; 
+				s1  = toInt(tok[6])    + gn1.cdsStart;
+				e1  = toInt(tok[7])*tm + gn1.cdsStart;
+				s2  = toInt(tok[8])    + gn2.cdsStart;
+				e2  = toInt(tok[9])*tm + gn2.cdsStart; 	
 			}
+			if (s1>e1) {int i=s1; s1=e1; e1=i;} // happens with NT on +/-
+			if (s2>e2) {int i=s2; s2=e2; e2=i;}
+			if (e1>gn1.geneEnd) e1 = gn1.geneEnd; // if load NT, but did not change in pair params to NT (then *3)
+			if (e2>gn2.geneEnd) e2 = gn2.geneEnd;
+			
 			if (!bSuccess) {fhIn.close(); return false;} // for any toInt or interrupt
 			
 			ht.add(pid, len, s1, e1, s2, e2);	
-			if (cnt++ == 10000) {Globals.rprt(" Load " + cntPair); cnt=0;}
+			if (cnt++ == 10000) {Globals.rprt(" Load " + cntRead); cnt=0;}
 		}
 		fhIn.close();
 		Globals.rclear();
-		Utils.prtNumMsgFile(mLog, cntPair, "Hits from Blast file");
+		Utils.prtNumMsgFile(mLog, cntRead, "Hits from Blast file");
+		if (idFail>0) Utils.prtNumMsgFile(mLog, idFail, "Failed %identity cutoff of " + idCutoff);
+		if (evalFail>0) Utils.prtNumMsgFile(mLog, evalFail, "Failed E-value cutoff of " + evalCutoff);
 		
 		if (cntSkip>0) Utils.prtNumMsgFile(mLog,cntSkip,"Ignore hits - no corresponding gene pair");
-		if (cntSkip>0 && cntPair==0) {
+		if (cntSkip>0 && cntGood==0) {
 			String name1="", name2="";
 			for (Gene x : geneIdxMap1.values()) {name1 = x.name; break;} // get first one
 			for (Gene x : geneIdxMap2.values()) {name2 = x.name; break;}
@@ -221,8 +245,12 @@ public class UseBlast {
 	private void finish() {
 	try {
 		for (Hit ht : hitPairMap.values()) {
-			ht.gn1.olap = (ht.len<ht.gn1.len) ? (int) Math.round((((double)ht.len/(double)ht.gn1.len)*100.0)) : 100;
-			ht.gn2.olap = (ht.len<ht.gn2.len) ? (int) Math.round((((double)ht.len/(double)ht.gn2.len)*100.0)) : 100;
+			ht.gn1.eolap = (ht.len<ht.gn1.exonLen) ? (int) Math.round((((double)ht.len/(double)ht.gn1.exonLen)*100.0)) : 100;
+			ht.gn2.eolap = (ht.len<ht.gn2.exonLen) ? (int) Math.round((((double)ht.len/(double)ht.gn2.exonLen)*100.0)) : 100;
+			
+			ht.gn1.golap = (ht.len<ht.gn1.geneLen) ? (int) Math.round((((double)ht.len/(double)ht.gn1.geneLen)*100.0)) : 100;
+			ht.gn2.golap = (ht.len<ht.gn2.geneLen) ? (int) Math.round((((double)ht.len/(double)ht.gn2.geneLen)*100.0)) : 100;
+			
 			ht.pid = (int) Math.round((double)ht.pid/(double)ht.numHits);
 			int len1 = ht.e1-ht.s1+1;
 			int len2 = ht.e2-ht.s2+1;
@@ -237,13 +265,19 @@ public class UseBlast {
 		Utils.prtIndentMsg(mLog, 1, msg + " -- cannot continue");
 		bSuccess=false;
 	}
-	
+
 	private int toInt(String i) {
 		try {
 			if (i.contains(".")) return (int) Math.round(Double.parseDouble(i));
 			return Integer.parseInt(i);
 		} 
 		catch (Exception e) {ErrorReport.print(e, "To integer"); bSuccess=false; return -1;}
+	}
+	private double toDouble(String i) {
+		try {
+			return Double.parseDouble(i);
+		} 
+		catch (Exception e) {ErrorReport.print(e, "To double"); bSuccess=false; return -1;}
 	}
 	protected void interrupt() {
 		bSuccess=false;
@@ -252,10 +286,12 @@ public class UseBlast {
 	/********************************************************************/
 	// Created in loadAnno
 	private class Gene {
-		private Gene(int idx, int grpIdx, int start, int end, String strand, String name) {
+		private Gene(int idx, int grpIdx, int start, int end, int elen, String strand, String name) {
 			this.idx=idx; 	
 			this.grpIdx=grpIdx;
-			this.len = end-start+1;
+			this.geneEnd = end;
+			this.geneLen = end-start+1;
+			this.exonLen = elen;
 			this.strand=strand;
 			this.name = name;	
 		}
@@ -263,10 +299,11 @@ public class UseBlast {
 			if (cdsStart==0 || cstart<cdsStart) cdsStart=cstart;
 		} 
 		private int idx, grpIdx;	 // hit uses idx and grpIdx
-		private int len;			 
+		private int exonLen;			 
 		private String strand, name; // strand is used for hit; name is used in idIdxMap
 		private int cdsStart=0;		 // hits relative to first CDS
-		private int olap=0;
+		private int geneLen, geneEnd=0;		 // 
+		private int golap=0, eolap;
 	}
 	// created during load hits
 	private class Hit {	
@@ -282,7 +319,7 @@ public class UseBlast {
 		private String querySeq="", targetSeq="";
 		
 		private boolean isNew=true;		// only changes if bAddExist and there is a hit in db for this gene:gene
-		private String htype = HTYPE;
+		private String htype = BpTYPE;
 		
 		private void add(int pid, int len, int s1, int e1, int s2, int e2) {
 			if (numHits>0 && isOverlap(this.s1, this.e1, s1, e1) || isOverlap(this.s2, this.e2, s2, e2)) return; 
@@ -348,29 +385,34 @@ public class UseBlast {
 				String strand 	= rs.getString(i++);
 				String tag 		= rs.getString(i++);
 				String anno 	= rs.getString(i++);
+				int elen = getExonLen(tag);
 				
 				String name="";
-				if (isID) {
-					if (!anno.isBlank() && anno.contains(Globals.idKey)) {
-						String [] tok = anno.split(";");
-						for (String tuple : tok) {
-							if (tuple.startsWith(Globals.idKey)) {
-								name = tuple.split("=")[1];
-								
-								break;
-							}
+				if (!anno.isBlank() && anno.contains(Globals.idKey)) {
+					String [] tok = anno.split(";");
+					for (String tuple : tok) {
+						if (tuple.startsWith(Globals.idKey)) {
+							name = tuple.split("=")[1];	
+							break;
 						}
-					} else {cntNoId++; continue;}
+					}
+				} else {
+					if (cntNoId<3) {
+						if (tag.contains("(")) name = tag.substring(0,tag.indexOf(")"));
+						else name = tag;
+						Globals.prt(String.format("%6s does not have GFF ID", tag));
+					}
+					else if (cntNoId==3) Globals.prt("Further 'no ID' messages will be surpressed");
+					cntNoId++; continue;
 				}
-				else name = tag.substring(0, tag.indexOf("("));
-					
+				
 				idIdxMap.put(name, idx);
-				Gene gn = new Gene(idx, grpIdx, s, e, strand, name);
+				Gene gn = new Gene(idx, grpIdx, s, e, elen, strand, name);
 				geneIdxMap.put(idx, gn);
 				cntGene++;
 			}
 			
-			if (idIdxMap.size()==0 && cntNoId>0 && isID) {
+			if (idIdxMap.size()==0 && cntNoId>0) {
 				prtErr("Genes do not have a GFF ID"); bSuccess=false;
 				return;
 			}
@@ -386,6 +428,16 @@ public class UseBlast {
 		}
 		catch (Exception e) {ErrorReport.print(e, "loadAnno"); bSuccess=false;}
 		}
+		private static int getExonLen(String tag) { // 1.a (15 1,637)
+			String [] tok = tag.split("\\s+");
+			if (tok.length!=3) return -1;
+				
+			String len = tok[2].replace(")", "");
+			len = len.replace(",", "");
+			
+			return Integer.parseInt(len);
+		}
+		
 		/* ****************************************************************** */
 		private void saveHits(TreeMap <Integer, String> grpMap1, TreeMap <Integer, String> grpMap2) {
 		try {
@@ -421,7 +473,7 @@ public class UseBlast {
 				ps.setInt(i++, 0); 				// cvgpct;  unsigned tiny int; now Avg%Sim
 				ps.setInt(i++, ht.numHits); 	// countpct; unsigned tiny int, #SubHits
 				ps.setInt(i++, ht.len); 		// score; max coverage 
-				ps.setString(i++, HTYPE) ;		// htype usually EE or g2
+				ps.setString(i++, ht.htype) ;	// EE:Bp1, or Bp12....
 				ps.setInt(i++, 2);				// geneOlap 0,1,2
 				ps.setString(i++, ht.gn1.strand+"/"+ht.gn2.strand); 		// Strand
 				ps.setInt(i++, ht.gn1.idx);
@@ -464,8 +516,8 @@ public class UseBlast {
 			for (Hit ht : hitPairMap.values()) { 
 				ps.setInt(1, ht.hidx); 
 				ps.setInt(2, ht.gn1.idx); 
-				ps.setInt(3, ht.gn1.olap); 
-				ps.setInt(4, 0); 
+				ps.setInt(3, ht.gn1.golap); 
+				ps.setInt(4, ht.gn1.eolap); 
 				ps.setInt(5, ht.gn2.idx);
 				ps.addBatch();
 				cntBatch++;
@@ -473,8 +525,8 @@ public class UseBlast {
 			
 				ps.setInt(1, ht.hidx); 
 				ps.setInt(2, ht.gn2.idx); 
-				ps.setInt(3, ht.gn2.olap); 
-				ps.setInt(4, 0); 
+				ps.setInt(3, ht.gn2.golap); 
+				ps.setInt(4, ht.gn1.eolap); 
 				ps.setInt(5, ht.gn1.idx);
 				
 				ps.addBatch();
@@ -489,57 +541,66 @@ public class UseBlast {
 			if (cntBatch>0) ps.executeBatch();
 			ps.close();
 			Globals.rclear();
-			Utils.prtNumMsgFile(mLog, hitIdxMap.size(), "Saved hits");
+			Utils.prtNumMsgFile(mLog, hitIdxMap.size(), "Saved new hits");
 		}
 		catch (Exception e) {ErrorReport.print(e, "Save New Hits"); bSuccess=false;}
 		}
-		/******************************************************************
-		 * 
-		 */
+		/********************************************************************
+		 * Load and update ht.htype 
+		 * Each blast file will get an incremental number assigned to htype; CAS591
+		 ***********************************************************/
 		private void updateExistingHits() {
 		try {
-			// load and update ht.htype 
+			if (numExistHits==0) {
+				for (Hit ht : hitPairMap.values()) ht.htype = BpTYPE+"1";
+				return;
+			}
 			ResultSet rs = dbc.executeQuery("SELECT idx, annot1_idx, annot2_idx, htype FROM pseudo_hits "
 					+ " where pair_idx=" + mp.getPairIdx());
 			
-			int found=0;
+			int found=0, lastNum=0;
 			while (rs.next()){
 				String key = rs.getInt(2) + SEP + rs.getInt(3);
 				if (!hitPairMap.containsKey(key)) continue;
+				found++;
 				
 				Hit ht = hitPairMap.get(key);
 				ht.isNew = false;
-				found++;
 				ht.hidx = rs.getInt(1);
-				String type = rs.getString(4);
 				
-				if (!type.contains(HTYPE)) { // MUMmer type of g2, EE, EI, II; htype = EE:Bp
-					ht.htype = type + SEP + HTYPE;
-					continue;
-				}
-				else if (type.endsWith(HTYPE)) {// Bp or EE:Bp, etc;           htype = Bp2 or EE:Bp2
-					ht.htype = type+2;
-					continue;
-				}
+				ht.htype = rs.getString(4);
+				if (ht.htype==null) ht.htype="";
+				int htlen = ht.htype.length();
+				if (htlen==0) continue;
 				
-				String prefix=null, bhtype; // else increment last number, e.g. Bp3 or EE:Bp3, etc
-				if (type.contains(SEP)) {
-					String [] tok = type.split(":");
-					prefix = tok[0];
-					bhtype = tok[1];
-				}
-				else bhtype = type;
-					
-				bhtype = bhtype.replace(HTYPE, "");
-				int num = toInt(bhtype) + 1;
+				boolean isBp = ht.htype.contains(BpTYPE);
+				int maxsz = ht.htype.startsWith(BpTYPE) ? 11 : 14; // Bp123456789 : EE:Bp123456789
 				
-				if (prefix==null) ht.htype = HTYPE + num;
-				else              ht.htype = prefix + SEP +  HTYPE + num;
+				if (isBp && htlen<maxsz) { 
+					String last = ht.htype.substring(htlen-1, htlen);
+					try {
+						int i = Integer.parseInt(last);
+						if (i>lastNum) lastNum=i;
+					} 
+					catch (Exception e) {}
+				}
 			}
 			rs.close();
 			if (found==0) return;
 			
-			Utils.prtNumMsgFile(mLog, found, "Update existing hits");
+			lastNum++;		// will be 0 on first, or if pre-v591
+			if (lastNum<10) {
+				for (Hit ht : hitPairMap.values()) {
+					if (ht.htype.length()>=14) continue;
+					
+					if (ht.htype.isBlank()) 			ht.htype = BpTYPE + lastNum;		// first hit
+					else {
+						if (ht.htype.contains(BpTYPE)) 	ht.htype += lastNum;				// at least on Blast hit already
+						else 							ht.htype += SEP + BpTYPE  + lastNum; // MUMmer hit
+					}
+				}
+			}
+			Utils.prtNumMsgFile(mLog, found, "Update existing hits - file #" + lastNum);
 			
 			int countBatch=0, countSave=0;
 			PreparedStatement ps = dbc.prepareStatement("update pseudo_hits set htype=? where idx=?");

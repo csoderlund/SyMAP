@@ -158,7 +158,6 @@ public class SumFrame extends JDialog implements ActionListener {
 			dbc2.tableCheckAddColumn("pairs", "summary", "text", null); 
 			dbc2.executeUpdate("update pairs set summary='" + info + "' where idx=" + pairIdx);
 		}
-		System.out.println("Finish Summary");
 		return info;
 	}
 	catch(Exception e){ErrorReport.print(e, "Create summary"); return "summary error";}
@@ -802,7 +801,7 @@ public class SumFrame extends JDialog implements ActionListener {
 		
 		String allParams = "";
 		if (pairParams==null) allParams  = "Align Unknown";
-		else                  allParams  = mp.getParamsForSum(pairParams); // CAS590 create line in Mpair to add cluster/synteny
+		else                  allParams  = mp.getChgForSummary(pairParams); // uses pair.params and current pair_props
 		
 		String d = (alignDate==null) ? "Date Unknown"      : Utilities.getNormalizedDate(alignDate); 
 		String v = (syver==null)     ? "  Version Unknown" : ("  " + syver);

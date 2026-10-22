@@ -38,11 +38,11 @@ import symap.Globals;
 import symap.closeup.AlignPool;
 import util.ErrorReport;
 import util.Jcomp;
-import util.Popup;
 import util.Utilities;
 
 /***********************************************
  * Project View; displays information and has an export; created CAS589
+ * CAS591 add Export unspliced transcripts
  */
 public class ViewProj extends JDialog implements ActionListener {
 	private static final long serialVersionUID = 1L;
@@ -52,6 +52,7 @@ public class ViewProj extends JDialog implements ActionListener {
 	private DBconn2 dbc;
 	private Mproject mProj;
 	private ManagerFrame mFrame;
+	private boolean isCDS=false;
 	
 	protected ViewProj(DBconn2 dbc, Mproject mProj, ManagerFrame parent) {
 		super();
@@ -67,6 +68,7 @@ public class ViewProj extends JDialog implements ActionListener {
 		this.dbc = dbc;
 		this.mProj = mProj;
 		this.mFrame = parent;
+		isCDS = mProj.isLoadCDS();
 		
 		String theInfo = mProj.loadProjectForView();
 		
@@ -109,9 +111,7 @@ public class ViewProj extends JDialog implements ActionListener {
 		private static final long serialVersionUID = 3194236729803023525L;
 
 		private boolean bOkay=false;
-		
-		private JRadioButton radGene, radID, radTrans, radCDS;
-		
+		private JRadioButton radExon, radProtein, radTrans;
 		private FileWriter logFW=null;
 		
 		private Export(ViewProj parent) {
@@ -125,34 +125,32 @@ public class ViewProj extends JDialog implements ActionListener {
 			setTitle("Export options");
 			
 			JPanel page = Jcomp.createPagePanel();
+			radProtein = Jcomp.createRadio("Proteins", "Create amino acid sequence from CDSs");
 			
-			radID =  Jcomp.createRadio("GFF ID", "Use GFF ID from the GFF");
-			radGene =  Jcomp.createRadio("Gene#", "Use SyMAP Gene#");
-			ButtonGroup grp = new ButtonGroup();
-			grp.add(radGene); grp.add(radID); 
-	    	radID.setSelected(true);
-	    	
-			JPanel row = Jcomp.createRowPanel();
-			row.add(Jcomp.createLabel("Use", "Select type of identifier"));row.add(Box.createHorizontalStrut(5));
-			row.add(radID); row.add(Box.createHorizontalStrut(5));
-			row.add(radGene);
-			// ignore for now; page.add(row); page.add(Box.createVerticalStrut(10));
 			
-			radTrans = Jcomp.createRadio("Export RNAs", "Create nucleotide sequence from spliced exons or CDSs");
-			radCDS = Jcomp.createRadio("Export proteins", "Create amino acid sequence from spliced CDS");
-			if (!mProj.isLoadCDS()) radCDS.setEnabled(false);
+			String label = (isCDS) ? "Spliced CDSs" : "Spliced Exons";
+			radExon =    Jcomp.createRadio(label, "Create spliced nucleotide sequences from exons or CDSs");
+			
+			radTrans = Jcomp.createRadio("Unspliced transcripts", "Create primary unspliced transcripts");
 			
 			ButtonGroup rg = new ButtonGroup();
-			rg.add(radTrans); rg.add(radCDS); 
-			radTrans.setSelected(true);
+			rg.add(radExon); rg.add(radProtein); rg.add(radTrans);
+			
+			if (!mProj.isLoadCDS()) {
+				radProtein.setEnabled(false);
+				radExon.setSelected(true);
+			}
+			else radProtein.setSelected(true);
 			
 			page.add(Box.createVerticalStrut(5)); 	
-			page.add(radTrans); 		page.add(Box.createVerticalStrut(3));
-			page.add(radCDS); 		
+			page.add(radProtein); 	page.add(Box.createVerticalStrut(3));
+			page.add(radExon); 		page.add(Box.createVerticalStrut(3));
+			page.add(radTrans);
 				
 			page.add(new JSeparator());
 			
 			// Buttons
+			JPanel row = Jcomp.createRowPanel();
 			row = Jcomp.createRowPanel(); row.add(Box.createHorizontalStrut(5));
 			JButton btnOK = Jcomp.createButton("Export", "Export to file"); 	
 	    	btnOK.addActionListener(new ActionListener() {
@@ -172,14 +170,6 @@ public class ViewProj extends JDialog implements ActionListener {
 				}
 			});
 	    	row.add(btnCancel); row.add(Box.createHorizontalStrut(5));
-	    	
-	    	JButton btnInfo = Jcomp.createBorderIconButton("/images/info.png", "Quick Help Popup");
-	    	btnInfo.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					popupHelp();
-				}
-			});
-			row.add(btnInfo); 	row.add(Box.createHorizontalStrut(5));
 			
 	    	page.add(row);
 	    	page.add(Box.createVerticalStrut(5));
@@ -205,9 +195,14 @@ public class ViewProj extends JDialog implements ActionListener {
 		try {
 			DBconn2 tdbc = new DBconn2("Export" + DBconn2.getNumConn(), dbc);
 			
-			boolean isGene = radGene.isSelected(), isCDS = radCDS.isSelected();
-			String file = (isCDS) ? "Pr.faa" : "Tr"+mProj.getAnnoType() + ".fna"; // Pr.faa, TrExon.fna or TrCDS.fna
+			boolean isExonCDS = radExon.isSelected(), 
+					isProt  = radProtein.isSelected(); // else radTrans.isSelected()
 			
+			String file;
+			if (isExonCDS) 		file =  mProj.getAnnoType() + ".fna"; // CDS or Exon
+			else if (isProt) 	file = "Prot.faa";
+			else 				file = "Unspliced.fna";
+		
 			BufferedWriter outFH = getFileHandle(mProj.strDBName+ file);
 			if (outFH==null) return;
 			
@@ -218,33 +213,42 @@ public class ViewProj extends JDialog implements ActionListener {
 				AlignPool aPool = new AlignPool(tdbc);
 				
 				TreeMap <Integer, String> grpIdxMap = mProj.getGrpIdxFullMap();
-				int cntOut=0, cntNoID=0, cntGrp=1, numGrp = grpIdxMap.size();
+				int cntOut=0, cntNoID=0, cntGrp=1, numGrp = grpIdxMap.size(), cntGrpEnd=0, cntSeq=0;
 				
 				for (int grpIdx : grpIdxMap.keySet()) {
-					Globals.rprt("Exporting " + grpIdxMap.get(grpIdx));
-					
+					String chr = grpIdxMap.get(grpIdx);
+					Globals.rprt("Exporting " + chr);
 					ArrayList <String> tagList = new ArrayList <String>  ();
 					
 					ResultSet rs = dbc.executeQuery("select idx, strand, tag, name from pseudo_annot "
 						+ " where type='gene' and grp_idx=" + grpIdx + " order by start");
 					
 					while(rs.next()) {
+						int id = rs.getInt(1);
+						String strand = rs.getString(2);
 						String tag =rs.getString(3);
 						String anno=rs.getString(4);
-						String name="";
 						
-						if (isGene) name = tag.substring(0, tag.indexOf("("));
-						else if (!anno.isBlank() && anno.contains(Globals.idKey)) {
+						tag = chr + "." + tag.substring(0, tag.indexOf("("));
+						String name="", rnaID="", protID="";
+						
+						if (!anno.isBlank() && anno.contains(Globals.idKey)) {
 							String [] tok = anno.split(";");
 							for (String tuple : tok) {
-								if (tuple.startsWith(Globals.idKey)) {
+								if (name.isBlank() && tuple.startsWith(Globals.idKey)) {
 									name = tuple.split("=")[1];
-									break;
+								}
+								else if (rnaID.isBlank() && tuple.startsWith(Globals.rnaID)) {
+									rnaID = tuple.split("=")[1];
+									if (rnaID.contains("(")) rnaID = rnaID.substring(0, rnaID.indexOf("("));
+								}
+								else if (protID.isBlank() && tuple.startsWith(Globals.protID)) {
+									protID = tuple.split("=")[1];
 								}
 							}
 						} else {name="NoID"; cntNoID++;}
 						
-						tagList.add(rs.getInt(1)+":" + rs.getString(2)+":" + name);
+						tagList.add(id+":" + strand +":" + name + "   " + rnaID + "   " + protID + "   " + tag);
 					}
 					rs.close();
 					
@@ -256,22 +260,44 @@ public class ViewProj extends JDialog implements ActionListener {
 						int annoIdx = Integer.parseInt(tok[0]);
 						String strand = tok[1];
 						String name = tok[2];
-						String seq;
-						if (isCDS) seq = aPool.loadProtein(annoIdx, grpIdx, strand); 
-						else       seq = aPool.loadSpliced(annoIdx, grpIdx, strand);
 						
-						outFH.write(">" + name + "\n" + seq + "\n");
+						String seq;
+						if (isProt) 		seq = aPool.loadProtein(annoIdx, grpIdx, strand); 
+						else if (isExonCDS) seq = aPool.loadSpliced(annoIdx, grpIdx, strand);
+						else                seq = aPool.loadUnsplicedTrans(annoIdx, grpIdx);
+						
+						if (isProt) {
+							int cntend=0;
+							for (int i=0; i<seq.length(); i++) 
+								if (seq.charAt(i)=='*') cntend++;
+							if (cntend>1) cntGrpEnd++;
+						}
+						
+						cntSeq += seq.length();
+						outFH.write(">" + name + "\n" + seq + "\n"); 
 						cntOut++;
 						
-						if (cnt++ %10 == 0) 
+						if (cnt++ %100 == 0) {
 							Globals.rprt("Export " + cntGrp + "/" + numGrp + "  "+ grpIdxMap.get(grpIdx) + " " + cnt + "/" + tagList.size());
+							outFH.flush(); 
+						}
 					}
+					Globals.rclear();
+					String msg;
+					if (isProt) 		msg = String.format("   %-10s  %,5d Proteins   %,10d AAs    %,4d multi-stops",
+												grpIdxMap.get(grpIdx), tagList.size(), cntSeq, cntGrpEnd);
+					else if (isExonCDS) msg = String.format("   %-10s  %,5d Spliced %s  %,10dbp", 
+												grpIdxMap.get(grpIdx), tagList.size(), mProj.getAnnoType(), cntSeq);
+					else 				msg = String.format("   %-10s  %,5d Unspliced   %,10dbp", 
+												grpIdxMap.get(grpIdx), tagList.size(), cntSeq);
+					
+					Utils.prtToFile(logFW,msg); 
+					cntSeq=cntGrpEnd=0;
 					outFH.flush();
 					cntGrp++;
 				}			
 				outFH.close();
-				Globals.rclear();
-				
+			
 				Utils.prtToFileNano(logFW, String.format("Wrote %,d genes to file", cntOut), time);
 				if (cntNoID>0) Globals.prt(String.format("   %,d genes had no 'ID=' keyword", cntNoID));
 				if (logFW!=null) {logFW.close(); logFW=null;}
@@ -298,11 +324,16 @@ public class ViewProj extends JDialog implements ActionListener {
 			
 			logFW = mFrame.getLoadLog(); // log/db_load.log
 			
-			if (radTrans.isSelected()) {
+			if (radExon.isSelected()) { // Exons or CDSs
 				if (!saveFileName.contains(".")) saveFileName += ".fna";
-				
+				String what = (isCDS) ? "   Spliced CDSs to" : "   Spliced Exons to";
 				Utils.prtToFileHeader(logFW,"Exporting " + mProj.getDBName());
-				Utils.prtToFile(logFW, "   Spliced transcripts to " + saveFileName);
+				Utils.prtToFile(logFW, what + saveFileName);
+			}
+			else if (radTrans.isSelected()) {
+				if (!saveFileName.contains(".")) saveFileName += ".fna";
+	    		Utils.prtToFileHeader(logFW,"Exporting " + mProj.getDBName());
+	    		Utils.prtToFile(logFW, "   Unspliced transcripts to " + saveFileName);
 			}
 			else {
 	    		if (!saveFileName.contains(".")) saveFileName += ".faa";
@@ -324,12 +355,5 @@ public class ViewProj extends JDialog implements ActionListener {
 			catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + saveFileName);}
 			return out;
 	    }
-		private void popupHelp() {
-			String msg = "Export a file of spliced sequences for each gene in project.";
-			msg += "\nTranscripts: These are the spliced nucleotide sequences";
-			msg += "\nProteins: These are the translated spliced amino acid sequences."
-				 + "\n          The project must have CDSs loaded.\n";
-			Popup.displayInfoMonoSpace(this, "Quick Help", msg, false);
-		}
 	}
 }

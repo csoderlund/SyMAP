@@ -172,7 +172,7 @@ public class RemoveProj {
 				
 		try {
 			if (rc==2) {
-				msg = "Remove " + mp.alignStr + " files in:\n   " + path;
+				msg = "Remove " + mp.alignStr + " in:\n   " + path;
 				if (!Popup.showConfirm2("Remove from disk", msg)) {
 					System.out.println(sp + "cancel removal of " + path);
 					return;
@@ -201,14 +201,14 @@ public class RemoveProj {
 			FileDir.deleteDir(f1);
 			if (f1.exists()) f1.delete();
 		}
-		else System.out.println(sp + "MUMmer files " + f.getName() + " already deleted");
+		else System.out.println(sp + "No MUMmer files " + f.getName()); // CAS591 was saying 'already deleted'
 		
 		f1 = new File(f.getAbsoluteFile() + "/" + Constants.blastDir);
 		if (f1.exists()) {
 			FileDir.deleteDir(f1);
 			if (f1.exists()) f1.delete();
 		}
-		else System.out.println(sp + "Blast files " + f.getName() + " already deleted");
+		else System.out.println(sp + "No Blast files " + f.getName());
 		
 		File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
 		FileDir.deleteDir(f2);

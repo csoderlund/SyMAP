@@ -22,7 +22,7 @@ public class OverviewPanel extends JPanel {
 		qFrame = parentFrame;
 		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 		
-		buildOverview(qFrame.isSelf);
+		buildOverview(qFrame.isSelf());
 		add(mainPanel);
 	}
 	
@@ -72,16 +72,16 @@ public class OverviewPanel extends JPanel {
 				String gene = "<i>Only one of two species has genes</i>. Some filters are not relevant.";
 				mainPanel.add(Jcomp.createLabel(head + gene + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 			}
-			String algo = qFrame.isAlgo2() ? "<i>Algo2:</i>&nbsp;  " : "<i>Algo1:</i>&nbsp;  "; 
-			if (qFrame.bUseBlast) algo = "<i>Blast:</i>&nbsp;  "; // CAS589
-			
+			String algo = "<i>" + qFrame.sumLabel() + "</i>&nbsp;  "; 
 			algo += "The Olap column is ";
-			if  (qFrame.bUseAlgo2 && !qFrame.bUseBlast && Globals.bQueryOlap==false) 
-										algo += "exon overlap; Olap may be 0 if hits only overlap intron.";
+			if  (qFrame.isUseExon() && Globals.bQueryOlap==false) {
+				if (qFrame.isOnlyBlast()) algo += "exon overlap.";
+				else algo += "exon overlap; Olap may be 0 if hits only overlap intron.";
+			}
 			else {
 				if (Globals.bQueryOlap)     algo += "gene overlap; flag -go was used.";
-				else if (projVec.size()<=2) algo += "gene overlap";
-				else 					    algo += "gene overlap; at least one project used Algo1/Blast.";
+				else if (projVec.size()<=2) algo += "gene overlap.";
+				else 					    algo += "gene overlap; at least one project used Algo1.";
 			}
 			mainPanel.add(Jcomp.createLabel(head + algo + tail)); mainPanel.add(Box.createVerticalStrut(w2));	
 		}

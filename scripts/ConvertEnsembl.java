@@ -15,7 +15,8 @@ import java.util.zip.GZIPInputStream;
 /*************************************************************
  * ConvertEnsembl: Ensembl genome files formatted for SyMAP
  * See https://csoderlund.github.io/SyMAP/input/ensembl.html
- * This script is the same as used by xToSymap Convert Ensembl
+ * 
+ * Called from xToSymap, but can be used stand-alone (see /scripts directory).
  * 
  * This assumes input of, e.g:
  * 1. ftp://ftp.ensemblgenomes.org/pub/plants/release-45/fasta/<species>/dna/<species>.dna_sm.toplevel.fa.gz
@@ -30,13 +31,15 @@ import java.util.zip.GZIPInputStream;
  * CAS586 include All sequences; remove Protein-id
  * 		output mRNA with 'tag=Ensembl_canonical'; if none exist, output largest
  * 		if no desc, use 'uncharacterized protein' (same as NCBI); output Version; add classes
+ * CAS591 add proteinID
  */
 
 public class ConvertEnsembl {
-	static private boolean isToSymap=false; 
-	static private boolean bTrace=false;
+	static private boolean isToSymap=true; // set to false in main if stand-alone
 	static private final int defGapLen=30000;
+	static private boolean bTrace=false;
 	
+	// remove for stand-alone
 	private final String header = "### Written by SyMAP ConvertEnsembl"; 
 	
 	private String logFileName = "/xConvertENS.log";
@@ -69,7 +72,7 @@ public class ConvertEnsembl {
 	
 	private String chrPrefix="Chr", chrPrefix2="C", chrType="chromosome"; // these values are checked in Split
 	private String scafPrefix="s",  scafType="scaffold";
-	private String unkPrefix="Seq", unkType="unknown";	// CAS586 changed Unk to Seq
+	private String unkPrefix="Seq", unkType="unknown";	
 		
 	// input -- Ensembl allows individual chromosomes to be downloaded, hence, the vector
 	private String projDir = null; // command line input
@@ -88,10 +91,7 @@ public class ConvertEnsembl {
 	private PrintWriter logFile=null, diffFile=null;
 	
 	private boolean bSuccess=true;
-	
-	private FASTA faObj;
-	private GFF gffObj;
-	private Init initObj;
+	private String suggestMsg="";
 	
 	/************************************************************************/
 	// main: stand-alone; gaplen or prefix need be changed below; args are -s (scaffold) -t (MT) -v (verbose)
@@ -100,7 +100,7 @@ public class ConvertEnsembl {
 		new ConvertEnsembl(args, defGapLen, null, false);
 	}
 	protected ConvertEnsembl(String[] args, int gapLen, String prefix, boolean bNum) { 
-		initObj = new Init();
+		Init initObj = new Init();
 		initObj.printArgs(args); // Stand-alone; will quit if no args or -h or -help
 		
 		projDir = args[0];
@@ -114,9 +114,9 @@ public class ConvertEnsembl {
 		initObj.createLog(args); 	if (!bSuccess) return;
 		initObj.checkArgs(args);	if (!bSuccess) return;
 		
-		faObj = new FASTA(); 		if (!bSuccess) return;
+		new FASTA(); 		if (!bSuccess) return;
 		
-		gffObj = new GFF();			if (!bSuccess) return;
+		new GFF();			if (!bSuccess) return;
 		
 		printSuggestions();
 		
@@ -135,10 +135,7 @@ public class ConvertEnsembl {
 			}
 			if (isChr && !INCLUDESCAF) prt("Suggestion: Set SyMAP project parameter 'Group prefix' to 'Chr'.");
 		}
-		if (faObj.cntOutSeq==0) prt("Are these Ensembl files? Should scaffolds be included? Should 'Prefix only' be set?");
-		else if (faObj.cntOutSeq>30)  
-				prt( "Suggestion: There are " + String.format("%,d",faObj.cntOutSeq) + " sequences. "
-				   + "Set SyMAP project parameter 'Minimum length' to reduce number loaded.");
+		prt(suggestMsg);
 	}
 
 	private BufferedReader openGZIP(String file) {
@@ -367,6 +364,10 @@ public class ConvertEnsembl {
     		
     		printSummary();
     		
+    		if (cntOutSeq==0) suggestMsg = "Are these Ensembl files? Should scaffolds be included? Should 'Prefix only' be set?";
+    		else if (cntOutSeq>30)  
+    			suggestMsg = "Suggestion: There are " + String.format("%,d", cntOutSeq) + " sequences. "
+    				   + "Set SyMAP project parameter 'Minimum length' to reduce number loaded.";
 		}
 		catch (Exception e) {fail(e, "rwFasta");}
 		}
@@ -480,7 +481,7 @@ public class ConvertEnsembl {
 						fhOut.println(">" + prtName+ "  " + idCol1 + " " + scafType);
 						bPrtSeq=true; 
 					}
-					else if (prefixOnly!=null || INCLUDEAll) {// CAS586 add INCLUDEAll
+					else if (prefixOnly!=null || INCLUDEAll) {
 						nUnk++;
 						prtName = unkPrefix + padNum(nUnk+""); 
 						id2chr.put(idCol1, prtName); 
@@ -657,11 +658,13 @@ public class ConvertEnsembl {
 	}
 	/********************************************************************************
 	 * XXX GFF file, e.g.
-	1  araport11   gene    3631    5899    .       +       .       ID=gene:AT1G01010;Name=NAC001;biotype=protein_coding;description=NAC domain containing protein 1 [Source:NCBI gene (formerly Entrezgene)%3BAcc:839580];gene_id=AT1G01010;logic_name=araport11
-	1  araport11   mRNA    3631    5899    .       +       .       ID=transcript:AT1G01010.1;Parent=gene:AT1G01010;Name=NAC001-201;biotype=protein_coding;transcript_id=AT1G01010.1
-	1  araport11   five_prime_UTR  3631    3759    .       +       .       Parent=transcript:AT1G01010.1
-	1  araport11   exon    3631    3913    .       +       .       Parent=transcript:AT1G01010.1;Name=AT1G01010.1.exon1;constitutive=1;ensembl_end_phase=1;ensembl_phase=-1;exon_id=AT1G01010.1.exon1;rank=1
-	New Gene attribute of the selected mRNA along with number of mRNAs for gene, ie rnaID=selected mrnaID (cnt)
+	1  araport11   gene    3631    5899    .    +    .       ID=gene:AT1G01010;Name=NAC001;biotype=protein_coding;description=NAC domain containing protein 1 [Source:NCBI gene (formerly Entrezgene)%3BAcc:839580];gene_id=AT1G01010;logic_name=araport11
+	1  araport11   mRNA    3631    5899    .    +    .       ID=transcript:AT1G01010.1;Parent=gene:AT1G01010;Name=NAC001-201;biotype=protein_coding;transcript_id=AT1G01010.1
+	1  araport11   five_prime_UTR  3631    3759 .    +    .       Parent=transcript:AT1G01010.1
+	1  araport11   exon    3631    3913    .    +    .       Parent=transcript:AT1G01010.1;Name=AT1G01010.1.exon1;constitutive=1;ensembl_end_phase=1;ensembl_phase=-1;exon_id=AT1G01010.1.exon1;rank=1
+	1  araport11   CDS     3760    3913    .    +    0       ID=CDS:AT1G01010.1;Parent=transcript:AT1G01010.1;protein_id=AT1G01010.1
+	New Gene attribute of the selected mRNA along with number of mRNAs for gene, i.e. rnaID=selected mrnaID (cnt)
+	    and new proteinID=CDS protein_id=value for selected mrnaID
 	 */
 	private class GFF {
 		private final int PRT = 10000;
@@ -678,12 +681,14 @@ public class ConvertEnsembl {
 		private final String proteinAttr 	= "protein_coding"; // Gene
 		private final String parentAttrKey 	= "Parent"; 		// mRNA and Exon
 		private final String mrnaPrefAttr   = "tag=Ensembl_canonical";	// mRNA - Ensembl preferred mrna
+		private final String proteinAttrKey = "protein_id";
 		
 		private final String RMGENE    	= "gene:";					// remove from Gene and mRNA
 		private final String RMTRAN    	= "transcript:";			// remove from mRNA, Exon, CDS
 		
 		private final String MRNAID     = "rnaID="; 	// new gene attribute
 		private final String DESC	    = "desc=";		// rename description to desc
+		private final String PROTEINID  = "proteinID=";  // new keywords for gene attributes
 		
 		private final String NODESC	    = "uncharacterized protein"; 
 		private TreeMap <String, Integer> geneAttrCnt = new TreeMap <String, Integer> ();
@@ -693,21 +698,21 @@ public class ConvertEnsembl {
 		
 		private int cntChrGeneAll=0, cntScafGeneAll=0;
 		private int cntGene=0, cntExon=0, cntCDS=0, cntGeneNotOnSeq=0; 
-		private int cntReadGene=0, cntReadMRNA=0, cntReadExon=0, cntReadCDS=0;
-		private int skipLine=0, cntReplace=0;
+		private int cntReadGene=0, cntReadMRNA=0, cntReadExon=0, cntReadCDS=0, cntNoDesc=0;
+		private int skipLine=0, cntNoProtID=0;
 		
 		// per gene
 		private String geneID="",geneLine="", gChr="";
 		private int cntGeneMRNA=0;
 		
 		private int mrnaLen=0;
-		private String mrnaLine="", mrnaID="";
+		private String mrnaLine="", mrnaID="", protID="";
 		private Vector <String> exonVec = new Vector <String> ();	
 		private Vector <String> cdsVec = new Vector <String> ();	
 		
 		private boolean bFoundTag=false;	// mRNA has tag=Ensembl_canonical attribute
 		private int nextLen=0;				// use longest mRNA or canonical
-		private String nextLine="", nextID="";
+		private String nextLine="", nextID="", nextProtID="";
 		private Vector <String> nextExonVec = new Vector <String> ();	
 		private Vector <String> nextCdsVec = new Vector <String> ();	
 		
@@ -820,6 +825,7 @@ public class ConvertEnsembl {
 			String desc = getVal(descAttrKey, typeAttrs).trim();
 			if (desc==null || desc.equals("")) { 
 				desc = NODESC;
+				cntNoDesc++;
 			}
 			else {
 				if (desc.contains(source)) // "[Source"
@@ -880,20 +886,20 @@ public class ConvertEnsembl {
 		 // Update MRNA with longest
 		 private void replaceMRNA() {
 			 if (nextLine.equals("")) return;
-			 
+			 	 
 			 if (mrnaLen==0 || mrnaLen<nextLen || bFoundTag) { // FoundTag set for nextID
 				 mrnaLen  = nextLen;
 				 mrnaLine = nextLine;
 				 mrnaID   = nextID;
-				
+				 protID = nextProtID;
+				 
 				 exonVec.clear(); cdsVec.clear();
 				 for (String e : nextExonVec) exonVec.add(e);
 				 for (String c : nextCdsVec)  cdsVec.add(c); 
-				 cntReplace++;
 			 }
 			 nextExonVec.clear(); nextCdsVec.clear();
 			 nextLen=0;
-			 nextLine = nextID = "";
+			 nextLine = nextID = nextProtID = "";
 		 }
 		 // CDS
 		 private void typeCDS(String [] tok, String line) { 
@@ -904,6 +910,9 @@ public class ConvertEnsembl {
 			String pid = getVal(parentAttrKey, attrs);
 				
 			if (!nextID.equals(pid)) return;
+			
+			if (nextProtID.isBlank()) 
+				nextProtID = getVal(proteinAttrKey, attrs);
 			
 			// save CDS
 			String newAttrs = parentAttrKey + "=" + nextID.replace(RMTRAN,""); // "transcript:"
@@ -942,8 +951,12 @@ public class ConvertEnsembl {
 			cntExon += exonVec.size();
 			cntCDS  += cdsVec.size();
 			
-			String gmrnaID = ";" + MRNAID + mrnaID.replace(RMTRAN,"") + " (" + cntGeneMRNA + ");";
-			fhOutGff.println(geneLine + gmrnaID);
+			String mid = mrnaID.replace(RMTRAN,"");
+			String gmrnaID = ";" + MRNAID + mid + " (" + cntGeneMRNA + ")";				// rnaID
+			String proteinAt = (protID.isBlank() || protID.equals(mid)) ? "" : ";" + PROTEINID + protID; 	// proteinID
+			if (proteinAt.isBlank()) cntNoProtID++;
+			
+			fhOutGff.println(geneLine + gmrnaID + proteinAt);
 			
 			fhOutGff.println(mrnaLine); 
 			
@@ -952,13 +965,13 @@ public class ConvertEnsembl {
 			
 			if (bTrace) printDiff();
 			cntGeneMRNA=0;
-			geneID=geneLine=gChr=mrnaID=mrnaLine="";
+			geneID=geneLine=gChr=mrnaID=protID=mrnaLine="";
 			exonVec.clear(); cdsVec.clear();
 			mrnaLen=0;
 			
 			nextExonVec.clear(); nextCdsVec.clear();
 			nextLen=0;
-			nextLine = nextID = "";
+			nextLine = nextID = nextProtID = "";
 			bFoundTag=false;
 		}
 		catch (Exception e) {fail(e, "writeGene");} 
@@ -980,13 +993,20 @@ public class ConvertEnsembl {
 		}
 		
 		private void printSummary() {
+			int cntZero=0;
 			prt("");
 			prt(String.format("   Chromosome gene count: %,d ", cntChrGeneAll));
 			for (String prt : chr2id.keySet()) {
 				String id = chr2id.get(prt); // sorted on prtName
 				int cnt   = cntChrGene.get(id);
-				prt(String.format("   %-7s %-15s %,8d", prt, id, cnt));
+				if (cnt==0) {
+					if (cntZero<5) prt(String.format("   %-7s %-15s %,8d", prt, id, cnt));
+					else if (cntZero==5) prt("Surpressing further zero counts");
+					cntZero++;
+				}
+				else prt(String.format("   %-7s %-15s %,8d", prt, id, cnt));
 			}
+			if (cntZero>=5) prt(String.format("   Chromosome gene counts of zero: %,d", cntZero));
 			
 			if (INCLUDESCAF) {
 				prt("");
@@ -1000,16 +1020,17 @@ public class ConvertEnsembl {
 				}
 				prt(String.format("   Scaffolds with <=%d genes: %,d (not listed)", cutGene, cntOne));
 			}
+			
 			prt(String.format("   Genes not included in GFF file: %,d",  cntGeneNotOnSeq));
+			if (cntNoDesc>0) 
+				prt(String.format("   Genes with no description : %,d  (set to 'uncharacterized protein')",  cntNoDesc));
 			
 			prt("");
 			prt(String.format(" %,8d Gene from %,d (protein coding)", cntGene, cntReadGene));
 			prt(String.format(" %,8d mRNA from %,d (canonical or longest)", cntGene, cntReadMRNA));
 			prt(String.format(" %,8d Exon from %,d                ", cntExon, cntReadExon));
 			prt(String.format(" %,8d CDS  from %,d                ", cntCDS,  cntReadCDS));
-		
-			if (bTrace) prt(String.format("   Replace 1st mRNA with longest %,d", cntReplace));
-			
+			if (cntNoProtID>0) prt(String.format(" %,8d No unique proteinID ", cntNoProtID));
 			prt("Finish writing " + annoDir + outGffFile + "                     ");
 			
 			if (!VERBOSE) return;

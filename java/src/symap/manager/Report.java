@@ -3,10 +3,11 @@ package symap.manager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -30,16 +31,29 @@ import util.Utilities;
 /**************************************************************
  * Block report from Manager 
  * CAS575 remove species column and put species name over species specific columns
+ * CAS591 move blocks with gene list here
  */
 public class Report extends JDialog  {
 	private static final long serialVersionUID = 1L;
+	
+	private final String titleBlockInfo = "Blocks with block info";
+	private final String titleGeneInfo  = "Blocks with gene info";
+	private final String titleChrSum    = "Blocks with chr-pair summary";
+	private final String titleGenePairs = "Blocks with gene pairs";
+	
+	private final String fileBlockInfo = "BlkBlockInfo";
+	private final String fileGeneInfo  = "BlkGeneInfo";
+	private final String fileChrSum    = "BlkChrPairSum";
+	private final String fileGenePairs = "BlkGenePairs";
+	
 	private final int GENE=1, ONLY=2, SUM=3;
 	private final int IGN=1, NUM=2, FLOAT=3, LFLOAT=4;
 	private final String CHR="Chr", CCB = "C1.C2.B", CC = "C1.C2";
 	private final int PCCcol = 2; 
 	
-	private boolean isTSV=false, isHTML, isPop=false, isSp1=true, isSp2, useComb=true, isSelf=false, isSum=false;
-	private int cntHtmlRow=0; // to determine whether to have a Goto top at bottom
+	private boolean isTSV=false, isHTML=false, isPop=false;
+	private boolean isSp1=true, isSp2, useComb=true, isSelf=false, isSum=false;
+	private int cntHtmlRow=0; 	// to determine whether to have a Goto top at bottom for popup
 	
 	private DBconn2 tdbc2 = null;
 	private Mpair mp;
@@ -58,10 +72,8 @@ public class Report extends JDialog  {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setTitle("Block Report");
 		
-		mainPanel = Jcomp.createPagePanel();
 		createPanel();
-		createOutput();
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		
 		add(mainPanel);
 		
 		pack();
@@ -71,20 +83,30 @@ public class Report extends JDialog  {
 		setLocationRelativeTo(null); 
 		setVisible(true);
 	}
-	/*****************************************************************/
 	private void createPanel() {
+		mainPanel = Jcomp.createPagePanel();
 		
-		JPanel radPanel = Jcomp.createPagePanel();
-		radBlocksPlus  = Jcomp.createRadio("Blocks plus", "Download all blocks with extra block info"); 
-		radBlocksGenes = Jcomp.createRadio("Blocks with gene info", "Download all blocks with gene info");
-		radBlocksSum   = Jcomp.createRadio("Blocks summary", "Download block summary by chromosome pair");
+		createTop();
+		createOutput();
+		createGeneList();
+		createButtons();
 		
 		ButtonGroup ba = new ButtonGroup();
-		ba.add(radBlocksGenes);ba.add(radBlocksPlus);ba.add(radBlocksSum);
+		ba.add(radBlocksGeneInfo);ba.add(radBlocksPlus);ba.add(radBlocksSum);
 		radBlocksPlus.setSelected(true);
+		
+		mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	}
+	/*****************************************************************/
+	private void createTop() {
+		
+		JPanel radPanel = Jcomp.createPagePanel();
+		radBlocksPlus  = Jcomp.createRadio(titleBlockInfo, "Download all blocks with extra block info"); 
+		radBlocksGeneInfo = Jcomp.createRadio(titleGeneInfo, "Download all blocks with gene summary info");
+		radBlocksSum   = Jcomp.createRadio(titleChrSum, "Download block summary by chromosome pair");
 			
 		radPanel.add(radBlocksPlus); 	radPanel.add(Box.createVerticalStrut(5));
-		radPanel.add(radBlocksGenes); 	radPanel.add(Box.createVerticalStrut(5));
+		radPanel.add(radBlocksGeneInfo);radPanel.add(Box.createVerticalStrut(5));
 		radPanel.add(radBlocksSum); 	radPanel.add(Box.createVerticalStrut(5));
 		
 		/// Species
@@ -101,7 +123,7 @@ public class Report extends JDialog  {
 		radSpecies[0].setSelected(true);
 					
 		mainPanel.add(spRow);   mainPanel.add(Box.createVerticalStrut(3));
-		mainPanel.add(radPanel);mainPanel.add(Box.createVerticalStrut(3));
+		mainPanel.add(radPanel);mainPanel.add(Box.createVerticalStrut(3));	
 	}
 	private void createOutput() {
 		JPanel row = Jcomp.createRowPanel();
@@ -111,10 +133,10 @@ public class Report extends JDialog  {
 		btnPop =  Jcomp.createRadio("Popup", "Popup of block report");
 		row.add(btnPop); row.add(Box.createHorizontalStrut(5));
 		
-		btnHTML =  Jcomp.createRadio("HTML File", "HTML file of blocks");
+		btnHTML =  Jcomp.createRadio("HTML file", "HTML file of blocks");
 		row.add(btnHTML); row.add(Box.createHorizontalStrut(5));
 		
-		btnTSV =  Jcomp.createRadio("TSV File", "File of tab separated values");
+		btnTSV =  Jcomp.createRadio("TSV file", "File of tab separated values");
 		row.add(btnTSV); 
 		
 		ButtonGroup grp = new ButtonGroup();
@@ -126,9 +148,33 @@ public class Report extends JDialog  {
 		useRow.add(Box.createHorizontalStrut(lab.getPreferredSize().width + 5));
 		chkComb = Jcomp.createCheckBox("Combine " + CCB, "Make Chr1.Chr2.Block one column; if unchecked, make 3 columns.", true);
 		useRow.add(chkComb);
-    			
-		// Buttons
-		btnOK = Jcomp.createButton("Create", "Create report and write to file");
+		
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(3));
+		mainPanel.add(useRow); mainPanel.add(Box.createVerticalStrut(3));
+	}
+	private void createGeneList() {
+		mainPanel.add(new JSeparator());
+		
+		JPanel row = Jcomp.createRowPanel();
+		radBlocksGeneList   = Jcomp.createRadio(titleGenePairs + " (Text file)", "Download all blocks with list of genes");
+		row.add(radBlocksGeneList);
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(10));
+		
+		row = Jcomp.createRowPanel();
+		radID =  Jcomp.createRadio("GFF ID", "Use GFF ID (if exists)");
+		radGene =  Jcomp.createRadio("Gene#", "Use SyMAP Gene#");
+		ButtonGroup grp = new ButtonGroup();
+		grp.add(radGene); grp.add(radID); 
+    	radID.setSelected(true);
+    
+    	row.add(Box.createHorizontalStrut(20));
+    	row.add(radID); 
+    	row.add(Box.createHorizontalStrut(10));
+		row.add(radGene);
+		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(10));
+	}
+	private void createButtons() {
+		btnOK = Jcomp.createButton("Create", "Create report, write to popup, or write to file");
     	btnOK.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				runReport();
@@ -140,18 +186,14 @@ public class Report extends JDialog  {
 				setVisible(false);
 			}
 		});
+						
 		boolean isl = Jhtml.isLinux();
 		int sp = (isl) ? 60 : 30;
-		
 		JPanel buttonPanel = Jcomp.createRowPanel();
 		buttonPanel.add(Box.createHorizontalStrut(sp));
 		
 		buttonPanel.add(btnOK);			buttonPanel.add(Box.createHorizontalStrut(sp));
 		buttonPanel.add(btnCancel);		
-		
-		mainPanel.add(new JSeparator());
-		mainPanel.add(row); mainPanel.add(Box.createVerticalStrut(3));
-		mainPanel.add(useRow); mainPanel.add(Box.createVerticalStrut(3));
 		
 		mainPanel.add(new JSeparator());
 		mainPanel.add(Box.createVerticalStrut(8));
@@ -162,6 +204,10 @@ public class Report extends JDialog  {
 	private void runReport() {
 		setVisible(false);
 		
+		if (radBlocksGeneList.isSelected()) {
+			new Blocks();
+			return;
+		}
 		isTSV  = btnTSV.isSelected();
 		isPop  = btnPop.isSelected();
 		isHTML = btnHTML.isSelected() || isPop;
@@ -170,19 +216,19 @@ public class Report extends JDialog  {
 		useComb = chkComb.isSelected();
 		isSum = radBlocksSum.isSelected();
 		
-		if (radBlocksGenes.isSelected())     mkBlocksGene();
-		else if (radBlocksPlus.isSelected()) mkBlocksPlus();
-		else if (radBlocksSum.isSelected())  mkBlocksSum();
+		if (radBlocksGeneInfo.isSelected())  mkBlocksGene();
+		else if (radBlocksPlus.isSelected()) mkBlocksInfo();
+		else if (radBlocksSum.isSelected())  mkChrSum();
 	}
 	/*****************************************************************/
-	private void mkBlocksSum() { 
+	private void mkChrSum() { 
 		try { 
 			PrintWriter outFH = null;
 			String report = "";
 			
 			if (isPop) report = htmlHead();
 			else {
-				outFH = startFile("blocksSummary");
+				outFH = startFile(fileChrSum);
 				if (outFH==null) return;
 				if (isTSV) tsvHead(outFH);
 			}
@@ -238,21 +284,21 @@ public class Report extends JDialog  {
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
-				util.Jhtml.showHtmlPanel(null, ("Block Summary"), report); 
+				util.Jhtml.showHtmlPanel(null, titleChrSum, report); 
 			}
 			else endFile(outFH, totBlks);	
 		} 
 		catch(Exception e) {ErrorReport.print(e, "Generate blocks summary");}
 	}
 	/*****************************************************************/
-	private void mkBlocksPlus() { 
+	private void mkBlocksInfo() { 
 		try { 
 			PrintWriter outFH = null;
 			String report = "";
 			
 			if (isPop) report = htmlHead();
 			else {
-				outFH = startFile("blocksPlus");
+				outFH = startFile(fileBlockInfo);
 				if (outFH==null) return;
 				if (isTSV) tsvHead(outFH);
 			}
@@ -300,7 +346,7 @@ public class Report extends JDialog  {
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
-				util.Jhtml.showHtmlPanel(null, ("Blocks Plus"), report); 
+				util.Jhtml.showHtmlPanel(null, titleBlockInfo, report); 
 			}
 			else endFile(outFH, totBlks);	
 		} 
@@ -314,7 +360,7 @@ public class Report extends JDialog  {
 			
 			if (isPop) report = htmlHead();
 			else {
-				outFH = startFile("blocksGenes");
+				outFH = startFile(fileGeneInfo);
 				if (outFH==null) return;
 				if (isTSV) tsvHead(outFH);
 			}
@@ -364,7 +410,7 @@ public class Report extends JDialog  {
 			}
 			if (isPop) {
 				report += htmlTail(totBlks);
-				util.Jhtml.showHtmlPanel(null, ("Blocks with genes info"), report); 
+				util.Jhtml.showHtmlPanel(null, titleGeneInfo, report); 
 			}
 			else endFile(outFH, totBlks);	
 		} 
@@ -436,33 +482,14 @@ public class Report extends JDialog  {
     	
     	return sql;
     }
-    ///////////////////////////////////////////////////
+    /*****************************************************/
     private PrintWriter startFile(String filename) {
     try {
     	filename += (isTSV) ? ".tsv" : ".html";
-    	String dirname = Globals.getExport(); 
-		JFileChooser chooser = new JFileChooser(dirname);
-		chooser.setSelectedFile(new File(filename));
-		
-		if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return  null;
-		if (chooser.getSelectedFile() == null) return null;
-			
-		exFileName = chooser.getSelectedFile().getAbsolutePath();
-		if (isTSV) {
-			if(!exFileName.endsWith(".tsv")) exFileName += ".tsv";
-		}
-		else {
-			if(!exFileName.endsWith(".html")) exFileName += ".html";
-		}
-		File f = new File(exFileName);
-		if (f.exists()) {
-			if (!util.Popup.showConfirm2("File exists","File '" + exFileName + "' exists.\nOverwrite?")) return null;
-			f.delete();
-		}
-		
-		f.createNewFile();
-		PrintWriter out = new PrintWriter(new FileWriter(exFileName));
-		
+    	
+    	PrintWriter out = getFileHandle(filename);
+    	if (out==null) return null;
+    	
 		if (isHTML) out.println(htmlHead());
 		
 		return out;
@@ -474,7 +501,29 @@ public class Report extends JDialog  {
     
     	out.close();
 
-		System.out.println("Wrote to " + exFileName);
+		Globals.prt("Finish blocks for "  + dname1 + " and " + dname2);
+    }
+    private PrintWriter getFileHandle(String fname) {
+    	String saveDir = Globals.getExport(); 
+		
+		JFileChooser chooser = new JFileChooser(saveDir);
+		chooser.setSelectedFile(new File(fname));
+		if(chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return null;
+		if(chooser.getSelectedFile() == null) return null;
+		
+		File f = new File(exFileName);
+		if (f.exists()) {
+			if (!util.Popup.showConfirm2("File exists","File '" + exFileName + "' exists.\nOverwrite?")) 
+				return null;
+		}
+		exFileName = chooser.getSelectedFile().getAbsolutePath();
+		Globals.prt("Exporting blocks to " + exFileName);
+		
+		try {
+			return new PrintWriter(new FileOutputStream(exFileName, false));
+		}
+		catch (Exception e) {ErrorReport.print(e, "Cannot open file - " + exFileName);}
+		return null;
     }
     ////////////////////////////////////////////////////
     private String getNames() {
@@ -597,14 +646,111 @@ public class Report extends JDialog  {
     	if (i==PCCcol && !x.startsWith("-")) x = "+" + x;
     	return x;
     }
+    /***********************************************************/
+    // CAS589 add; CAS591 move from ReportExport
+	private class Blocks {
+		private TreeMap <String, Block> blockMap = new TreeMap <String, Block> ();
+		
+		private Blocks() {
+		try {
+			PrintWriter fhOut = getFileHandle(fileGenePairs + ".txt");
+			if (fhOut==null) return;
+			
+			createBlocks();
+			
+			for (String key : blockMap.keySet()) {
+				Block b = blockMap.get(key);
+				fhOut.write("Block: " + b.chr1 + " " + b.chr2 + " #" + b.blknum + "\n");
+				for (int hitnum : b.geneMap.keySet()) {
+					String line = b.geneMap.get(hitnum);
+					fhOut.write(String.format("#%-5d   ", hitnum)+ line + "\n");
+				}
+			}
+			fhOut.close();
+			Globals.prt("Finish blocks for "  + dname1 + " and " + dname2);
+		}
+		catch (Exception e) {ErrorReport.print(e, "Export Blocks");}
+		}
+		/****************************************************************/
+		private void createBlocks() {
+		try {
+			DBconn2 tdbc = new DBconn2("Export" + DBconn2.getNumConn(), tdbc2);
+			 String sql = "SELECT PA.grp_idx, PA.name, PA.tag,  PH.hitnum, PH.grp1_idx, PH.grp2_idx, B.blocknum"
+		    + " FROM pseudo_hits AS PH"
+		    + " LEFT JOIN pseudo_hits_annot AS PHA ON PH.idx = PHA.hit_idx"
+			+ " LEFT JOIN pseudo_annot AS PA ON PHA.annot_idx = PA.idx"
+			+ " LEFT JOIN pseudo_block_hits AS PBH ON PBH.hit_idx = PH.idx"
+			+ " LEFT JOIN blocks AS B ON B.idx = PBH.block_idx"
+			+ " where PH.pair_idx=" + mp.getPairIdx() 
+			+ " AND PBH.block_idx is not null AND PH.gene_overlap=2 ORDER BY PH.hitnum asc";
+			 
+			boolean isID = radID.isSelected();
+			Block curBlk;
+			
+			ResultSet rs = tdbc.executeQuery(sql);
+			while (rs.next()) {
+				int i=1;
+				int gidx 	= rs.getInt(i++);
+				String anno = rs.getString(i++);
+				String tag 	= rs.getString(i++);
+				int hitnum 	= rs.getInt(i++);
+				int gidx1 	= rs.getInt(i++);
+				int gidx2 	= rs.getInt(i++);
+				int blknum 	= rs.getInt(i++);
+				
+				String key = gidx1 + ":" + gidx2 + ":" + blknum;
+				if (blockMap.containsKey(key)) curBlk = blockMap.get(key);
+				else {
+					curBlk = new Block();
+					curBlk.chr1 = mProjs[0].getGrpFullNameFromIdx(gidx1);
+					curBlk.chr2 = mProjs[1].getGrpFullNameFromIdx(gidx2);
+					curBlk.blknum = blknum;
+					blockMap.put(key, curBlk);
+				}
+				String line = (curBlk.geneMap.containsKey(hitnum)) ? curBlk.geneMap.get(hitnum) : "";
+				String name="";
+				if (isID) {
+					if (!anno.isBlank() && anno.contains(Globals.idKey)) {
+						String [] tok = anno.split(";");
+						for (String tuple : tok) {
+							if (tuple.startsWith(Globals.idKey)) {
+								name = tuple.split("=")[1];
+								break;
+							}
+						}
+					} else name="NoID";
+				}
+				else {
+					name = tag.substring(0, tag.indexOf("(")).trim();
+				}
+				name = String.format("%-12s", name);
+				
+				if (gidx==gidx1) line = name + " " + line;
+				else             line = line + " " + name;
+				curBlk.geneMap.put(hitnum, line);
+			}
+			rs.close();
+			tdbc.close();	
+		} catch (Exception e) {ErrorReport.print(e, "Export Blocks");}
+		}
+		private class Block {
+			int blknum;
+			String chr1, chr2;
+			TreeMap <Integer, String> geneMap = new TreeMap <Integer, String> ();
+		}
+	}
+	
     /********************************************************************/
     private String exFileName="";
     private ArrayList <Integer> typeArr = new ArrayList <Integer> ();
     private JPanel mainPanel;
     private JCheckBox chkComb = null;
     private JRadioButton [] radSpecies=null;
-    private JRadioButton radBlocksGenes, radBlocksPlus, radBlocksSum;
-    
+    private JRadioButton radBlocksGeneInfo, radBlocksPlus, radBlocksSum;
     private JRadioButton btnHTML, btnTSV, btnPop;
+    
+    private JRadioButton radBlocksGeneList;
+    private JRadioButton radGene, radID;
+    
     private JButton btnOK=null, btnCancel=null;
 }
