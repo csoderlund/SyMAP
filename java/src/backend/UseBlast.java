@@ -46,13 +46,12 @@ public class UseBlast {
 	private boolean bSuccess=true;
 	private AccessDB aDB;
 				
-	private HashMap <String, Integer> idIdxMap1   = new HashMap <String, Integer> ();// LoadAnno: GFF Id, idx
-	private HashMap <String, Integer> idIdxMap2   = new HashMap <String, Integer> ();//           ditto
-	private HashMap <Integer, Gene>   geneIdxMap1 = new HashMap <Integer, Gene> ();  //           idx, Gene
-	private HashMap <Integer, Gene>   geneIdxMap2 = new HashMap <Integer, Gene> ();  //           ditto
+	private HashMap <String, Integer> gnIdIdxMap1   = new HashMap <String, Integer> ();// LoadAnno: GFF Id, idx
+	private HashMap <String, Integer> gnIdIdxMap2   = new HashMap <String, Integer> ();//           ditto
+	private HashMap <Integer, Gene>   gnIdxGeneMap1 = new HashMap <Integer, Gene> ();  //           idx, Gene
+	private HashMap <Integer, Gene>   gnIdxGeneMap2 = new HashMap <Integer, Gene> ();  //           ditto
 	
 	private HashMap <String, Hit>     hitPairMap  = new HashMap <String, Hit> ();    // Created in Blast; key geneIdx1:geneIdx2
-	private int numExistHits=0;
 	/********************************************************************/
 	public UseBlast(DBconn2 dbc, ProgressDialog mLog,  Mpair mp) {
 		this.mLog = mLog;
@@ -86,15 +85,12 @@ public class UseBlast {
 		}
 		
 	// Process
-		aDB.loadGenes(mProj1.strDisplayName, grpMap1, idIdxMap1, geneIdxMap1); if (!bSuccess) return false;
-		aDB.loadGenes(mProj2.strDisplayName, grpMap2, idIdxMap2, geneIdxMap2); if (!bSuccess) return false;
-		numExistHits = aDB.getNumHits();
-		if (numExistHits>0) Utils.prtNumMsgFile(mLog, numExistHits, "gene pair hits in database");
+		aDB.loadGenes(mProj1.strDisplayName, grpMap1, gnIdIdxMap1, gnIdxGeneMap1); if (!bSuccess) return false;
+		aDB.loadGenes(mProj2.strDisplayName, grpMap2, gnIdIdxMap2, gnIdxGeneMap2); if (!bSuccess) return false;
 		boolean rc;
 		
 		for (String fileName : fileList) {
 			Utils.prtIndentMsg(mLog, 1, "--- Read File " + fileName.substring(fileName.lastIndexOf("/")) + " ---");
-			
 			rc = readBlast(fileName);				if (!bSuccess) return false;						
 			if (rc) {
 				aDB.updateExistingHits(); 			if (!bSuccess) return false;
@@ -150,10 +146,10 @@ public class UseBlast {
 			String qid = tok[0];
 			String sid = tok[1];
 			if (!bSetSwap) { // read until the first found qseqid or sseqid, set swap if necessary
-				if      (idIdxMap1.containsKey(qid)) bSetSwap = true;
-				else if (idIdxMap2.containsKey(qid)) bSetSwap = bSwap =  true;
-				else if (idIdxMap2.containsKey(sid)) bSetSwap = true;
-				else if (idIdxMap1.containsKey(sid)) bSetSwap = bSwap = true;
+				if      (gnIdIdxMap1.containsKey(qid)) bSetSwap = true;
+				else if (gnIdIdxMap2.containsKey(qid)) bSetSwap = bSwap =  true;
+				else if (gnIdIdxMap2.containsKey(sid)) bSetSwap = true;
+				else if (gnIdIdxMap1.containsKey(sid)) bSetSwap = bSwap = true;
 				else { // both not in; if only one is not in, not caught until below
 					if (cntSkip<3)       Utils.prtIndentMsg(mLog, 2, " No ID's in database: " + qid + " or " + sid);
 					else if (cntSkip==3) Utils.prtIndentMsg(mLog, 2, " Additional messages will be surpressed");
@@ -167,13 +163,13 @@ public class UseBlast {
 			Gene gn1=null, gn2=null;
 			if (bSwap) {String tmp=qid; qid=sid; sid=tmp;}
 			
-			if (idIdxMap1.containsKey(qid)) {
-				idx1 = idIdxMap1.get(qid);
-				gn1  = geneIdxMap1.get(idx1);
+			if (gnIdIdxMap1.containsKey(qid)) {
+				idx1 = gnIdIdxMap1.get(qid);
+				gn1  = gnIdxGeneMap1.get(idx1);
 			}
-			if (idIdxMap2.containsKey(sid)) {
-				idx2 = idIdxMap2.get(sid);
-				gn2  = geneIdxMap2.get(idx2);
+			if (gnIdIdxMap2.containsKey(sid)) {
+				idx2 = gnIdIdxMap2.get(sid);
+				gn2  = gnIdxGeneMap2.get(idx2);
 			}
 			if (idx1==0 || idx2==0) {
 				if (cntSkip<3)       Utils.prtIndentMsg(mLog, 2, "No ID's in database: " + qid + " or " + sid);
@@ -234,8 +230,8 @@ public class UseBlast {
 		if (cntSkip>0) Utils.prtNumMsgFile(mLog,cntSkip,"Ignore hits - no corresponding gene pair");
 		if (cntSkip>0 && cntGood==0) {
 			String name1="", name2="";
-			for (Gene x : geneIdxMap1.values()) {name1 = x.name; break;} // get first one
-			for (Gene x : geneIdxMap2.values()) {name2 = x.name; break;}
+			for (Gene x : gnIdxGeneMap1.values()) {name1 = x.name; break;} // get first one
+			for (Gene x : gnIdxGeneMap2.values()) {name2 = x.name; break;}
 			Utils.prtIndentMsg(mLog, 2, "Example IDs in database: " + name1 + " " + name2) ;
 		} 
 		return true;
@@ -362,7 +358,7 @@ public class UseBlast {
 		
 		/* *******************************************************************/
 		private void loadGenes(String species, TreeMap <Integer, String> grpMap, 
-				HashMap <String, Integer> idIdxMap, HashMap <Integer, Gene> geneIdxMap) {
+				HashMap <String, Integer> gnIdIdxMap, HashMap <Integer, Gene> geneIdxMap) {
 		try {
 			int cntNoId=0, cntGene=0;
 			
@@ -406,13 +402,13 @@ public class UseBlast {
 					cntNoId++; continue;
 				}
 				
-				idIdxMap.put(name, idx);
+				gnIdIdxMap.put(name, idx);
 				Gene gn = new Gene(idx, grpIdx, s, e, elen, strand, name);
 				geneIdxMap.put(idx, gn);
 				cntGene++;
 			}
 			
-			if (idIdxMap.size()==0 && cntNoId>0) {
+			if (gnIdIdxMap.size()==0 && cntNoId>0) {
 				prtErr("Genes do not have a GFF ID"); bSuccess=false;
 				return;
 			}
@@ -546,17 +542,20 @@ public class UseBlast {
 		catch (Exception e) {ErrorReport.print(e, "Save New Hits"); bSuccess=false;}
 		}
 		/********************************************************************
-		 * Load and update ht.htype 
-		 * Each blast file will get an incremental number assigned to htype; CAS591
+		 * Read hits from database; for those in hitPairMap, update htype
+		 * Each blast file will get an incremental number assigned to htype
 		 ***********************************************************/
 		private void updateExistingHits() {
 		try {
+			int numExistHits = aDB.getNumHits();
 			if (numExistHits==0) {
 				for (Hit ht : hitPairMap.values()) ht.htype = BpTYPE+"1";
 				return;
 			}
-			ResultSet rs = dbc.executeQuery("SELECT idx, annot1_idx, annot2_idx, htype FROM pseudo_hits "
-					+ " where pair_idx=" + mp.getPairIdx());
+			Utils.prtNumMsgFile(mLog, numExistHits, "Hits from gene pairs in database");
+			
+			ResultSet rs = dbc.executeQuery("SELECT idx, annot1_idx, annot2_idx, htype "
+					+ " FROM pseudo_hits where pair_idx=" + mp.getPairIdx());
 			
 			int found=0, lastNum=0;
 			while (rs.next()){

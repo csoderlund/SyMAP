@@ -15,7 +15,7 @@ import java.io.File;
  */
 public class Globals {
 	public static final String 	VERSION = "v5.9.1";    // see Version.isVerLt (if add char, must be single, e.g. v5.7.5b)
-	public static final String 	DATE = " (22-Oct-26)";
+	public static final String 	DATE = " (24-Oct-26)";
 	public static final String  VERDATE = VERSION + " " + DATE;
 	public static final String  WEB = "https://csoderlund.github.io/SyMAP"; // Jhtml.BASE_HELP_URL/
 	public static final int 	DBVER = 7; 	// CAS512 v3, CAS520 v4, CAS522 v5, CAS543 v6, CAS546 v7
