@@ -228,13 +228,17 @@ The following three scripts are provided in the tar file.
 		<td style="vertical-align: text-top;">6.
 		<td style="vertical-align: text-top;">Load the files into SyMAP
 		<td style="vertical-align: text-top;">For a project, set <span class="ttb">project parameters</span>, then select <span class="ttb">Load project</span>.
-		<br>See <a href="#create">New project</a> and <a href="SystemHelp.html#selLoad" class="ext" target="_blank">Load project</a>.
+		<br>See <a href="#create">New project</a> and
+		<a href="SystemHelp.html#selLoad" class="ext" target="_blank">Load project</a>.
 	<tr>
 		<td style="vertical-align: text-top;">7.
 		<td style="vertical-align: text-top;">Compute alignments and synteny
-		<td style="vertical-align: text-top;">For a selected pair, set <span class="ttb">pair parameters</span>,
-		then select <span class="ttb">Selected pair</span>.
-		<br>See <a href="#create">New project</a> and <a href="SystemHelp.html#avail" class="ext" target="_blank">Align&amp;Synteny</a>.
+		<td style="vertical-align: text-top;">For a selected pair,
+		set <span class="ttb">pair parameters</span>,
+		then select <span class="ttb">Run MUMmer</span>.
+		<br>See <a href="#create">New project</a> and
+		<a href="SystemHelp.html#avail" class="ext" target="_blank">Align&amp;Synteny</a>
+		and <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a>.
 	<tr>
 		<td style="vertical-align: text-top;">8.
 		<td style="vertical-align: text-top;">View results
@@ -489,7 +493,8 @@ Your may verify the results by selecting the <a href="img/view.png">View</a> lin
 <span class="ttx">demoArab</span> and <span class="ttx">demoBrap</span> will
 automatically be selected (green cell).
 
-<p>Click the <span class="ttb">Selected Pair</span> button to start the <span class="ttl">Align&amp;Synteny</span>.
+<p>Click the <span class="ttb">Run MUMmer</span> button to start
+the <span class="ttl">Align&amp;Synteny</span>.
 
 <p>The MUMmer alignment takes less than 6 minutes on
 a MacOS x86_64 with 64Gb memory but could take up to 30 minutes on a slow machine.
@@ -546,7 +551,7 @@ It also show the results from <span class=ttx> Load Blast File</span>.
 <p>
 <table>
 <tr><td style="vertical-align: text-top;">
-	Run the <span class="ttl">Align&amp;Synteny</span>, where the alignment should take less than
+	Select <span class="ttl">Run MUMmer</span>, where the alignment should take less than
 	8 minutes with one CPU.
 	<p>When done, open the <span class="ttb">Summary</span> for the pair which will be similar to what
 	is shown on the right; there may be slight difference in the number of <span class="ttx">Cluster hits</span>.
@@ -558,7 +563,7 @@ It also show the results from <span class=ttx> Load Blast File</span>.
 	as shown in the <span class="ttp">Manager</span> on the right.
 	<br>Load <span class="ttx">demoDraft.demoBrap</span>.
 
-	<p>Run the <span class="ttl">Align&amp;Synteny</span> with the
+	<p>Run the <span class="ttl">Run MUMmer</span> with the
 	<span class="ttx">demoBrap</span> and <span class="ttx">demoDraft.demoBrap</span> projects,
 	which will produce the synteny with ordered draft sequences.
 	<p>See the second <span class="ttp">Dot Plot</span> for
@@ -579,7 +584,7 @@ It also show the results from <span class=ttx> Load Blast File</span>.
 <table>
 <tr>
 <td>To perform self-synteny, select the cell for <span class="ttx">demoBrap</span> row and column (it turns green).
-Click <span class="ttb">Selected Pair</span> from the <span class="ttp">Manager</span>.
+Click <span class="ttb">Run MUMmer</span>.
 <p>See <a href="Demo.html#self" class="ext" target="_blank">Demo self-synteny</a> for more information.
 <td><a href="img/selfDemo.png"><img src="img/selfDemo.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
@@ -637,7 +642,7 @@ on setting the pair parameters for the this step.
 <p>
 <li>See <a href="SystemHelp.html#cpu" class="ext" target="_blank">CPU and Verbose</a> for a description of these two options.
 <p>
-<li>Then select <span class="ttb">Selected Pair</span> to run the <span class="ttl">Align&amp;Synteny</span>.
+<li>Then select <span class="ttb">Run MUMmer</span> to run the <span class="ttl">Align&amp;Synteny</span>.
 See <a href="./SystemHelp.html#avail" class="ext" target="_blank">Available Syntenies</a> for details.
 </ul>
 <td><a href="img/newPair.png"><img src="img/newPair.png" alt="align and synteny" style="border: 1px solid black; width: 400px"></a>
@@ -688,7 +693,7 @@ that indicates ordering your draft against a complete sequence (e.g. draft-&gt;d
 	<img src="img/parameters2o.png" alt="order parameters" style="border: 1px solid black; width: 320px"></a>
 </table>
 <p>
-<li>Run <span class="ttl">Align&Synteny</span> on the pair.
+<li>Select <span class="ttl">Run MUMmer</span> for the pair.
 <table><tr><td>
 This <i>orders</i> the draft contigs and creates a new project.
 <p>
@@ -698,9 +703,9 @@ The new project will appear on the left panel of the <span class="ttp">Manager</
 	  <img src="img/demoDraft3.png" alt="demoDraft3" style="border: 1px solid black; width: 400px"></a>
 </table>
 <p>
-<li>Select the new project and <span class="ttl">Load project</span>. Select the ordered against project.
+<li>Select the new project and <span class="ttl">Load project</span>. Select the "ordered against" project.
 <p>
-<li>Run <span class="ttl">Align&Synteny</span> between them. This merges contigs into possible chromosome sequences;
+<li>Select <span class="ttl">Run MUMmer</span> for the pair. This merges contigs into possible chromosome sequences;
 this is illustrated by the demo <a href="./Demo.html#draft" class="ext" target="_blank">Dot Plots</a>
 </ol>
 
@@ -740,7 +745,8 @@ will print out all the lengths; set the <span class="ttx">Minimum length</span> 
 
 <table>
 <tr>
-<td>To perform self-synteny, select the cell for the same project (it turns green) followed by <span class="ttb">Selected Pair</span>.
+<td>To perform self-synteny, select the cell for the same project
+ (it turns green) followed by <span class="ttb">Run MUMmer</span>.
 <td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 

@@ -68,8 +68,8 @@ for the long introns of mammalian genomes, and less diverse genomes.
 1. <a href="#build"><u>Build database</u></a>
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#start">Start SyMAP</a>
-<li style="margin: 0.4em 0;"><a href="#selLoad">Load project</a>
-<li style="margin: 0.4em 0;"><a href="#avail">Available syntenies</a>
+<li style="margin: 0.4em 0;"><a href="#selLoad">Selected Projects</a>
+<li style="margin: 0.4em 0;"><a href="#avail">Available Syntenies</a>
 <li style="margin: 0.4em 0;"><a href="#fun">Align&amp;Synteny (A&amp;S)</a>
 <li style="margin: 0.4em 0;"><a href="#cpu">CPU and Verbose</a>
 </ol>
@@ -113,8 +113,8 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <table class="tz">
 <tr>
 <td><a href="#start">Start<br>SyMAP</a>
-<td><a href="#selLoad">Load<br>Project</a>
-<td><a href="#avail">Available<br>Synteny</a>
+<td><a href="#selLoad">Selected<br>Projects</a>
+<td><a href="#avail">Available<br>Syntenies</a>
 <td><a href="#fun">Align&amp;<br>Synteny</a>
 <td><a href="#cpu">CPU&amp;<br>Verbose</a>
 </tr>
@@ -127,7 +127,6 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <br>The <span class="ttp">Project Manager</span> will be displayed.
 
 <p>To view the command line options: <span class="ttt">./symap -h</span>
-
 
 <td>&nbsp;For the first time user of SyMAP, see:
 <ul>
@@ -143,7 +142,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 	<img src="img/symapPlants.png" alt="manager" style="border: 1px solid black; width: 580px"></a>
 
 <a id="selLoad"></a>
-<h3>Load Project</h3>
+<h3>Selected Projects</h3>
 As shown in the <span class="ttb">Project Manager</span> above, selected projects from the left panel
 will be listed in the <span class="ttb">Selected</span> section on the right.
 The possible functions vary with the state, as listed below:
@@ -238,17 +237,17 @@ the buttons that can be selected are activated.
 	<td>Synteny for this project pair is ready to view.
 <tr><td><b>A</b>
 	<td>The MUMmer alignment has been performed but the <span class="ttl">Clust&amp;Synteny</span> needs to be run;
-	select <span class="ttl">Selected Redo</span>.
+	select <span class="ttl">Reload MUMmer</span>.
 <tr><td><b>?</b>
-	<td>The alignment have not been completed. In this case, select <span class="ttl">Selected Redo</span> and the
+	<td>The alignment have not been completed. In this case, select <span class="ttl">Reload MUMmer</span> and the
 		alignments will be completed followed by the synteny computation.
 <tr><td><b>B</b>
 	<td>A blast tabular file is available but the <span class="ttl">Load&amp;Synteny</span> needs to be run;
-	select <span class="ttl">Selected Redo</span>.
+	select <span class="ttl">Load Blast</span>.
 	<tr><td><b>A/B</b>
 	<td>Both MUMmer and Blast files are available; select which to use on the <a href="#pairPanel">Pair Parameters</a> window.
 <tr><td>&nbsp;
-	<td>The alignment has not been started.
+	<td>Neither MUMmer or Blast alignment files exist.
 </table>
 <p>See <a href="#pairPanel">Pair Parameters</a> for additional information on the <span class="ttb">Available Syntenies</span> and codes.
 
@@ -256,20 +255,35 @@ the buttons that can be selected are activated.
 <h3>Align&amp;Synteny</h3>
 
 <table class="ty">
-<tr><td colspan=2><i>Align&amp;Synteny (A&amp;S)</i>
-<tr><td style="white-space: nowrap;vertical-align: text-top;">
-		<span class="ttb">Selected Pair</span>
-		<br><span class="ttb">Selected Redo</span>
-	<td>Run (or complete) the <span class="ttl">A&amp;S</span> computation for the selected project pair.
-		<br>If the pair is already complete, the button label changes to <span class="ttb">Redo</span>.
-		This will rerun the <span class="ttx">Cluster&amp;Synteny</span> or run <span class="ttx">Load&amp;Synteny</span>,
-		depending on the <a href="#pairParams">Pair Parameters</a> settings.
-		<br>See the parameters's <a href="#drop">drop-down</a> for some variations.
+<tr><td colspan=2><span class=ttl>Align&amp;Synteny</span> The following 3 buttons are to the left of this label, which is abbreviated A&amp;S.
+<tr><td>First button<td>The text of the first button changes depending on the state of the selected project pair.
+  <table>
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">
+	    <span class="ttb">Select Pair</span>
+	     <td>No pair is selected.
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Run MUMmer</span>
+		<td>Run (or complete) the MUMmer alignments, followed by the <span class="ttx">Cluster&amp;Synteny</span>.
+		<br>See <a href="MUMmer.html" class="ext" target="_blank">Use MUMmer</a>
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Reload MUMmer</span>
+		<td>If the pair is already complete (&#10004;), the button label changes to <span class="ttb">Reload MUMmer</span>.
+		Selecting this will remove the pair from the database, load the existing MUMmer files, and run the <span class="ttx">Cluster&amp;Synteny</span>.
 		<br>If you wish to rerun the MUMmer alignment, first use the <span class="ttb">Clear Pair</span> function.
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Load Blast</span>
+		<td>The <span class="ttb">Load Blast files</span> option is selected in the
+		<a href="#pairParams">Pair Parameters</a>.
+		<br>Selecting this will add the hits in existing blast file(s) to the database, and run the <span class="ttx">Synteny</span>
+		(there is no clustering for blast hits).
+		<br>See <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a>
+	<tr><td style="white-space: nowrap;vertical-align: text-top;">Only...
+		<td>See the parameters's <a href="#drop">drop-down</a> for the variations.
+  </table>
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Clear Pair</span>
-	<td><span class="ttx">Only: remove synteny from database</span>
-	<br><span class="ttx">All: remove synteny and MUMmer/Blast files from disk for this pair</span>
+	<td><span class="ttx">Only: remove pair from database</span>
+	<br><span class="ttx">All: remove pair and MUMmer/Blast files from disk for this pair</span>
 	<p>If you have changed the <span class="ttl">Alignment</span> parameters, or loaded new sequence for one
 	of the projects, you need to have the alignments removed and redone; otherwise, you can just remove the synteny
 	from database.
@@ -294,8 +308,7 @@ the buttons that can be selected are activated.
 	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
 	</ul>
 Neither of these are saved with the <span class="ttb">Pair parameters</span> <a href="#save2">Save</a>. They can be
-set a the command line using <span class=ttt>-p</span> and/or <span class=ttt>-v</span>, respectively.
-
+set at the command line using <span class=ttt>-p</span> and/or <span class=ttt>-v</span>, respectively.
 
 <hr>
 <!-- =================================================================-->
@@ -587,13 +600,15 @@ its associated parameters.
 	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 300px"></a>
 	<td>&nbsp;
 	<td>
-     If a value in the pair cell exists and the parameters for a section are changed, do the following:
+     If a pair cell has a &#10004; indicating it is complete, and the parameters for a section are changed, do the following:
 
 	<table class="ty">
 		<tr><td style="white-space: nowrap;"><i>Changed Section</i><td><i>Action</i>
-		<tr><td><b><i>Alignment</i></b> <td>Select <span class="ttb">Clear Pair</span> to remove the existing alignments,
-		then <span class="ttb">Selected Pair</span>.
-		<tr><td><b><i>Cluster Hits</i></b> <td>Use <span class="ttb">Selected Redo</span>
+		<tr><td><b><i>Alignment</i></b> <td>If the MUMmer parameters have been changed, selected
+		<span class=ttl>Clear Pair</span> followed by <span class=ttl>Run MUMmer</span>.
+		<br>If the Blast files have been changed, selected
+		<span class=ttl>Clear Pair</span> followed by <span class=ttl>Load Blast</span>.
+		<tr><td><b><i>Cluster Hits</i></b><br>(MUMmer only) <td>Use <span class="ttb">Reload MUMmer</span>
 		directly; the existing alignments for the pair will be used.
 		<tr><td><b><i>Collinear Sets</i></b><td>If only collinear sets parameters are changed,
 		click the lower drop-down and select <span class="ttx">Collinear Only</span>
@@ -618,14 +633,22 @@ its associated parameters.
 
 <a id="align"></a>
 <a id="align2"></a> <!-- ref in code -->
-<a id="clust"></a> <!-- ref in pre-v590 code -->
 <h3><span style="font-size: 20px">+</span> Alignment</h3>
 <table style="width:90%"><tr><td>
 &bull; <span class=ttl>Use MUMmer</span>:
-MUMmer provides genome alignment, as described in <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a>.
-<p>&bull; <span class=ttl>Load Blast files</span>: Blastp hits from a b6 tabular file can be loaded instead of running MUMmer, or to augment MUMmer results;
-see <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details.
-<p><b><span style="font-size: 12px">+</span> Cluster MUMmer hits</b>
+MUMmer provides genome alignment.
+<p><span style="font-size: 15px">+</span><span class=ttx>Mask and MUMmer args</span>
+Click  <span style="font-size: 15px">+</span> to view the MUMmer arguments.
+<br>See  <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> for details.
+
+<p>&bull; <span class=ttl>Load Blast files</span>:
+Blastp hits from a b6 tabular file can be loaded instead of running MUMmer, or to augment MUMmer results.
+<p><span style="font-size: 15px">+</span><span class=ttx>Blast input and filter</span>
+Click  <span style="font-size: 15px">+</span> to view the Blast arguments.
+<br>See <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details.
+
+<a id="clust"></a> <!-- ref in pre-v590 code -->
+<h3><span style="font-size: 12px">+</span> Cluster MUMmer hits</h3>
 See <a href="MUMmer.html#clust" class="ext" target="_blank">MUMmer</a> for clustering MUMmer hits.
 <td><a href="img/parameters2ab.png">
     <img src="img/parameters2ab.png" alt="align params" style="border: 1px solid black; width: 200px"></a>
@@ -729,7 +752,7 @@ The "-&gt;" indicates that the first sequence will be ordered against the second
 
 <p>If the draft has been aligned to the <span class="ttl">Order against</span> sequence, but this option
 was not set, it can be set and the <span class="ttx">Synteny Only</span> setting used (described below in <b>3.e Save</b>).
-
+<!-- ============================================= -->
 <a id="save2"></a>
 <h3>Drop-down and Save</h3>
 
@@ -744,12 +767,6 @@ There are additional options you may select, as follows:
 </table>
 
 <table class="tx">
-<tr><td><span class="ttx">Clust&Synteny</span>
-	<td>If you have changed the
-	<a href="MUMmer.html#clParam">clustering</a> parameters, select this option. It will be the default.
-<tr><td><span class="ttx">Load&Synteny</span>
-	<td>If you have <span class=ttl>Load Blast File</span> selected, this option will show as the default.
-
 <tr><td><span class="ttx">Synteny Only</span>
 	<td>If you have only changed
 	<a href="#syn">synteny</a> parameters, select this option.
@@ -759,12 +776,8 @@ There are additional options you may select, as follows:
 	<td>If you only want to redo the <a href="#cosets">Collinear Sets</a> computation, select this option.
 </table>
 
-<p>The <span class="ttp">Manager</span> window button right after <span class=ttl>Align &amp; Synteny</span> will be labeled:
-<p>&nbsp;&nbsp;<span class="ttx">Clust&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
-<br>&nbsp;&nbsp;<span class="ttx">Load&amp;Synteny</span> &rarr; <span class="ttb">Selected Redo</span>
-<br>&nbsp;&nbsp;<span class="ttx">Synteny Only</span> &nbsp;&rarr; <span class="ttb">Synteny Only</span>
-<br>&nbsp;&nbsp;<span class="ttx">Number Pseudo</span> &rarr; <span class="ttb">Pseudo Only</span>
-<br>&nbsp;&nbsp;<span class="ttx">Collinear Sets</span> &rarr; <span class="ttb">Collinear</span>
+<p>The <span class="ttp">Manager</span> window button right after <span class=ttl>Align &amp; Synteny</span>
+will indicate what was selected.
 <table style="width:80%"><tr><td>
 <p>Once the button is clicked, a popup will give detailed information on the actions and parameters,
 select <span class=ttl>Confirm</span>.
