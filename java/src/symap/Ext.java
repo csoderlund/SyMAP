@@ -99,14 +99,19 @@ public class Ext {
 	
 	public static boolean isMummer4Path() {return mummer4Path!=null;}
 	public static String getMummerPath() { // mummer 
-		if (mummer4Path!=null) return mummer4Path;
+		if (mummer4Path!=null) {
+			if (!checkDir(mummer4Path)) return "";
+			return mummer4Path;
+		}
 		
 		String path = extDir + dirMummer + archDir;
 		if (!checkDir(path)) return "";
 		
 		return path; 
 	}
-	
+	public static String getMummerPathNoChk() {
+		return extDir + dirMummer + archDir;
+	}
 	/**************************************************************
 	 * Check ext directory when database is created or opened
 	 * .. not checking blat since that is probably obsolete

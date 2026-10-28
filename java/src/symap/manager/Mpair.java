@@ -58,10 +58,10 @@ public class Mpair {
 	private DBconn2 dbc2;
 	
 	private boolean isSelf=false; 
-	private boolean bHasMUMmerFiles=false,  //align/all.done	
-					  bHasBlastFiles=false, //blast/files
-					  bHasMUMmerHits=false,	// pair.params string contains MUMmer - see loadParamsDB
-					  bHasBlastHits=false;  // pair.params string contains Load
+	private boolean bHasMUMmerFiles=false,//align/all.done	
+					bHasBlastFiles=false, //blast/files
+					bHasMUMmerHits=false, // pair.params string contains MUMmer - see loadParamsDB
+					bHasBlastHits=false;  // pair.params string contains Load
 	private boolean isAlignNT, bUsedAlgo1=false, bUsedAlgo2=false; // pair.params contains ALGO1, ALGO2, nucmer
 	protected String alignStr="";
 	
@@ -344,11 +344,12 @@ public class Mpair {
 		
 		// repeated in saveOaransToDBforBlast; Utils.getBlastFileList reads from disk and 'could' have changed
 		cmsg = spp + fname;
-		if (isNotDefault(type,"isAA")) 	cmsg += " NT"; else cmsg += " AA";	
-		if (pairIdx>0) cmsg = joinSp(cmsg, "Add to existing", spp);
+		if (isNotDefault(type,"isAA")) 	cmsg += " NT"; 
+		else                            cmsg += " AA";	
+		if (pairIdx>0 && (bHasMUMmerHits || bHasBlastHits)) cmsg = joinSp(cmsg, "Add to existing", spp);
 
-		if (isNotDefault(type,"pIdentity")) 	cmsg = joinSp(cmsg, "%Identity " + getpIdentity(type), spp);	
-		if (isNotDefault(type,"evalue")) 		cmsg = joinSp(cmsg, "E-value "   + getEval(type), spp);
+		if (isNotDefault(type,"pIdentity")) cmsg = joinSp(cmsg, "%Identity " + getpIdentity(type), spp);	
+		if (isNotDefault(type,"evalue")) 	cmsg = joinSp(cmsg, "E-value "   + getEval(type), spp);
 		cmsg = LOAD + "\n" + cmsg;
 		
 		String csmsg = getChgCoSet(type);
@@ -388,7 +389,7 @@ public class Mpair {
 		return msg;
 	}
 	// Synteny: Called for A&S, C&S, and SynOnly (directly)
-	protected String getChgSynteny(int type) {   
+	public String getChgSynteny(int type) {   
 		String msg="";
 		
 		if (isNotDefault(type,"mindots")) 	   msg = joinSp(msg, "Min hits=" + getMinDots(type), spp);
@@ -406,10 +407,10 @@ public class Mpair {
 		return smsg + "\n" + msg; 	
 	}
 	// Collinear sets
-	protected String getChgCoSet(int type) {
+	public String getChgCoSet(int type) {
 		String msg="";
 		if (!isCoSetNum(type))  msg = joinSp(msg, "Order by size", spp);
-		if (!isCoSetAlgo(type)) msg = joinSp(msg, "Simple", spp);
+		if (!isCoSetNew(type)) msg = joinSp(msg, "Simple", spp);
 		if (msg.isEmpty()) return msg;
 		return COSET + "\n" + msg;
 	}
@@ -435,11 +436,7 @@ public class Mpair {
 	/************************************************************************************
 	 * XXX File/DB params and actions
 	 **************************************************************************************/
-	
-	// ManagerFrame.alignSelected; remove existing and restart
-	public int renewIdx() { 
-		removePairFromDB(false); // False; do not redo numHits,  interrupt does not clear it
-		
+	public int setIdx() { 
 		try { 
 			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " + " VALUES('" + proj1Idx + "','" + proj2Idx + "')");
 			
@@ -448,6 +445,13 @@ public class Mpair {
 			return pairIdx;
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");return -1;}
+	}
+	
+	// ManagerFrame.alignSelected; remove existing and restart
+	public int removeAndSetIdx() { 
+		removePairFromDB(false); // False; do not redo numHits,  interrupt does not clear it
+		setIdx();
+		return pairIdx;
 	}
 	/************************************************************
 	* Above (!bHitCnt), removeProj (bHitCnt), Cancel (bHitCnt)
@@ -465,6 +469,11 @@ public class Mpair {
 			 
 		     if (bHitCnt) ancObj.saveAnnoHitCnt(false); // Redo numhits for this pair; false is to not print
 		}
+		bPseudo=bSynOnly=bCoSet=false;
+		bHasMUMmerHits=bHasBlastHits=false;
+		isAlignNT=bUsedAlgo1=bUsedAlgo2=false; 
+		alignStr="";
+		
 	    pairIdx = -1;
 	}
 	catch (Exception e) {ErrorReport.print(e, "Error removing pair from database - you may need to Clear Pair (leave alignments)");}
@@ -847,7 +856,7 @@ public class Mpair {
 		if (y.length!=2) return true;
 		return y[0].contentEquals("0");
 	}
-	public boolean isCoSetAlgo(int type) {
+	public boolean isCoSetNew(int type) {
 		String x = (type==FILE) ? fileMap.get("CoSet") : dbMap.get("CoSet");
 		String [] y = x.split(":");
 		if (y.length!=2) return true;

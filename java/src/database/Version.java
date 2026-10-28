@@ -221,6 +221,8 @@ public class Version {
 			dbc2.tableCheckAddColumn("xgroups", "labname", "VARCHAR(40) NOT NULL", "fullname"); // search CAS582 backwards
 			
 			dbc2.tableCheckModifyColumn("projects", "type", "VARCHAR(10) default 'other'"); // CAS586 was enum; Mprojects
+		
+			dbc2.tableCheckModifyColumn("pseudo_annot", "numhits", "INTEGER unsigned default 0"); // AnchorMain.saveAnnotHitCnt
 		}
 		catch (Exception e) {ErrorReport.print(e, "Could not update database for v7");}
 	}
@@ -459,23 +461,5 @@ public class Version {
 			dbc2.executeUpdate(sql);
 		}
 		catch (Exception e) {ErrorReport.print(e, "Replace props: " + sql);}
-	}
-	/**********************************************
-	 * There is no where to shared database routines. CAS589 add; CAS590 quit using
-	 */
-	public static boolean isLoadBlast(DBconn2 dbc2, int [] projIDs) { 
-		try {
-			for (int i=0; i<projIDs.length-1; i++) {
-				for (int j=1; j<projIDs.length; j++) {
-					int idx = dbc2.executeCount("select idx from pairs where proj1_idx=" + projIDs[i] + " and proj2_idx=" + projIDs[j]);
-					if (idx!= -1) {
-						String k = dbc2.executeString("select value from pair_props where name='Blast'");
-						if (k!=null && k.equals("1")) return true;
-					}
-				}
-			}
-			return false;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Check if blast hit were loaded"); return false;}
 	}
 }

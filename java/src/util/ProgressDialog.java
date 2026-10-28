@@ -36,13 +36,16 @@ public class ProgressDialog extends JDialog  {
 
 	private static final int MIN_DISPLAY_TIME = 1500; // milliseconds
 	
+	public static final String CANCEL="Cancel", DONE="Done";
+	
 	private JProgressBar progressBar;
 	private JTextArea textArea;
 	private JPanel panel;
 	private JButton button;
 	private long startTime;
 	private Thread userThread = null;
-	private boolean bCancelled = false, bCloseWhenDone = false, bCloseIfNoErrors = false, bDone = false;
+	private boolean bCancelled = false; 
+	private boolean bDone = false;
 	private FileWriter logFileW = null;
 	
 	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
@@ -54,9 +57,9 @@ public class ProgressDialog extends JDialog  {
 		logFileW = logW;
 		boolean isDeterminate=false; 
 	
-		msgToFileOnly("-----------------------------------------------------------------");
+		msgLog("-----------------------------------------------------------------");
 		String x = "    Running Java v" + System.getProperty("java.version") + " on " + ErrorReport.getDate(); 
-		msgToFileOnly(">>> SyMAP " + Globals.VERDATE + x + " <<<");
+		msgLog(">>> SyMAP " + Globals.VERDATE + x + " <<<");
 		
 		// Label
 		JLabel label = new JLabel(strMessage);
@@ -78,11 +81,10 @@ public class ProgressDialog extends JDialog  {
 		textArea.setMargin(new Insets(5,5,5,5));
 		textArea.setEditable(false);
 		textArea.setFont(new Font("monospaced", Font.PLAIN, 10));
-		//textArea.setWrapStyleWord(true);
 		textArea.setLineWrap(true);
 		((DefaultCaret)textArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // enable auto-scroll
 			
-		button = new JButton("Cancel");
+		button = new JButton(CANCEL);
 		button.setAlignmentX(Component.CENTER_ALIGNMENT);
 		button.addActionListener( handleButton );
 		
@@ -114,10 +116,9 @@ public class ProgressDialog extends JDialog  {
 		
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent we) {
-		    	if (!bDone) cancel();
+		    	if (!bDone) cancelThread();
 		    }
 		});
-		
 		addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() >= 2
@@ -133,101 +134,78 @@ public class ProgressDialog extends JDialog  {
 		startTime = System.currentTimeMillis(); // must be here and not in start() for some reason
 	}
 	public void start(Thread thread) {
-		this.userThread = thread;
-		
-        thread.start();
-        
-        setVisible(true); // blocking
+		try {
+			this.userThread = thread;
+			
+	        thread.start();
+	        
+	        setVisible(true); // blocking
+		}
+		catch (Exception e) {ErrorReport.print(e, "Progress thread panel");}
 	}
 	
 	public void start() {
-		setVisible(true); // blocking
-	}
-	public void closeIfNoErrors(){
-		ErrorCount.init();
-		bCloseIfNoErrors = true;
+		try {
+			setVisible(true); // blocking
+		}
+		catch (Exception e) {ErrorReport.print(e, "Progress panel");}
 	}
 
-	public void closeWhenDone(){
-		bCloseWhenDone = true;	
-	}
-	
-	public void finish(boolean success) {
-		if (bCloseWhenDone) {
-			finishAndClose(success);	
-			return;
-		}
-		if (bCloseIfNoErrors) {
-			setCursor( Cursor.getDefaultCursor() );
-			progressBar.setIndeterminate(false);
-			
-			if (ErrorCount.getCount() > 0) {
-				progressBar.setString("Completed, click 'Done' to continue ..."); 
-				msg("Some errors occurred, check text in this window, terminal or view logs/[dbName]_load.log.");
-				button.setText("Done (Error Occurred)"); 
-			}
-			else {
-				finishAndClose(success);	
-				return;				
-			}
+	public void finish(boolean bSuccess) {
+		setCursor( Cursor.getDefaultCursor() );
+		progressBar.setIndeterminate(false);
+		
+		if (ErrorCount.getCount() > 0) {
+			progressBar.setString("Error occurred, click 'Done' to abort ...");
+			msg("Some errors occurred. See terminal and /logs.");
+			button.setText(DONE + " (Error Occurred)"); 
 		}
 		else {
-			long runTime = System.currentTimeMillis() - startTime;
-			if (runTime < MIN_DISPLAY_TIME) // ensure dialog is visible
-				try { Thread.sleep(MIN_DISPLAY_TIME - runTime); } 
-				catch (Exception e) { }
-			setCursor( Cursor.getDefaultCursor() );
-			if (button != null ) {
-				progressBar.setIndeterminate(false);
-				if (success) {
-					bDone = true;
-					progressBar.setString("Completed, click 'Done' to continue ...");
-					button.setText("Done"); // Wait for user to close
-				}
-				else {
-					progressBar.setString("Error occurred, click 'Cancel' to abort ...");
-				}
-			}
-			else {
-				dispose();
-			}
+			finishAndClose();	
+			return;				
 		}
 	}
-	public void finishAndClose(boolean success) {
+	public void finishAndClose() {
 		long runTime = System.currentTimeMillis() - startTime;
-		if (runTime < MIN_DISPLAY_TIME) // ensure dialog is visible
+		if (runTime < MIN_DISPLAY_TIME) {// ensure dialog is visible
 			try { Thread.sleep(MIN_DISPLAY_TIME - runTime); } 
 			catch (Exception e) { }
-			
+		}
 		try {
 			setCursor( Cursor.getDefaultCursor() );
-			dispose(); // Close this dialog
+			dispose(); 					// Close this dialog
 		}
 		catch (Exception e) {} 
 		
-		if (logFileW != null) 
+		if (logFileW != null) {
 			try {
 				logFileW.close(); 
-				logFileW=null;}
+				logFileW=null;
+			}
 			catch (Exception e) {} 
+		}
 	}	
 	public void setCancelled() {
-		try {
-			if (logFileW!=null) logFileW.append("Cancel"); 
-			bCancelled = true;	
-		}
-		catch (Exception e) {}
-	}
-	private void cancel() {
-		bCancelled = true;
+		if (!bCancelled) msg("Cancelled");
+		bCancelled = true;	
 		Cancelled.cancel();
-		if (userThread != null)
-			userThread.interrupt();
+	}
+	public void setFailed() {
+		int cnt = ErrorCount.getCount();
+		if (cnt<10000) ErrorCount.inc();// actual number not used
+	}
+
+	private void cancelThread() {
+		setCancelled();
+		if (userThread != null) userThread.interrupt();
+		
 		while (userThread != null && userThread.isAlive()) {
-			try{Thread.sleep(100);} catch(Exception e){}
+			try {Thread.sleep(100);} catch(Exception e){}
 		}
 	}
 	public boolean wasCancelled() { return bCancelled; }
+	
+	public boolean failed() { return ErrorCount.getCount()>0; }
 	
 	public void addActionListener(ActionListener listener) {
 		button.removeActionListener( handleButton );
@@ -236,14 +214,15 @@ public class ProgressDialog extends JDialog  {
 	
 	private ActionListener handleButton = new ActionListener() {
 		public void actionPerformed(ActionEvent e) {
-			if (button.getText().equals("Cancel"))
-				cancel();
+			cancelThread();
 			ProgressDialog.this.setVisible(false);//ProgressDialog.this.dispose();
 		}
 	};
-	/************************************************************/
+	/************************************************************
+	 * Write to textArea, logFile, stdout
+	 **********************************************************/
 	
-	public synchronized void updateText(String search, String newText) {
+	public synchronized void updatePop(String search, String newText) {//updatePop
 		if (textArea==null) return;
 		String text = textArea.getText();
 		
@@ -255,32 +234,32 @@ public class ProgressDialog extends JDialog  {
 			textArea.setText(text);
 		}	
 	}
-
 	public void msg(String msg) {
-		appendText(msg);
+		msgPopLogOut(msg);
 	}
-	
-	public synchronized void appendText(String s) {
+	public synchronized void msgPopLogOut(String s) { // msgPopLogOut
 		if (!s.endsWith("\n")) s += "\n";
 		
-		msgToFile(s);
+		System.out.print(s);
+		
+		msgLog(s);
 		
 		if (textArea!=null) textArea.append(s);
 	}
-	
-	public void msgOnly(String s) {
+	// textArea
+	public void msgPop(String s) { 
 		if (!s.endsWith("\n")) s += "\n";
 		if (textArea!=null) textArea.append(s);
 	}
-	
-	public void msgToFile(String s) {
+	// file, stdout
+	public void msgLogOut(String s) {		
 		if (!s.endsWith("\n")) s += "\n";
 		System.out.print(s);
 		
-		msgToFileOnly(s);
+		msgLog(s);
 	}	
-	
-	public void msgToFileOnly(String s) {
+	// file
+	public void msgLog(String s) { 
 		if (!s.endsWith("\n")) s += "\n";
 		if (logFileW != null) {
 			try {
@@ -290,10 +269,10 @@ public class ProgressDialog extends JDialog  {
 			catch (Exception e) {}
 		}
 	}
-	// Dialog, symap.log, error.log, termimal; CAS580 add
-	public void msgToAll(String s) {
+	// Dialog, symap.log, error.log/out
+	public void msgPopLogErr(String s) {	
 		ErrorReport.print(s);
-		msgOnly(s);
-		msgToFileOnly(s);
+		msgPop(s);
+		msgLog(s);
 	}
 }

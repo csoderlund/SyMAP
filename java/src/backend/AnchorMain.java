@@ -28,6 +28,7 @@ import util.ProgressDialog;
 public class AnchorMain {
 	public boolean doAlgo1=false;
 	private boolean isSelf=false;  
+	private boolean bSuccess=true;
 	
 	// variables may be accessed directly by AnchorMain1 or AnchorMain2
 	public DBconn2 dbc2;
@@ -43,74 +44,91 @@ public class AnchorMain {
 		if (mp!=null) {						// Null for Mproject.removeProjectFromDB;
 			this.pairIdx = mp.getPairIdx(); 
 			doAlgo1 = (mp.isAlgo1(Mpair.FILE));
-			
 			isSelf = mp.getProj1Idx()==mp.getProj2Idx();
 		}
 	}
 	
-	protected boolean run(Mproject pj1, Mproject pj2) throws Exception {
-		try {
-		/** setup **/
-			long startTime = Utils.getTimeMem();
-			isSelf = pj1.getIdx()==pj2.getIdx();
-			
-			String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
-			if (isSelf) plog.msg("\nStart calculating cluster hits for " + proj1Name + " self synteny"); 
-			else        plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);
-			
-			String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
-			if (!util.FileDir.pathExists(resultDir)) {
-				plog.msg("Cannot find pair directory " + resultDir);
-				ErrorCount.inc();
-				return false;
-			}
-			String alignDir = resultDir + Constants.alignDir;
-			
-			File dh = new File(alignDir);
-			if (!dh.exists() || !dh.isDirectory()) return Constants.rtError("/align directory does not exist " + alignDir);
-			plog.msg("   Alignment files in " + alignDir);
-			
-		/** execute **/
-			if (doAlgo1) {
-				AnchorMain1 an = new AnchorMain1(this);
-				boolean b = an.run(pj1, pj2, dh); if (!b) return false;
-			}
-			else {
-				AnchorMain2 an = new AnchorMain2(this);
-				boolean b = an.run(pj1, pj2, dh); if (!b) return false;
-			}
-			if (Cancelled.isCancelled()) {dbc2.close(); return false; } 
-			
-			saveHitNum();
-			saveAnnoHitCnt(true);
-			
-			/** Run before pseudo **/
-			if (pj1.hasGenes() && pj2.hasGenes()) { 
-				if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, pj1, pj2, dbc2, plog).collinearSets(); // CAS588 new
-				else 							new AnchorCset1(mp, pj1, pj2, dbc2, plog).collinearSets(); // original
-			}
-			if (Cancelled.isCancelled()) {dbc2.close(); return false; } 
-			
-			// Numbers pseudo genes; must be after collinear;
-			if (mp.isNumPseudo(Mpair.FILE)) new Pseudo().addPseudo(); 
-			
-		/** finish **/	
-			long modDirDate = new File(resultDir).lastModified(); // add for Pair Summary with 'use existing files'
-			mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
-			if (!Constants.VERBOSE) Globals.rclear();
-			Utils.prtMsgTimeDone(plog,  "Finish clustering hits", startTime); 
-			return true;
-		}
-		catch (Exception e) {ErrorReport.print(e, "Run load anchors"); return false;}		
+	protected boolean run(Mproject pj1, Mproject pj2, boolean bLoadBlast) throws Exception {
+	try {
+		/** MUMmer only **/
+		if (!bLoadBlast) 
+			if (!clusterHits(pj1, pj2)) return false;
+		
+		/** Finish for MUMmer or Blast **/
+		long startTime = Utils.getTimeMem();
+		Utils.prtIndentMsg(plog, 0, "Process hits"); 
+		
+		saveHitNum();			if (!bSuccess || Cancelled.isCancelled()) return false; 
+		saveAnnoHitCnt(true);   if (!bSuccess || Cancelled.isCancelled()) return false; 
+		collinear(pj1, pj2);	if (!bSuccess || Cancelled.isCancelled()) return false; 
+		
+		if (!bLoadBlast && mp.isNumPseudo(Mpair.FILE)) new Pseudo().addPseudo(); // Pseudo: Must be after Collinear;
+		
+		if (!Constants.VERBOSE) Globals.rclear();
+		
+		Utils.prtMsgTimeDone(plog,  "Finish processing hits", startTime); 
+		
+		return true;
 	}
-	protected void interrupt() {bInterrupt = true;	}
+	catch (Exception e) {ErrorReport.print(e, "Run load anchors"); return false;}		
+	}
+	/*******************************************************/
+	protected void interrupt() {bInterrupt = true;}
 	
+	private boolean failure(Exception e, String msg) {
+		if (e!=null) ErrorReport.print(e, msg); 
+		else         ErrorReport.print(msg); 
+		bSuccess = false;
+		ErrorCount.inc();
+		return false;
+	}
+	/*******************************************************
+	 * For MUMmer - cluster hits
+	 */
+	private boolean clusterHits(Mproject pj1, Mproject pj2) {
+	try {
+		long startTime = Utils.getTimeMem();
+		
+		String proj1Name = pj1.getDBName(), proj2Name = pj2.getDBName();
+		if (isSelf) plog.msg("\nStart calculating cluster hits for " + proj1Name + " self synteny"); 
+		else        plog.msg("\nStart calculating cluster hits for " + proj1Name + " and " + proj2Name);
+		
+		String resultDir = Constants.getNameResultsDir(proj1Name, proj2Name); // e.g. data/seq_results/p1_to_p2
+		if (!util.FileDir.pathExists(resultDir)) {
+			plog.msg("Cannot find pair directory " + resultDir);
+			ErrorCount.inc();
+			return false;
+		}
+		String alignDir = resultDir + Constants.alignDir;
+		
+		File dh = new File(alignDir);
+		if (!dh.exists() || !dh.isDirectory()) return Constants.rtError("/align directory does not exist " + alignDir);
+		plog.msg("   Alignment files in " + alignDir);
+		
+	/** execute **/
+		if (doAlgo1) {
+			AnchorMain1 an = new AnchorMain1(this);
+			boolean b = an.run(pj1, pj2, dh); if (!b) {ErrorCount.inc(); return false;}
+		}
+		else {
+			AnchorMain2 an = new AnchorMain2(this);
+			boolean b = an.run(pj1, pj2, dh); if (!b) {ErrorCount.inc(); return false;}
+		}
+		if (Cancelled.isCancelled()) {dbc2.close(); return false; } 
+		
+		long modDirDate = new File(resultDir).lastModified(); // add for Pair Summary with 'use existing files'
+		mp.setPairProp("pair_align_date", Utils.getDateStr(modDirDate));
+		Utils.prtMsgTimeDone(plog,  "Finish clustering hits", startTime); 
+		
+		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Run cluster anchors"); return false;}		
+	}
 	/***************************************************************
 	 * Assign hitnum, with them ordered by start1 ASC, len DESC
 	 * isSelf: just do upper part of diagonal: only number if refidx=0
-	 * CAS589 called by UseBlast
 	 */
-	protected boolean saveHitNum() { 
+	private boolean saveHitNum() { 
 	try {
 		Globals.rprt("Compute and save hit#"); 
 		TreeMap <Integer, String> grpMap1 = mp.mProj1.getGrpIdxMap();
@@ -162,14 +180,14 @@ public class AnchorMain {
 		}
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
+	catch (Exception e) {return failure(e, "compute gene hit cnts");}
 	}
 	/********************************************************************
 	 * Count number of hits per gene; these include all pairwise projects
 	 * This includes isSelf, but self hits get counted for both sides of the diagonal
-	 * CAS589 called by UseBlast
+	 * public for Mpair.removePairFromDB
 	 */
-	public void saveAnnoHitCnt(boolean bPrt) { // public for Mpair.removePairFromDB; also called for command line -nh
+	public void saveAnnoHitCnt(boolean bPrt) { 
 		if (bPrt) Globals.rprt("Compute and save gene numHits..."); 
 		
 		TreeMap <Integer, String> idxList1 = mp.mProj1.getGrpIdxMap();
@@ -182,8 +200,10 @@ public class AnchorMain {
 		
 		Globals.rclear();
 	}
-	// This counts all hits in the database for a give grpIdx, so it is across pairs.
-	// This does not distinguish above and below diagonal for self-synteny; that will require pairIdx.
+	/************************************************************
+	* This counts all hits in the database for a give grpIdx, so it is across pairs.
+	* This does not distinguish above and below diagonal for self-synteny; that will require pairIdx.
+	***/
 	public boolean saveAnnotHitCnt(int grpIdx, String grpName) { // public for Mproject.removeProjectFromDB
 		try {
 			dbc2.executeUpdate("update pseudo_annot set numhits=0 "
@@ -192,7 +212,6 @@ public class AnchorMain {
 			int cnt = (rs.next()) ? rs.getInt(1) : 0;
 			if (cnt==0) return true; 							// this is not a failure 
 			
-			// CAS579c changed 4/14/25; no Version update for it. 
 			dbc2.tableCheckModifyColumn("pseudo_annot", "numhits", "INTEGER unsigned default 0"); 
 			
 			HashMap <Integer, Integer> geneCntMap = new HashMap <Integer, Integer> ();
@@ -213,7 +232,6 @@ public class AnchorMain {
 			PreparedStatement ps = dbc2.prepareStatement("update pseudo_annot set numhits=? where idx=?");
 			for (int idx : geneCntMap.keySet()) {
 				int num = geneCntMap.get(idx);
-				// if (num>255) num=255; // tinyint unsigned max is 255; CAS579c is Integer now
 				ps.setInt(1, num);
 				ps.setInt(2, idx);
 				ps.addBatch();
@@ -224,10 +242,24 @@ public class AnchorMain {
 			Globals.rclear();
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "compute gene hit cnts"); return false;}
+		catch (Exception e) {return failure(e, "compute gene hit cnts");}
 	}
-	// Called in Clear Pair as the pseudo are pair A&S specific
-	// numhits is used for the pairIdx for pseudo, otherwise it is the number of hits in the DB to the gene
+	/********************************************************
+	 * Collinear Sets - also called by Collinear Only; CAS592 made separate method for Collinear Only
+	 */
+	public void collinear(Mproject pj1, Mproject pj2) {
+		if (pj1.hasGenes() && pj2.hasGenes()) { 
+			if (mp.isCoSetNew(Mpair.FILE)) new AnchorCset2(mp, pj1, pj2, dbc2, plog).run(); 
+			else 						   new AnchorCset1(mp, pj1, pj2, dbc2, plog).run(); // original
+		}
+		else {
+			plog.msg("No collinear sets - at least one sequence is not annotated");
+		}
+	}
+	/********************************************************************
+	 * Called in Clear Pair as the pseudo are pair A&S specific
+	 * numhits is used for the pairIdx for pseudo, otherwise it is the number of hits in the DB to the gene
+	 */
 	public boolean removePseudo() { 
 	try {
 		String where = "where type='" + Globals.pseudoType + "' and numhits=" + pairIdx;
@@ -240,10 +272,10 @@ public class AnchorMain {
 		
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "remove pseudo from pseudo_annot"); return false;}
+	catch (Exception e) {return failure(e, "remove pseudo from pseudo_annot");}
 	}
-	/** For release v5.6.5 flag -pseudo **/
-	protected boolean addPseudoFromFlag() {
+	/** Pseudo numbers only **/
+	protected boolean addPseudoOnly() {
 	try {
 		// This cascades to remove pseudo_hit_annot rows also
 		int cnt = dbc2.executeCount("select count(*) from pseudo_annot "
@@ -269,7 +301,7 @@ public class AnchorMain {
 		}
 		return new Pseudo().addPseudo();
 	}
-	catch (Exception e) {ErrorReport.print(e, "Add pseudo from flag"); return false;}
+	catch (Exception e) {return failure(e, "Add pseudo from flag");}
 	}
 	/*******************************************************
 	 * Add so can be used in Cluster and Report as regular genes;
@@ -303,7 +335,7 @@ public class AnchorMain {
 					}
 				}
 			}
-			catch (Exception e) {ErrorReport.print(e, "Could not get annotation keys");}
+			catch (Exception e) {failure(e, "Could not get annotation keys");}
 		}
 		/*****************************************************/
 		private boolean addPseudo() {
@@ -344,7 +376,7 @@ public class AnchorMain {
 					String.format("Pseudo %s     %,d Pseudo %s ", mProj1.getDisplayName(), cntPseudo[1], mProj2.getDisplayName()));
 			return true;
 		}
-		catch (Exception e) {Globals.prt(""); ErrorReport.print(e, "add pseudos"); return false;}
+		catch (Exception e) {return failure(e, "add pseudos"); }
 		}
 		/*******************************************************
 		 * Assign one side at a time; find all that have annotN_idx=0 and update
@@ -386,7 +418,7 @@ public class AnchorMain {
 			}
 			rs.close();
 			
-			if (Globals.TRACE) { // CAS579c was rprt, which was immediately written over leaving trailing stuff
+			if (Globals.TRACE) { 
 				String dn =  (i==0) ? mProj1.getDisplayName() : mProj2.getDisplayName();
 				String chr = (i==0) ? mProj1.getGrpFullNameFromIdx(grpIdx) : mProj2.getGrpFullNameFromIdx(grpIdx);
 				String msg = String.format("Pseudo %-20s   Genes %,6d   Start %,6d ", (dn+" "+chr), genes, geneStart); 
@@ -478,7 +510,7 @@ public class AnchorMain {
 			Globals.rclear();
 			return true;
 		}
-		catch (Exception e) {Globals.prt(""); ErrorReport.print(e, "add pseudos"); return false;}
+		catch (Exception e) {return failure(e, "add pseudos");}
 		}
 		private class Hit {
 			int hitIdx, start, end, annotIdx;

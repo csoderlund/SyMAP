@@ -259,7 +259,7 @@ public class UserBlocks {
 			try {
 				int x = dbc.getIdx("select idx from pairs where proj1_idx=" + projIdx1 + " and proj2_idx=" + projIdx2);
 				if (x == -1) {
-					pairIdx = mp.renewIdx();
+					pairIdx = mp.removeAndSetIdx();
 					return;
 				}
 				Utils.prtIndentMsgFile(mLog, 1, "Delete blocks from database");

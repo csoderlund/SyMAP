@@ -1,3 +1,4 @@
+
 package backend;
 
 import java.io.File;
@@ -134,7 +135,7 @@ public class AlignMain {
 			if (getNumErrors() == 0) {
 				if (!mCancelled) {
 					Utils.writeDoneFile(resultDir + Constants.alignDir);
-					plog.msg("Alignments:  success " + getNumCompleted());
+					plog.msg("Alignments: success " + getNumCompleted());
 					
 					String tmpDir = Constants.getNameTmpDir(proj1Dir, proj2Dir);// only delete tmp files if successful
 					if (Globals.TRACE) {
@@ -148,10 +149,11 @@ public class AlignMain {
 				}
 			}
 			else { 
-				plog.msg("Alignments:  success " + getNumCompleted() + "   failed " + getNumErrors());
+				plog.msg("Alignments: success " + getNumCompleted() + "   failed " + getNumErrors());
+				plog.setFailed();
 			}
 			
-			Utils.prtMsgTimeDone(plog, "Alignments", startTime); // Align done: time
+			Utils.prtMsgTimeDone(plog, "Finish MUMmer alignments", startTime); // Align done: time
 		} 
 		catch (Exception e) {ErrorReport.print(e, "Run alignment"); }
 		
@@ -229,16 +231,14 @@ public class AlignMain {
 		// Preprocessing for proj1
 			if (!writePreprocSeq(fh_tDir1, mProj1,  bDoCat, isSelf, "Query")) { // concat=true if Concat not checked
 				mCancelled = true;
-				Cancelled.cancel();
-				System.out.println("Cancelling"); 
+				plog.setCancelled();
 				return;								
 			}
 			
 		// Preprocessing for proj2	
 			if (!writePreprocSeq(fh_tDir2, mProj2,  false, isSelf, "Target")) { // concat=false
 				mCancelled = true;
-				Cancelled.cancel();
-				System.out.println("Cancelling");
+				plog.setCancelled();
 				return;															
 			}
 			
@@ -504,10 +504,10 @@ public class AlignMain {
 	protected String getStatusSummary() {
 		String s = "";
 		
-		for (AlignRun p : alignList)
-			if ( p.isRunning() || p.isError() )
+		for (AlignRun p : alignList) {
+			if ( p.isRunning() || p.isError())
 				s += p.toStatus() + "\n";
-		
+		}
 		return s;
 	}
 	protected int getNumRunning() {
@@ -525,11 +525,10 @@ public class AlignMain {
 	}
 	protected int getNumErrors() {
 		int count = 0;
-		
 		for (AlignRun p : alignList)
-			if (p.isError())
+			if (p.isError()) 
 				count++;
-		
+		if (count>0) error = true;
 		return count;
 	}
 	protected boolean notStarted() {

@@ -143,8 +143,8 @@ public class AnnotLoadMain {
 				ErrorCount.inc();
 				numParseErrors++;
 				if (numParseErrors <= maxPrtErr) {
-					plog.msgToFile("*** Parse: expecting at least 9 tab-delimited fields in gff file at line " + lineNum);
-					if (numParseErrors >= maxPrtErr) plog.msgToFile("*** Suppressing further parse errors");
+					plog.msgLogOut("*** Parse: expecting at least 9 tab-delimited fields in gff file at line " + lineNum);
+					if (numParseErrors >= maxPrtErr) plog.msgLogOut("*** Suppressing further parse errors");
 				}
 				continue; // skip this annotation
 			}
@@ -207,8 +207,8 @@ public class AnnotLoadMain {
 			grpIdx = mProj.getGrpIdx(chr); 
 			if (grpIdx < 0) {// this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
-					if (noGrpSet.size() < maxPrtErr) plog.msgToFile("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
-					else if (noGrpSet.size() == maxPrtErr) plog.msgToFile("+++ Suppressing further warnings of no loaded sequence");
+					if (noGrpSet.size() < maxPrtErr) plog.msgLogOut("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
+					else if (noGrpSet.size() == maxPrtErr) plog.msgLogOut("+++ Suppressing further warnings of no loaded sequence");
 					if (noGrpSet.size()==0) System.out.println("Valid names: " + mProj.getValidGroup());
 					noGrpSet.add(chr);
 				}
@@ -334,32 +334,32 @@ public class AnnotLoadMain {
 	private String getmRNAid(String geneID, String [] keyVal, int lineNum, String line) {
 		String mrnaID = getVal(idKey, keyVal);
 		if (mrnaID==null) {
-			plog.msgToFile("+++ missing mRNA ID on line " + lineNum);
-			plog.msgToFile("line: " + line);
+			plog.msgLogOut("+++ missing mRNA ID on line " + lineNum);
+			plog.msgLogOut("line: " + line);
 			cntNoKey++;
 			if (cntNoKey>5) {
 				bSuccess=false;
-				plog.msgToFile("Fatal error: missing keywords ");
+				plog.msgLogOut("Fatal error: missing keywords ");
 				return null;
 			}
 			String parent = getVal(parentKey, keyVal);
 			if (parent==null) {
-				plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
-				plog.msgToFile("line: " + line);
+				plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgLogOut("line: " + line);
 				cntNoKey++;
 				if (cntNoKey>5) {
 					bSuccess=false;
-					plog.msgToFile("Fatal error: missing keywords ");
+					plog.msgLogOut("Fatal error: missing keywords ");
 					return null;
 				}
 			}
 			if (!parent.equals(geneID)) {
-				plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
-				plog.msgToFile("line: " + line);
+				plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgLogOut("line: " + line);
 				cntNoKey++;
 				if (cntNoKey>5) {
 					bSuccess=false;
-					plog.msgToFile("Fatal error: missing keywords ");
+					plog.msgLogOut("Fatal error: missing keywords ");
 					return null;
 				}
 			}
@@ -369,12 +369,12 @@ public class AnnotLoadMain {
 	private boolean isGoodExon(String mrnaID, String [] keyVal, int lineNum, String line) {
 		String parent = getVal(parentKey, keyVal);
 		if (parent==null) {
-			plog.msgToFile("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + mrnaID);
-			plog.msgToFile("line: " + line);
+			plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + mrnaID);
+			plog.msgLogOut("line: " + line);
 			cntNoKey++;
 			if (cntNoKey>5) {
 				bSuccess=false;
-				plog.msgToFile("Fatal error: missing keywords ");
+				plog.msgLogOut("Fatal error: missing keywords ");
 				return false;
 			}
 		}

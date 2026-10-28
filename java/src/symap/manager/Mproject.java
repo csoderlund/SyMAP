@@ -545,6 +545,7 @@ public class Mproject implements Comparable <Mproject> {
         	for (int gidx : gidxList) ancObj.saveAnnotHitCnt(gidx,""); // get ResultClose error if not put in vector
         }
         Globals.rclear();
+        Globals.prt("  Finish removing " + strDisplayName); 
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove project from DB"); }
 	}

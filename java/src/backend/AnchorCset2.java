@@ -12,6 +12,7 @@ import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
+import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
@@ -26,7 +27,8 @@ import util.Utilities;
  */
 public class AnchorCset2 {
 	private boolean DEBUG=Globals.DEBUG, TRACE=Globals.TRACE; // prtdt uses -dd; TRACE -tt; if TRACE, then DEBUG 
-
+	private boolean bSuccess=true;
+	
 	// parameters
 	private int mPairIdx; 				// project pair
 	private Mproject mProj1, mProj2;	// two projects
@@ -59,7 +61,7 @@ public class AnchorCset2 {
 		bNumBySz = !mp.isCoSetNum(Mpair.FILE);
 		if (TRACE) DEBUG=true;
 	}
-	protected void collinearSets() {
+	protected void run() {
 	try {
 		dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
 		
@@ -79,7 +81,7 @@ public class AnchorCset2 {
 				Globals.rprt(num2go + " pairs remaining (" + t + ")"); 
 				num2go--;	
 				
-				if (!buildSets(grpIdx1, grpIdx2)) return;
+				buildSets(grpIdx1, grpIdx2); if (!bSuccess) return;
 			}
 			if (Cancelled.isCancelled()) return; 		
 		}
@@ -97,7 +99,7 @@ public class AnchorCset2 {
 			dprt(String.format("Prune %d  Crossed %d  Merge Gene %d  Merge Hit %d  ", cntPrune, cntCross, cntMergeGene, cntMergeHit));
 		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
+	catch (Exception e) {failure(e, "Compute colinear genes"); }
 	}
 		
 	/*****************************************************************************************************
@@ -121,7 +123,7 @@ public class AnchorCset2 {
 		
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Build collinear " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Build collinear " + chrs); }
 	}
 	
 	/*************************************************************
@@ -201,7 +203,7 @@ public class AnchorCset2 {
 		}
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Load from DB " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Load from DB " + chrs); }
 	}
 	
 	/*****************************************************************/
@@ -251,11 +253,19 @@ public class AnchorCset2 {
 		}
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Save sets to database " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Save sets to database " + chrs);  }
 	}
 	
 	private void dprt(String msg) {symap.Globals.dprt(msg);}
-	
+
+	private boolean failure(Exception e, String msg) {// CAS592 add
+		if (e!=null) ErrorReport.print(e, msg); 
+		else         ErrorReport.print(msg); 
+		
+		bSuccess = false;
+		ErrorCount.inc();
+		return false;
+	}
 	/******************************************************************************/
 	private class Compute {
 		private Vector <Hit> xHitVec; // input: all hits for this bInv and this chr-chr 
@@ -266,7 +276,7 @@ public class AnchorCset2 {
 		private Gene gH1g1=null, gH1g2=null, gH2g1=null, gH2g2=null; // H can be Hit number or Set number
 		
 		private int d1, d2, t1, t2;
-		private boolean b1=false, b2=false, bSuccess=true;
+		private boolean b1=false, b2=false;
 		private String drows=""; // globals for debugging; only used in setsInit
 		
 		private TreeMap <Integer, Olap> olapMap1 = new TreeMap <Integer, Olap> (); // created loadFromDB, used in setAllMerge
@@ -296,7 +306,7 @@ public class AnchorCset2 {
 			}
 			return true;	
 		}
-		catch (Exception e) {ErrorReport.print(e, "Build sets " + chrs); return false; }
+		catch (Exception e) {return failure(e, "Build sets " + chrs);}
 		}
 		/*
 		 * setsInit: Creates sets from adjacent hits with adjacent genes
@@ -373,7 +383,7 @@ public class AnchorCset2 {
 			
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Create sets " + chrs); bSuccess=false; return false; }
+		catch (Exception e) {return failure(e, "Create sets " + chrs); }
 		}
 		/*
 		 * transfer set from hitSetVec to setList 
@@ -408,7 +418,7 @@ public class AnchorCset2 {
 			coSetNum++; 
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Finish sets " + chrs); bSuccess=false; return false; }
+		catch (Exception e) {return failure(e, "Finish sets " + chrs); }
 		}
 		/*
 		 * Remove 2-set (Cherry picking problems):
@@ -443,7 +453,7 @@ public class AnchorCset2 {
 				}
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "Prune sets " + chrs); bSuccess=false; return; }
+		catch (Exception e) {failure(e, "Prune sets " + chrs); }
 		}
 		/*************************************************************
 		 * setsMerge: This iterates through SETS (not hits)
@@ -475,7 +485,7 @@ public class AnchorCset2 {
 				
 				return true;
 			}
-			catch (Exception e) {ErrorReport.print(e, "Finish sets " + chrs); bSuccess=false; return false; }
+			catch (Exception e) {return failure(e, "Finish sets " + chrs); }
 		}
 		/* 
 		 * setsMergeOlap: go through first and last genes of set; use isGoodOlap
@@ -550,7 +560,7 @@ public class AnchorCset2 {
 			olapMap1.clear(); olapMap2.clear();
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Merge " + chrs); bSuccess=false; return false; }
+		catch (Exception e) {return failure(e, "Merge " + chrs); }
 		}
 		
 		/*
@@ -600,7 +610,7 @@ public class AnchorCset2 {
 			
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Merge " + chrs); bSuccess=false; return false; }
+		catch (Exception e) {return failure(e, "Merge " + chrs); }
 		}
 		
 		/***************************************************************/

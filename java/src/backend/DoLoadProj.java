@@ -31,18 +31,18 @@ public class DoLoadProj {
 		
 		final ProgressDialog progress = new ProgressDialog(frame, 
 				"Loading All Projects", "Loading all projects" ,  true, fw); // Writes version and date to file
-		progress.closeIfNoErrors();
+		ErrorCount.init();
 	
 		Thread loadThread = new Thread() {
 			public void run() {
 				boolean success = true;
-				progress.appendText(">>> Load all projects (" + selectedProjVec.size() + ")"); 
+				progress.msgPopLogOut(">>> Load all projects (" + selectedProjVec.size() + ")"); 
 				
 				for (Mproject mProj : selectedProjVec) {
 					if (mProj.getStatus() != Mproject.STATUS_ON_DISK) continue;
 					
 					try {
-						progress.appendText(">>> Load " + mProj.getDBName()); 
+						progress.msgPopLogOut(">>> Load " + mProj.getDBName()); 
 						mProj.createProject();
 						success = new SeqLoadMain().run(dbc2, progress, mProj);
 					
@@ -52,7 +52,6 @@ public class DoLoadProj {
 						}
 						
 						if (!success || Cancelled.isCancelled()) {
-							System.out.println("Removing project from database " + mProj.getDBName());
 							mProj.removeProjectFromDB(); 
 						}
 						else mProj.saveParams(mProj.xLoad);
@@ -75,14 +74,14 @@ public class DoLoadProj {
 		
 		final ProgressDialog progress = new ProgressDialog(frame, 
 				"Loading Project", "Loading project " + mProj.getDBName() + " ...",  true, fw);
-		progress.closeIfNoErrors();
+		ErrorCount.init();
 		
 		Thread loadThread = new Thread() {
 			public void run() {
 				boolean success = true;
 				
 				try {
-					progress.appendText(">>> Load " + mProj.getDBName()); 
+					progress.msgPopLogOut(">>> Load " + mProj.getDBName()); 
 					
 					mProj.createProject();		
 					success = new SeqLoadMain().run(dbc2, progress, mProj);	
@@ -114,12 +113,12 @@ public class DoLoadProj {
 		String title = "Reload annotation";
 		String msg = ">>>Reloading annotation " + mProj.getDBName();
 		final ProgressDialog progress = new ProgressDialog(frame, title, msg + " ...", true, fw);
-		progress.closeIfNoErrors();
+		ErrorCount.init();
 		
 		Thread loadThread = new Thread() {
 			public void run() {
 				boolean success = true;
-				progress.appendText(msg); 
+				progress.msgPopLogOut(msg); 
 				
 				try { 
 					mProj.removeAnnoFromDB(); 

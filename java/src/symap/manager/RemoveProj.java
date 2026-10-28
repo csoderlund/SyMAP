@@ -139,7 +139,7 @@ public class RemoveProj {
 					FileDir.deleteDir(f);
 					if (f.exists()) f.delete();
 				}
-				else {
+				else {// Remove MUMmer files   Remove Blast files   Remove MUMmer/Blast files
 					System.out.println(sp + "remove " + pj.alignStr + " files from: " + f.getName()); 
 					removeAlignFromDir(f);
 				}
@@ -158,11 +158,11 @@ public class RemoveProj {
 		int rc = 2;
 		if (mp.isPairInDB()) {
 			if (mp.alignStr==null) {
-				if (!Popup.showConfirm2("Clear pair", msg + "\n\nOnly: remove synteny from database")) return;
+				if (!Popup.showConfirm2("Clear pair", msg + "\n\nOnly: remove pair from database")) return;
 				rc = 1;
 			}
-			else rc = Popup.showConfirm3("Clear pair", msg + "\n\nOnly: remove synteny from database" +
-				             "\nAll: remove synteny and " + mp.alignStr + " for this pair from disk ");
+			else rc = Popup.showConfirm3("Clear pair", msg + "\n\nOnly: remove pair from database" +
+				             "\nAll: remove pair and " + mp.alignStr + " for this pair from disk ");
 		}
 		else { 										
 			if (!Popup.showConfirm2("Clear alignments",msg 
@@ -183,7 +183,7 @@ public class RemoveProj {
 			}
 			if (mp.isPairInDB()) {
 				mp.removePairFromDB(true); // True = redo numHits; 
-				Globals.prt("Finish remove " + p1.getDBName() + "-" + p2.getDBName() + " from database"); 
+				Globals.prt("   Finish remove " + p1.getDBName() + "-" + p2.getDBName() + " from database"); 
 			}	
 			close();
 		}
@@ -193,6 +193,7 @@ public class RemoveProj {
 	 * Remove /align, /results and params_align_used
 	 * --removeAllAlignFromDisk for Reload Project
 	 * --Clear pair 
+	 * Remove /align, /blast, /final and used_align_params
 	 */
 	private void removeAlignFromDir(File f) { 
 	try {
@@ -201,14 +202,11 @@ public class RemoveProj {
 			FileDir.deleteDir(f1);
 			if (f1.exists()) f1.delete();
 		}
-		else System.out.println(sp + "No MUMmer files " + f.getName()); // CAS591 was saying 'already deleted'
-		
 		f1 = new File(f.getAbsoluteFile() + "/" + Constants.blastDir);
 		if (f1.exists()) {
 			FileDir.deleteDir(f1);
 			if (f1.exists()) f1.delete();
 		}
-		else System.out.println(sp + "No Blast files " + f.getName());
 		
 		File f2 = new File(f.getAbsoluteFile() + "/" + Constants.finalDir);
 		FileDir.deleteDir(f2);

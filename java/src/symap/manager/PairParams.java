@@ -46,11 +46,11 @@ public class PairParams extends JDialog {
 	protected static String [] coSetAlgoOpts = {"Advanced", "Simple"};
 	
 	// ManagerFrame.alignSelectedPair and updateEnableButtons use similar text
-	private String [] actAlt0 =    {"Align&Synteny   ", // blank if not exist;  Selected Pair
-			                        "Cluster&Synteny ", // A if exists and MUMmer selected
-			                        "Load&Synteny  "};  // B exists and Load selected
+	private String [] actAlt0 =    {"Run MUMmer   ", // blank if not exist;  Selected Pair
+			                        "Load MUMmer ", // A if exists and MUMmer selected
+			                        "Load Blast  "};  // B exists and Load selected
 	
-	private String[]  actOptions = {"Cluster&Synteny  ", // if Check; may be replaced with Load&Synteny; Selected Redo; 
+	private String[]  actOptions = {"Load MUMmer  ", // if Check; may be replaced with Load Blast
 								    "Synteny Only     ",
 								    "Number Pseudo    ",
 								    "Collinear Sets   "}; 
@@ -643,11 +643,11 @@ public class PairParams extends JDialog {
 		setActionItems();
 		cmbAction.setModel(new DefaultComboBoxModel<>(actions));
 	}
-	private void setActionItems() { // Set the Action text; CAS591
+	private void setActionItems() { 
 		String align;
-		if (radBlast.isSelected()) align = actAlt0[2];  // Load &Synteny
-		else if (mp.hasMUMerHits())align = actAlt0[1];  // Clust&Synteny
-		else                       align = actAlt0[0];  // Align&Synteny
+		if (radBlast.isSelected())   align = actAlt0[2];  // Load Blast
+		else if (mp.hasMUMerFiles()) align = actAlt0[1];  // Load MUMmer
+		else                         align = actAlt0[0];  // Run MUMmer
 		
 		if (!isAlignDone || !mp.isPairInDB()) { 
 			actions = new String [1];	

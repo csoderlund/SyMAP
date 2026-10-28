@@ -36,7 +36,7 @@ public class Utils {
 	}
 	public static void prtMsgTimeFile(ProgressDialog prog, String msg, long startTime) {
 		String t = Utilities.getDurationString(getTime()-startTime);
-		prog.msgToFile(String.format("%-30s %s", msg, t));	
+		prog.msgLogOut(String.format("%-30s %s", msg, t));	
 	}
 	public static void prtMsgTime(ProgressDialog prog, String msg, long startTime) {
 		String t = Utilities.getDurationString(getTime()-startTime);
@@ -54,7 +54,7 @@ public class Utils {
 	public static long getTimeMem() { System.gc(); return System.currentTimeMillis();}
 	
 	public static void prtTimeMemUsage(ProgressDialog prog, String title, long startTime) {
-		prog.msgToFile(getTimeMemUsage(title, startTime) + "\n\n");
+		prog.msgLogOut(getTimeMemUsage(title, startTime) + "\n\n");
 	}
 	public static void prtTimeMemUsage(String title, long startTime) {
 		System.out.print(getTimeMemUsage(title, startTime) + "\n\n");
@@ -83,26 +83,26 @@ public class Utils {
 	public static void prtIndentMsg(ProgressDialog prog, int indent, String msg) {
 		String x = "";
 		for (int i=0; i<indent; i++) x +="   ";
-		prog.appendText(x + msg);
+		prog.msgPopLogOut(x + msg);
 	}
 	public static void prtMsgFile(ProgressDialog prog, String msg) { 
-		prog.msgToFile(msg);
+		prog.msgLogOut(msg);
 	}
 	public static void prtIndentMsgFile(ProgressDialog prog, int indent, String msg) {
 		String x = "";
 		for (int i=0; i<indent; i++) x +="   ";
-		prog.msgToFile(x + msg);
+		prog.msgLogOut(x + msg);
 	}
 	public static void prtNumMsgFile(ProgressDialog prog, int num, String msg) {
-		prog.msgToFile(String.format("%,10d %s         ", num, msg));
+		prog.msgLogOut(String.format("%,10d %s         ", num, msg));
 	}
 	public static void prtIndentNumMsgFile(ProgressDialog prog, int indent, int num, String msg) {
 		String x = "";
 		for (int i=0; i<indent; i++) x +="   ";
-		prog.msgToFile(String.format("%s%,10d %s           ", x, num, msg));
+		prog.msgLogOut(String.format("%s%,10d %s           ", x, num, msg));
 	}
 	public static void prtNumMsg(ProgressDialog prog, int num, String msg) {
-		prog.appendText(String.format("%,10d %s           ", num, msg));
+		prog.msgPopLogOut(String.format("%,10d %s           ", num, msg));
 	}
 	public static void prtNumMsgNZx(ProgressDialog prog, int num, String msg) { 
 		if (num>0) prtNumMsg(prog, num, msg);

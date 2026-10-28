@@ -14,6 +14,7 @@ import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import util.Cancelled;
+import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
@@ -63,9 +64,9 @@ public class AnchorCset1 {
 		bNumBySz = !mp.isCoSetNum(Mpair.FILE);
 	}
 	
-	protected void collinearSets() {
+	protected void run() {
 		try {
-			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx);
+			dbc2.executeUpdate("update pseudo_hits set runsize=0, runnum=0 where pair_idx=" + mPairIdx); 
 			
 			int num2go = mProj1.getGrpSize() * mProj2.getGrpSize();
 			Utils.prtMsgFile(mLog, "   Finding Collinear sets"); 
@@ -98,7 +99,7 @@ public class AnchorCset1 {
 				Utils.prtMsgTime(mLog, "   Finish Collinear", time);
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "Compute colinear genes"); }
+		catch (Exception e) {failure(e, "Compute colinear genes"); }
 	}
 		
 	/*****************************************************************************************************
@@ -119,7 +120,7 @@ public class AnchorCset1 {
 
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Build collinear " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Build collinear " + chrs); }
 	}
 	
 	/*************************************************************
@@ -187,7 +188,7 @@ public class AnchorCset1 {
 			
 			return true;
 		}
-		catch (Exception e) {ErrorReport.print(e, "Load from DB " + chrs); return false; }
+		catch (Exception e) {return failure(e, "Load from DB " + chrs); }
 	}
 	
 	/*************************************************************
@@ -295,7 +296,7 @@ public class AnchorCset1 {
 		
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Build sets " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Build sets " + chrs); }
 	}
 	/***************************************************
 	 * Trace and verify print routines
@@ -433,7 +434,14 @@ public class AnchorCset1 {
 		}
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Save sets to database " + chrs); return false; }
+	catch (Exception e) {return failure(e, "Save sets to database " + chrs); }
+	}
+	private boolean failure(Exception e, String msg) {// CAS592 add
+		if (e!=null) ErrorReport.print(e, msg); 
+		else         ErrorReport.print(msg); 
+
+		ErrorCount.inc();
+		return false;
 	}
 	/******************************************************************
 	 * annot_hit:  idx  annot1_hit annot2_hit  (best two overlaps)

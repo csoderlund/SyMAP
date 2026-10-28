@@ -12,6 +12,7 @@ import database.DBconn2;
 import symap.Globals;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
+import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
 
@@ -34,8 +35,7 @@ public class UseBlast {
 	
 	private Mpair mp;
 	private ProgressDialog mLog;
-	private DBconn2 dbc;	
-	
+
 	private int pairIdx, projIdx1, projIdx2;
 	private Mproject mProj1, mProj2;
 	
@@ -56,7 +56,6 @@ public class UseBlast {
 	public UseBlast(DBconn2 dbc, ProgressDialog mLog,  Mpair mp) {
 		this.mLog = mLog;
 		this.mp = mp;
-		this.dbc = dbc;
 		
 		aDB = new AccessDB(dbc);
 		pairIdx = mp.getPairIdx();
@@ -80,7 +79,7 @@ public class UseBlast {
 		String blastFileList = Utils.getBlastFileList(mp.getResultDir()); // use for summary at end
 		ArrayList <String> fileList = Utils.getBlastFiles(mp.getResultDir());
 		if (fileList==null || fileList.isEmpty()) {
-			prtErr("No files in " + mp.getResultDir() + Constants.blastDir);
+			failure(null, "No files in " + mp.getResultDir() + Constants.blastDir);
 			return false;
 		}
 		
@@ -102,22 +101,12 @@ public class UseBlast {
 			hitPairMap.clear();
 		}
 		Utils.prtNumMsgFile(mLog, aDB.getNumHits(), "Total hits in database");
-		Utils.prtMsgTimeDone(mLog, "Finish Load Blast", time); 
 		
-	// Finish -- These all must be done!
+		// Finish (numHits && collinear done in AnchorMain)
 		time = Utils.getTime();
-		Utils.prtIndentMsg(mLog, 0, "Process hits"); 
-		mp.saveParamsToDBforBlast(blastFileList); // goes in Summary, which is done in DoAlignSynPair
-		
-		AnchorMain anchors = new AnchorMain(dbc, mLog, mp);
-		anchors.saveHitNum();
-		anchors.saveAnnoHitCnt(true);
-		
-		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc, mLog).collinearSets(); 
-		else 							new AnchorCset1(mp, mProj1, mProj2, dbc, mLog).collinearSets(); 
-		
-		Utils.prtMsgTimeDone(mLog, "Finish Processing hits", time); 
-
+		mp.saveParamsToDBforBlast(blastFileList); // goes in Summary, which is called in DoAlignSynPair
+				
+		Utils.prtMsgTimeDone(mLog, "Finish Load Blast", time); 
 		return true;
 	}
 	/********************************************************************
@@ -236,7 +225,7 @@ public class UseBlast {
 		} 
 		return true;
 	}
-	catch (Exception e) {ErrorReport.print(e, "Load file"); bSuccess=false; return false;}
+	catch (Exception e) {return failure(e, "Load file");}
 	}
 	private void finish() {
 	try {
@@ -253,27 +242,28 @@ public class UseBlast {
 			ht.len = Math.max(len1, len2);
 		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "Load file"); bSuccess=false;}
+	catch (Exception e) {failure(e, "Load file"); }
 	}
 	/***********************************************************/
-	///////////////////////////
-	private void prtErr(String msg) {
-		Utils.prtIndentMsg(mLog, 1, msg + " -- cannot continue");
-		bSuccess=false;
-	}
-
 	private int toInt(String i) {
 		try {
 			if (i.contains(".")) return (int) Math.round(Double.parseDouble(i));
 			return Integer.parseInt(i);
 		} 
-		catch (Exception e) {ErrorReport.print(e, "To integer"); bSuccess=false; return -1;}
+		catch (Exception e) {failure(e, "To integer"); return -1;}
 	}
 	private double toDouble(String i) {
 		try {
 			return Double.parseDouble(i);
 		} 
-		catch (Exception e) {ErrorReport.print(e, "To double"); bSuccess=false; return -1;}
+		catch (Exception e) {failure(e, "To double"); return -1;}
+	}
+	private boolean failure(Exception e, String msg) {
+		Utils.prtIndentMsg(mLog, 1, msg + " -- cannot continue");
+		if (e!=null) ErrorReport.print(e, msg);        
+		ErrorCount.inc();
+		bSuccess=false;
+		return false;
 	}
 	protected void interrupt() {
 		bSuccess=false;
@@ -409,7 +399,7 @@ public class UseBlast {
 			}
 			
 			if (gnIdIdxMap.size()==0 && cntNoId>0) {
-				prtErr("Genes do not have a GFF ID"); bSuccess=false;
+				failure(null, "Genes do not have a GFF ID"); 
 				return;
 			}
 			// exons/cds can be ascending or descending, so need to check all; addCDS takes lowest value
@@ -422,7 +412,7 @@ public class UseBlast {
 			if (cntNoId>0) Utils.prtIndentMsg(mLog, 2,String.format("%s: %,d genes have no GFF ID from %,d total", species, cntNoId, cntGene));
 			else if (bVerbose) Utils.prtNumMsgFile(mLog, cntGene, String.format("%-15s genes", species));
 		}
-		catch (Exception e) {ErrorReport.print(e, "loadAnno"); bSuccess=false;}
+		catch (Exception e) {failure(e, "loadAnno"); }
 		}
 		private static int getExonLen(String tag) { // 1.a (15 1,637)
 			String [] tok = tag.split("\\s+");
@@ -500,7 +490,7 @@ public class UseBlast {
 				int hnum = rs.getInt(2);
 				
 				if (hitIdxMap.containsKey(hnum)) hitIdxMap.get(hnum).hidx=idx;
-				else {prtErr("No hitnum " + hnum); rs.close(); return; }
+				else {failure(null, "No hitnum " + hnum); rs.close(); return; }
 			}
 			rs.close();
 			
@@ -539,7 +529,7 @@ public class UseBlast {
 			Globals.rclear();
 			Utils.prtNumMsgFile(mLog, hitIdxMap.size(), "Saved new hits");
 		}
-		catch (Exception e) {ErrorReport.print(e, "Save New Hits"); bSuccess=false;}
+		catch (Exception e) {failure(e, "Save New Hits"); }
 		}
 		/********************************************************************
 		 * Read hits from database; for those in hitPairMap, update htype
@@ -618,7 +608,7 @@ public class UseBlast {
 			if (countBatch>0) ps.executeBatch();
 			ps.close();
 		}
-		catch (Exception e) {ErrorReport.print(e, "Load Hits"); bSuccess=false;}
+		catch (Exception e) {failure(e, "Load Hits"); }
 		}
 		
 		private int getNumHits() {

@@ -411,7 +411,7 @@ public class AnchorMain2 {
 					Globals.rclear(); // last print gets mixed with print(line)
 					ErrorReport.print(line);
 					String msg = String.format("Error in line: %,d   File: %s", cntLine, fObj.getName());
-					plog.msgToAll(msg); // Will go to symap.log, message window, error.log and terminal
+					plog.msgPopLogErr(msg); // Will go to symap.log, message window, error.log and terminal
 					cntErr++;
 					continue;
 				}
@@ -466,7 +466,6 @@ public class AnchorMain2 {
 	}
 	protected boolean failCheck() {
 		if (Cancelled.isCancelled() || mainObj.bInterrupt || !bSuccess) {
-			Globals.prt("Cancelling operation");
 			bSuccess=false;
 			return true; 
 		}

@@ -15,8 +15,10 @@ import database.DBconn2;
 import symap.manager.Mpair;
 import symap.manager.Mproject;
 import symap.manager.SumFrame;
+import symap.Ext;
 import symap.manager.ManagerFrame;
 import util.Cancelled;
+import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
 import util.Utilities;
@@ -44,7 +46,7 @@ public class DoAlignSynPair extends JFrame {
 	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp, boolean bclose,  int maxCPUs, boolean bAlignDone) {
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  int maxCPUs, boolean bAlignDone) {
 		this.dbc2 = dbc2;
 		this.mp = mp;
 		
@@ -54,29 +56,17 @@ public class DoAlignSynPair extends JFrame {
 		String dbName2 = mProj2.getDBName();
 		String toName =  (mProj1 == mProj2) ? dbName1 + " to self (includes mirrored hits)": dbName1 + " to " + dbName2; 
 		
-		FileWriter syFW =   symapLog(mProj1,mProj2);
+		FileWriter syLogFW = symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
 		String msg = (mProj1 == mProj2) ? "Self-synteny "  + dbName1 + " ..." : "Synteny " + toName + " ...";
 		
-		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syFW); // write version and date
+		final ProgressDialog diaLog = new ProgressDialog(this, "Running Synteny", msg, true, syLogFW); // write version and date
 		
 		String v = (Constants.VERBOSE) ? "   Verbose" : "    !Verbose"; 
-		diaLog.msgToFileOnly(">>> " + toName + v);
+		diaLog.msgLog(">>> " + toName + v);
+		ErrorCount.init();
 		
-		if (mp.bSynOnly) { // CAS591 make separate method
-			mp.removeSyntenyFromDB(); 
-			syntenyOnly(diaLog, mProj1, mProj2);
-			return;
-		}
-		if (mp.bPseudo) {
-			pseudoOnly(diaLog, mProj1, mProj2);
-			return;
-		}
-		if (mp.bCoSet) { // Popup is in ManagerFrame.alignSelectedPair( ) -- already been okay
-			collinearOnly(diaLog, mProj1, mProj2);
-			return;
-		}
 		if (Constants.NUMHITS_ONLY) {// hidden
 			numHitsOnly(diaLog, mProj1, mProj2);
 			return;
@@ -85,29 +75,66 @@ public class DoAlignSynPair extends JFrame {
 			loadBlocks(diaLog, mProj1, mProj2);
 			return;
 		}
-		if (mp.isPairInDB() && mp.isBlast(Mpair.FILE))
-			  mp.removeSyntenyFromDB(); // isBlastAdd uses existing hits; CAS590 
-		else  mp.renewIdx(); 			// Remove existing and restart, sets projIdx; 
-		
-		String chgMsg = (bAlignDone) ? mp.getChgClustSyn(Mpair.FILE) : mp.getChgAllParams(Mpair.FILE);  
-		diaLog.msg("Pair Parameters" + "\n" + chgMsg); // getChgClustSyn includes MUMmer
-		diaLog.closeWhenDone();					
-		
+		long timeStart = Utils.getTime();
 		final boolean bLoadBlast = mp.isBlast(Mpair.FILE);
+		final boolean bOnly = mp.bSynOnly || mp.bCoSet || mp.bPseudo; // can't select if !isPairInDB
+		
+		if (mp.isPairInDB()) {
+			if (bOnly) { // NO remove on pseudo and collinear
+				if (mp.bSynOnly) {
+					diaLog.msg("Remove synteny from database");
+					mp.removeSyntenyFromDB(); // isBlastAdd uses existing hits
+				}
+			}
+			else {
+				if (bLoadBlast) {
+					diaLog.msg("Remove synteny from database");
+					mp.removeSyntenyFromDB(); // isBlastAdd uses existing hits
+				}
+				else {
+					diaLog.msg("Remove pair from database");
+					mp.removeAndSetIdx(); 			 // Remove existing and restart, sets projIdx; 
+				}
+			}	
+		}
+		else mp.setIdx();
+		
+		String chgMsg="";
+		if (bOnly) {
+			if (mp.bSynOnly)     chgMsg = "Only Synteny\n" + mp.getChgSynteny(Mpair.FILE);
+			else if (mp.bCoSet)  chgMsg = "Only Collinear Sets\n" + mp.getChgCoSet(Mpair.FILE);
+			else if (mp.bPseudo) chgMsg = "Only Pseudo Numbers";
+			diaLog.msg(chgMsg);
+		}
+		else {
+			if (bAlignDone) chgMsg = mp.getChgClustSyn(Mpair.FILE);
+			else            chgMsg = mp.getChgAllParams(Mpair.FILE);  
+			diaLog.msg("Pair Parameters" + "\n" + chgMsg); 
+		}
+		
+		if (!bLoadBlast) { 				// CAS592 add; wasn't showing proper message and outputting lots of ...
+			String mummerPath = Ext.getMummerPath(); 
+			if (mummerPath.equals("")) {
+				Popup.showErrorMsg(Ext.getMummerPathNoChk() + " does not exist\nCannot continue");
+				return;
+			}
+		}
 		
 		final UseBlast loadBlast = (bLoadBlast)  ? new UseBlast(dbc2, diaLog, mp) : null;
-		final AlignMain aligner =  (!bLoadBlast) ? new AlignMain(dbc2, diaLog, mp,  maxCPUs, alignLogDir) : null;
+		final AlignMain aligner =  (!bLoadBlast) ? new AlignMain(dbc2,diaLog, mp,maxCPUs,alignLogDir) : null;
 		
 		final AnchorMain anchors = new AnchorMain(dbc2, diaLog, mp );
 		
 		final SyntenyMain synteny = new SyntenyMain(dbc2, diaLog, mp );
 		
-		final Thread statusThread = new Thread() {
+		/** Thread for running MUMmer and updating dialog **/
+		final Thread mummerThread = new Thread() {
 			public void run() {
-				if (aligner==null) return;
-				
+				if (aligner==null) return; // returns if MUMmer not going to run
+								
 				while (aligner.notStarted() && !Cancelled.isCancelled()) Utils.sleep(1000);
 				if (aligner.getNumRemaining() == 0 && aligner.getNumRunning() == 0) return;
+				
 				if (Cancelled.isCancelled()) return;
 				
 				// Alignments\n list errors and current\nStatus
@@ -115,93 +142,113 @@ public class DoAlignSynPair extends JFrame {
 				if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
 				if (aligner.getNumErrors()>0) status += ", errors " + aligner.getNumErrors(); 
 				
-				diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
+				diaLog.updatePop("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 
 				while (aligner.getNumRunning()>0 || aligner.getNumRemaining()>0) {
 					if (Cancelled.isCancelled()) return;
-					Utils.sleep(10000);
+					Utils.sleep(5000);			// CAS592 was 10000 - was behind finishing for demo errors
 					if (Cancelled.isCancelled()) return;
-					
-					// same as before loop
+				
+					// same as 3 lines before loop
 					status = "\nAlignments:  running " + aligner.getNumRunning() + ", completed " + aligner.getNumCompleted();
 					if (aligner.getNumRemaining()>0) status += ", queued " + aligner.getNumRemaining();
 					if (aligner.getNumErrors()>0)    status += ", errors " + aligner.getNumErrors(); 
 				
-					diaLog.updateText("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
+					diaLog.updatePop("\nRunning alignments:\n", aligner.getStatusSummary() + status + "\n");
 				}
-				diaLog.updateText("Alignments:" ,  "Completed " + aligner.getNumCompleted() + "\n\n");
+				diaLog.updatePop("Alignments: " ,  "Completed " + aligner.getNumCompleted() + "\n\n");
 			}
 		};
 		
-		// Perform alignment, load anchors and compute synteny; cancel and success like original
+		/****************************************************
+		 * XXX Main Thread: Perform alignment, load anchors and compute synteny 
+		 *********************************************************/
 		// each 'run' makes a new connection from dbc2
-		final Thread alignThread = new Thread() {
+		// return exists thread and goes to finish
+		final Thread runAllThread = new Thread() {
 			public void run() {
-				boolean success = true;
-				
+				boolean bSuccess = true;
 				try {
-					long timeStart = Utils.getTime();
+					if (bOnly) {
+						if (mp.bSynOnly) synteny.run( mProj1, mProj2);	
+						if (mp.bCoSet)   anchors.collinear(mProj1, mProj2);
+						if (mp.bPseudo)  anchors.addPseudoOnly();
 					
-					/** Align **/
-					if (bLoadBlast) success = loadBlast.run(); 
-					else            success = aligner.run(); 
+						if (Cancelled.isCancelled()) {
+							diaLog.setVisible(false); 
+							diaLog.setCancelled();
+							return;
+						}
+						if (!bSuccess) {
+							diaLog.setFailed();
+							return;
+						}	
+					
+						mp.saveParamsForOnly();	
+						diaLog.finish(bSuccess); 
+						return; 		// goto Finish
+					}
+					
+					/** Align -- MUMmer or Blast**/
+					if (bLoadBlast) bSuccess = loadBlast.run(); 
+					else            bSuccess = aligner.run();  
 					
 					if (Cancelled.isCancelled()) {
-						diaLog.setVisible(false);
+						diaLog.setVisible(false); 
 						diaLog.setCancelled();
 						return;
 					}
-					if (!success) {
-						diaLog.finish(false);
+					if (!bSuccess) {
+						diaLog.setFailed();
+						diaLog.finish(bSuccess); 
 						return;
 					}	
-					if (Cancelled.isCancelled()) return;
 					
-					/** Anchors **/
-					long synStart = Utils.getTime(); // need time for symap part only
-					success = (bLoadBlast) ? true : anchors.run( mProj1, mProj2); // add anchors, cluster, number, collinear, pseudo; bSynOnly
+					/** Anchors -- MUMmer add hits, cluster, pseudo; MUMmer/Blast number, collinear **/
+					anchors.run( mProj1, mProj2, bLoadBlast); 
 					
-					if (Cancelled.isCancelled()) return;
-					if (!success) {
-						diaLog.finish(false);
+					if (Cancelled.isCancelled()) {
+						diaLog.setVisible(false); 
+						diaLog.setCancelled();
 						return;
 					}
+					if (!bSuccess) {
+						diaLog.setFailed();
+						Utils.sleep(1000); // let mummerThread catch up
+						diaLog.finish(bSuccess); 
+						return;
+					}	
 					
 					/** Synteny **/
-					success &= synteny.run( mProj1, mProj2);
+					bSuccess = synteny.run( mProj1, mProj2);
 					
-					if (Cancelled.isCancelled()) return;
-					if (!success) {
-						diaLog.finish(false);
+					if (Cancelled.isCancelled()) {
+						diaLog.setVisible(false); 
+						diaLog.setCancelled();
 						return;
 					}
-					if (mp.bSynOnly)     Utils.prtMsgTimeDone(diaLog, "Complete SyMAP", synStart);
-					else if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, "Complete Load & SyMAP", synStart);
-					else                 Utils.prtMsgTimeDone(diaLog, "Complete Align & SyMAP", synStart);
-
-					/** Finish **/
-					new SumFrame(dbc2, mp);
+					if (!bSuccess) {
+						diaLog.setFailed();
+						diaLog.finish(bSuccess); 
+						return;
+					}	
 					
-					diaLog.appendText(">> Summary for " + toName + "\n");
-					printStats(diaLog);
-					
-					Utils.prtMsgTimeDone(diaLog, "Complete processing", timeStart);
+					diaLog.finish(bSuccess); 
 				}
 				catch (OutOfMemoryError e) {
-					success = false;
-					statusThread.interrupt();
+					mummerThread.interrupt();
+					bSuccess = false;
 					diaLog.msg( "Not enough memory - increase 'mem' in symap script");
 					Popup.showOutOfMemoryMessage(diaLog);
 				}
 				catch (Exception e) {
-					success = false;
-					ErrorReport.print(e,"Running alignment");
-					statusThread.interrupt();
-				}
-				diaLog.finish(success); 
+					mummerThread.interrupt();
+					bSuccess = false;
+					ErrorReport.print(e,"Running A&S");
+				}	
 			}
 		};
-		
+		/** Dialog popup **/
 		diaLog.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println(e.getActionCommand());
@@ -211,61 +258,77 @@ public class DoAlignSynPair extends JFrame {
 				else if (loadBlast!=null) 	loadBlast.interrupt();
 				
 				if (anchors!=null) anchors.interrupt();
-				if (synteny!=null) synteny.interrupt(); // CAS589 add synteny interrupt
+				if (synteny!=null) synteny.interrupt(); 
 				
 				try {
-					alignThread.wait(5000);
-					statusThread.wait(5000);
+					runAllThread.wait(5000);
+					mummerThread.wait(5000);
 				}
 				catch (Exception e2) { }
 				
 				// Threads should be done by now, but kill just in case
-				alignThread.interrupt();
-				statusThread.interrupt();
+				runAllThread.interrupt();
+				mummerThread.interrupt();
 				
 				// Close dialog
 				diaLog.setVisible(false);
-				if (e.getActionCommand().equals("Cancel")) {
+				if (e.getActionCommand().equals(ProgressDialog.CANCEL)) {
 					diaLog.setCancelled();
-					Cancelled.cancel();
 				}
 			}
 		});
 		
-		alignThread.start();
-		statusThread.start();
-		diaLog.start(); // blocks until thread finishes or user cancels
-		
-		if (diaLog.wasCancelled()) { // Remove partially-loaded alignment
-			try {
-				Thread.sleep(1000);
-				String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
-						     "\nCancel:  The user removes the database and starts over";
+		runAllThread.start();	// main thread
+		mummerThread.start();	// only runs if MUMmer is being used
+		diaLog.start(); 		// blocks until thread finishes or user cancels
 				
-				if (Popup.showConfirm2("Remove pair", msgx)) { 
-					System.out.println("Cancel alignment (removing alignment from DB)");
-						mp.removePairFromDB(true); 					// redo numHits;
-					System.out.println("Removal complete");
-				} 
-				else System.out.println("Remove database and restart");
+		/**********************************************************
+		 * XXX Finish - all processing ends here
+		 ********************************************************/
+		if (diaLog.wasCancelled() || diaLog.failed()) { // Remove partially-loaded alignment
+			if (bOnly) {
+				Popup.showWarningMessage("The database may be in an incomplete state");
 			}
-			catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
+			else {
+				try {
+					String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
+							     "\nCancel:  The user removes the database and starts over";
+					if (Popup.showConfirm2("Remove pair", msgx)) { 
+						mp.removePairFromDB(true); 					// True redo numHits; writes to stdout that it is removing
+						System.out.println("   Removal complete");
+					} 
+					else System.out.println("Remove database and restart");
+				}
+				catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
+			}
 		}
-		else if (bclose) {
-			diaLog.dispose();	
+		else {
+			if (!mp.bPseudo) { // when moved into thread, error on creating summary
+				diaLog.msgPop(">> Summary for " + toName + "\n");
+				new SumFrame(dbc2, mp);
+				printStats(diaLog);
+			}
 		}
+		String what = "Complete ";
+		if (diaLog.wasCancelled()) what = "Cancelled ";
+		else if (diaLog.failed())  what = "Failed ";
+		if (bOnly)			 Utils.prtMsgTimeDone(diaLog, what + "Only", timeStart);
+		else if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, what + "Load&SyMAP", timeStart);
+		else                 Utils.prtMsgTimeDone(diaLog, what + "Align&SyMAP", timeStart);
 		
 		System.out.println("--------------------------------------------------");
 		frame.refreshMenu();
 		try {
-			if (syFW != null) {
-				if (Cancelled.isCancelled())  syFW.write("Cancelled");
-				syFW.write("\n-------------- done " + new Date().toString() + " --------------------\n");
-				syFW.close();
+			if (syLogFW != null) {
+				if (Cancelled.isCancelled())  syLogFW.write("Cancelled");
+				if (ErrorCount.getCount()>0)  syLogFW.write("Errors");
+				syLogFW.write("\n-------------- done " + new Date().toString() + " -----------------\n");
+				syLogFW.close();
 			}
 		}
 		catch (Exception e) {}
-	} // end of run
+	} // end of run method
+	
 	/**********************************************************************/
 	private FileWriter symapLog(Mproject p1, Mproject p2) {
 		FileWriter ret = null;
@@ -324,55 +387,8 @@ public class DoAlignSynPair extends JFrame {
 		catch (Exception e){ErrorReport.print(e, "Creating log file");}
 		return null;
 	}
-	/**************************************************************/
-	/*** Synteny - pair parameter pull-down  ***/ 
-	private void syntenyOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
-	try {
-		mLog.msg("Only synteny");
-		
-		SyntenyMain synteny = new SyntenyMain(dbc2, mLog, mp);
-		synteny.run( mProj1, mProj2);
-		
-		mp.saveParamsForOnly();		
-		new SumFrame(dbc2, mp); 
-		System.out.println("--------------------------------------------------");
-	}
-	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
-	}
-	
-	/*** Add Pseudo - pair parameters pull-down  ***/ 
-	private void pseudoOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
-	try {
-		mLog.msg("Only add pseudo-genes");
-		
-		AnchorMain anchors = new AnchorMain(dbc2, mLog, mp);
-		anchors.addPseudoFromFlag();
-			
-		mp.saveParamsForOnly();		
-		new SumFrame(dbc2, mp, "Number pseudo"); // only so it will show the updated version
-		System.out.println("--------------------------------------------------");
-	}
-	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
-	}
-	/** Collinear only: pair parameter pull-down  **********************/
-	private void collinearOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
-	try {
-		mLog.msg("Only run collinear set algorithm");
-		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
-			mLog.msg("Both projects must have genes for the collinear set algorithm");
-			return;
-		}
-		
-		if (mp.isCoSetAlgo(Mpair.FILE)) new AnchorCset2(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
-		else 							new AnchorCset1(mp, mProj1, mProj2, dbc2, mLog).collinearSets(); // CAS588
-			
-		mp.saveParamsForOnly();
-		new SumFrame(dbc2, mp);
-		System.out.println("--------------------------------------------------");
-	}
-	catch (Exception e){ErrorReport.print(e, "Creating log file"); }
-	}
-	/*** Load Blocks Pair --blk ; CAS589 *************/
+
+	/*** Load Blocks Pair --blk  *************/
 	private void loadBlocks(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
 		mLog.msg("Load blocks from file");
@@ -409,7 +425,6 @@ public class DoAlignSynPair extends JFrame {
 	/*** Update NumHits: -nh command line, not visible  ***/ 
 	private void numHitsOnly(ProgressDialog mLog, Mproject mProj1, Mproject mProj2) {
 	try {
-		mLog.msg("Compute NumHits Only...");
 		if (!mProj1.hasGenes() || !mProj2.hasGenes()) { 
 			mLog.msg("Both projects must have genes to have numHits");
 			return;

@@ -125,7 +125,7 @@ public class SyntenyMain {
 		if (Cancelled.isCancelled() || !bSuccess) {tdbc2.close(); return false;} 
 		
 	/** Main loop through chromosome pairs ***************************************/
-		int nGrpGrp = 1; // CAS589 count up instead of down
+		int nGrpGrp = 1; 
 		int maxGrp =  mProj1.getGrpSize() * mProj2.getGrpSize();
 		
 		if (bVerbose) 	Utils.prtNumMsg(mLog, maxGrp, "group-x-group pairs to analyze");
@@ -203,7 +203,7 @@ public class SyntenyMain {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Computing Synteny"); return false; }
 	}
-	public void interrupt() {bSuccess=false;} // CAS589 add
+	
 	
 //  Pearson correlation coefficient (PCC) of midpoints; used for BuildBlock and for saving final to DB
 	private float hitCorrelation(Vector<SyHit> hits) {
@@ -285,9 +285,17 @@ public class SyntenyMain {
 			       m="Gap2: "; for (int g : gap2list) m += String.format("%,d  ",g); Globals.prt(m); Globals.prt("");
 		}
 	}
-	catch (Exception e) {ErrorReport.print(e, "Set properties for synteny"); bSuccess=false;}
+	catch (Exception e) {failure(e, "Set properties for synteny");}
 	}
-	
+	/*************************************************************************/
+	public void interrupt() {bSuccess=false;} 
+	private boolean failure(Exception e, String msg) {
+		if (e!=null) ErrorReport.print(e, msg); 
+		else         ErrorReport.print(msg); 
+		bSuccess = false;
+		ErrorCount.inc();
+		return false;
+	}
 	/*************************************************************************
 	 * Synteny algorithm
 	 * All methods that use hitVec are in this class
@@ -328,7 +336,7 @@ public class SyntenyMain {
 			
 			hitVec.clear();
 		}
-		catch (Exception e) {ErrorReport.print(e, "Synteny main"); bSuccess = false;}
+		catch (Exception e) {failure(e, "Synteny main"); }
 		}
 		
 		/** This performs a "binary search" of the gap parameter space **/
@@ -613,7 +621,7 @@ public class SyntenyMain {
 
 			private CoSet(int num) {}
 		}
-	}
+	} // End Build Block
 	/*************************************************************
 	 * All blocks for grp-grp, both orient
 	 */
@@ -653,7 +661,7 @@ public class SyntenyMain {
 			
 			totalBlocks += blockVec.size();
 		}
-		catch (Exception e) {ErrorReport.print(e, "Synteny main finish"); bSuccess = false;}
+		catch (Exception e) {failure(e, "Synteny main finish"); }
 		}
 		
 		/***********************************************************
@@ -733,7 +741,7 @@ public class SyntenyMain {
 				blockVec = xVec;
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "trim block"); }
+		catch (Exception e) {failure(e, "trim block"); }
 		}
 		
 		/**************************************************
@@ -774,6 +782,7 @@ public class SyntenyMain {
 			}
 			blockVec = out;
 		}
-	}
+	} // end FinishBlock
+	
 }
 

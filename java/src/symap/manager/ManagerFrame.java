@@ -90,7 +90,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private HashMap <String, Mproject> projObjMap = new HashMap <String, Mproject> (); // displayName, same set as projVec
 	private HashMap <String, String>   projNameMap = new HashMap <String, String> ();   // DBname to displayName
 	
-	protected Vector<Mproject> tableProjVec = new Vector<Mproject>(); // CAS588 was selectedProjVec, but confusing with selected cell
+	protected Vector<Mproject> tableProjVec = new Vector<Mproject>(); 
 	
 	private HashMap<String, Mpair> pairObjMap = new HashMap <String, Mpair> (); // proj1_idx:proj2_idx is key 
 	
@@ -254,7 +254,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		TreeMap <String, Integer> showMap = new TreeMap <String, Integer> ();
 		for (String cat : categories) {
 			for (Mproject p : cat2Proj.get(cat)) {
-				if (inReadOnlyMode && !p.isLoaded()) continue; // CAS588 at least show this on left
+				if (inReadOnlyMode && !p.isLoaded()) continue; // at least show this on left
 				
 				if (showMap.containsKey(cat)) showMap.put(cat, showMap.get(cat)+1);
 				else 						  showMap.put(cat, 1);
@@ -266,8 +266,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			subPanel.add(new JLabel(cat));
 			
 			for (Mproject p : cat2Proj.get(cat)) {
-				if (inReadOnlyMode && !p.isLoaded()) continue; // CAS588 at least show this on left
-				//if (inReadOnlyMode && p.getCntSyntenyStr().equals("")) continue; // nothing to view
+				if (inReadOnlyMode && !p.isLoaded()) continue; // at least show this on left
 					
 				String name = p.getDisplayName();
 				boolean bLoaded = (p.getStatus() != Mproject.STATUS_ON_DISK);
@@ -491,13 +490,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		// Buttons
 		JLabel lblAnS = new JLabel("Align & Synteny"); 
-		JLabel lblSel = new JLabel("Selected Pair  ");  
+		JLabel lblSel = new JLabel("Select Pair  ");  
 		JLabel lblAll = new JLabel("All " + TBL_DONE + " Pairs"); 
 		JLabel lblSp = new JLabel("               "); 
 		Dimension d = lblAnS.getPreferredSize();
 		lblSel.setPreferredSize(d); lblAll.setPreferredSize(d); lblSp.setPreferredSize(d);
 		
-		btnSelAlign = Jcomp.createButton("Selected Pair", "Run Align/Clust/Synteny on the selected pair"); 
+		btnSelAlign = Jcomp.createButton("Select Pair", "Select a pair to run Align&Synteny"); 
 		btnSelAlign.addActionListener( new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				alignSelectedPair();
@@ -732,7 +731,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	 * Align&Synteny: one selected pair
 	 * 		Clear - selected pair has A or check
 	 * Selected pair: selected pair has check
-	 * All pairs: have at least one check that is not self-synteny, or only one pair with self-synteny CAS588
+	 * All pairs: have at least one check that is not self-synteny, or only one pair with self-synteny
 	 */
 	protected void updateEnableButtons() { // PairParams calls this too to update the "Selected Pair" button
 		if (pairTable == null) return;
@@ -755,22 +754,22 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			
 			boolean allDone =  (val!=null && val.contains(TBL_DONE));
 			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_BDONE) || !val.contains(TBL_QDONE)));
-			
-			// Similar to popup message in 
+			Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
+					
+			// Similar to popup message in in alignSelectedPair
 			if (Constants.LOAD_BLOCKS) btnSelAlign.setText("Load Blocks"); // Hidden command line option -blk
-			else if (allDone) { 		
-				Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
-				
-				btnSelAlign.setText("Selected Redo"); // default
-				if (mp!=null) {						    // Similar labels in PairParams and alignSelectedPair()
-					if 		(mp.bSynOnly)               btnSelAlign.setText("Synteny Redo");
-					else if (mp.bPseudo)                btnSelAlign.setText("Pseudo Only");
-					else if (mp.bCoSet)  				btnSelAlign.setText("Collinear");
-					else if (Constants.NUMHITS_ONLY)    btnSelAlign.setText("NumHits");
-				}
+			else if (allDone && mp!=null) { 		
+				if 		(mp.bSynOnly)               btnSelAlign.setText("Synteny Redo");
+				else if (mp.bPseudo)                btnSelAlign.setText("Pseudo Only");
+				else if (mp.bCoSet)  				btnSelAlign.setText("Collinear");
+				else if (Constants.NUMHITS_ONLY)    btnSelAlign.setText("NumHits");
+				else if (mp.isBlast(Mpair.FILE))	btnSelAlign.setText("Load Blast");
+				else                                btnSelAlign.setText("Reload MUMmer"); 
 			}	
 			else {
-				btnSelAlign.setText("Selected Pair");	
+				if (mp.isBlast(Mpair.FILE))	 btnSelAlign.setText("Load Blast");
+				else if (mp.hasMUMerFiles()) btnSelAlign.setText("Reload MUMmer");
+				else                         btnSelAlign.setText("Run MUMmer");	
 			}
 	
 			btnSelClearPair.setEnabled(allDone || partDone);
@@ -1073,10 +1072,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	/*****************************************************************
 	 * Project actions
 	 ******************************************************/
-	public FileWriter getLoadLog() { return openLoadLog();} // CAS589 for view export
+	public FileWriter getLoadLog() { return openLoadLog();} 
 	
 	private void viewProject(Mproject mProj) {
-		new ViewProj(dbc2, mProj, getInstance()); // CAS589 change to Dialog so could have Export button
+		new ViewProj(dbc2, mProj, getInstance()); 
 	}
 	private void loadAllProjects() {
 		try {
@@ -1169,13 +1168,15 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			else if (mp.bPseudo)				msg = "Pseudo Only";
 			else if (mp.bCoSet) 				msg = "Collinear Only\n" + mp.getChgCoSet(loc); 
 			else if (Constants.NUMHITS_ONLY) 	msg = "NumHits Only\n";   					 // For v5.7.9c,flag -nh
-			// if none of the above selected
 			else if (mp.isBlast(Mpair.FILE))	msg = "Load&Synteny\n"   + mp.getChgLoad(loc) + "\n";
 			else								msg = "Clust&Synteny\n"  + mp.getChgClustSyn(loc) + "\n";
 		}
 		else {
-			msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(loc) + "\n";
-			msg += "CPUs " + nCPU + ";  ";	
+			if (mp.isBlast(loc)) 				msg = "Load&Synteny\n"   + mp.getChgLoad(loc) + "\n";
+			else {
+				msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(loc) + "\n";
+				msg += "CPUs " + nCPU + ";  ";
+			}
 		}
 		if (!msg.contains("Only")) {
 			if (Constants.VERBOSE) msg += "Verbose On"; else msg += "Verbose Off";
@@ -1184,7 +1185,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
 		
-		new DoAlignSynPair().run(getInstance(), dbc2, mp, false, nCPU, bAlignDone);
+		new DoAlignSynPair().run(getInstance(), dbc2, mp, nCPU, bAlignDone);
 		
 		new Version(dbc2).updateReplaceProp();
 	}
@@ -1199,7 +1200,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		refreshMenu();
 	}
-	private void showPairParams() { // CAS588 was actionListener
+	private void showPairParams() { 
 		Mproject[] sel = getSelectedPair();
 		
 		Mpair p = getMpair(sel[0].getIdx(), sel[1].getIdx());
@@ -1362,7 +1363,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private void showChrExp() { 
 		Jcomp.setCursorBusy(this, true);
 		try {
-			Vector <Mproject> pVec = getSynProjects(); // CAS588 only selected projects that have synteny
+			Vector <Mproject> pVec = getSynProjects(); // only selected projects that have synteny
 			if (pVec.size()==0) {
 				Popup.showErrorMessage("No synteny pairs. ");
 				return;
@@ -1379,7 +1380,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	/// All Dotplot
 	private void showAllDotPlot()	{
-		Vector <Mproject> pVec = getSynProjects(); // CAS588 only selected projects that have synteny
+		Vector <Mproject> pVec = getSynProjects(); // only selected projects that have synteny
 		if (pVec.size()==0) {
 			Popup.showErrorMessage("No synteny pairs. ");
 			return;
@@ -1420,7 +1421,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 				pVec.add(cp);					
 			}
 	
-			sortProjDisplay(pVec); // loses order; causes Columns to be wrong if one is not annotated; CAS589 moved flags to QueryFrame
+			sortProjDisplay(pVec); // loses order; causes Columns to be wrong if one is not annotated
 			
 			QueryFrame qFrame = new QueryFrame(getInstance(), frameTitle, dbc2, pVec, isSelf);
 			qFrame.build();
@@ -1437,7 +1438,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private ManagerFrame getInstance() { return this; }
 	
 	// Either one self, or all that have at least one synteny with the rest
-	private Vector <Mproject> getSynProjects() {// CAS588 add this 
+	private Vector <Mproject> getSynProjects() { 
 	Vector <Mproject> pVecA = new Vector <Mproject> ();
 	try {
 		// initial fast check	
@@ -1488,7 +1489,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		int nCol = pairTable.getSelectedColumn();
 		String val = (String)pairTable.getValueAt(nRow, nCol);
 		
-		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_BDONE) || val.contains(TBL_DONE))); // A or Check; CAS589 add B
+		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_BDONE) || val.contains(TBL_DONE))); // A, B or Check
 	}
 	
 	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame 

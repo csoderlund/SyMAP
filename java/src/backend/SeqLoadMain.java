@@ -237,7 +237,7 @@ public class SeqLoadMain {
 							System.gc();	
 						}
 						else {
-							plog.msgToFile("*** Dup seqid: " + grpFullName + " skipping...");
+							plog.msgLogOut("*** Dup seqid: " + grpFullName + " skipping...");
 						}
 					} else seqIgnore++;
 					
@@ -248,8 +248,8 @@ public class SeqLoadMain {
 					grpName = parse1stId(line, prefix);
 					if (grpName == null){ 
 						seqPrefixIgnore++;
-						if (seqPrefixIgnore<=maxPrtErr) plog.msgToFile("+++ Invalid prefix, ignore: " + line);
-						if (seqPrefixIgnore==maxPrtErr) plog.msgToFile("+++ Surpressing further invalid prefix ");
+						if (seqPrefixIgnore<=maxPrtErr) plog.msgLogOut("+++ Invalid prefix, ignore: " + line);
+						if (seqPrefixIgnore==maxPrtErr) plog.msgLogOut("+++ Surpressing further invalid prefix ");
 						continue;
 					}
 					
@@ -293,7 +293,7 @@ public class SeqLoadMain {
 					chrSeq="";
 				}
 				else {
-					plog.msgToFile("*** Dup seqid: " + grpFullName + " skipping...");
+					plog.msgLogOut("*** Dup seqid: " + grpFullName + " skipping...");
 				}
 			}
 			else if (curSeq.length()>0) seqIgnore++; 
@@ -345,7 +345,7 @@ public class SeqLoadMain {
 		}
 		String id = line.split("\\s+")[0];
 		if (id.length()>maxLenName) {
-			plog.msgToFile("+++ Invalid Sequence Id; must be <= " + maxLenName + " characters, ignore: " + line);
+			plog.msgLogOut("+++ Invalid Sequence Id; must be <= " + maxLenName + " characters, ignore: " + line);
 			return null;
 		}
 		
@@ -450,7 +450,7 @@ public class SeqLoadMain {
 	}
 	/**************************************************************************/
 	private boolean rtError(String msg) {
-		plog.msgToFile("*** " + msg); 
+		plog.msgLogOut("*** " + msg); 
 		ErrorCount.inc();
 		tdbc2.close();
 		

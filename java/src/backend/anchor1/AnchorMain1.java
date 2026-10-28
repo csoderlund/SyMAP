@@ -263,7 +263,7 @@ public class AnchorMain1 {
 			if (!success) {
 				if (numErrors < 5){
 					String msg = String.format("Error in line: %,d   File: %s", cntLine, mFile.getName());
-					plog.msgToAll(msg); // Will go to symap.log, message window, error.log and terminal
+					plog.msgPopLogErr(msg); // Will go to symap.log, message window, error.log and terminal
 					numErrors++;
 					continue;
 				}
