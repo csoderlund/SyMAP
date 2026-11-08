@@ -9,6 +9,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -22,6 +23,8 @@ public class Popup {
 	/**************************************************************
 	 * XXX Popups
 	 */
+	final static Icon icon = ImageViewer.getImageIcon("/images/dna.png");  // CAS593 add to all showConfirm 
+	
 	// isModal=true means that everything is frozen until the window is closed
 	// these allow formatted messages, but only have OK at the bottom of window
 	public static void showMonoWarning(Component parent, String message) {
@@ -81,7 +84,6 @@ public class Popup {
 				aObj.setIsPopup(false);
 			}
 		});
-		
 		 optionPane.addPropertyChangeListener(
     		new PropertyChangeListener() {
         		public void propertyChange(PropertyChangeEvent e) {
@@ -89,34 +91,33 @@ public class Popup {
         		}
     		}
     	);
-		 
 		return optionPane;
 	}
 	
 	public static void showInfoMsg(String title, String msg) {
-		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE, icon);
 	}
 	public static void showWarning(String msg) { 
-		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE, icon);
 	}
 	
 	public static void showInfoMessage(String title, String msg) {
 		System.out.println(msg);
-		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE, icon);
 	}
 	
 	public static void showWarningMessage(String msg) {
 		System.out.println(msg);
-		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE, icon);
 	}
 	
 	public static void showErrorMsg(String msg) {
-		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE, icon);
 	}
 	
 	public static void showErrorMessage(String msg) {
 		System.err.println(msg);
-		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE, icon);
 	}
 	
 	public static void showErrorMessage(String msg, int exitStatus) {
@@ -129,7 +130,7 @@ public class Popup {
 		int ret = JOptionPane.showOptionDialog(null, 
 				msg,
 				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+				JOptionPane.PLAIN_MESSAGE, icon, options, options[1]);
 		if (ret == 0) return false;
 		return true;
 	}
@@ -138,7 +139,7 @@ public class Popup {
 		int ret = JOptionPane.showOptionDialog(null, 
 				msg + "\nContinue?",
 				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+				JOptionPane.PLAIN_MESSAGE, icon, options, options[1]);
 		if (ret == 0) return false;
 		return true;
 	}
@@ -149,7 +150,7 @@ public class Popup {
 		int ret = JOptionPane.showOptionDialog(null, 
 				msg, 
 				title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+				JOptionPane.PLAIN_MESSAGE, icon, options, options[1]);
 		if (ret == 0) return false;
 		else return true;
 	}
@@ -159,7 +160,7 @@ public class Popup {
 		String [] options = {"Cancel", "Only", "All"};
 		return JOptionPane.showOptionDialog(null, 
 				msg, title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[1]); 
+				JOptionPane.PLAIN_MESSAGE, icon, options, options[1]); 
 	}
 	public static int showConfirmFile(String filename) {
 		String [] options = {"Cancel", "Overwrite", "Append"};
@@ -167,7 +168,7 @@ public class Popup {
 		String msg = "File '" + filename + "' exists.\nDo you want to overwrite it or append to it?";
 		return JOptionPane.showOptionDialog(null, 
 				msg, title, JOptionPane.YES_NO_OPTION, 
-				JOptionPane.QUESTION_MESSAGE, null, options, options[2]);
+				JOptionPane.PLAIN_MESSAGE, icon, options, options[2]);
 	}
 	public static void showOutOfMemoryMessage(Component parent) {
 		System.err.println("Not enough memory.");

@@ -250,8 +250,7 @@ public class AlignMain {
 			if      (program.equals(Ext.exPromer) && mp.isNucmer(Mpair.FILE)) program = Ext.exNucmer; 
 			else if (program.equals(Ext.exNucmer) && mp.isPromer(Mpair.FILE)) program = Ext.exPromer; 
 				
-			String args = (program.contentEquals(Ext.exPromer)) ? mp.getPromerArgs(Mpair.FILE) : mp.getNucmerArgs(Mpair.FILE);
-			String self = (isSelf) ? (" " + mp.getSelfArgs(Mpair.FILE)) : ""; 
+			String args = mp.getMUMmerArgs(Mpair.FILE); // CAS593 reduced to one
 			
 		/** create list of comparisons to run **/
 			// under runDir/<p1>_to_<p2>/tmp/<px>/ with file names
@@ -273,8 +272,7 @@ public class AlignMain {
 					// XXX
 					String aArgs = args;
 					if (isSelf) { // chr files have been written as is
-						if (f1.getName().equals(f2.getName())) aArgs += self;
-						else if (f1.getName().compareTo(f2.getName()) < 0)  continue; // AnchorMain will correct order when wrong
+						if (f1.getName().compareTo(f2.getName()) < 0)  continue; // AnchorMain will correct order when wrong
 					}
 			
 					AlignRun ps = new AlignRun(program, aArgs, f1, f2, alignDir, alignLogDirName);

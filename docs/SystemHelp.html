@@ -14,19 +14,21 @@
 <p class=sidetit>&nbsp;&nbsp;Parameters</p>
 <p>
 <a href="#build">Build database</a> <!-- # ref in code -->
-<a href="#projParams">Load Project Parameters</a>
+<a href="#selLoad">&nbsp;&nbsp;Selected Projects</a>
+<a href="#avail">&nbsp;&nbsp;Available Syntenies</a>
+<a href="#fun">&nbsp;&nbsp;Align&amp;Synteny </a>
+<a href="#projParams">Project Parameters</a>
 <a href="#display">&nbsp;&nbsp;Display</a>
 <a href="#project">&nbsp;&nbsp;Load project</a>
 <a href="#anno">&nbsp;&nbsp;Load annotation</a>
 <a href="#annot">&nbsp;&nbsp;GFF Attributes</a>
 <a href="#save1">&nbsp;&nbsp;Save</a>
-<a href="#pairParams">A&amp;S Pair Parameters</a>
+<a href="#pairParams">Pair Parameters</a>
 <a href="#align2">&nbsp;&nbsp;Alignment</a>
 <a href="#cosets">&nbsp;&nbsp;Collinear Sets</a>
 <a href="#syn">&nbsp;&nbsp;Synteny</a>
 <a href="#save2">&nbsp;&nbsp;Drop-down and Save</a>
 <a href="#synResults">Synteny Compare</a>
-<p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
 
@@ -68,7 +70,7 @@ for the long introns of mammalian genomes, and less diverse genomes.
 1. <a href="#build"><u>Build database</u></a>
 <ol type="a">
 <li style="margin: 0.4em 0;"><a href="#start">Start SyMAP</a>
-<li style="margin: 0.4em 0;"><a href="#selLoad">Selected Projects</a>
+<li style="margin: 0.4em 0;"><a href="#selLoad">Selected Projects (Load)</a>
 <li style="margin: 0.4em 0;"><a href="#avail">Available Syntenies</a>
 <li style="margin: 0.4em 0;"><a href="#fun">Align&amp;Synteny (A&amp;S)</a>
 <li style="margin: 0.4em 0;"><a href="#cpu">CPU and Verbose</a>
@@ -123,12 +125,13 @@ for the long introns of mammalian genomes, and less diverse genomes.
 <a id="start"></a>
 <h3>Start SyMAP</h3>
 <table class="tx"><tr>
-<td style="vertical-align: text-top;">To start SyMAP, type at the command line: <span class="ttt">./symap</span>
+<td style="vertical-align: text-top;">To start SyMAP, type at the command line:
+<span class="ttt">./symap</span>
 <br>The <span class="ttp">Project Manager</span> will be displayed.
 
 <p>To view the command line options: <span class="ttt">./symap -h</span>
 
-<td>&nbsp;For the first time user of SyMAP, see:
+<td>&nbsp;&nbsp;&nbsp;For the first time user of SyMAP, see:
 <ul>
 <li><a href="input/index.html" class="ext" target="_blank">Input</a> for file formats.
 <li><a href="SystemGuide.html#machine" class="ext" target="_blank">System Guide</a> for setup and system requirements.
@@ -143,77 +146,79 @@ for the long introns of mammalian genomes, and less diverse genomes.
 
 <a id="selLoad"></a>
 <h3>Selected Projects</h3>
-As shown in the <span class="ttb">Project Manager</span> above, selected projects from the left panel
-will be listed in the <span class="ttb">Selected</span> section on the right.
-The possible functions vary with the state, as listed below:
+<table class="tx"><tr><td>
+<a href="img/selectedProj.png">
+	<img src="img/selectedProj.png" alt="manager" style="border: 1px solid black; width: 480px"></a>
+<td>The possible functions next to a project name vary as to whether the project is loaded or not.
+<p>If there is <i>any</i> selected project not loaded to the database, you will see:
+<p><span class="ttb">Load All Projects</span> - Load all projects that have not been loaded yet.
+</table>
 
-<table class="ty">
-<tr><td colspan=2>&diams; <i>If there is any selected project not loaded to the database, you will see:</i>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
-	<span class="ttb">Load All Projects</span>
-    <td style="white-space: nowrap;">Load all projects that have not been loaded yet.
+<p>
+<table class="ty"><tr><td><i>Loaded</i><td><i>Label</i><td><i>Description</i>
+<tr><td style="vertical-align: text-top;">No
+	<td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Remove from disk</span>
+    <td>A <span class="ttx">Confirm/Cancel</span> popup will show that actions that will occur, as follows:
+    	<br><span class="ttx">&nbsp;&nbsp;Remove project:
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data/seq/[project-name]
+    	<br>&nbsp;&nbsp;Remove results:
+    	<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[followed by list of directories that will be removed]</span>
+    	<p>e.g. If the demo has been completely run, and <span class=ttx>demoBrap</span>
+    	is to be removed from disk, the following popup will show what will be removed:
+    	<a href="img/removeProj.png"><img src="img/removeProj.png"
+    	alt="remove project from disk" style="border: 1px solid black; width: 260px"></a>
+<tr><td style="vertical-align: text-top;">Yes
+	<td  style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Remove from database</span>
+    <td>The projects and its synteny pairs will be removed from the database.
+    <br>Once complete, the label will change to <span class="ttb">Remove from disk</span>.
+<tr><td colspan=3>&nbsp;
 
-<tr><td colspan=2>&diams; <i>If a selected project <b>is not</b> loaded in the database, you will see:</i>
-
-<tr><td style="vertical-align: text-top;">&nbsp;&nbsp;
-	<span class="ttb">Remove from disk</span>
-    <td><span class="ttx">Only: Remove results (MUMmer/Blast) directories from disk</span>
-    <br><span class="ttx">All: Remove results (MUMmer/Blast) and project directory from disk</span>
-    <p><span class="ttx">Remove results</span> removes the
-    MUMmer <span class=ttt>/align</span> and or the <span class=ttt>/blast</span> directories
-    from <span class="ttt">data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;</span> for this project . You will
-    be prompted for each one to confirm you want it removed.
-    <p>If there are no alignments, you will only see the prompt <span class="ttx">Remove project</span> to remove the project directory from disk.
-    <p><span class="ttx">Remove project directory</span> remove  <span class="ttt">data/seq/&lt;project-name&gt;</span> from disk.
-    You will be prompted to confirm you want it removed.
-    If removed, the project will no longer be shown on the left.
-
-<tr><td style="white-space: nowrap;vertical-align: text-top;">&nbsp;&nbsp;
-	<span class="ttb">Load project</span>
+<tr><td style="vertical-align: text-top;">No
+	<td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Load project</span>
     <td>Loads the sequence and optional annotations to the database.
-    <br>When loading is complete,
-    always verify by selecting the <span class="ttb">View</span> link, which provides a summary of what has been loaded
-    (e.g. <a href="img/viewArab.png">View Arabidopsis</a>).
+    	<br>When loading is complete,
+    	always verify by selecting the <span class="ttb">View</span>, e.g. <a href="img/viewArab.png">View</a>.
+<tr><td style="vertical-align: text-top;">Yes
+	<td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Reload project</span>
+    <td>A popup will show the following options:
+    	<br>&nbsp;&nbsp;&nbsp;<span class="ttx">Only: Reload project</span>
+    	<br>&nbsp;&nbsp;&nbsp;<span class="ttx">All: Plus, remove results
+    	<br>&nbsp;&nbsp;&nbsp; [followed by list of directories that will be removed]</span>
+    	<p>&#128073;
+    	If the sequence file has been changed, select <span class=ttx>All</span>;
+    	this will remove the same set of directories as shown in <span class="ttb">Remove from disk</span>.
+    	MUMmer or Blast will need to be rerun.
 
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
-	<span class="ttb">Parameters</span>
+	<tr><td colspan=3>&nbsp;
+	<tr><td style="vertical-align: text-top;">Either
+	<td style="white-space: nowrap;vertical-align: text-top;">
+		<span class="ttb">Parameters</span>
     <td>This brings up a panel of parameters, see <a href="#projParams">Project Parameters</a>.
-	After the project is loaded, you can still change the <span class="ttl">Display</span> parameters.
+		After the project is loaded, you can still change the <span class="ttl">Display</span> parameters
+		without reloading the project or annotation.
+</table>
+<p>All actions that remove from the database or disk provide a <b>Final Confirm</b> popup.
+<p>
+<table class="ty">
+<tr><td colspan=2><i>These links are only available if the project is loaded:</i>
 
-<tr><td colspan=2>&diams; <i>If a project <b>is</b> loaded into the database, you will see:</i>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
-	<span class="ttb">Remove from database</span>
-    <td>The projects and its synteny pairs will be removed from the database, but the files stay on disk.
-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
-	<span class="ttb">Reload project</span>
-    <td><span class="ttx">Only: reload project only.</span>
-    <br><span class="ttx">All: reload project and remove MUMmer/Blast files from disk.</span>
-	<p>If <span class="ttl">All</span> is selected, it first prompts for each alignment directory for this project before it is removed.
-		It removes the alignments, but it leaves the <span class="ttt">params.txt</span> file. You will need to remove the
-		alignment(s) if (1) there is a change in sequence, or (2) there is a change in the <span class="ttl">Minimal length</span> parameter;
-		see <a href="#project">Load project</a> parameters.
-		<p>For either option, it executes <span class="ttl">Remove from database</span> followed by <span class="ttl">Load project</span>.
-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+<tr><td style="white-space: nowrap;vertical-align: text-top;">
 	<span class="ttb">Reload annotation</span>
     <td>Removes the annotation from the database then load the annotations.
 
 	<p>This does not effect the alignment, so they do not have to be redone.
-	The <span class="ttl">Align&amp;Synteny</span> commands will recognize if there are existing alignments for the pair and use it
-	for the clustering and synteny computations.
-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
-	<span class="ttb">Parameters</span>
-    <td>This brings up the <a href="#projParams">Project Parameters</a> panel.
-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;
+	The <span class="ttl">Align&amp;Synteny</span> commands will recognize if there are existing alignments and will use them.
+	<br>&#128073; This would be done if the annotation file has changed or its parameters
+	<br>(see project parameter's <a href="#anno">Load Annotation</a>).
+<tr><td style="white-space: nowrap;">
 	<span class="ttb">View</span>
-    <td>This bring up a panel of a summary of the loaded results, e.g. <a href="img/viewArab.png">View Arabidopsis</a>.
+    <td>This bring up a panel of a summary of the loaded results,
+    e.g. <a href="img/viewArab.png">View Arabidopsis</a>.
 </table>
-<p>For any action that will remove the project or alignments from disk, a popup will occur
-to confirm that you want this done! If it will be removing multiple alignment directories, it will prompt
-on each one.
 
 <a id="avail"></a>
 <h3>Available Syntenies</h3>
@@ -237,15 +242,17 @@ the buttons that can be selected are activated.
 	<td>Synteny for this project pair is ready to view.
 <tr><td><b>A</b>
 	<td>The MUMmer alignment has been performed but the <span class="ttl">Clust&amp;Synteny</span> needs to be run;
-	select <span class="ttl">Reload MUMmer</span>.
+	<br>select <span class="ttl">Reload MUMmer</span>.
 <tr><td><b>?</b>
-	<td>The alignment have not been completed. In this case, select <span class="ttl">Reload MUMmer</span> and the
+	<td>The alignment have not been completed. In this case,
+	<br>select <span class="ttl">Reload MUMmer</span> and the
 		alignments will be completed followed by the synteny computation.
 <tr><td><b>B</b>
 	<td>A blast tabular file is available but the <span class="ttl">Load&amp;Synteny</span> needs to be run;
-	select <span class="ttl">Load Blast</span>.
+	<br>select <span class="ttl">Load Blast</span>.
 	<tr><td><b>A/B</b>
-	<td>Both MUMmer and Blast files are available; select which to use on the <a href="#pairPanel">Pair Parameters</a> window.
+	<td>Both MUMmer and Blast files are available;
+	<br>select which to use on the <a href="#pairPanel">Pair Parameters</a> window.
 <tr><td>&nbsp;
 	<td>Neither MUMmer or Blast alignment files exist.
 </table>
@@ -253,9 +260,10 @@ the buttons that can be selected are activated.
 
 <a id="fun"></a>
 <h3>Align&amp;Synteny</h3>
-
+<a href="img/LoadBlastAnS.png"><img src="img/LoadBlastAnS.png" alt="Load Blast"
+style="border: 1px solid black; width: 450px"></a>
+<p>
 <table class="ty">
-<tr><td colspan=2><span class=ttl>Align&amp;Synteny</span> The following 3 buttons are to the left of this label, which is abbreviated A&amp;S.
 <tr><td>First button<td>The text of the first button changes depending on the state of the selected project pair.
   <table>
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
@@ -263,30 +271,39 @@ the buttons that can be selected are activated.
 	     <td>No pair is selected.
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Run MUMmer</span>
-		<td>Run (or complete) the MUMmer alignments, followed by the <span class="ttx">Cluster&amp;Synteny</span>.
+		<td>The alignments hav not been run nor is synteny computed.
+		<br>Run (or complete) the MUMmer alignments, followed by the <span class="ttx">Cluster&amp;Synteny</span>.
 		<br>See <a href="MUMmer.html" class="ext" target="_blank">Use MUMmer</a>
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Reload MUMmer</span>
-		<td>If the pair is already complete (&#10004;), the button label changes to <span class="ttb">Reload MUMmer</span>.
-		Selecting this will remove the pair from the database, load the existing MUMmer files, and run the <span class="ttx">Cluster&amp;Synteny</span>.
+		<td>The pair is already complete (&#10004;) or the alignments exists (<b>A</b>).
+		<br>Selecting this will remove the pair from the database, load the existing MUMmer files, and run the <span class="ttx">Cluster&amp;Synteny</span>.
 		<br>If you wish to rerun the MUMmer alignment, first use the <span class="ttb">Clear Pair</span> function.
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Load Blast</span>
-		<td>The <span class="ttb">Load Blast files</span> option is selected in the
+		<td>The pair is already complete (&#10004;) or the Blast alignments exists (<b>B</b>),
+		<br>and <span class="ttb">Load Blast files</span> option is selected in the
 		<a href="#pairParams">Pair Parameters</a>.
-		<br>Selecting this will add the hits in existing blast file(s) to the database, and run the <span class="ttx">Synteny</span>
+		<br>Selecting this will add the hits from the blast file(s) to the database, and run the <span class="ttx">Synteny</span>
 		(there is no clustering for blast hits).
 		<br>See <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a>
 	<tr><td style="white-space: nowrap;vertical-align: text-top;">Only...
 		<td>See the parameters's <a href="#drop">drop-down</a> for the variations.
   </table>
-<tr><td style="white-space: nowrap;vertical-align: text-top;">
+
+<tr><td style="white-space: nowrap;">
 		<span class="ttb">Clear Pair</span>
-	<td><span class="ttx">Only: remove pair from database</span>
-	<br><span class="ttx">All: remove pair and MUMmer/Blast files from disk for this pair</span>
-	<p>If you have changed the <span class="ttl">Alignment</span> parameters, or loaded new sequence for one
-	of the projects, you need to have the alignments removed and redone; otherwise, you can just remove the synteny
-	from database.
+	<td>
+	<table class="ty"><tr><td><a href="img/clearPair.png">
+	<img src="img/clearPair.png" alt="manager" style="border: 1px solid black; width: 330px"></a>
+	<td>A dialog, as illustrated on the left, will show the options.
+	The <span class=ttx>Results</span> items will only be enabled if the subdirectories exist.
+	<p>&#128073; If the <a href="#align2">Mask or MUMmer args</a> are changed, MUMmer needs to be re-run.
+	The <span class=ttx>/align</span> directory needs to be removed, which contains
+	the MUMmer alignment results.
+	<p>After <span class=ttl>Confirm</span> is selected, a second <b>Final Confirm</b> will popup.
+
+	</table>
 <tr><td style="white-space: nowrap;vertical-align: text-top;">
 		<span class="ttb">Parameters</span>
 	<td>Set the <a href="#pairParams">Pair Parameters</a> for the selected pair cell .
@@ -307,8 +324,9 @@ the buttons that can be selected are activated.
 	<li>If this is not checked, it will write status information repeatedly on the same terminal line.
 	<li>See <a href="Demo.html#slog" class="ext" target="_blank">Demo examples</a>.
 	</ul>
-Neither of these are saved with the <span class="ttb">Pair parameters</span> <a href="#save2">Save</a>. They can be
-set at the command line using <span class=ttt>-p</span> and/or <span class=ttt>-v</span>, respectively.
+Neither of these are saved with the <span class="ttb">Pair parameters</span> <a href="#save2">Save</a>.
+They can be set at the command line, e.g.
+<br><span class=ttt>./symap -p 3 -v </span>
 
 <hr>
 <!-- =================================================================-->
@@ -339,8 +357,8 @@ set at the command line using <span class=ttt>-p</span> and/or <span class=ttt>-
 
 <tr><td>Click the <u>Parameters</u> link for a project to open the parameters panel shown on the right.
 
-<p><i>Make sure these two parameters are correct before running the alignment</i>: <span class="ttl">Minimum length</span>, <span class="ttl">Sequence files</span>.
-These are described in <a href="#project">Load project</a>.
+<p>&#128073; <i>Make sure these two parameters are correct before running the alignment</i>: <span class="ttl">Minimum length</span>, <span class="ttl">Sequence files</span>.
+These are described in <a href="#minlen">Load project</a>.
 
 <p><span class="ttl">Sequence</span> and <span class="ttl">Anno</span> (annotation) <span class="ttl">files</span>:
 <br>If the files are put in the default locations, nothing needs to be entered for them.
@@ -361,10 +379,12 @@ in the converted .gff files.
 
 <!-- ================================================== -->
 <a id="display"></a>
-<h3>Display parameters</h3>
-
-Most of the values in the parameter's <u>Display</u> section are shown in the <span class="ttl">Selected</span> section of the <span class="ttp">Manager</span>.
-New values take immediate effect on <span class="ttb">Save</span> and are saved in the <span class="ttt">symap_5/data/seq/&lt;project-name&gt;/params.txt</span> file.
+<h3>Display</h3>
+The following parameters are under the <u>Display</u> section of the <a href="#start">parameters</a> panel.
+<br>Most of these values are shown in the <span class="ttl">Selected</span> section of the
+<span class="ttp">Manager</span>.
+<br>New values take immediate effect on <span class="ttb">Save</span> and are saved in the
+<span class="ttt">symap_5/data/seq/&lt;project-name&gt;/params.txt</span>.
 
 <p>
 <table class="ty">
@@ -416,9 +436,11 @@ New values take immediate effect on <span class="ttb">Save</span> and are saved 
 	<td>50
 	<td>--
 </table>
+<p>&#128073; Changes to the display parameters take immediate effect, i.e. no further action is required.
 
+<!- ======================================= -->
 <a id="project"></a>
-<h3>Load project parameters</h3>
+<h3>Load project</h3>
 The following parameters are under the <u>Load project</u> section of the <a href="#start">parameters</a> panel.
 
 <p><span class="ttl">Group prefix</span>
@@ -454,6 +476,7 @@ and check the output to the terminal to make sure the annotation was loaded righ
 <a href="./input/index.html#convert" class="ext" target="_blank">xToSymap</a>
 as it may help you create the files with good prefixes.
 
+<a id="minlen"></a>
 <p><span class="ttl">Minimum length</span>
 <br>This must be an integer, commas are allowed (e.g. 1,000,000).
 <br>This is the minimum length of the FASTA sequence that will be loaded; smaller sequences will be ignored. Note that annotations
@@ -466,14 +489,14 @@ Select the input FASTA sequence file(s) or directories of sequence files.
 For formatting, see <a href="./input/index.html#seqprep" class="ext" target="_blank">Sequence files</a>.
 Default location: <span class="ttt">data/seq/&lt;project-name&gt;/sequence</span>
 
-<p>If any either the <span class="ttl">Sequence files</span> or <span class="ttl">Minimal length</span> parameters are changed:
+<p>&#128073; If any either the <span class="ttl">Sequence files</span> or <span class="ttl">Minimal length</span> parameters are changed:
 <ul><li>If the project has already been loaded, <span class="ttb">Reload Project</span>.
 <li>If <span class="ttl">A&amp;S</span> has previously been run,
 select <span class="ttb">Clear Pair</span> and remove the alignment files, then run <span class="ttl">A&amp;S</span>.
 </ul>
 <!-- ============================================ -->
 <a id="anno"></a>
-<h3>Load annotation parameters</h3>
+<h3>Load annotation</h3>
 The following parameters are under the <u>Load annotation</u> section of the <a href="#projParams">parameters</a> panel.
 
 <p><span class="ttl">Exon/CDS</span> toggle (v5.8.7 or later)
@@ -510,12 +533,12 @@ a GFF3 file directly can cause problems if it does not conform to what SyMAP exp
 <a href="input/index.html#annot" class="ext" target="_blank">Annotation files</a>.
 Annotation is optional but highly recommended. Default location: <span class="ttt">data/seq/&lt;project-name&gt;/annotation</span>
 
-<p>If any of these are changed:
+<p>&#128073; If any of these are changed:
 <ul><li>If the annotation has already been loaded, <span class="ttb">Reload Annotation</span>.
 <li>If <span class="ttl">A&amp;S</span> has been previously run, re-run <span class="ttl">A&amp;S</span> (the existing alignments files will be reused).
 </ul>
 <!-- ================================================= -->
-<a id="annot"></a>
+<a id="annot"></a> <!-- ref in various webpages -->
 <h4>GFF Attributes</h4>
 If <span class="ttp">xToSymap</span> was used to create the GFF file, then the attributes have already been filtered,
 and this section can probably be ignored.
@@ -547,8 +570,9 @@ The <span class="ttl">Anno key count</span> can be modified at any time using <s
 the desired keywords separated by commas.  Using this approach, it will also reduce
 annotation description per gene in the <span class="ttl">2D display</span>.
 Referring to the example above, if the string "<span class="ttt">ID, product</span>" was entered for <span class="ttl">Anno keywords</span>,
-the <span class="ttt">Name=value</span> would not be part of any gene annotation. This must be set before <span class="ttb">Load Annotations</span>
-is executed.
+the <span class="ttt">Name=value</span> would not be part of any gene annotation.
+<p>&#128073; If the  <span class="ttl">Anno keywords</span> are changed after the annotations are loaded, execute
+<span class=ttl>Reload Annotations</span>
 <!-- ============================================================= -->
 <a id="save1"></a>
 <h3>Saving project parameters</h3>
@@ -581,44 +605,48 @@ Do not edit <span class="ttt">params.txt</span> with a standard editor.
 
 <a id="pairPanel"></a>
 <h3>Pair Parameter panel</h3>
-The <a href="#avail">Available Syntenies</a> section explains the table in the lower right.
-<p><a href="img/demoTableA.png"><img src="img/demoTableA.png" alt="demo table with A" style="border: 1px solid black; width: 500px"></a>
 
-<p>If a cell contains an <b>A</b>, the MUMmer alignments are complete and will
+<table class=tx><tr><td>
+<p><a href="img/demoTableA.png"><img src="img/demoTableA.png"
+	alt="demo table with A" style="border: 1px solid black; width: 450px"></a>
+<p>The <a href="#avail">Available Syntenies</a> section explains the table underneath the label.
+A few more notes: If a cell contains an <b>A</b>, the MUMmer alignments are complete and will
 	not be redone. This is important because MUMmer
 is very time-consuming, but the synteny computation is not
 (see <a href="Results.html#time" class="ext" target="_blank">timing results</a>); hence,
 one can make changes to the cluster or synteny parameters and re-run without redoing the alignments.
-<p>
 
-Select a pair cell in the <span class="ttb">Available Syntenies</span> table followed by the <span class="ttl">Parameters</span>
-button, which will popup the panel shown on the lower left; click <span style="font-size: 20px">+</span> to open a section and show
+<td style="vertical-align: text-top;">
+	<a href="img/parameters2.png"><img src="img/parameters2.png"
+	   alt="pair parameters" style="border: 1px solid black; width: 280px"></a>
+</table>
+<p>Select a pair cell in the <span class="ttb">Available Syntenies</span> table followed by
+the <span class="ttl">Parameters</span>
+button, which will popup the panel shown on the upper right; click <span style="font-size: 20px">+</span> to open a section and show
 its associated parameters.
-<p><table>
-<tr>
-    <td style="vertical-align: text-top;">
-	<a href="img/parameters2.png"><img src="img/parameters2.png" alt="pair parameters" style="border: 1px solid black; width: 300px"></a>
-	<td>&nbsp;
-	<td>
-     If a pair cell has a &#10004; indicating it is complete, and the parameters for a section are changed, do the following:
 
+<p> &#128073; If a pair cell has a &#10004; indicating it is complete, and the parameters for a section are
+subsequently changed, do the following:
 	<table class="ty">
 		<tr><td style="white-space: nowrap;"><i>Changed Section</i><td><i>Action</i>
-		<tr><td><b><i>Alignment</i></b> <td>If the MUMmer parameters have been changed, selected
-		<span class=ttl>Clear Pair</span> followed by <span class=ttl>Run MUMmer</span>.
-		<br>If the Blast files have been changed, selected
-		<span class=ttl>Clear Pair</span> followed by <span class=ttl>Load Blast</span>.
-		<tr><td><b><i>Cluster Hits</i></b><br>(MUMmer only) <td>Use <span class="ttb">Reload MUMmer</span>
-		directly; the existing alignments for the pair will be used.
+		<tr><td><b><i>Alignment</i></b> <td>If the MUMmer parameters have been changed, select
+		<br><a href="#fun">Clear Pair</a>
+		with <span class=ttx>Remove pair /align</span>, followed by <a href="#align2">Run MUMmer</a>.
+		<br>If the Blast files have been changed,
+		<br><a href="#fun">Clear Pair</a>,
+		replace the files in the <span class=ttx>/blast</span> directory,
+		followed by <a href="#align2">Load Blast</a>.
+
+		<tr><td><b><i>Cluster Hits</i></b><br>(MUMmer only)
+		<td>The button label will be <span class="ttb">Reload MUMmer</span>;
+		the existing alignments for the pair will be used.
 		<tr><td><b><i>Collinear Sets</i></b><td>If only collinear sets parameters are changed,
-		click the lower drop-down and select <span class="ttx">Collinear Only</span>
+		click the lower drop-down and select <span class="ttx">Collinear Sets</span>
 		(see <a href="#drop">drop-down</a>).
 		<tr><td><b><i>Synteny</i></b> <td>If only synteny parameters are changed,
 		click the lower drop-down and select <span class="ttx">Synteny Only</span>
 		(see <a href="#drop">drop-down</a>).
 	</table>
-	&nbsp;
-</table>
 <p>The <span class="ttl">Align&amp;Synteny</span> drop-down shows what will be run.
 	If the alignment and synteny have been run, parameters can be changed and then
 	different actions can be selected to re-run (see <a href="#drop">drop-down</a>):
@@ -634,58 +662,61 @@ its associated parameters.
 <a id="align"></a>
 <a id="align2"></a> <!-- ref in code -->
 <h3><span style="font-size: 20px">+</span> Alignment</h3>
-<table style="width:90%"><tr><td>
-&bull; <span class=ttl>Use MUMmer</span>:
-MUMmer provides genome alignment.
-<p><span style="font-size: 15px">+</span><span class=ttx>Mask and MUMmer args</span>
-Click  <span style="font-size: 15px">+</span> to view the MUMmer arguments.
-<br>See  <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> for details.
+<table class="tx">
+<tr><td style="vertical-align: text-top;">
+&bull; <span class=ttl>Use MUMmer</span>: MUMmer provides genome alignment.
+<p>See  <a href="MUMmer.html" class="ext" target="_blank">MUMmer</a> for details
+about the parameters shown on the right.
 
 <p>&bull; <span class=ttl>Load Blast files</span>:
-Blastp hits from a b6 tabular file can be loaded instead of running MUMmer, or to augment MUMmer results.
-<p><span style="font-size: 15px">+</span><span class=ttx>Blast input and filter</span>
-Click  <span style="font-size: 15px">+</span> to view the Blast arguments.
-<br>See <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details.
+Blast hits from a b6 tabular file can be loaded instead of running MUMmer, or to augment MUMmer results.
+<p>See <a href="LoadBlast.html" class="ext" target="_blank">Load Blast</a> for details
+about the parameters shown on the right.
 
 <a id="clust"></a> <!-- ref in pre-v590 code -->
-<h3><span style="font-size: 12px">+</span> Cluster MUMmer hits</h3>
-See <a href="MUMmer.html#clust" class="ext" target="_blank">MUMmer</a> for clustering MUMmer hits.
+<p>&nbsp;<p><b><span style="font-size: 12px">+</span> Cluster MUMmer hits</b>
+<br>See <a href="MUMmer.html#clust" class="ext" target="_blank">MUMmer</a> for clustering MUMmer hits.
 <td><a href="img/parameters2ab.png">
-    <img src="img/parameters2ab.png" alt="align params" style="border: 1px solid black; width: 200px"></a>
+    <img src="img/parameters2ab.png" alt="align params" style="border: 1px solid black; width: 350px"></a>
 </table>
 
 <a id="cosets"></a> <!-- ref in code -->
 <h3><span style="font-size: 20px">+</span> Collinear Sets</h3>
-<table><tr><td>
+<table><tr><td style="vertical-align: text-top;">
 Collinear Sets is abbreviated as "CoSet" below. A description of <span class="ttx">Collinear Sets</span>
 is given in <a href="Details.html" class="ext" target="_blank">Details</a>.
 <td><a href="img/parameters2c.png"><img src="img/parameters2c.png" alt="Collinear" style="border: 1px solid black; width:  380px"></a>
 </table>
-<p><b>Parameters</b>
+<span class="ttl">Algorithm</span>
 <table class="tx">
-<tr><td style="vertical-align: text-top;"><span class="ttl">By Order</span> <br><span class="ttl">By Size</span>
-<td>The 1st option numbers the CoSets in descending order by the start coordinates.
-<br>The 2nd option sorts CoSets by size and then numbers then in ascending order by size.
+<tr><td style="vertical-align: text-top;">
+    <span class="ttl">By Order</span>
+    <br><span class="ttl">By Size</span>
+    <td>The 1st option numbers the CoSets in descending order by the start coordinates.
+    <br>The 2nd option sorts CoSets by size and then numbers then in ascending order by size.
 
-<tr><td style="vertical-align: text-top;"><span class="ttl">Advanced</span> <br>&nbsp;<br><span class="ttl">Simple</span>
-<td>The 1st option uses the advanced algorithm (released v5.8.8), which tries to find collinearity
-in complex overlapped genes areas.
-<br>The 2nd option uses the original algorithm, which does not try to resolve overlapping genes.
+<tr><td style="vertical-align: text-top;">
+       <span class="ttl">Advanced</span>
+       <br><span class="ttl">Simple</span>
+    <td>The 1st option tries to find collinearity in complex overlapped genes areas.
+     <br>The 2nd option uses the original algorithm, which does not try to resolve overlapping genes.
+<tr><td colspan="2">See <a href="Details.html#simple" class="ext" target="_blank">Advanced vs Simple</a>.
 </table>
-See <a href="Details.html#simple" class="ext" target="_blank">Advanced vs Simple</a>.
+
 <p>
-Suggestion:
-<ul>
-<li>Use <span class="ttl">Advanced</span>; if you do not like how it handles embedded genes,
+Suggestion: Use <span class="ttl">Advanced</span>, then if you do not like how it handles embedded genes,
 change to <span class="ttl">Simple</span>.
-<li>You can change the collinear parameters, then <i>only</i> execute the <span class="ttb">Collinear Set</span> algorithm;
-see <a href="#save2">Save</a>.
+<p>&#128073; If the collinear parameters are changed:
+<ul>
+<li><i>Only</i> execute the <span class="ttb">Collinear Set</span> algorithm by
+using the <a href="#drop">drop-down</a>.
 <li>The algorithm runs very quickly, e.g. 10 seconds for mouse compared to humans.
 
 <li>If the Collinear sets have changed, and you are using the Synteny
 <span class="ttl">Strict</span> option, you should rerun it with <span class="ttb">Synteny Only</span> because it uses
 the collinear sets (see <span class="ttl">Strict</span> below).
 </ul>
+
 <!-- =============================================================== -->
 <a id="syn"></a> <!-- ref in code -->
 <h3><span style="font-size: 20px">+</span> Synteny</h3>
@@ -734,10 +765,11 @@ when evaluated with the following 3 parameter sets:
 <a id="hint2"></a>
 <p><b>Hints about synteny parameter settings</b>
 
-<p>It is easier to experiment with synteny parameters since <span class="ttx">Synteny Only</span> can be used to speed it up.
+<p>&#128073; It is easy to experiment with synteny parameters since it is possible to execute the
+<i>Synteny only</i> using the <a href="#drop">drop-down</a>.
 For two genome complete sequence synteny, it is strongly suggested you start with <span class="ttx">Strict</span>.
 
-<p>&rarr;&nbsp;<i>Suggestion</i>: For large genomes, experiment with the parameters on just one or two pairs of the chromosomes;
+<p><i>Suggestion</i>: For large genomes, experiment with the parameters on just one or two pairs of the chromosomes;
 you can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split. Note: the synteny results of
 one or two chromosomes will be slightly different compared to whole genome synteny.
 
@@ -750,8 +782,8 @@ See <a href="./SystemGuide.html#draft2" class="ext" target="_blank">Ordering det
 <span class="ttl">Abbreviation</span> set in the <span class="ttb">Project parameters</span> panel.
 The "-&gt;" indicates that the first sequence will be ordered against the second.
 
-<p>If the draft has been aligned to the <span class="ttl">Order against</span> sequence, but this option
-was not set, it can be set and the <span class="ttx">Synteny Only</span> setting used (described below in <b>3.e Save</b>).
+<p>&#128073; If the draft has been aligned to the <span class="ttl">Order against</span> sequence, but this option
+was not set, it can be set and then execute <i>Synteny Only</i> by setting the <a href="#drop">drop-down</a>.
 <!-- ============================================= -->
 <a id="save2"></a>
 <h3>Drop-down and Save</h3>
@@ -775,13 +807,14 @@ There are additional options you may select, as follows:
 <tr><td><span class="ttx">Collinear Sets</span>
 	<td>If you only want to redo the <a href="#cosets">Collinear Sets</a> computation, select this option.
 </table>
-
-<p>The <span class="ttp">Manager</span> window button right after <span class=ttl>Align &amp; Synteny</span>
-will indicate what was selected.
-<table style="width:80%"><tr><td>
+<p>
+<table style="width:70%"><tr><td>
+The <span class="ttp">Manager</span> window <span class=ttl>Align &amp; Synteny</span> button
+will indicate what was selected, e.g. <span class=ttl>Synteny Only</span>.
 <p>Once the button is clicked, a popup will give detailed information on the actions and parameters,
 select <span class=ttl>Confirm</span>.
-<td><a href="img/demoRedo.png"><img src="img/demoRedo.png" alt="Drop redo" style="border: 1px solid black; width: 250px"></a>
+<td><a href="img/demoRedo.png"><img src="img/demoRedo.png" alt="Drop redo"
+     style="border: 1px solid black; width: 200px"></a>
 </table>
 <!-- =================================================== -->
 <h4>Saving pairs parameters</h4>

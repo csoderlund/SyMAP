@@ -1,12 +1,10 @@
- package backend;
+package backend;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.Date;
 import java.util.TreeMap;
-
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 
@@ -16,12 +14,12 @@ import symap.manager.Mpair;
 import symap.manager.Mproject;
 import symap.manager.SumFrame;
 import symap.Ext;
+import symap.Globals;
 import symap.manager.ManagerFrame;
 import util.Cancelled;
 import util.ErrorCount;
 import util.ErrorReport;
 import util.ProgressDialog;
-import util.Utilities;
 import util.Popup;
 
 /**********************************************************
@@ -46,7 +44,7 @@ public class DoAlignSynPair extends JFrame {
 	private DBconn2 dbc2;
 	private Mpair mp;
 	
-	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  int maxCPUs, boolean bAlignDone) {
+	public void run(ManagerFrame frame, DBconn2 dbc2, Mpair mp,  int maxCPUs, FileWriter syLogFW ) { // CAS593 move open log to ManagerFrame and pass in
 		this.dbc2 = dbc2;
 		this.mp = mp;
 		
@@ -56,7 +54,6 @@ public class DoAlignSynPair extends JFrame {
 		String dbName2 = mProj2.getDBName();
 		String toName =  (mProj1 == mProj2) ? dbName1 + " to self (includes mirrored hits)": dbName1 + " to " + dbName2; 
 		
-		FileWriter syLogFW = symapLog(mProj1,mProj2);
 		String alignLogDir = buildLogAlignDir(mProj1,mProj2);
 
 		String msg = (mProj1 == mProj2) ? "Self-synteny "  + dbName1 + " ..." : "Synteny " + toName + " ...";
@@ -107,12 +104,12 @@ public class DoAlignSynPair extends JFrame {
 			diaLog.msg(chgMsg);
 		}
 		else {
-			if (bAlignDone) chgMsg = mp.getChgClustSyn(Mpair.FILE);
-			else            chgMsg = mp.getChgAllParams(Mpair.FILE);  
+			if (mp.hasAlignDone() || bLoadBlast) chgMsg = mp.getChgClustSyn(Mpair.FILE); 
+			else                                 chgMsg = mp.getChgAllParams(Mpair.FILE);  
 			diaLog.msg("Pair Parameters" + "\n" + chgMsg); 
 		}
 		
-		if (!bLoadBlast) { 				// CAS592 add; wasn't showing proper message and outputting lots of ...
+		if (!bLoadBlast) { 				
 			String mummerPath = Ext.getMummerPath(); 
 			if (mummerPath.equals("")) {
 				Popup.showErrorMsg(Ext.getMummerPathNoChk() + " does not exist\nCannot continue");
@@ -169,6 +166,7 @@ public class DoAlignSynPair extends JFrame {
 			public void run() {
 				boolean bSuccess = true;
 				try {
+				/** Onlys */
 					if (bOnly) {
 						if (mp.bSynOnly) synteny.run( mProj1, mProj2);	
 						if (mp.bCoSet)   anchors.collinear(mProj1, mProj2);
@@ -185,11 +183,18 @@ public class DoAlignSynPair extends JFrame {
 						}	
 					
 						mp.saveParamsForOnly();	
+						
+						if (!mp.bPseudo) { 
+							diaLog.msgPop(">> Summary for " + toName + "\n");
+							new SumFrame(dbc2, mp);
+							printStats(diaLog);
+						}
+						Utils.prtMsgTimeDone(diaLog, "Complete Only", timeStart);
 						diaLog.finish(bSuccess); 
 						return; 		// goto Finish
 					}
 					
-					/** Align -- MUMmer or Blast**/
+				/** Align -- MUMmer or Blast**/
 					if (bLoadBlast) bSuccess = loadBlast.run(); 
 					else            bSuccess = aligner.run();  
 					
@@ -233,6 +238,13 @@ public class DoAlignSynPair extends JFrame {
 						return;
 					}	
 					
+					/** Summary CAS593 put in progress panel **/
+					diaLog.msgPopLog(">> Summary for " + toName + "\n");
+					new SumFrame(dbc2, mp);
+					printStats(diaLog);
+					
+					if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, "Complete Load&SyMAP", timeStart);
+					else            Utils.prtMsgTimeDone(diaLog, "Complete Align&SyMAP", timeStart);
 					diaLog.finish(bSuccess); 
 				}
 				catch (OutOfMemoryError e) {
@@ -294,61 +306,27 @@ public class DoAlignSynPair extends JFrame {
 					String msgx =  "Confirm: Remove " + mp.toString() + " from database (slow if large database)" + 
 							     "\nCancel:  The user removes the database and starts over";
 					if (Popup.showConfirm2("Remove pair", msgx)) { 
-						mp.removePairFromDB(true); 					// True redo numHits; writes to stdout that it is removing
-						System.out.println("   Removal complete");
+						ErrorCount.init();
+						diaLog.msg("Remove pair from database on user request");
+						mp.removePairFromDB(true); 	// True redo numHits
 					} 
-					else System.out.println("Remove database and restart");
+					else diaLog.msg("Remove database and restart");
 				}
 				catch (Exception e) { ErrorReport.print(e, "Removing alignment");}
 			}
 		}
-		else {
-			if (!mp.bPseudo) { // when moved into thread, error on creating summary
-				diaLog.msgPop(">> Summary for " + toName + "\n");
-				new SumFrame(dbc2, mp);
-				printStats(diaLog);
-			}
-		}
-		String what = "Complete ";
-		if (diaLog.wasCancelled()) what = "Cancelled ";
-		else if (diaLog.failed())  what = "Failed ";
-		if (bOnly)			 Utils.prtMsgTimeDone(diaLog, what + "Only", timeStart);
-		else if (bLoadBlast) Utils.prtMsgTimeDone(diaLog, what + "Load&SyMAP", timeStart);
-		else                 Utils.prtMsgTimeDone(diaLog, what + "Align&SyMAP", timeStart);
-		
+	    // syLogFW in dialog.finish will have been closed unless cancel or error
 		System.out.println("--------------------------------------------------");
 		frame.refreshMenu();
 		try {
 			if (syLogFW != null) {
-				if (Cancelled.isCancelled())  syLogFW.write("Cancelled");
-				if (ErrorCount.getCount()>0)  syLogFW.write("Errors");
-				syLogFW.write("\n-------------- done " + new Date().toString() + " -----------------\n");
+				syLogFW.write(Globals.lastLine);
 				syLogFW.close();
 			}
 		}
 		catch (Exception e) {}
 	} // end of run method
 	
-	/**********************************************************************/
-	private FileWriter symapLog(Mproject p1, Mproject p2) {
-		FileWriter ret = null;
-		try {
-			File pd = new File(Constants.logDir);
-			if (!pd.isDirectory()) pd.mkdir();
-			
-			String pairDir = Constants.logDir + p1.getDBName() + Constants.projTo + p2.getDBName(); 
-			pd = new File(pairDir);
-			if (!pd.isDirectory()) pd.mkdir();
-			
-			File lf = new File(pd,Constants.syntenyLog);
-			ret = new FileWriter(lf, true); // append
-			System.out.println("\nAppend to log file: " 
-					+ pairDir + "/" + Constants.syntenyLog + " (Length " + Utilities.kMText(lf.length()) + ")");	
-		}
-		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
-		return ret;
-	}
-
 	private void printStats(ProgressDialog prog)  {
 		int pairIdx = mp.getPairIdx();
 		if (pairIdx<=0) return;

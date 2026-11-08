@@ -17,7 +17,6 @@
 <p>&nbsp;
 <a href="#disk">Disk & Time</a>
 <a href="#align">Use MUMmer</a>
-<a href="#exist">Existing MUMmer</a>
 <a href="#clust">Cluster hits</a>
 <a href="MUMmerHelp.html" class="ext" target="_blank">MUMmer Help</a>
 <a href="#top">Go to top</a>
@@ -71,14 +70,13 @@
 <p><li>If MUMmer fails, it is often due to insufficient memory; see
 <a href="MUMmerHelp.html#mem" class="ext" target="_blank">Out of Memory</a>, which
 explains how to determine the problem and ways around it.
-<p><li>For large genomes, <i>it is essential that the machine has at least 6Gb of RAM and disk space
-for each CPU used</i>.
+<p><li>For large genomes, <i>it is essential that the machine has at least 6Gb of RAM for each CPU used</i>.
+<p><li>When MUMmer is running, the temporary files can take up to 6G of disk space, hence, if you have 12 CPUs/threads
+running, this could use 72G of disk space.
+<p><li>If RAM and/or disk space is not large, it is faster to use fewers CPUs.
 <p><li>If gene discovery is not important, then masking all but the gene sequences <i>greatly</i> reduces
 the time and memory.  Alternatively, create a
 <a href="LoadBlast.html" class="ext" target="_blank">Blast file for input</a>.
-
-<p><li>When MUMmer is running, the temporary files can take up to 6G of disk space, hence, if you have 12 CPUs/threads
-running, this could use 72G of disk space.
 </ul>
 
 <p>MUMmer produces a <span class="ttt">.mum</span> and <span class="ttt">.delta</span> file.
@@ -128,11 +126,17 @@ The resulting <span class="ttt">align.tar.gz</span> file take 3.5G of space (red
 <!-- ========================================================== -->
 <a id="align"></a>
 <h2>Use MUMmer</h2>
-
-<h3>Preparing the sequences</h3>
-<table class=tx><tr><td>
+<table class="tz">
+<tr>
+	<td><a href="#concat">Preparing the<br>sequences</a>
+	<td><a href="#mparam">MUMmer<br>Parameters</a>
+	<td><a href="#exist">Existing<br>MUMmer files</a>
+	<td><a href="MUMmerHelp.html" class="ext" target="_blank">MUMmer<br>Help</a>
+</table>
 
 <a id="concat"></a> <!-- this is referenced elsewhere -->
+<h3>Preparing the sequences</h3>
+<table class=tx><tr><td>
 <u><span class="ttl">Concat</span> checked</u>:
 <div class="hanging-indent">&bull; For the 1st genome, sequences are concatenated into a file as long as the file length is &lt;1G. Multiple
 files of maximum file length 1G may be created.</div>
@@ -144,7 +148,7 @@ multiple files &lt;60M  are created for each genomes. This results in more MUMme
 The exception is self-synteny, where all chromosomes are written to their own file, so <span class="ttl">Concat</span> is
 not relevant.
 
-<td><td><a href="img/parameters2a.png"><img src="img/parameters2a.png" alt="align params" style="border: 1px solid black; width: 350px"></a>
+<td><td><a href="img/parameters2ab.png"><img src="img/parameters2ab.png" alt="align params" style="border: 1px solid black; width: 350px"></a>
 </table>
 <p>The following statistics are from comparing Arabidopsis thaliana (119M) against Brassica rapa (297M)
 on a MacOS using 1 CPU.
@@ -188,37 +192,27 @@ and gene-based synteny.
 removed with <span class="ttb">Clear Pair</span> and <span class="ttl">A&amp;S</span> run again.
 </div>
 
+<a id="mparam"></a>
 <h3>MUMmer parameters</h3>
 The default MUMmer parameter seems to work fine with SyMAP, so probably do not need changing.
 <table class="ty">
 <tr>
 <td><i>Parameter</i><td><i>Description</i><td><i>Default</i>
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">PROmer Args</span><sup>1</sup>
-	<td>Arguments for PROmer
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">MUMmer Args</span><sup>1</sup>
+	<td>Arguments for PROmer or NUCmer
 	<td>&nbsp;-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">NUCmer Args</span><sup>1</sup>
-	<td>Arguments for NUCmer
-	<td>&nbsp;-
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">Self Args</span><sup>2</sup>
-	<td>Arguments to use when aligning a chromosome to itself
-	<td>&nbsp;-
-<tr><td>&nbsp;&nbsp;<span class="ttl">PROmer Only</span><sup>3</sup>
+<tr><td>&nbsp;&nbsp;<span class="ttl">PROmer Only</span><sup>2</sup>
 	<td>Use PROmer for all alignments
 	<td>Off
-<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">NUCmer Only</span><sup>3</sup>
+<tr><td style="white-space: nowrap;">&nbsp;&nbsp;<span class="ttl">NUCmer Only</span><sup>2</sup>
 	<td>Use NUCmer for all alignments
 	<td>Off
 </table>
-<br><sup>1</sup>
+<sup>1</sup>
 <small>
 <span class="green">BEWARE</span>: Entered PROmer and NUCmer arguments are <b>NOT</b> checked for correctness.
 See <a href="MUMmerHelp.html#mum" target="_blank" class="ext">MUMmer parameters</a>.</small>
-
-<br><sup>2</sup><small>When self-alignment is performed, standard arguments are used
-when comparing different chromosomes. However, additional arguments may be desired
-when a chromosome sequence is run against itself, e.g. <span class="ttt">--nosimplify</span>.
-</small>
-<br><sup>3</sup><small> By default, PROmer is used for alignments between different
+<br><sup>2</sup><small> By default, PROmer is used for alignments between different
 projects, while NUCmer is used for self alignments.
 </small>
 <p>All MUMmer files but the those with the <span class="ttt">.mum</span> suffix are removed by <span class="ttp">symap</span>. If you prefer them not to be removed,
@@ -226,19 +220,22 @@ use the "-mum" command line parameter, i.e.
 <pre> ./symap -mum</pre>
 <!-- ============================================================= -->
 <a id="exist"></a>
-<h2>Existing MUMmer Files</h2>
+<h3>Existing MUMmer Files</h3>
 <table class=tx>
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class=ttl>Selected Pair</span>
+<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class=ttl>Run MUMmer</span>
 <td>No MUMmer files exist. MUMmer will be run to compare the two genome sequences.
 <br>Then <span class=ttl>Cluster&amp;Synteny</span> will be run.
 
-<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class=ttl>Selected Redo</span>
+<tr><td style="white-space: nowrap; vertical-align: text-top;"><span class=ttl>Reload MUMmer</span>
 <td>MUMmer files exist and have been processed.
 <br>All current results in the database will be removed.
 <br>The <span class=ttl>Cluster&amp;Synteny</span> will be run using the existing MUMmer files.
 
 <tr><td style="white-space: nowrap; vertical-align: text-top;"><span class=ttl>Clear Pair</span>
-<td>Remove the pair results from the database. If requested, it will also remove the MUMmer files.
+<td>Remove the pair results from the database. If requested, it will also remove the MUMmer files, which
+are in subdirectory <span class=ttt>/align</span> in directory
+<span class="ttt">data/seq_results/&lt;species1&gt;-to-&lt;species2&gt;</span>);
+see <a href="SystemHelp.html#fun"  target="_blank" class="ext">Clear Pair</a>
 
 </table>
 <!-- ============================================================= -->
@@ -246,78 +243,19 @@ use the "-mum" command line parameter, i.e.
 <h2>Cluster MUMmer Hits</h2>
 	<table class="tz">
 	<tr>
+	<td><a href="#clParam">Parameters</a>
 	<td><a href="#a1a2">Algo1 vs Algo2 with hints</a>
-	<td><a href="#clParam">Parameter description</a>
 	<td><a href="#pseudo">Pseudo and Piles</a>
 	<td class="colrt"><a href="#top">Go to top</a>
 	</table>
 
-
-<a id="a1a2"></a>
-<h4>Algo1 vs Algo2</h4>
-<a href="img/parameters2b.png">
-<img src="img/parameters2b.png" alt="Cluster parameters" style="border: 1px solid black; width: 360px"></a>
-
-<table class="ty">
-<tr><td colspan="2"><span class="ttl">Algorithm 1 (modified original, abbreviated Algo1)</span>:
-<tr><td>Pros<td>This is an generic algorithm that has knowledge of genes versus intergenic hits.
-<br>It is recommended for ordering sequence contigs and when there are little or no gene annotation.
-<br>It <u>must</u> be used for self-synteny.
-<br>It has been used on 100's of genome comparisons.
-<tr><td>Cons<td>It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
-<tr><td>Parameters<td>It only has one parameter, which is easier to run but there is no control over what hits are filtered.
-
-<tr><td colspan="2"><span class="ttl">Algorithm 2 (exon-intron, abbreviated Algo2)</span>:
-<tr><td>Pros<td>This is a new algorithm with explicit knowledge of gene pairs and their exon-intron structure.
-<br>When there is good gene annotations for both genomes, this is definitely the superior algorithm.
-<br>It takes less memory.
-<tr><td>Cons<td>It does not perform self-synteny.
-<br>It does not work when a given chromosome is split over multiple MUMmer files; this will NOT happen
-when SyMAP generates the MUMmer files.
-
-<tr><td>Parameters<td>It has two set of parameters, hence, more control over results than <span class="ttl">Algo1</span>. See <a href="#hint">Hints</a>
-below the parameter explanation; the parameters generally do not need adjusting.
-</table>
-<p><span class="ttl">Algo1</span> is the default for self-synteny and if there is no annotation; else <span class="ttl">Algo2</span> is the default.
-
-<p><b>Wrong strand</b>
-The wrong strand is when all hits in a cluster are to the same strand (++/--)
-yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
-
-<p><span class="ttt">Algo1</span> includes these hits. You can view them in the <span class="ttp">Queries</span>
-where the <span class="ttx">Hit St</span> column will be different than the two gene <span class="ttx">Gst</span> columns.
-
-<p><span class="ttt">Algo2</span> does NOT include these hits. You can request to view the potential hits
-during the <span class="ttl">A&amp;S</span> by running it with the "-wsp" flag, i.e.
-<span class="ttt">   ./symap -wsp </span>.
-This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
-an overlapping gene. It is up to the user to determine what is real.
-
-<a id="hint"></a>
-<p><b>Hints about parameter settings</b>
-
-<p><u>Hint for <span class="ttx">Algo1</span></u>: Increasing the <span class="ttl">Top N</span> parameter can cause too many hits and reduce synteny.
-Decreasing it can remove more gene-pair hits.
-Hence, try <span class="ttl">Algo2</span> if you want more gene pairs.
-
-<p><u>Hint for <span class="ttx">Algo2</span></u>: On the output to the terminal (in <span class="ttl">Verbose</span> mode), if any chromosome pair shows over 10,000 hits, the
-parameters probably need to be made more stringent. Too many hits confuses the synteny algorithm, which results
-in synteny blocks not being found; it also results in very long execution time.
-<p><i>Suggestion</i>: For large genomes, experiment with the parameters on just one pair of the chromosomes.
-(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
-<p><i>I have experimented with the datasets</i>: (1) human, chimpanzee, mouse (2)
-Arabidopsis, Brassica rapa, Brassica oleracea.
-Only B. rapa to B. oleracea needed parameter adjustment: the number of G1 hits was over 200k,
-which is way more than typical;
-by increasing all parameters a small amount, this reduced to just over 100k.
-
 <!-- ==================================================== -->
 <a id="clParam"></a>
-<h4>Parameter description</h4>
+<h3>Parameters</h3>
 <table class="tx">
 <tr><td>
-<a href="img/parameters2b.png">
-<img src="img/parameters2b.png" alt="Cluster parameters" style="border: 1px solid black; width: 360px"></a>
+<a href="img/parameters2cl.png">
+<img src="img/parameters2cl.png" alt="Cluster parameters" style="border: 1px solid black; width: 360px"></a>
 <td>Defaults:
 <p>
 <ul>
@@ -377,13 +315,68 @@ pseudo number. This is explained below in <a href="#pseudo">Pseudo genes</a>.
 for any uncheck categories, but in a more conservative way.
 It will retain the <span class="ttl">Top N</span> hits of a piled region that have lengths within
 80% of the longest hit.
-<tr><td>Collinear Sets</td><td>See <a href="SystemHelp.html#cosets" class="ext" target="_blank">Collinear sets</a>
 </table>
+<!-- ==================================================== -->
+<a id="a1a2"></a>
+<h3>Algo1 vs Algo2</h3>
 
+<table class="ty">
+<tr><td colspan="2"><span class="ttl">Algorithm 1 (modified original, abbreviated Algo1)</span>:
+<tr><td>Pros<td>This is an generic algorithm that has knowledge of genes versus intergenic hits.
+<br>It is recommended for ordering sequence contigs and when there are little or no gene annotation.
+<br>It <u>must</u> be used for self-synteny.
+<br>It has been used on 100's of genome comparisons.
+<tr><td>Cons<td>It does not distinguish between exon and intron hits. It is more likely to miss good homologous gene pairs.
+<tr><td>Parameters<td>It only has one parameter, which is easier to run but there is no control over what hits are filtered.
+
+<tr><td colspan="2"><span class="ttl">Algorithm 2 (exon-intron, abbreviated Algo2)</span>:
+<tr><td>Pros<td>This is a new algorithm with explicit knowledge of gene pairs and their exon-intron structure.
+<br>When there is good gene annotations for both genomes, this is definitely the superior algorithm.
+<br>It takes less memory.
+<tr><td>Cons<td>It does not perform self-synteny.
+<br>It does not work when a given chromosome is split over multiple MUMmer files; this will NOT happen
+when SyMAP generates the MUMmer files.
+
+<tr><td>Parameters<td>It has two set of parameters, hence, more control over results than <span class="ttl">Algo1</span>. See <a href="#hint">Hints</a>
+below the parameter explanation; the parameters generally do not need adjusting.
+</table>
+<p><span class="ttl">Algo1</span> is the default for self-synteny and if there is no annotation; else <span class="ttl">Algo2</span> is the default.
+
+<p><u>Wrong strand</u>
+The wrong strand is when all hits in a cluster are to the same strand (++/--)
+yet the cluster aligns to two genes on the different strands (+-/-+), or vice versa.
+
+<p><span class="ttt">Algo1</span> includes these hits. You can view them in the <span class="ttp">Queries</span>
+where the <span class="ttx">Hit St</span> column will be different than the two gene <span class="ttx">Gst</span> columns.
+
+<p><span class="ttt">Algo2</span> does NOT include these hits. You can request to view the potential hits
+during the <span class="ttl">A&amp;S</span> by running it with the "-wsp" flag, i.e.
+<span class="ttt">   ./symap -wsp </span>.
+This will only show gene pairs with (1) multiple hits to exons (in one or multiple gene pairs), (2) at least one is not
+an overlapping gene. It is up to the user to determine what is real.
+
+<a id="hint"></a>
+<p><b>Hints about parameter settings</b>
+
+<p><u>Hint for <span class="ttx">Algo1</span></u>: Increasing the <span class="ttl">Top N</span> parameter can cause too many hits and reduce synteny.
+Decreasing it can remove more gene-pair hits.
+Hence, try <span class="ttl">Algo2</span> if you want more gene pairs.
+
+<p><u>Hint for <span class="ttx">Algo2</span></u>: On the output to the terminal (in <span class="ttl">Verbose</span> mode), if any chromosome pair shows over 10,000 hits, the
+parameters probably need to be made more stringent. Too many hits confuses the synteny algorithm, which results
+in synteny blocks not being found; it also results in very long execution time.
+<p><i>Suggestion</i>: For large genomes, experiment with the parameters on just one pair of the chromosomes.
+(You can use <a href="input/index.html" class="ext" target="_blank">xToSymap</a> for the split.)
+<p><i>I have experimented with the datasets</i>: (1) human, chimpanzee, mouse (2)
+Arabidopsis, Brassica rapa, Brassica oleracea.
+Only B. rapa to B. oleracea needed parameter adjustment: the number of G1 hits was over 200k,
+which is way more than typical;
+by increasing all parameters a small amount, this reduced to just over 100k.
+<!-- ==================================================== -->
 <a id="pseudo"></a>
-<h4>3.c.iii Pseudos and Piles</h4>
+<h3>Pseudos and Piles</h3>
 
-<b>Pseudo genes</b>
+<u>Pseudo genes</u>
 <table><tr><td>
 The end of a hit may not overlap an annotated gene; by default, this
 will just show a <span class="ttx">Gene#</span> of 'N.~' where N is the chromosome number.
@@ -417,7 +410,7 @@ to include un-annotated hits.
 will work).
 
 <a id="pileOfHits"></a>
-<p><b>Piles of Hits</b>
+<p><u>Piles of Hits</u>
 
 <table>
 <tr><td>The below image shows a pile of hits on the left (Cabb C5)

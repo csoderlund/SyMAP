@@ -31,8 +31,7 @@ public class DoLoadProj {
 		
 		final ProgressDialog progress = new ProgressDialog(frame, 
 				"Loading All Projects", "Loading all projects" ,  true, fw); // Writes version and date to file
-		ErrorCount.init();
-	
+		
 		Thread loadThread = new Thread() {
 			public void run() {
 				boolean success = true;
@@ -52,6 +51,7 @@ public class DoLoadProj {
 						}
 						
 						if (!success || Cancelled.isCancelled()) {
+							progress.msg("Cancel remove " + mProj.getDisplayName() + " from database              ");
 							mProj.removeProjectFromDB(); 
 						}
 						else mProj.saveParams(mProj.xLoad);
@@ -69,18 +69,21 @@ public class DoLoadProj {
 		progress.start( loadThread ); // blocks until thread finishes or user cancels
 	}
 	/********************************************************************************/
-	public void loadProject(final Mproject mProj) { // Reload Project deletes project before calling
+	public void loadProject(final Mproject mProj, boolean rmProj) { // rmProj=true reload project; CAS593
 		ErrorCount.init();
 		
 		final ProgressDialog progress = new ProgressDialog(frame, 
 				"Loading Project", "Loading project " + mProj.getDBName() + " ...",  true, fw);
-		ErrorCount.init();
 		
 		Thread loadThread = new Thread() {
 			public void run() {
 				boolean success = true;
 				
 				try {
+					if (rmProj) {
+						progress.msg("Remove " + mProj.getDisplayName() + " from database         ");
+						mProj.removeProjectFromDB(); 
+					}
 					progress.msgPopLogOut(">>> Load " + mProj.getDBName()); 
 					
 					mProj.createProject();		
@@ -92,7 +95,7 @@ public class DoLoadProj {
 					}
 					
 					if (!success || Cancelled.isCancelled()) {
-						System.out.println("Removing project from database " + mProj.getDBName());
+						progress.msg("Cancel remove " + mProj.getDisplayName() + " from database          ");
 						mProj.removeProjectFromDB(); 
 					}
 					else mProj.saveParams(mProj.xLoad);
@@ -127,14 +130,14 @@ public class DoLoadProj {
 					success = annot.run(mProj.getDBName()); 
 				
 					if (!success || Cancelled.isCancelled()) {
-						System.out.println("Removing annotation from database " + mProj.getDBName());
+						System.out.println("Cancel remove " + mProj.getDBName() + " annotation from database      ");
 						mProj.removeAnnoFromDB(); 
 					}
 					else mProj.saveParams(mProj.xLoad);
 				}
 				catch (Exception e) {
 					success = false;
-					ErrorReport.print(e, "Run Reload");
+					ErrorReport.print(e, "Run Reload anno");
 				}
 				finally {
 					if (!progress.wasCancelled()) progress.finish(success); 

@@ -18,7 +18,13 @@
 <a href="#installation">Install SyMAP</a>
 <a href="#demo">Running the Demo</a>
 <a href="#create">New Project</a>
-<a href="#gen">General</a>
+<a href="#load">&nbsp;&nbsp;&nbsp;Load project</a>
+<a href="#create2">&nbsp;&nbsp;&nbsp;Align&amp;Synteny</a>
+<a href="#draft2">&nbsp;&nbsp;&nbsp;Draft ordering</a>
+<a href="#self">&nbsp;&nbsp;&nbsp;Self synteny</a>
+<a href="#cancel">&nbsp;&nbsp;&nbsp;Cancel</a>
+<a href="#gen">Update SyMAP</a>
+<a href="#refs">References</a>
 <p>&nbsp;
 <a href="#top">Go to top</a>
 </div>
@@ -497,7 +503,7 @@ automatically be selected (green cell).
 the <span class="ttl">Align&amp;Synteny</span>.
 
 <p>The MUMmer alignment takes less than 6 minutes on
-a MacOS x86_64 with 64Gb memory but could take up to 30 minutes on a slow machine.
+a MacOS x86_64 with 64Gb memory but could take up to longer on a slow machine.
 
 <td><a href="img/demoMgr.png"><img src="img/demoMgr.png" alt="demoMgr" style="border: 1px solid black; width: 400px"></a>
 <tr><td colspan="2" style="height: 40px;">&nbsp;
@@ -594,7 +600,7 @@ Click <span class="ttb">Run MUMmer</span>.
 <!-- NEW PROJECT ============================== -->
 <hr>
 <a id="create"></a>
-<h2>5. New projects and synteny</h2>
+<h2>5. New projects</h2>
 <table class="tz"><tr>
 <td><a href="#load">Load<br>project</a>
 <td><a href="#create2">Align&amp;<br>synteny</a>
@@ -623,8 +629,7 @@ on the input files and how to define their location to <span class="ttp">symap</
 <table class="tx"><tr><td>
 <ul>
 <li>See <a href="./SystemHelp.html#projParams" class="ext" target="_blank">project parameters</a>
-on setting the parameters; it is important to get these correct before running A&amp;S.
-The main parameters are listed on the <span class="ttb">Manager's</span> right side before load.
+on setting the parameters. It is important to get these correct before running A&amp;S.
 <p><li>Then select <a href="./SystemHelp.html#selLoad" class="ext" target="_blank">Load project</a>.
 </ul>
 <td><a href="img/newLoad.png"><img src="img/newLoad.png" alt="load " style="border: 1px solid black; width: 500px"></a>
@@ -647,8 +652,6 @@ See <a href="./SystemHelp.html#avail" class="ext" target="_blank">Available Synt
 </ul>
 <td><a href="img/newPair.png"><img src="img/newPair.png" alt="align and synteny" style="border: 1px solid black; width: 400px"></a>
 </table>
-<p>By default, MUMmer will be run; see <a href="MUMmer.html"  class="ext" target="_blank">Using MUMmer with SyMAP</a>.
-
 
 <p>For fast results, but that do not provide gene discovery, use one of the following two:
 <ol>
@@ -659,15 +662,17 @@ See <a href="./SystemHelp.html#avail" class="ext" target="_blank">Available Synt
 
 <p><u>Results</u>:
 The following directories are used by SyMAP
-(<span class=ttt>&lt;project&gt;</span> is the name of a <span class=ttt>/data/seq/&lt;project&gt;</span>):
+(<span class=ttt>&lt;project&gt;</span> is the name of a <span class=ttt>/data/seq/&lt;project&gt;</span>
+project directory):
 <p><pre>
    /data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;/align	# MUMmer alignments
    /data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;/tmp	# temporarily used during MUMmer alignments
    /data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;/blast	# User puts blast tabular results
 </pre>
-As long as those three directory names are not used, the user can add other directories here.
-However, they will be remove if the project is removed and the user okays removing
-the top directory <span class=ttt>/data/seq_results/&lt;project1&gt;-to-&lt;project2&gt;</span>.
+Other subdirectories can be added this directory as long as the above three directory names are not used.
+However, they will be remove if the user selects
+<a href="SystemHelp.html#selLoad" class="ext" target="_blank">Remove from disk</a>, e.g. all the project's
+result directories will be removed.
 
 <p>The log files are in the <span class="ttt">/logs</span> directory, see
 <a href="MUMmerHelp.html#log" class="ext" target="_blank">MUMmer log files</a> for more details.
@@ -742,22 +747,19 @@ will print out all the lengths; set the <span class="ttx">Minimum length</span> 
 <!-- ********************************************* -->
 <a id="self"></a>
 <h3>Self-synteny</h3>
-
 <table>
 <tr>
 <td>To perform self-synteny, select the cell for the same project
  (it turns green) followed by <span class="ttb">Run MUMmer</span>.
+ <p>By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
+is compared to every other chromosome including itself.
 <td><a href="img/self.png"><img src="img/self.png" alt="self" style="border: 1px solid black; width: 370px"></a>
 </table>
 
-By default, SyMAP uses the MUMmer 'NUCmer' program for self-alignments. Each chromosomes
-is compared to every other chromosome including itself.
-<ul>
-<li>Chromosome to itself: The Align&amp;Synteny <a href="SystemHelp.html#pairParams" class="ext" target="_blank">
-Parameters</a> panel has an option to set <span class="ttx">Self Args</span>,
-which is only used when comparing the chromosome sequence file to itself.
-<li>Make sure that the <span class="ttx">Cluster Hits Algorithm 1</span> option is selected.
-</ul>
+<p>SyMAP does not allow the selection of the
+<a href="MUMmer.html#clust" class="ext" target="_blank">Cluster Algorithm 2</a> option, as it
+does not work with self-synteny.
+<p>
 <table class="tx">
 <tr><td style="vertical-align: text-top;">
 <p>The <span class="ttp">Dot plot</span> on the right is <i>Arabidopsis thaliana</i> from NCBI, converted with the
@@ -781,9 +783,9 @@ the right. There is a <span class="ttb">Cancel</span> button on the bottom that 
 it will remove the results from the database and exit.
 <p>Occasionally, the <span class="ttb">Cancel</span> will cause it to create an error, writing to the <span class="ttt">error.log</span>
 or to the terminal. This is not a problem, though you may need to remove the results yourself.
-<p>If MUMmer is running when you <span class="ttb">Cancel</span>, make sure there is "Error: Failed command:" line
-to terminal for each MUMmer alignment that was running; if there is not, use the "top" linux command to
-view the running processes and stop any MUMmers still running.
+<p>If MUMmer is running when you <span class="ttb">Cancel</span>, the MUMmer processes do not always quit;
+use the <span class=ttb>Activity Monitor</span> or terminal <span class=ttb>Top</span> to find
+any continuing MUMmer processes and quit them.
 <td><a href="img/cancel.png"><img src="img/cancel.png" alt="self" style="border: 1px solid black; width: 350px"></a>
 </table>
 Also, see <a href="TroubleShoot.html#hang" class="ext" target="_blank">Trouble Shoot Hang</a>

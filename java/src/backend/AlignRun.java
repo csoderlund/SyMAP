@@ -251,4 +251,39 @@ public class AlignRun implements Comparable<AlignRun>
 			return getDescription().compareTo(p.getDescription() );
 		return -1;
     }
+    /*** Only used by Align - CAS593 moved from separate file *************/
+    private class Log  {
+    	private FileWriter logFile = null;
+    	
+    	private Log(FileWriter fw) { 
+    		logFile = fw;
+    	}
+    	private void msg(String s) {
+    		System.out.println(s);
+    		
+    		if (logFile != null) {
+    			try {
+    				logFile.write(s + "\n");		
+    				logFile.flush();
+    			}
+    			catch(Exception e) {
+    				ErrorReport.print(e, "Cannot write to log file");
+    			}		
+    		}
+    	}
+    	private void msgToFile(String s) {
+    		if (logFile != null) {
+    			try {
+    				logFile.write(s + "\n");		
+    				logFile.flush();
+    			}
+    			catch(Exception e) {
+    				ErrorReport.print(e, "Cannot write to log file");
+    			}		
+    		}
+    	}	
+    	private void write(char c) {
+    		System.out.print(c);
+    	}
+    }
 }

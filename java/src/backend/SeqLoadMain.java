@@ -450,15 +450,14 @@ public class SeqLoadMain {
 	}
 	/**************************************************************************/
 	private boolean rtError(String msg) {
-		plog.msgLogOut("*** " + msg); 
+		plog.msgPopLogOut("*** " + msg); // CAS593 add pop
 		ErrorCount.inc();
 		tdbc2.close();
+		if (projIdx<=0) return false;
 		
 		try {
-			if (projIdx > 0) {
-				mProj.removeProjectFromDB();
-				plog.msg("Remove partially loaded project from database");
-			}
+			plog.msg("Removing " + mProj.getDisplayName() + " from database...");
+			mProj.removeProjectFromDB();
 		}
 		catch (Exception e) {ErrorReport.print(e, "Removing project due to load failure");}
 		

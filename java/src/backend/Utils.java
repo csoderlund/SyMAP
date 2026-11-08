@@ -79,7 +79,7 @@ public class Utils {
 		return String.format("Memory %s\n\n", mem);
 	}
 	// no time
-	// CAS589 added so will go to file, terminal, progress -- this is all a mess
+	// Go to file, terminal, progress 
 	public static void prtIndentMsg(ProgressDialog prog, int indent, String msg) {
 		String x = "";
 		for (int i=0; i<indent; i++) x +="   ";
@@ -108,7 +108,7 @@ public class Utils {
 		if (num>0) prtNumMsg(prog, num, msg);
 	}
 	////////////////////////////////////////////////////////////////////////////
-	public static void prtToFileHeader(FileWriter fw, String msg) { // CAS589 added
+	public static void prtToFileHeader(FileWriter fw, String msg) { 
 		try {
 			String x =  String.format("%-40s  %s", msg, ErrorReport.getDate());
 			Globals.prt(x);
@@ -139,7 +139,14 @@ public class Utils {
 		System.err.println("Fatal error: " + msg);
 		System.exit(-1);
 	}
-	/***************************************************************************/
+	/***************************************************************************
+	 * Extract part of path
+	 */
+	public static String dataPathOnly(String path) {// CAS593 add
+		String d = Constants.dataDir;
+		if (path.contains(d)) return path.substring(path.indexOf(d));
+		return path;
+	}
 	public static String fileFromPath(String path) {
 		int i = path.lastIndexOf("/");
 		if (i<=0) return path;
@@ -150,6 +157,7 @@ public class Utils {
 		if (i<=0) return path;
 		return path.substring(0, i);
 	}
+	/***************************************************************************/
 	public static BufferedReader openGZIP(String file) {
 		try {
 			File f = new File (file);
@@ -173,7 +181,7 @@ public class Utils {
 	/********************************************************
 	 * DONE 
 	 */
-	public static boolean checkDoneBlast(String dir)  {// CAS589 for Load Blast
+	public static boolean checkDoneBlast(String dir)  {
 		File d = new File(dir);
 		if (!d.exists() || d.isFile()) return false;
 		
@@ -216,7 +224,7 @@ public class Utils {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Cannot write done file to " + dir);}
 	}
-	// Get .tab file in resultDir/blast; CAS589 add; CAS590 change to read all files
+	// Get .tab file in resultDir/blast; 
 	public static String getBlastFileList(String dir) {
 	try {
 		String blastDir = dir + Constants.blastDir;

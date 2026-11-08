@@ -75,14 +75,17 @@ or <a href="https://github.com/bbuchfink/diamond/releases"  class="ext" target="
 </div>
 <p><u>The steps are very easy</u>:
 <ul>
-<li>Use the SyMAP <span class=ttl>Export</span> to create a FASTA file of the protein, CDS or Exons.
-<li>Run Blast or Diamond on
-them and put the results in <span class=ttt>data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;/blast</span>.
-<li>Set <span class=ttl>Load Blast files</span> from
-<a href="SystemHelp.html#align2" class="ext" target="_blank">Parameters</a>,
-then run <span class=ttp>Selected Pairs</span> or <span class=ttp>Selected Redo</span> (add to existing hits).
+<li>Use the SyMAP <span class=ttl>Export</span> to create a FASTA file of the proteins, CDSs or Exons.
+<p><li>Run Blast or Diamond on them and put the results in
+<span class=ttt>data/seq_results/&lt;project1&gt;_to_&lt;project2&gt;/blast</span>.
+<p><li>Set the option <span class=ttl>Load Blast files</span> in
+<a href="SystemHelp.html#align2" class="ext" target="_blank">Parameters</a>.
+<br>The button to the right of the label <span class=ttl>Align&amp;Synteny</span>
+will have changed to <span class=ttp>Load Blast</span>; select it.
 </ul>
-Please read the following for the details.
+<a href="img/LoadBlastAnS.png"><img src="img/LoadBlastAnS.png" alt="Load Blast"
+style="border: 1px solid black; width: 400px"></a>
+<p>Please read the following for the details.
 <!-- =========================================== -->
 <!-- -->
 <a id="pfile"></a>
@@ -137,7 +140,7 @@ top 5 hits per gene (<span class=ttt>-max_target_seqs 5</span>).
 <h3>Load Blast files</h3>
 <table class="tx">
 <tr>
-	<td>Start SyMAP and select
+	<td>From the SyMAP <span class=ttp>Manager</span>, select
 	<a href="SystemHelp.html#projParams" class="ext" target="_blank">Pair Parameters</a>.
 	<br>Select the <span class="ttl">Load Blast files</span> option.
 	<p>If protein files are being compared, select <span class="ttx">Proteins</span>,
@@ -147,20 +150,23 @@ top 5 hits per gene (<span class=ttt>-max_target_seqs 5</span>).
 	<p>When you select <span class="ttl">Save</span>, the directory
 	<span class="ttt">data/&lt;project1&gt;_to_&lt;project2&gt;/blast</span> will be created.
 
-	<td><a href="img/parameters2ab.png"><img src="img/parameters2ab.png"
-	alt="view export" style="border: 1px solid black; width: 240px"></a>
+	<td><a href="img/parameters2b.png"><img src="img/parameters2b.png"
+	alt="view export" style="border: 1px solid black; width: 200px"></a>
 <tr><td colspan="2">Exit SyMAP and move the blast tab file(s) to <span class="ttt">data/&lt;project1&gt;_to_&lt;project2&gt;/blast</span>.
 <tr>
 	<td style="vertical-align: text-top;">
-	Restart SyMAP and select <span class=ttl>Selected Pair</span>; a popup (as shown on right) will confirm your
+	Restart SyMAP and from the <span class=ttp>Manager</span>, select <span class=ttl>Load Blast</span>.
+	<p><a href="img/LoadBlastAnS.png"><img src="img/LoadBlastAnS.png" alt="Load Blast"
+style="border: 1px solid black; width: 400px"></a>
+	<p>A popup (as shown on right) will confirm your
 	parameters; select <span class="ttb">Confirm</span>.
-	<p>SyMAP will load the blast hits, then execute the <span class=ttx>Collinear</span> algorithm and
-	<span class=ttx>Synteny</span> algorithm.
 
 	<td><a href="img/loadBlast.png"><img src="img/loadBlast.png" alt="load blast" style="border: 1px solid black; width: 200px"></a>
 </table>
+<p>SyMAP will load the blast hits, then execute the <span class=ttx>Collinear</span> algorithm and
+	<span class=ttx>Synteny</span> algorithm.
 
-SyMAP will load ALL files in the <span class=ttt>/blast</span> directory.
+<p>SyMAP will load ALL files in the <span class=ttt>/blast</span> directory.
 <ul>
 <li>The hits coordinates are set to start at the beginning of the first CDS or exon.
 That is, the hit does not align correctly with the gene (MUMmer hits do align correctly).
@@ -176,7 +182,8 @@ That is, the hit does not align correctly with the gene (MUMmer hits do align co
 
 <ul>
 <li>In order to load both MUMmer and Blast hits, first run SyMAP with MUMmer. Then add the Blast hits.
-<p><li>The <span class=ttl>Load&Synteny</span> can be executed with any number of blast files.
+<p><li>The <span class=ttl>Load Blast</span> can be executed with any number of blast files, and any number
+of times.
 <br>If multiple files are being loaded, make sure they are all from protein sequences
 or all from nucleotide sequences, and have the parameter correctly set to <span class=ttx>Protein</span>
 or <span class=ttx>Nucleotide</span>, respectively.
@@ -185,7 +192,8 @@ or <span class=ttx>Nucleotide</span>, respectively.
 subsets depending one whether <i>project1</i> is the blast database or <i>project2</i>. By loading all variations, the maximum
 number of gene pair hits will be in the SyMAP database.
 </ul>
-<p><u>Remove hits added by a given file</u>: There is no way to do this. <span class=ttb>Clear Pair</span> then reload the desired files.
+<p><u>Remove hits added by a given file</u>: There is no way to do this.
+<a href="SystemHelp.html#fun" class="ext" target="_blank">Clear Pair</a> then reload the desired files.
 
 <!-- =========================================== -->
 <a id="pex"></a>

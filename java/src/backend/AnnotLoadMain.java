@@ -51,30 +51,30 @@ public class AnnotLoadMain {
 	private boolean bUserSetKeywords = false;
 	private final int savAtLeastKeywords=10; 		// These are columns in SyMAP Query
 	
-	private boolean bSuccess=true;
+	private boolean bSuccess=true;					// only set in rtError
 	private int cntAllGene=0, cntNoKey=0;
 	
 	protected AnnotLoadMain(DBconn2 dbc2, ProgressDialog log, Mproject proj) throws Exception {
-		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);;
+		this.tdbc2 = new DBconn2("AnnoLoad-"+ DBconn2.getNumConn(), dbc2);
 		this.plog = log;
 		this.mProj = proj;
 		
-		proj.loadDataFromDB();
+		mProj.loadDataFromDB(); // gets info needed below
 	}
 	
-	protected boolean run(String projDBName) throws Exception {
+	protected boolean run(String projDBName)  {
+	try {
 		long startTime = Utils.getTime();
 		prtType = mProj.getAnnoType();
-		bUseCDS = prtType.equals("CDS"); // CAS587 changed from command line to project params
+		bUseCDS = prtType.equals("CDS"); 
 		
 		plog.msg("Loading annotation (" + prtType + ") for " + projDBName);
 		
-		initFromParams(projDBName);	if (!bSuccess) {tdbc2.close(); return false; };
+		initFromParams(projDBName);	if (!bSuccess) return false;
 		
 		if (annotFiles.size()==0) { 
 			Utils.prtMsgFile(plog, "Finish annotation");
 			tdbc2.executeUpdate("delete from annot_key where proj_idx=" + mProj.getIdx());
-			tdbc2.close();
 			return true;
 		}
 		
@@ -85,7 +85,7 @@ public class AnnotLoadMain {
 		
 		for (File af : annotFiles) {
 			nFiles++;
-			loadFile(af);	if (!bSuccess) {tdbc2.close(); return false; }
+			loadFile(af);	if (!bSuccess) return false; 
 		}
 		Utils.prtTimeMemUsage(plog, (nFiles + " file(s) loaded"), time);
 		
@@ -94,16 +94,18 @@ public class AnnotLoadMain {
 		time = Utils.getTimeMem();
 		
 		AnnotLoadPost alp = new AnnotLoadPost(mProj, tdbc2, plog);
+		if (!alp.run(cntAllGene>0)) return false; // every other error goes through rtError
 		
-		bSuccess = alp.run(cntAllGene>0); 	if (!bSuccess) {tdbc2.close(); return false; }
 		Utils.prtTimeMemUsage(plog, "Finish computations", time);
 
 /** Wrap up **/
-		summary();		if (!bSuccess) {tdbc2.close(); return false; }
+		summary();		if (!bSuccess) return false; 
 		Utils.prtMsgTimeDone(plog, "Finish annotation for " + projDBName + "      ", startTime);
 		
-		tdbc2.close();
 		return true;
+	}
+	catch (Exception e) {ErrorReport.print(e, "Load annotation"); return false;}
+	finally {if (tdbc2!=null) tdbc2.close();}
 	}
 	/************************************************************************8
 	 * Load file and write to DB
@@ -129,9 +131,10 @@ public class AnnotLoadMain {
 				+ "values (?,?,?,?,?,?,?,0,'')"); 			
 		while ((line = fh.readLine()) != null) {
 			if (Cancelled.isCancelled()) {
-				plog.msg("User cancelled");
-				bSuccess=false;
-				break;
+				rtError("Cancelling Load Annotation");
+				if (ps!=null) ps.close();
+				if (fh!=null) fh.close();
+				return;
 			}	
 			
 			lineNum++;
@@ -144,7 +147,10 @@ public class AnnotLoadMain {
 				numParseErrors++;
 				if (numParseErrors <= maxPrtErr) {
 					plog.msgLogOut("*** Parse: expecting at least 9 tab-delimited fields in gff file at line " + lineNum);
-					if (numParseErrors >= maxPrtErr) plog.msgLogOut("*** Suppressing further parse errors");
+					if (numParseErrors >= maxPrtErr) {
+						rtError("*** Too many errors - see terminal");
+						return;
+					}
 				}
 				continue; // skip this annotation
 			}
@@ -174,7 +180,7 @@ public class AnnotLoadMain {
 			boolean isCent = (type.contentEquals(Globals.centType)) ? true : false;
 			
 			if (!(isGene || isExon || isMRNA || isGap || isCent || isCDS)) continue;
-			if ((isExon && bUseCDS) || (isCDS && !bUseCDS)) continue;// CAS586 add
+			if ((isExon && bUseCDS) || (isCDS && !bUseCDS)) continue;
 			
 			if (isCDS) type="exon";	// needs to go into DB as exon, or too many changes are needed
 				
@@ -192,7 +198,7 @@ public class AnnotLoadMain {
 				else if (geneID!=null) cntSkipMRNA++;
 				continue;
 			}
-			else if (isExon || isCDS) { // CAS586 add; see above where only one is allowed thru
+			else if (isExon || isCDS) { 
 				if (mrnaID==null) continue;
 				
 				if (!isGoodExon(mrnaID, keyVals, lineNum, line)) { // if fail, the exon/CDS parent does not match mrnaID
@@ -207,7 +213,7 @@ public class AnnotLoadMain {
 			grpIdx = mProj.getGrpIdx(chr); 
 			if (grpIdx < 0) {// this is not an error; can happen if scaffolds have been filtered out
 				if (!noGrpSet.contains(chr)) {
-					if (noGrpSet.size() < maxPrtErr) plog.msgLogOut("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
+					if (noGrpSet.size() < maxPrtErr)       plog.msgLogOut("+++ Gene on sequence '" + chr + "'; sequence is not loaded - ignore");
 					else if (noGrpSet.size() == maxPrtErr) plog.msgLogOut("+++ Suppressing further warnings of no loaded sequence");
 					if (noGrpSet.size()==0) System.out.println("Valid names: " + mProj.getValidGroup());
 					noGrpSet.add(chr);
@@ -321,8 +327,8 @@ public class AnnotLoadMain {
 		System.err.println("");
 		System.err.println("*** Database index problem: try 'Load' again (it generally works on 2nd try)"); 
 		System.err.println("");
-		ErrorReport.print(e, "Load file (grpIdx=" + grpIdx + ") try 'Load' again (it generally works on 2nd try)."); 
-		bSuccess=false;}
+		rtError(e, "Try 'Load' again"); 
+	}
 	}
 	private String getVal(String key, String [] attrs) {
 		for (String s : attrs) {
@@ -334,34 +340,23 @@ public class AnnotLoadMain {
 	private String getmRNAid(String geneID, String [] keyVal, int lineNum, String line) {
 		String mrnaID = getVal(idKey, keyVal);
 		if (mrnaID==null) {
-			plog.msgLogOut("+++ missing mRNA ID on line " + lineNum);
+			plog.msgPopLogOut("+++ missing mRNA ID on line " + lineNum);
 			plog.msgLogOut("line: " + line);
 			cntNoKey++;
-			if (cntNoKey>5) {
-				bSuccess=false;
-				plog.msgLogOut("Fatal error: missing keywords ");
-				return null;
-			}
+			if (cntNoKey>5) return rtErrorStr("*** Fatal error: missing keywords ");
+			
 			String parent = getVal(parentKey, keyVal);
 			if (parent==null) {
-				plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgPopLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
 				plog.msgLogOut("line: " + line);
 				cntNoKey++;
-				if (cntNoKey>5) {
-					bSuccess=false;
-					plog.msgLogOut("Fatal error: missing keywords ");
-					return null;
-				}
+				if (cntNoKey>5) return rtErrorStr("*** Fatal error: missing keywords ");
 			}
 			if (!parent.equals(geneID)) {
-				plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
+				plog.msgPopLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + geneID);
 				plog.msgLogOut("line: " + line);
 				cntNoKey++;
-				if (cntNoKey>5) {
-					bSuccess=false;
-					plog.msgLogOut("Fatal error: missing keywords ");
-					return null;
-				}
+				if (cntNoKey>5) return rtErrorStr("*** Fatal error: missing keywords ");
 			}
 		}
 		return mrnaID;
@@ -369,14 +364,10 @@ public class AnnotLoadMain {
 	private boolean isGoodExon(String mrnaID, String [] keyVal, int lineNum, String line) {
 		String parent = getVal(parentKey, keyVal);
 		if (parent==null) {
-			plog.msgLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + mrnaID);
+			plog.msgPopLogOut("+++ missing mRNA parent on line " + lineNum + " Last Parent '" + mrnaID);
 			plog.msgLogOut("line: " + line);
 			cntNoKey++;
-			if (cntNoKey>5) {
-				bSuccess=false;
-				plog.msgLogOut("Fatal error: missing keywords ");
-				return false;
-			}
+			if (cntNoKey>5) return rtError("Fatal error: missing keywords ");
 		}
 		return parent.equals(mrnaID);
 	}
@@ -451,7 +442,7 @@ public class AnnotLoadMain {
 				modDirDate = new File(saveAnnoDir).lastModified();
 				mProj.saveProjParam("proj_anno_date", Utils.getDateStr(modDirDate));
 				mProj.saveProjParam("proj_anno_dir", saveAnnoDir);
-				if (bUseCDS) mProj.saveProjParam("annot_type", "CDS"); // CAS586 add
+				if (bUseCDS) mProj.saveProjParam("annot_type", "CDS"); 
 				else 		 mProj.saveProjParam("annot_type", "Exon");
 			}
 			
@@ -470,7 +461,7 @@ public class AnnotLoadMain {
 				else userAttr.put(attrKW.trim(), 0);
 			}
 		}
-		catch (Exception e) {ErrorReport.print(e, "load anno init"); bSuccess=false;}
+		catch (Exception e) {rtError(e, "load anno init");}
 	}
 	/********************** wrap up ***********************/
 	private void summary() {
@@ -521,6 +512,27 @@ public class AnnotLoadMain {
 			typeCounts = null;
 			System.gc(); // Java treats this as a suggestion
 		}
-		catch (Exception e) {ErrorReport.print(e, "Compute gene order"); bSuccess=false;}
+		catch (Exception e) {rtError(e, "Creating summary");}
+	}
+	/***********************************************************************
+	 * Fatal errors 
+	 *************************************************************************/
+	private boolean rtError(String msg) {
+		plog.msgPopLogOut("*** " + msg); 
+		ErrorCount.inc();
+		bSuccess=false;
+		return false;
+	}
+	private String rtErrorStr(String msg) {
+		plog.msgPopLogOut("*** " + msg); 
+		ErrorCount.inc();
+		bSuccess=false;
+		return null;
+	}
+	private void rtError(Exception e, String msg) {
+		ErrorReport.print(e, msg);
+		plog.msgPopLogOut("*** java exception"); 
+		ErrorCount.inc();
+		bSuccess=false;
 	}
 }

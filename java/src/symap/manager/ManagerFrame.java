@@ -640,7 +640,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		columnNames.add(blank);
 
 		for (Mproject p1 : tableProjVec) {
-			if (p1.getStatus() == Mproject.STATUS_ON_DISK) continue; // skip if not in DB		
+			if (!p1.isLoaded()) continue; // skip if not in DB		
 			
 			int id1 = p1.getIdx();
 			columnNames.add( p1.getDisplayName() );
@@ -649,12 +649,13 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			row.add(p1.getDisplayName());
 		
 			for (Mproject p2 : tableProjVec) {
-				if (p2.getStatus() == Mproject.STATUS_ON_DISK) continue; // skip if not in DB	
+				if (!p2.isLoaded()) continue; // skip if not in DB	
+				
 				int id2 = p2.getIdx();
 
 				Mproject[] ordP = orderProjName(p1,p2); // order indices according to DB pairs table
-				
 				Mpair mp = getMpair(id1, id2);
+				
 				if (mp!=null && mp.pairIdx>0) {	
 					row.add(TBL_DONE); 
 				}
@@ -666,16 +667,20 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 					}
 					else {
 						mp = pairObjMap.get(key);
-						mp.setAligns(); // in case contents changed
 					}
-					if (mp.hasMUMerFiles() && mp.hasBlastFiles()) row.add(TBL_ADONE + "/" + TBL_BDONE);
-					else if (mp.hasMUMerFiles()) 		     row.add(TBL_ADONE); 
-					else if (mp.hasBlastFiles()) 		     row.add(TBL_BDONE); 
-					else {
+					// CAS593 a few changes to get correct
+					mp.setAligns(); // in case contents changed
+					boolean partDone=false, alignDone=mp.hasAlignDone(), blastDone=mp.hasBlastDone();
+					if (!alignDone) {
 						String alignDir = Constants.getNameAlignDir(ordP[0].getDBName(), ordP[1].getDBName());
-						if (Utils.checkDoneMaybe(alignDir)>0) row.add( TBL_QDONE);
-						else 					row.add(null);
+						partDone = (Utils.checkDoneMaybe(alignDir)>0);
 					}
+					if (alignDone && blastDone)     row.add(TBL_ADONE + "/" + TBL_BDONE);
+					else if (partDone && blastDone) row.add(TBL_QDONE + "/" + TBL_BDONE);
+					else if (alignDone) 		    row.add(TBL_ADONE); 
+					else if (blastDone) 		    row.add(TBL_BDONE); 
+					else if (partDone) 		        row.add(TBL_QDONE); 
+					else 					        row.add(null);
 				}				
 			}
 			rowData.add( row );
@@ -726,73 +731,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		return scroller;
 	}
 	
-	/***********************************************************
-	 * Enable function buttons; 
-	 * Align&Synteny: one selected pair
-	 * 		Clear - selected pair has A or check
-	 * Selected pair: selected pair has check
-	 * All pairs: have at least one check that is not self-synteny, or only one pair with self-synteny
-	 */
-	protected void updateEnableButtons() { // PairParams calls this too to update the "Selected Pair" button
-		if (pairTable == null) return;
-		
-		Vector <Mproject> pVec = getSynProjects();
-		boolean isSyn = pVec.size()>0; 
-		btnAllChrExp.setEnabled(isSyn);
-		btnAllQueryView.setEnabled(isSyn); 	// allow for isSelf
-		btnAllDotplot.setEnabled(isSyn);    	// this does not work for isSelf
-		
-		Mproject[] projects = getSelectedPair();  // null if nothing selected
-		if ((projects!=null)) { // Something is selected
-			btnPairParams.setEnabled(true);  
-			btnSelAlign.setEnabled(true);
-			
-			// Set label for Selected Pair
-			int nRow = pairTable.getSelectedRow();
-			int nCol = pairTable.getSelectedColumn();
-			String val = (String)pairTable.getValueAt(nRow, nCol);
-			
-			boolean allDone =  (val!=null && val.contains(TBL_DONE));
-			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_BDONE) || !val.contains(TBL_QDONE)));
-			Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
-					
-			// Similar to popup message in in alignSelectedPair
-			if (Constants.LOAD_BLOCKS) btnSelAlign.setText("Load Blocks"); // Hidden command line option -blk
-			else if (allDone && mp!=null) { 		
-				if 		(mp.bSynOnly)               btnSelAlign.setText("Synteny Redo");
-				else if (mp.bPseudo)                btnSelAlign.setText("Pseudo Only");
-				else if (mp.bCoSet)  				btnSelAlign.setText("Collinear");
-				else if (Constants.NUMHITS_ONLY)    btnSelAlign.setText("NumHits");
-				else if (mp.isBlast(Mpair.FILE))	btnSelAlign.setText("Load Blast");
-				else                                btnSelAlign.setText("Reload MUMmer"); 
-			}	
-			else {
-				if (mp.isBlast(Mpair.FILE))	 btnSelAlign.setText("Load Blast");
-				else if (mp.hasMUMerFiles()) btnSelAlign.setText("Reload MUMmer");
-				else                         btnSelAlign.setText("Run MUMmer");	
-			}
 	
-			btnSelClearPair.setEnabled(allDone || partDone);
-			btnSelDotplot.setEnabled( allDone ); 
-			btnSelCircView.setEnabled(allDone); 
-			btnSelReports.setEnabled(allDone);  
-			btnSelBlockView.setEnabled(allDone); 
-			
-			boolean isSelf = projects.length==2 && projects[0].getIdx()==projects[1].getIdx();
-			btnSelFlatView.setEnabled(!isSelf && allDone); // Linear not working for isSelf
-		}
-		else {
-			btnPairParams.setEnabled(false);  
-			btnSelAlign.setEnabled(false);
-			btnSelClearPair.setEnabled(false);
-			btnSelDotplot.setEnabled(false); 
-			btnSelCircView.setEnabled(false); 
-			btnSelFlatView.setEnabled(false); 
-			btnSelReports.setEnabled(false);  
-			btnSelBlockView.setEnabled(false);
-		}
-	}
-
 	/***********************************************************************
 	 * Database
 	**************************************************/
@@ -865,8 +804,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	        String pw   = (inReadOnlyMode ? db_clientpasswd : db_adminpasswd);
 	        
 	        DBconn2 dbc = new DBconn2("Manager", db_server, db_name, user, pw);
-	        if (rc==0) dbc.checkVariables(true);
-	        
+	        if (rc==0) dbc.checkVariables(true); // on new only
+	        	
 	        return dbc;
 		}
 		catch (Exception e) {ErrorReport.die("Error getting connection"); }
@@ -1003,18 +942,17 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	private MouseListener doRemoveProjDB = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
-			new RemoveProj(openLoadLog()).removeProjectDB(mp);
+			removeProject(mp, true);	
 			refreshMenu();
 		}
 	};
 	private MouseListener doRemoveProjDisk = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Mproject mp = ((ProjectLinkLabel)e.getSource()).getProject();
-			new RemoveProj(openLoadLog()).removeProjectDisk(mp);
+			removeProject(mp, false);
 			refreshMenu();
 		}
 	};
-	
 	private MouseListener doLoadAllProj = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			loadAllProjects();
@@ -1038,13 +976,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 			reloadAnno(mproj);	
 		}
 	};	
-	
 	private MouseListener doReloadParams = new MouseAdapter() {
 		public void mouseClicked(MouseEvent e) {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
-			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					true, mProj.hasAlignBlast(true)); // only exist true if /align or /blast
+			int cntDir = mProj.calcAlignBlast(true);// true if /align or /blast
+			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(), true, cntDir>0); 
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu();		
@@ -1054,8 +991,8 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		public void mouseClicked(MouseEvent e) {
 			Mproject mProj = ((ProjectLinkLabel)e.getSource()).getProject();
 			
-			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(),
-					false, mProj.hasAlignBlast(true)); // only exist true if /align
+			int cntDir = mProj.calcAlignBlast(true); // true if /align or /blast
+			ProjParams propFrame = new ProjParams(getInstance(), mProj, projVec, getCatArr(), false, cntDir>0);
 			propFrame.setVisible(true);
 			
 			if (propFrame.wasSave()) refreshMenu(); 
@@ -1070,56 +1007,76 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	};
 	
 	/*****************************************************************
-	 * Project actions
+	 * Project actions - 
+	 * RemoveProj for removing from disk; Mproject from removing from DB
 	 ******************************************************/
-	public FileWriter getLoadLog() { return openLoadLog();} 
 	
-	private void viewProject(Mproject mProj) {
-		new ViewProj(dbc2, mProj, getInstance()); 
+	// Remove project from DB - no disk removal
+	private void removeProject(Mproject mProj, boolean bProj) {
+		if (bProj) { // mProj.remove - popup and output done here
+			String name = mProj.getDisplayName();
+			String msg = "Remove project from database: " + name; 
+			if (!Popup.showConfirm2("Remove from database",msg)) return;
+			if (!Popup.showConfirm2("Final Confirm", "FINAL CONFIRM\n   " + msg)) return;
+			
+			mProj.removeProjectFromDB();
+			try {
+				FileWriter fw = openLoadLog();
+				fw.append(msg + "          " +  Utilities.getDateTime()+ "\n");
+				fw.append(Globals.lastLine);
+				fw.close();
+			} catch (Exception e) {}
+		}
+		else {	// Remove project from disk - does not prompt for each seq_result directory
+			new RemoveProj(openLoadLog()).removeProjectResultsDisk(mProj);// popup confirm in RemoveProj
+		}
 	}
+	// Load All Projects (that are not loaded)
 	private void loadAllProjects() {
 		try {
 			DoLoadProj lpObj = new DoLoadProj(this, dbc2, openLoadLog());
-			lpObj.loadAllProjects(tableProjVec); // All
+			lpObj.loadAllProjects(tableProjVec); 
 			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load all project");}
 	}
+	// Load project
 	private void loadProject(Mproject mProj) {
 		try {
 			DoLoadProj lpObj = new DoLoadProj(this, dbc2, openLoadLog());
-			lpObj.loadProject(mProj);				// just this one
+			lpObj.loadProject(mProj, false);				
 			
 			new Version(dbc2).updateReplaceProp();
 			refreshMenu();
 		}
 		catch (Exception e) {ErrorReport.print(e, "load project");}
 	}
+	// Reload project - remove aligns from disk if user requests
 	private void reloadProject(Mproject mProj) {
 	try {
-		RemoveProj rpObj = new RemoveProj(openLoadLog());
-		if (!rpObj.reloadProject(mProj)) return;				
+		RemoveProj rmObj = new RemoveProj(openLoadLog()); // closes load file
+		if (!rmObj.removeResultsDiskReload(mProj)) return;		  // prompt: return false - cancel
 		
 		DoLoadProj lpObj= new DoLoadProj(this, dbc2, openLoadLog());
-		lpObj.loadProject(mProj); 
+		lpObj.loadProject(mProj, true); 	// project dir removed in this method with progressDialog
 		
 		new Version(dbc2).updateReplaceProp();
 		refreshMenu();
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
-	// Reload
+	// Reload annotation - nothing removed from disk
 	private void reloadAnno(Mproject mProj) {
 	try {
 		String msg = "Reload annotation " + mProj.getDisplayName() + "\n" + mProj.getLoadParameters(); 
 		
-		if (!Popup.showConfirm2("Reload annotation", msg +							
-			"\n\nYou will need to re-run the synteny computations for this project," +  
-			"\nany existing alignment files will be used.")) return; 					
+		if (!Popup.showConfirm2("Reload annotation", msg +	"\n\n" +						
+			"You will need to re-run the synteny computations for this project,\n" +  
+			"    any existing alignment files will be used.")) return; 					
 		
-		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database...."); 
+		System.out.println("Removing " +  mProj.getDisplayName() + " annotation from database"); 
 		mProj.removeAnnoFromDB();
 		
 		DoLoadProj lpObj= new DoLoadProj(this, dbc2, openLoadLog());
@@ -1130,9 +1087,12 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 	}
 	catch (Exception e) {ErrorReport.print(e, "reload project");}
 	}
-	
+	private void viewProject(Mproject mProj) {
+		new ViewProj(dbc2, mProj, getInstance()); 
+	}
+	/****************************************************************/
 	/*****************************************************
-	 * Align selected pair
+	 * XXX Align selected pair
 	 */
 	private void alignSelectedPair( ) {
 		Mproject[] selProjs = getSelectedPair();
@@ -1147,7 +1107,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		String title;
 		if (selProjs[0].getIdx()==selProjs[1].getIdx()) { // isSelf
-			title = selProjs[0].getDisplayName() + " to itself";
+			title = selProjs[0].getDisplayName() + " to self";
 			if (mp.isAlgo2(Mpair.FILE)) { 				 // is disabled, but could get changed in file
 				Popup.showInfoMessage(title, "Please select Algorithm 1 from Parameters");
 				return;
@@ -1157,46 +1117,120 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		if (!alignCheckOrderAgainst(mp)) return; // For ordering contigs
 		
-		// Popup to confirm actions and params; Similar labels in PairParams and updateEnableButtons()
-		boolean bAlignDone = isSelectedAligned(); // check, A, B
-		String msg;
-		int loc = Mpair.FILE;
+		// Popup to confirm actions and params
+		mp.setAligns(); // in case directories have been added to seq_results from terminal; CAS593  
 		
-		if (Constants.LOAD_BLOCKS)				msg = "Load Blocks from file\n"; // hidden command line
-		else if (bAlignDone) {				 
-			if (mp.bSynOnly) 					msg = "Synteny Only\n"   + mp.getChgSynteny(loc) + "\n";	
-			else if (mp.bPseudo)				msg = "Pseudo Only";
-			else if (mp.bCoSet) 				msg = "Collinear Only\n" + mp.getChgCoSet(loc); 
-			else if (Constants.NUMHITS_ONLY) 	msg = "NumHits Only\n";   					 // For v5.7.9c,flag -nh
-			else if (mp.isBlast(Mpair.FILE))	msg = "Load&Synteny\n"   + mp.getChgLoad(loc) + "\n";
-			else								msg = "Clust&Synteny\n"  + mp.getChgClustSyn(loc) + "\n";
+		boolean isSyntenyDone = isPairDone(TBL_DONE); // check
+		String msg;
+		int isFile = Mpair.FILE;
+		
+		if (Constants.LOAD_BLOCKS)			 msg = "Load Blocks from file\n"; // hidden command line
+		else if (isSyntenyDone) {				 
+			if (mp.bSynOnly) 				 msg = "Synteny Only\n"   + mp.getChgSynteny(isFile) + "\n";	
+			else if (mp.bPseudo)			 msg = "Pseudo Only";
+			else if (mp.bCoSet) 			 msg = "Collinear Only\n" + mp.getChgCoSet(isFile); 
+			else if (Constants.NUMHITS_ONLY) msg = "NumHits Only\n";   					 // For v5.7.9c,flag -nh
+			else if (mp.isBlast(Mpair.FILE)) msg = "Load&Synteny\n"   + mp.getChgLoad(isFile) + "\n";
+			else							 msg = "Clust&Synteny\n"  + mp.getChgClustSyn(isFile) + "\n";
 		}
-		else {
-			if (mp.isBlast(loc)) 				msg = "Load&Synteny\n"   + mp.getChgLoad(loc) + "\n";
+		else { // no synteny
+			if (mp.isBlast(isFile)) 		 msg = "Load&Synteny\n"   + mp.getChgLoad(isFile) + "\n";
 			else {
-				msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(loc) + "\n";
-				msg += "CPUs " + nCPU + ";  ";
+				if (isPairDone(TBL_ADONE)) 	 msg = "Clust&Synteny\n"  + mp.getChgClustSyn(isFile) + "\n";
+				else 						 msg = "Align&Synteny"+ "\n" + mp.getChgAllParams(isFile) + "\nCPUs " + nCPU + ";";
 			}
 		}
 		if (!msg.contains("Only")) {
 			if (Constants.VERBOSE) msg += "Verbose On"; else msg += "Verbose Off";
 		}
+		if (msg.contains(Mpair.noBlast)) {
+			Popup.showErrorMsg(msg);
+			return; // if user says okay, messes up
+		}
 		if (!Popup.showConfirm2(title, msg)) return;
 		
 	/*--- Do Alignment, Clustering, Synteny (alignments will not happen if exists) ----*/
 		
-		new DoAlignSynPair().run(getInstance(), dbc2, mp, nCPU, bAlignDone);
+		new DoAlignSynPair().run(getInstance(), dbc2, mp, nCPU, openPairLog(mp));
 		
 		new Version(dbc2).updateReplaceProp();
 	}
+	/***********************************************************
+	 * Enable function buttons; 
+	 *   Align&Synteny: one selected pair
+	 *   Clear: selected pair has A/B or check
+	 *   All pairs: have at least one check that is not self-synteny, or only one pair with self-synteny
+	 */
+	protected void updateEnableButtons() { // PairParams calls this to update the "Selected Pair" button
+		if (pairTable == null) return;
+		
+		Vector <Mproject> pVec = getSynProjects();
+		boolean isSyn = pVec.size()>0; 
+		btnAllChrExp.setEnabled(isSyn);
+		btnAllQueryView.setEnabled(isSyn); 	// allow for isSelf
+		btnAllDotplot.setEnabled(isSyn);    	// this does not work for isSelf
+		
+		Mproject[] projects = getSelectedPair();// null if nothing selected
+		if ((projects!=null)) {					// Something is selected
+			btnPairParams.setEnabled(true);  
+			btnSelAlign.setEnabled(true);
+			
+			// Set label for Selected Pair -- see allSelectPair
+			int nRow = pairTable.getSelectedRow();
+			int nCol = pairTable.getSelectedColumn();
+			String val = (String)pairTable.getValueAt(nRow, nCol);
+			
+			boolean allDone =  (val!=null && val.contains(TBL_DONE));
+			boolean mumDone =  allDone || (val!=null && val.contains(TBL_ADONE));
+			boolean partDone = (val!=null && (!val.contains(TBL_ADONE) || !val.contains(TBL_BDONE) || !val.contains(TBL_QDONE)));
+			Mpair mp = getMpair(projects[0].getIdx(), projects[1].getIdx());
+			if (!mumDone && mp!=null && mp.hasAlignDir()) mumDone=true; // updated from terminal
+			
+			// Similar to popup message in in alignSelectedPair
+			if (Constants.LOAD_BLOCKS) btnSelAlign.setText("Load Blocks"); // Hidden command line option -blk
+			else if (allDone && mp!=null) { 		
+				if 		(mp.bSynOnly)               btnSelAlign.setText("Synteny Redo");
+				else if (mp.bPseudo)                btnSelAlign.setText("Pseudo Only");
+				else if (mp.bCoSet)  				btnSelAlign.setText("Collinear");
+				else if (Constants.NUMHITS_ONLY)    btnSelAlign.setText("NumHits");
+				else if (mp.isBlast(Mpair.FILE))	btnSelAlign.setText("Load Blast");
+				else                                btnSelAlign.setText("Reload MUMmer"); 
+			}	
+			else {
+				if (mp.isBlast(Mpair.FILE))	btnSelAlign.setText("Load Blast");
+				else if (mumDone)           btnSelAlign.setText("Reload MUMmer");
+				else                        btnSelAlign.setText("Run MUMmer");	
+			}
+	
+			btnSelClearPair.setEnabled(allDone || partDone);
+			btnSelDotplot.setEnabled( allDone ); 
+			btnSelCircView.setEnabled(allDone); 
+			btnSelReports.setEnabled(allDone);  
+			btnSelBlockView.setEnabled(allDone); 
+			
+			boolean isSelf = projects.length==2 && projects[0].getIdx()==projects[1].getIdx();
+			btnSelFlatView.setEnabled(!isSelf && allDone); // Linear not working for isSelf
+		}
+		else {
+			btnPairParams.setEnabled(false);  
+			btnSelAlign.setEnabled(false);
+			btnSelClearPair.setEnabled(false);
+			btnSelDotplot.setEnabled(false); 
+			btnSelCircView.setEnabled(false); 
+			btnSelFlatView.setEnabled(false); 
+			btnSelReports.setEnabled(false);  
+			btnSelBlockView.setEnabled(false);
+		}
+	}
+
 	/************************************************/
 	private void removeClearPair() {
 		Mproject[] mprojs = getSelectedPair();
 		if (mprojs==null) return;
 		
 		Mpair mp = getMpair(mprojs[0].getIdx(),mprojs[1].getIdx());
-		RemoveProj rpObj = new RemoveProj(openLoadLog());
-		rpObj.removeClearPair(mprojs[0], mprojs[1], mp);
+		RemoveProj rpObj = new RemoveProj(openPairLog(mp));
+		rpObj.removeClearPair(getInstance(), mprojs[0], mprojs[1], mp); // creates progressDialog while deleting
 		
 		refreshMenu();
 	}
@@ -1205,7 +1239,7 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		
 		Mpair p = getMpair(sel[0].getIdx(), sel[1].getIdx());
 		if (p!=null) {
-			boolean algDone =  isSelectedAligned();
+			boolean algDone =  isPairAlign();
 			ppFrame = new PairParams(p, getInstance(), algDone);
 			ppFrame.setVisible(true);
 		}
@@ -1484,12 +1518,21 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}	
 		return count;
 	}
-	private boolean isSelectedAligned() {
+	private boolean isPairAlign() { // mummer or blast
 		int nRow = pairTable.getSelectedRow();
 		int nCol = pairTable.getSelectedColumn();
-		String val = (String)pairTable.getValueAt(nRow, nCol);
+		if (nRow==-1 || nCol==-1) return false;
 		
+		String val = (String)pairTable.getValueAt(nRow, nCol);
 		return  (val!=null && (val.contains(TBL_ADONE) || val.contains(TBL_BDONE) || val.contains(TBL_DONE))); // A, B or Check
+	}
+	private boolean isPairDone(String tbl) {
+		int nRow = pairTable.getSelectedRow();
+		int nCol = pairTable.getSelectedColumn();
+		if (nRow==-1 || nCol==-1) return false;
+		
+		String val = (String)pairTable.getValueAt(nRow, nCol);
+		return  val!=null && val.contains(tbl);
 	}
 	
 	// Get Mpair from two projects; self-synteny will have idx1=idx2; Also used by QueryFrame 
@@ -1610,7 +1653,10 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		}
 		catch (Exception e) {ErrorReport.print(e, "Checking order against"); return false;}
 	}
+	/***********************************************************************/
 	// log file for load
+	public FileWriter getLoadLog() { return openLoadLog();} 
+	
 	private boolean first=true;
 	private FileWriter openLoadLog() {
 		FileWriter ret = null;
@@ -1633,8 +1679,31 @@ public class ManagerFrame extends JFrame implements ComponentListener {
 		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
 		return ret;
 	}
-	/* XXX *************************************************************************/
-	// *** Begin table customizations ******************************************
+	/**********************************************************************/
+	private FileWriter openPairLog(Mpair mp) {// CAS593 moved from DoAlignSynPair so share with ClearPair
+		FileWriter ret = null;
+		try {
+			Mproject mProj1 = mp.mProj1;
+			Mproject mProj2 = mp.mProj2;
+			
+			File pd = new File(Constants.logDir);
+			if (!pd.isDirectory()) pd.mkdir();
+			
+			String pairDir = Constants.logDir + mProj1.getDBName() + Constants.projTo + mProj2.getDBName(); 
+			pd = new File(pairDir);
+			if (!pd.isDirectory()) pd.mkdir();
+			
+			File lf = new File(pd,Constants.syntenyLog);
+			ret = new FileWriter(lf, true); // append
+			System.out.println("\nAppend to log file: " 
+					+ pairDir + "/" + Constants.syntenyLog + " (Length " + Utilities.kMText(lf.length()) + ")");	
+		}
+		catch (Exception e) {ErrorReport.print(e, "Creating log file");}
+		return ret;
+	}
+
+	/**************************************************************************/
+	// *** Begin pairs table customizations ******************************************
 	public void autofitColumns(JTable tbl) {
         TableModel model = tbl.getModel();
         TableColumn column;

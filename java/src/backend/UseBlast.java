@@ -52,6 +52,7 @@ public class UseBlast {
 	private HashMap <Integer, Gene>   gnIdxGeneMap2 = new HashMap <Integer, Gene> ();  //           ditto
 	
 	private HashMap <String, Hit>     hitPairMap  = new HashMap <String, Hit> ();    // Created in Blast; key geneIdx1:geneIdx2
+	private int loadFile=0, errFile=0;
 	/********************************************************************/
 	public UseBlast(DBconn2 dbc, ProgressDialog mLog,  Mpair mp) {
 		this.mLog = mLog;
@@ -89,6 +90,7 @@ public class UseBlast {
 		boolean rc;
 		
 		for (String fileName : fileList) {
+			loadFile++;
 			Utils.prtIndentMsg(mLog, 1, "--- Read File " + fileName.substring(fileName.lastIndexOf("/")) + " ---");
 			rc = readBlast(fileName);				if (!bSuccess) return false;						
 			if (rc) {
@@ -98,9 +100,13 @@ public class UseBlast {
 			
 				aDB.saveHits(grpMap1, grpMap2);		if (!bSuccess) return false;
 			}
+			else errFile++;
+			
 			hitPairMap.clear();
 		}
 		Utils.prtNumMsgFile(mLog, aDB.getNumHits(), "Total hits in database");
+		if (errFile>0) 
+			Utils.prtNumMsgFile(mLog, errFile, "Failed Blast files from " + loadFile + " files");
 		
 		// Finish (numHits && collinear done in AnchorMain)
 		time = Utils.getTime();
@@ -127,7 +133,7 @@ public class UseBlast {
 			
 			String [] tok = line.trim().split("\\s+");
 			if (tok.length != 12) {
-				Utils.prtIndentMsg(mLog, 2, "File does not have blast format of 12 columns -- skipping");
+				Utils.prtIndentMsg(mLog, 2, "***File does not have blast format of 12 columns -- skipping");
 				fhIn.close();
 				return false;
 			}

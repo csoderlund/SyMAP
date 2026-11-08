@@ -131,6 +131,7 @@ public class AnchorMain2 {
 		return bSuccess;
 	}
 	catch (Exception e) {ErrorReport.print(e, "create clustered hits"); return false;}
+	finally { if (tdbc2!=null) {tdbc2.close(); tdbc2=null;} } // CAS593 was not being closed
 	}
 	
 	/**************************************************************************

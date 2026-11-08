@@ -32,6 +32,8 @@ import util.FileDir;
 public class Mpair {
 	public  static final int FILE = 0;
 	public  static final int DB = 1;
+	public  static final String noBlast = "NO BLAST FILES!!"; // ManagerFrame checks; CAS593
+	
 	private static final String mummer = "MUMmer";
 	private static final String promer = "PROmer"; // Also hardcoded in PairParams - no where else
 	private static final String nucmer = "NUCmer";
@@ -58,12 +60,11 @@ public class Mpair {
 	private DBconn2 dbc2;
 	
 	private boolean isSelf=false; 
-	private boolean bHasMUMmerFiles=false,//align/all.done	
-					bHasBlastFiles=false, //blast/files
-					bHasMUMmerHits=false, // pair.params string contains MUMmer - see loadParamsDB
-					bHasBlastHits=false;  // pair.params string contains Load
+	private boolean bHasAlignDone=false,//align/all.done	
+					bHasBlastDone=false, //blast/files
+					bHasAlignHits=false, // pair.params string contains MUMmer - see loadParamsDB
+					bHasBlastHits=false;  // pair.params string contains Load 
 	private boolean isAlignNT, bUsedAlgo1=false, bUsedAlgo2=false; // pair.params contains ALGO1, ALGO2, nucmer
-	protected String alignStr="";
 	
 	public boolean bPseudo=false, bSynOnly=false, bCoSet=false; // set in PairParams and read in ManagerFrame
 	
@@ -77,12 +78,12 @@ public class Mpair {
 			// Alignment
 			"MUMmer", 
 			"concat", "mask1", "mask2",
-			"nucmer_args", "promer_args", "self_args", "nucmer_only","promer_only",
+			"mummer_args", "nucmer_only","promer_only", // CAS593 reduce to one set of args; 
 			"Blast", "isAA", "pIdentity", "evalue",
 			// Cluster
 			"number_pseudo",
-			"algo1", "topn", 					// algo1 is default for self, order, no genes, else algo2
-			"algo2", 
+			"algo1", "topn", 							// 'algo1', 'algo2' and 'strict_blocks' are checked below	
+			"algo2", 							
 			"gene_scale", "exon_scale","len_scale","g0_scale", 
 			"EE_pile", "EI_pile", "En_pile", "II_pile", "In_pile",
 			// Collinear sets	
@@ -94,25 +95,24 @@ public class Mpair {
 	};
 	// defMap value; not static because specific to pair, e.g. self-synteny, order, regular
 	// CHANGE these if anything is changed
-	
 	private String [] paramDef = {  	
-			"1", 						// 1 Use Mummer; 0 BlastHits
-			"1", "0", "0", 				// 2-4  concat, mask1, mask2
-			"", "", "", "0", "0",		// 5-9  nucmer, promer, self, only, only
-			"0", 						// 0 Load Blast
-			"1", "40", "1E-10",			// 1 Input Proteins, >%Sim, <evalue
+			"1", 						// Use Mummer; 0 BlastHits
+			"1", "0", "0", 				// concat, mask1, mask2
+			"", "0", "0",				// mummer,  only, only
+			"0", 						// Load Blast
+			"1", "40", "1E-10",			// Input Proteins, >%Sim, <evalue
 			//Cluster
-			"0",						// 10 number pseudo,  
-			"0",						// 11 algo1
-			"2", 					    // 12   topn
+			"0",						// number pseudo,  
+			"0",						// algo1
+			"2", 					    //  topn
 			
-			"1",						// 13 algo2
-			"1.0", "1.0", "1.0", "1.0",	// 14-17  gene, exon, Len, G0_Len	
-			"1", "1", "1", "0", "0", 	// 18-22  EE, EI, En, II, In 
+			"1",						// algo2
+			"1.0", "1.0", "1.0", "1.0",	//    gene, exon, Len, G0_Len	
+			"1", "1", "1", "0", "0", 	//    EE, EI, En, II, In 
 			
-			"0:0",						// 23 Collinear  Num (default order):Algo (default new)
+			"0:0",						// Collinear:  Num (default order):Algo (default new)
 			//Synteny
-			"7", "1", "0",	"0",        // 24-27 hits, strict, orient, merge; strict is default except for when there are many contigs
+			"7", "1", "0",	"0",        // hits: strict, orient, merge; strict is default except for when there are many contigs
 			"1", "0", "0"				// order against: none, proj1->proj2, proj2->proj1
 	};
 	
@@ -127,7 +127,7 @@ public class Mpair {
 		isSelf = proj1Idx==proj2Idx;
 		
 		// Set defaults based on database
-		int defStrict=25, defAlgo1=11, defAlgo2=13; 
+		int defStrict=0, defAlgo1=0, defAlgo2=0; 
 		for (int i=0; i<paramKey.length; i++) {
 			if (paramKey[i].equals("algo1")) defAlgo1=i;
 			else if (paramKey[i].equals("algo2")) defAlgo2=i;
@@ -156,20 +156,15 @@ public class Mpair {
 	/** ManagerFrame: */ 
 	protected void setAligns() {
 	try {
-		bHasMUMmerFiles = Utils.checkDoneMUMmer(resultDir + Constants.alignDir);
-		bHasBlastFiles  = Utils.checkDoneBlast(resultDir + Constants.blastDir);
-		
-		if (bHasBlastFiles && bHasMUMmerFiles) alignStr = "MUMmer/Blast files";
-		else if (bHasBlastFiles)         alignStr = "Blast files";
-		else if (bHasMUMmerFiles)        alignStr = "MUMmer files";
-		else alignStr="";
+		bHasAlignDone = Utils.checkDoneMUMmer(resultDir + Constants.alignDir);
+		bHasBlastDone = Utils.checkDoneBlast(resultDir + Constants.blastDir);
 	}
 	catch (Exception e) {ErrorReport.print(e, "check align/blast directories");  }
 	}
 	// PairParams.createMainLabels()
 	protected void setHasBlast() { 
 		String name = Utils.getBlastFileList(resultDir);
-	    bHasBlastFiles = (name!=null);
+	    bHasBlastDone = (name!=null);
 	}
 	/************************************************************************************
 	// Summary: The following lines can be in the database pair.dbParam 
@@ -239,7 +234,7 @@ public class Mpair {
 		String cmsg = "\n" + getChgCluster(type); 
 		String smsg = "\n" + getChgSynteny(type);
 		
-		String csmsg = getChgCoSet(type);  // CAS591 was missing coset
+		String csmsg = getChgCoSet(type);  
 		if (!csmsg.isBlank()) smsg = "\n" + csmsg  + smsg;
 		
 		return amsg + cmsg + smsg; // none are empty
@@ -254,7 +249,7 @@ public class Mpair {
 		// Load Mummer
 		String cmsg = getChgCluster(type); 
 		String smsg = getChgSynteny(type); 
-		String csmsg = getChgCoSet(type);  // CAS591 was missing coset
+		String csmsg = getChgCoSet(type);  
 		if (!csmsg.isBlank()) smsg = csmsg + "\n" + smsg;
 		
 		if (type==FILE) {
@@ -274,9 +269,7 @@ public class Mpair {
 		if (isNotDefault(type,"promer_only")) 		msg = joinSp(msg, "Use PROmer ", sp2);
 		else if (isNotDefault(type,"nucmer_only"))  msg = joinSp(msg, "Use NUCmer ", sp2);
 		
-		if (isNotDefault(type,"self_args")) 		msg = joinSp(msg, "Self args: "   + getSelfArgs(type), sp2); 
-		else if (isNotDefault(type,"promer_args"))  msg = joinSp(msg, "PROmer args: " + getPromerArgs(type), sp2);
-		else if (isNotDefault(type,"nucmer_args"))  msg = joinSp(msg, "NUCmer args: " + getNucmerArgs(type), sp2);
+		if (isNotDefault(type,"mummer_args")) 		msg = joinSp(msg, "MUMmer args: " + getMUMmerArgs(type), sp2); 
 		
 		if (Ext.isMummer4Path()) 					msg = joinSp(msg, Ext.getMummerPath(), sp2); 
 		if (!forSum && Constants.MUM_NO_RM)     	msg = joinSp(msg, "Keep MUMmer .delta file", sp2); 
@@ -338,15 +331,15 @@ public class Mpair {
 	public String getChgLoad(int type) {
 		String cmsg = "";
 		String fname = Utils.getBlastFileList(resultDir);
-		if (fname==null) return LOAD + "\n" + spp + "NO BLAST FILE!!";
+		if (fname==null) return LOAD + "\n" + spp + noBlast;
 		
-		bHasBlastFiles=true;
+		bHasBlastDone=true;
 		
-		// repeated in saveOaransToDBforBlast; Utils.getBlastFileList reads from disk and 'could' have changed
+		// repeated in saveParamsToDBforBlast; Utils.getBlastFileList reads from disk and 'could' have changed
 		cmsg = spp + fname;
 		if (isNotDefault(type,"isAA")) 	cmsg += " NT"; 
 		else                            cmsg += " AA";	
-		if (pairIdx>0 && (bHasMUMmerHits || bHasBlastHits)) cmsg = joinSp(cmsg, "Add to existing", spp);
+		if (pairIdx>0 && (bHasAlignHits || bHasBlastHits)) cmsg = joinSp(cmsg, "Add to existing", spp);
 
 		if (isNotDefault(type,"pIdentity")) cmsg = joinSp(cmsg, "%Identity " + getpIdentity(type), spp);	
 		if (isNotDefault(type,"evalue")) 	cmsg = joinSp(cmsg, "E-value "   + getEval(type), spp);
@@ -436,12 +429,14 @@ public class Mpair {
 	/************************************************************************************
 	 * XXX File/DB params and actions
 	 **************************************************************************************/
-	public int setIdx() { 
+	public int setIdx() { // CAS593 add initial check
 		try { 
-			dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " + " VALUES('" + proj1Idx + "','" + proj2Idx + "')");
-			
 			pairIdx = dbc2.getIdx("SELECT idx FROM pairs " + "WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
+			if (pairIdx==-1) {
+				dbc2.executeUpdate("INSERT INTO pairs (proj1_idx,proj2_idx) " + " VALUES('" + proj1Idx + "','" + proj2Idx + "')");
 			
+				pairIdx = dbc2.getIdx("SELECT idx FROM pairs " + "WHERE proj1_idx=" + proj1Idx + " AND proj2_idx=" + proj2Idx);
+			}
 			return pairIdx;
 		}
 		catch (Exception e) {ErrorReport.die(e, "SyMAP error getting pair idx");return -1;}
@@ -463,16 +458,14 @@ public class Mpair {
 			 AnchorMain ancObj = new AnchorMain(dbc2, null, this);
 			 ancObj.removePseudo();   // Remove pseudo where numhits=-pair_idx; do before saveAnno; 
 			 
-			 Globals.prt("Start remove pair from database, please be patient.....");
 			 dbc2.executeUpdate("DELETE from pairs WHERE idx="+ x);
 			 dbc2.resetAllIdx(); 				// check all, even though some are not relevant
 			 
 		     if (bHitCnt) ancObj.saveAnnoHitCnt(false); // Redo numhits for this pair; false is to not print
 		}
 		bPseudo=bSynOnly=bCoSet=false;
-		bHasMUMmerHits=bHasBlastHits=false;
+		bHasAlignHits=bHasBlastHits=false;
 		isAlignNT=bUsedAlgo1=bUsedAlgo2=false; 
-		alignStr="";
 		
 	    pairIdx = -1;
 	}
@@ -679,16 +672,16 @@ public class Mpair {
 		// see comment above
 		String params = dbc2.executeString("select params from pairs where idx=" + pairIdx);
 		if (params!=null && !params.equals("")) {
-			bHasMUMmerHits = params.contains(mummer) || params.contains(promer) || params.contains(nucmer); // CAS590 for query
+			bHasAlignHits = params.contains(mummer) || params.contains(promer) || params.contains(nucmer); // for query
 			bHasBlastHits  = params.contains(loadblast);
 			
-			if (bHasMUMmerHits) {
+			if (bHasAlignHits) {
 				if (params.contains(promer))      isAlignNT=false; 
 				else if (params.contains(nucmer)) isAlignNT=true; 
 			}
 		}
 		// pair_props may be changed, even if not used -- so use summary
-		if (bHasMUMmerHits) {
+		if (bHasAlignHits) {
 			String summary = dbc2.executeString("select summary from pairs where idx=" + pairIdx);
 			if (summary!=null && !summary.equals("")) {
 				bUsedAlgo1=bUsedAlgo2=false;
@@ -750,16 +743,8 @@ public class Mpair {
 		String x = (type==FILE) ? fileMap.get( "promer_only") : dbMap.get("promer_only");
 		return x.contentEquals("1");
 	}
-	public String getNucmerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "nucmer_args") : dbMap.get("nucmer_args");
-		return x;
-	}
-	public String getPromerArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "promer_args") : dbMap.get("promer_args");
-		return x;
-	}
-	public String getSelfArgs(int type) {
-		String x = (type==FILE) ? fileMap.get( "self_args") : dbMap.get("self_args");
+	public String getMUMmerArgs(int type) {
+		String x = (type==FILE) ? fileMap.get( "mummer_args") : dbMap.get("mummer_args");
 		return x;
 	}
 	public boolean isNucmer(int type) {
@@ -767,11 +752,19 @@ public class Mpair {
 		return x.contentEquals("1");
 	}
 	public boolean isAlignNT() {return isAlignNT;}
-	// Blast
-	public boolean hasMUMerHits() { return bHasMUMmerHits;}
-	public boolean hasBlastHits() { return bHasBlastHits;}
-	public boolean hasMUMerFiles() { return bHasMUMmerFiles;}
-	public boolean hasBlastFiles() { return bHasBlastFiles;}
+	
+	public boolean hasAlignHits() {return bHasAlignHits;}
+	public boolean hasBlastHits() {return bHasBlastHits;}
+	public boolean hasAlignDone()  {return bHasAlignDone;}
+	public boolean hasBlastDone()  {return bHasBlastDone;}
+	public boolean hasAlignDir() {
+		if (bHasAlignDone) return true;
+		return FileDir.dirExists(resultDir + Constants.alignDir);
+	}
+	public boolean hasBlastDir() {
+		if (bHasBlastDone) return true;
+		return FileDir.dirExists(resultDir + Constants.blastDir);
+	}
 	
 	public boolean isBlast(int type) { 
 		String x = (type==FILE) ? fileMap.get("Blast") : dbMap.get("Blast");

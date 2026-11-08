@@ -33,6 +33,8 @@ import backend.Utils;
 
 public class Mproject implements Comparable <Mproject> {
 	private final int abbrevLen = Globals.abbrevLen;
+	private final String spp = "      "; // same as in RemoveProj
+	
 	public String strDBName; 	// This is SQL project.name, and seq/dirName
 	public String strDisplayName;
 	
@@ -42,7 +44,7 @@ public class Mproject implements Comparable <Mproject> {
 	
 	private int numExon = 0, numGene = 0, numGap = 0, numGroups=0; 
 	private int numSynteny=0, numDraft=0; // need numDraft for !strict by default
-	protected String alignStr=null;		  // used by remove; set in hasExistingAlignments; MUMmer/Blast, MUMmer, Blast
+	protected String alignStr=null;		  // used by remove; set in hasAlignBlast; MUMmer/Blast, MUMmer, Blast
 	private long length=0; 				  // genome length - must be long
 	
 	private TreeMap <Integer, String> grpIdx2FullName = new TreeMap <Integer, String> (); // full name, e.g. chr01
@@ -77,7 +79,7 @@ public class Mproject implements Comparable <Mproject> {
 		}
 		else {
 			nStatus = STATUS_IN_DB;
-			if (annotdate!=null && !annotdate.isBlank())  {// CAS578 add !=
+			if (annotdate!=null && !annotdate.isBlank())  {
 				strDate = Utilities.reformatAnnotDate(annotdate);
 				if (strDate.contentEquals("???")) 
 					System.out.println("Warning: " + strName + " interrupted on load - reload");
@@ -88,6 +90,50 @@ public class Mproject implements Comparable <Mproject> {
 	public Mproject() { // for display packages querying proj_props 
 		makeParams();
 	}
+	// false: cnt all; true: only cnt if have /align or /blast;
+	protected int calcAlignBlast(boolean bCheckSubDir) { // moved and renamed; CAS593 
+	try {
+		alignStr = "";
+		File top = new File(Constants.seqRunDir);
+		if (top == null || !top.exists()) return 0; // may not have /data/seq_results directory
+		
+		// e.g. for brap; arab_to_brap  or brap_to_cabb
+		String pStart = strDBName + Constants.projTo, pEnd = Constants.projTo + strDBName;
+		int cntTop=0, cntBlast=0, cntMum=0;
+	
+		for (File f : top.listFiles()) {
+			if (!f.isDirectory()) continue;
+			
+			String dir = f.getName();
+			if	(!dir.startsWith(pStart) && !dir.endsWith(pEnd)) continue; // also found in RemoveProj.removeResults
+			
+			cntTop++;
+			if (!bCheckSubDir) {
+				alignStr += spp + Constants.seqRunDir  + dir + "\n";
+			}
+			else {
+				String alignDir = f.getAbsolutePath() + Constants.alignDir;
+				File d = new File(alignDir);
+				if (d.exists()) {
+					alignStr += spp + Utils.dataPathOnly(alignDir) + "\n";
+					cntMum++;  
+				}
+				
+				alignDir = f.getAbsolutePath() + Constants.blastDir;
+				d = new File(alignDir);
+				if (d.exists()) {
+					alignStr += spp + Utils.dataPathOnly(alignDir) + "\n";
+					cntBlast++;  
+				}
+			}
+		}	
+			
+		if (!bCheckSubDir) return cntTop;
+		else               return cntBlast+cntMum;
+	} 
+	catch (Exception e) {ErrorReport.print(e, "Check existing alignment files"); return 0;} 
+	}
+	
 	public Mproject copyForQuery() { // for isSelf
 	try {
 		Mproject p = new Mproject(dbc2, projIdx, strDBName, "");
@@ -123,8 +169,6 @@ public class Mproject implements Comparable <Mproject> {
 		if (numSynteny==0) return "";
 		else return "[" + numSynteny + "]";
 	}
-	
-	
 	public boolean hasSynteny() {return numSynteny>0;}
 	public boolean hasGenes() 	{return numGene>0;}
 	public boolean hasSelf() 	{return bHasSelf;}
@@ -146,7 +190,7 @@ public class Mproject implements Comparable <Mproject> {
 	public short getStatus() 	{return nStatus; }
 	public boolean isLoaded() 	{return (nStatus==STATUS_IN_DB);}
 	
-	public boolean isLoadCDS()  	{ return getDBVal(lAnnoType).equals("CDS");} // CAS589 add
+	public boolean isLoadCDS()  	{ return getDBVal(lAnnoType).equals("CDS");} 
 	public String getdbDesc() 		{ return getDBVal(sDesc); }
 	public String getdbGrpName() 	{ return getDBVal(sGrpType);}
 	public String getdbCat() 		{ return getDBVal(sCategory); }
@@ -172,7 +216,7 @@ public class Mproject implements Comparable <Mproject> {
 	
 	public int getGrpSize() { return grpIdx2Name.size();}
 	public TreeMap <Integer, String> getGrpIdxMap() {return grpIdx2Name;} 
-	public TreeMap <Integer, String> getGrpIdxFullMap() {return grpIdx2FullName;} // CAS589 add 
+	public TreeMap <Integer, String> getGrpIdxFullMap() {return grpIdx2FullName;} 
 	
 	public String getGrpFullNameFromIdx(int idx) {
 		if (grpIdx2FullName.containsKey(idx)) return grpIdx2FullName.get(idx);
@@ -224,45 +268,6 @@ public class Mproject implements Comparable <Mproject> {
 		if (!annotKeywords.equals("")) 	msg += "; Keywords " + annotKeywords;
 		
 		return msg;
-	}
-	// false: cnt all; true: only cnt if have /align or /blast;
-	// used for all project related links 
-	protected boolean hasAlignBlast(boolean bCheckSubDir) { 
-		try {
-			File top = new File(Constants.getNameResultsDir());
-			
-			if (top == null || !top.exists()) return false; // may not have /data/seq_results directory
-		
-			// e.g. for brap; arab_to_brap  or brap_to_cabb
-			String pStart = strDBName + Constants.projTo, pEnd = Constants.projTo + strDBName;
-			
-			int cntTop=0, cntBlast=0, cntMum=0;
-			for (File f : top.listFiles()) {
-				if (!f.isDirectory()) continue;
-				
-				String dir = f.getName();
-				if	(!dir.startsWith(pStart) && !dir.endsWith(pEnd)) continue;
-				cntTop++;
-				
-				String alignDir = f.getAbsolutePath() + Constants.alignDir;
-				File d = new File(alignDir);
-				if (d.exists()) cntMum++;  
-				
-				alignDir = f.getAbsolutePath() + Constants.blastDir;
-				d = new File(alignDir);
-				if (d.exists()) cntBlast++;  
-			}	
-			
-			alignStr = ""; 
-			if (cntBlast>0 && cntMum>0) alignStr = "MUMmer/Blast";
-			else if (cntBlast>0)        alignStr = "Blast";
-			else if (cntMum>0)          alignStr = "MUMmer";
-			
-			if (!bCheckSubDir) return (cntTop>0);
-			
-			return (cntBlast+cntMum>0);
-		} 
-		catch (Exception e) {ErrorReport.print(e, "Check existing alignment files"); return false;} 
 	}
 	
 	/*********************************************************
@@ -447,7 +452,7 @@ public class Mproject implements Comparable <Mproject> {
 					dbc2.executeUpdate("delete from proj_props where proj_idx="+ projIdx 
 							+ " and name='" + p.key + "'");
 					
-					if (p.projVal.length()>=255) { // CAS587 add check; depends on value whether this messes things up
+					if (p.projVal.length()>=255) { 
 						String msg = "Warning: Value for parameter '" + p.key + " is too long (>=255)."
 							+ "\n    " + p.projVal.substring(0,254) + "...\nAbbreviated value will be stored in database";
 						Globals.prt(msg);
@@ -515,9 +520,9 @@ public class Mproject implements Comparable <Mproject> {
 	}
 	catch (Exception e) {ErrorReport.print(e, "Remove annotations"); }
 	}
-	public void removeProjectFromDB() {
+	// Remove project - called from DoLoadProj; SeqLoadMain on Error; ManagerFrame on Clear Pair
+	public void removeProjectFromDB() { // messages to stdout, etc in calling routine
 	try {
-		Globals.prt("Removing " + strDisplayName + " from database...");  
 		// Setup for update numhits for single Query
 		Vector <Integer> proj2Idx = new Vector <Integer> ();
 		ResultSet rs = dbc2.executeQuery("select proj1_idx, proj2_idx from pairs where proj1_idx=" + projIdx + " or proj2_idx=" + projIdx);
@@ -545,7 +550,6 @@ public class Mproject implements Comparable <Mproject> {
         	for (int gidx : gidxList) ancObj.saveAnnotHitCnt(gidx,""); // get ResultClose error if not put in vector
         }
         Globals.rclear();
-        Globals.prt("  Finish removing " + strDisplayName); 
 	} 
 	catch (Exception e) {ErrorReport.print(e, "Remove project from DB"); }
 	}
@@ -826,7 +830,7 @@ public class Mproject implements Comparable <Mproject> {
 	public final int lANkeyword = 	8;
 	protected final int lSeqFile =  9;
 	protected final int lAnnoFile = 10;
-	protected final int lAnnoType = 11; // CAS587
+	protected final int lAnnoType = 11; 
 	
 	public final int xDisplay = 1;
 	public final int xLoad = 2;
@@ -839,7 +843,7 @@ public class Mproject implements Comparable <Mproject> {
 			this.defVal = 	defVal;  	// default
 			projVal =		defVal;  	// assigned in proj params
 			
-			if (index<lGrpPrefix) 	isSum=true;	// incorrectly 7; CAS587
+			if (index<lGrpPrefix) 	isSum=true;	
 			else 					isLoad=true;
 		}
 		private boolean isDBvalDef() {

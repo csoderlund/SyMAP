@@ -4,6 +4,10 @@ import backend.anchor1.Proj;
 import symap.manager.Mpair;
 import util.FileDir;
 
+/******************************************
+ * Paths and constants for backend
+ * See Utils for more file/directory stuff
+ */
 public class Constants {
 	
 /**********************************************
@@ -60,15 +64,13 @@ public static final String gffList  = ".gff, .gff3";
 // directories for results
 public static final String seqRunDir =  	"data/seq_results/";
 
-public static final String alignDir = 		"/align/";
+public static final String alignDir = 		"/align/"; // hard-coded in remove messages in RemoveProj
+public static final String blastDir = 		"/blast/"; // ditto
 public static final String mumSuffix = 		".mum";
 public static final String doneSuffix = 	".done";
 public static final String selfPrefix = 	"self.";
-public static final String finalDir = 		"/final/"; // has been discontinued; still exists in order to Remove
-public static final String blastDir = 		"/blast/"; // add CAS589 to load blast hits from
 public static final String projTo = 		"_to_";
 public static final String faFile =         ".fa";
-
 public static final String orderSuffix =	"_ordered.csv";
 public static final String orderDelim = 	"..";
 
@@ -78,6 +80,12 @@ public static final String orderDelim = 	"..";
 public static final String tmpRunDir = 		 "/tmp/"; 
 
 /*************************************************************************/
+	public static String getAlignDir() { // for messages
+		return alignDir.substring(0, alignDir.length()-1); 
+	}
+	public static String getBlastDir() {// for messages
+		return blastDir.substring(0, blastDir.length()-1); 
+	}
 	public static boolean rtError(String msg) {
 		System.out.println(msg);
 		return false;
@@ -120,7 +128,7 @@ public static final String tmpRunDir = 		 "/tmp/";
 		if (mp.isOrder2(Mpair.FILE)) return mp.mProj2.getDBName() + Constants.orderDelim + mp.mProj1.getDBName();
 		return null;
 	}
-	public static boolean checkCreateDataDir() { // added CAS589 for routines to share
+	public static boolean checkCreateDataDir() { 
 		try {
 			FileDir.checkCreateDir(dataDir, true);
 			FileDir.checkCreateDir(seqDataDir, true); 

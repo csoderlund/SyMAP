@@ -48,19 +48,28 @@ public class ProgressDialog extends JDialog  {
 	private boolean bDone = false;
 	private FileWriter logFileW = null;
 	
-	public ProgressDialog(final Frame owner, String strTitle, String strMessage, 
-			boolean hasCancel, 
-			FileWriter logW)   // LOAD.log or symap.log (2nd also written to by backend.Log)
-	{
+	// For Clear Pair - no cancel or initial banner; CAS593
+	public ProgressDialog(final Frame owner, String strTitle, String strMessage, FileWriter logW)  { 
 		super(owner, strTitle, true);
-		Cancelled.init();
 		logFileW = logW;
-		boolean isDeterminate=false; 
+		
+		createPanel(owner, strMessage, false);
+	}
 	
-		msgLog("-----------------------------------------------------------------");
+	public ProgressDialog(final Frame owner, String strTitle, String strMessage, boolean hasCancel, FileWriter logW) {
+		super(owner, strTitle, true);
+		logFileW = logW;
+		
 		String x = "    Running Java v" + System.getProperty("java.version") + " on " + ErrorReport.getDate(); 
 		msgLog(">>> SyMAP " + Globals.VERDATE + x + " <<<");
 		
+		createPanel(owner, strMessage, hasCancel);
+	}
+	/*****************************************************************************/
+	private void createPanel(final Frame owner, String strMessage, boolean hasCancel) {
+		Cancelled.init();
+		boolean isDeterminate=false; 
+	
 		// Label
 		JLabel label = new JLabel(strMessage);
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -179,6 +188,7 @@ public class ProgressDialog extends JDialog  {
 		
 		if (logFileW != null) {
 			try {
+				logFileW.append(Globals.lastLine);
 				logFileW.close(); 
 				logFileW=null;
 			}
@@ -246,7 +256,10 @@ public class ProgressDialog extends JDialog  {
 		
 		if (textArea!=null) textArea.append(s);
 	}
-	// textArea
+	public void msgPopLog(String s) {
+		msgPop(s);
+		msgLog(s);
+	}
 	public void msgPop(String s) { 
 		if (!s.endsWith("\n")) s += "\n";
 		if (textArea!=null) textArea.append(s);
